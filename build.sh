@@ -13,6 +13,7 @@ show_help(){
 change_version (){
 	local OLD_VERSION=$1
 	local NEW_VERSION=$2
+	echo "Updating version from ${OLD_VERSION} to ${NEW_VERSION}."
 	find . -name "*.xml" -not \( -path "./updates/*" -prune \) | xargs sed -i -e "s/$OLD_VERSION-SNAPSHOT/$NEW_VERSION-SNAPSHOT/" -e "s/$OLD_VERSION.qualifier/$NEW_VERSION.qualifier/"
 	find . -name "*.MF" | xargs sed -i -e "s/$OLD_VERSION.qualifier/$NEW_VERSION.qualifier/"
 	find . -name "*.properties" | xargs sed -i -e "s/$OLD_VERSION/$NEW_VERSION/"
