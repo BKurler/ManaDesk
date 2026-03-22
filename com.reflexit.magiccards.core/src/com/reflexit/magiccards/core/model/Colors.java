@@ -1,5 +1,3 @@
-
-
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
@@ -21,14 +19,22 @@ import com.reflexit.magiccards.core.MagicLogger;
 
 public class Colors implements ISearchableProperty {
 	static Colors instance = new Colors();
+
+	private static final ISearchableProperty WITHOUT_COLORLESS = new ColorsWithoutColorless();
+
+	public static ISearchableProperty getInstanceWithoutColorless() {
+		return WITHOUT_COLORLESS;
+	}
+
 	private LinkedHashMap<String, ManaColor> idmap;
 	private HashMap<String, ManaColor> namemap;
-	// RD Rework the color processing to include Colorless card
+	// Rework the color processing to include Colorless card
 	// Note: The text must be process before this pattern is used to replace colorless with C letter
 	private final static Pattern colorpattern = Pattern.compile("\\x{7b}([WUBRGC\\d])\\x{7d}");
 
 	public static enum ManaColor {
 		WHITE("W"), BLUE("U"), BLACK("B"), RED("R"), GREEN("G"), COLORLESS("C");
+
 		String tag;
 		String label;
 
@@ -97,55 +103,48 @@ public class Colors implements ISearchableProperty {
 	public static Collection<String> getColorPresense(String text, Collection<String> res) {
 		if (text == null || text.length() == 0)
 			return res;
-		
-		// RD To manage a special case where the scryfall http link is included in the oracle text
+
 		String oracle = text;
-		int endIndex = text.indexOf("https:");
-		if (endIndex > 0)
-		{
-			oracle = text.substring(0, endIndex);
-		}
-		
-		// RD Before doing the color pattern check, replace all the hybrid with separate colors
+
+		// Before doing the color pattern check, replace all the hybrid with separate colors
 		oracle = oracle.replaceAll("/", "}{");
-		
-		// RD Before doing the color pattern check, replace all colorless with C		
+
+		// Before doing the color pattern check, replace all colorless with C
 		oracle = oracle.replaceAll("\\x{7b}([\\dXYZ])++", "{C");
-		
-		// RD Before doing the color pattern check, remove all the "Pay life" tag
+
+		// Before doing the color pattern check, remove all the "Pay life" tag
 		oracle = oracle.replaceAll("P}", "}");
-		
-		// RD For oracle, search deeper, including reference to "named cards", improving the search capability
-		if (oracle.charAt(0) != '{')
-		{
-			// RD Replace all the land types with a equivalent mana color to allow the pattern to find it
+
+		// For oracle, search deeper, including reference to "named cards", improving the search capability
+		if (oracle.charAt(0) != '{') {
+			// Replace all the land types with a equivalent mana color to allow the pattern to find it
 			oracle = oracle.replaceAll(", or Island card", " card {U}");
 			oracle = oracle.replaceAll(", or Plains card", " card {W}");
 			oracle = oracle.replaceAll(", or Mountain card", " card {R}");
 			oracle = oracle.replaceAll(", or Swamp card", " card {B}");
 			oracle = oracle.replaceAll(", or Forest card", " card {G}");
-			
-			// RD Replace all the land types with a equivalent mana color to allow the pattern to find it		
+
+			// Replace all the land types with a equivalent mana color to allow the pattern to find it
 			oracle = oracle.replaceAll("or Island card", "card {U}");
 			oracle = oracle.replaceAll("or Plains card", "card {W}");
 			oracle = oracle.replaceAll("or Mountain card", "card {R}");
 			oracle = oracle.replaceAll("or Swamp card", "card {B}");
 			oracle = oracle.replaceAll("or Forest card", "card {G}");
-			
-			// RD Replace all the land types with a equivalent mana color to allow the pattern to find it		
+
+			// Replace all the land types with a equivalent mana color to allow the pattern to find it
 			oracle = oracle.replaceAll(", Island card", " card {U}");
 			oracle = oracle.replaceAll(", Plains card", " card {W}");
 			oracle = oracle.replaceAll(", Mountain card", " card {R}");
 			oracle = oracle.replaceAll(", Swamp card", " card {B}");
 			oracle = oracle.replaceAll(", Forest card", " card {G}");
-			
-			// RD Replace all the land types with a equivalent mana color to allow the pattern to find it		
+
+			// Replace all the land types with a equivalent mana color to allow the pattern to find it
 			oracle = oracle.replaceAll("Island card", "card {U}");
 			oracle = oracle.replaceAll("Plains card", "card {W}");
 			oracle = oracle.replaceAll("Mountain card", "card {R}");
 			oracle = oracle.replaceAll("Swamp card", "card {B}");
 			oracle = oracle.replaceAll("Forest card", "card {G}");
-		
+
 		}
 
 		Matcher matcher = colorpattern.matcher(oracle);
@@ -213,6 +212,14 @@ public class Colors implements ISearchableProperty {
 		return instance;
 	}
 
+	public Collection<ManaColor> getAllColors() {
+		return idmap.values();
+	}
+
+	public Collection<ManaColor> getColorsWithoutColorless() {
+		return idmap.values().stream().filter(c -> c != ManaColor.COLORLESS).toList(); // Java 16+ immutable list
+	}
+
 	@Override
 	public Collection<String> getIds() {
 		return new ArrayList<String>(this.idmap.keySet());
@@ -266,33 +273,29 @@ public class Colors implements ISearchableProperty {
 
 	public static String getColorType(String cost) {
 		String colorType = "";
-		
+
 		if (cost == null || cost.length() == 0)
 			return "costless"; // RD But could be a token, arts, etc, no just land
 
 		Collection<String> colors = getColorPresense(cost);
 
-		if (colors.size() == 1 && colors.contains("C"))
-		{
+		if (colors.size() == 1 && colors.contains("C")) {
 			return "colorless";
 		}
-		
+
 		// RD Now, remove C for the next steps because we have already check for colorless "only" cards
 		colors.remove("C");
 		int diff = colors.size();
-		if (diff == 1)
-		{
-			colorType += "mono";				
-		}
-		else
-		{
+		if (diff == 1) {
+			colorType += "mono";
+		} else {
 			colorType += "multi";
 		}
-		
+
 		// RD Check for hybrid card, append the hybrid keyboard, increasing the search capability
 		if (cost.contains("/") || cost.contains("P"))
 			colorType += "-hybrid";
-	
+
 		return colorType;
 	}
 
@@ -378,5 +381,45 @@ public class Colors implements ISearchableProperty {
 			}
 		}
 		return res;
+	}
+
+	Collection<ManaColor> getAllManaColors() {
+		return idmap.values();
+	}
+
+	ManaColor getColorById(String id) {
+		return idmap.get(id);
+	}
+}
+
+//private helper class to manage colorless special cases
+final class ColorsWithoutColorless implements ISearchableProperty {
+
+	private final Colors delegate = Colors.getInstance();
+
+	@Override
+	public String getIdPrefix() {
+		return delegate.getIdPrefix();
+	}
+
+	@Override
+	public FilterField getFilterField() {
+		return delegate.getFilterField();
+	}
+
+	@Override
+	public String getNameById(String id) {
+		return delegate.getNameById(id);
+	}
+
+	@Override
+	public Collection<String> getIds() {
+		return delegate.getIds().stream().filter(id -> delegate.getColorById(id) != Colors.ManaColor.COLORLESS)
+				.toList();
+	}
+
+	// Optional helper if you need the actual colors
+	public Collection<Colors.ManaColor> getColors() {
+		return delegate.getAllManaColors().stream().filter(c -> c != Colors.ManaColor.COLORLESS).toList();
 	}
 }

@@ -92,7 +92,8 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 				return true;
 			}
 		});
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
+		gd.horizontalSpan = 3;
 		gd.heightHint = 400;
 		this.treeViewer.getControl().setLayoutData(gd);
 		this.treeViewer.getControl().setFont(parent.getFont());
@@ -113,7 +114,7 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 		ModelRoot mroot = DataManager.getInstance().getModelRoot();
 		top = mroot;
 		this.treeViewer.setInput(mroot);
-		treeViewer.expandToLevel(3);
+		treeViewer.expandAll();
 		// load preferences
 		load();
 	}

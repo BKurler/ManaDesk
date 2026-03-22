@@ -1,4 +1,3 @@
-
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
@@ -7,33 +6,23 @@
 package com.reflexit.magiccards.ui.dialogs;
 
 import java.io.File;
-import java.io.PrintWriter;
-import java.io.StringWriter;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.SWTException;
+import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
-import org.eclipse.swt.graphics.Image;
-import org.eclipse.swt.graphics.ImageData;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
-import org.eclipse.swt.widgets.Display;
-import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.SpecialTags;
-import com.reflexit.magiccards.core.sync.CardCache;
-import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.utils.CardImageUI;
 import com.reflexit.magiccards.ui.utils.ImageCreator;
 import com.reflexit.magiccards.ui.widgets.ContextAssist;
 
@@ -88,93 +77,41 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 
 	private void createImageControl(Composite parent) {
 
-		final Label imageControl = new Label(parent, SWT.NONE);
+		String id = store.getString(MagicCardField.ID.name());
+		boolean multi = (id == null || id.isEmpty() || "<unchanged>".equals(id));
 
-		GridData gda1 = new GridData(GridData.FILL_VERTICAL);
-		gda1.widthHint = ImageCreator.CARD_WIDTH;
-		gda1.heightHint = ImageCreator.CARD_HEIGHT;
-		imageControl.setLayoutData(gda1);
+		// Always create the Browser so the layout stays aligned
+		Browser browser = new Browser(parent, SWT.NONE);
 
-		final String localPath = CardCache.createLocalImageFilePath(store.getString(MagicCardField.ID.name()),
-				store.getString(MagicCardField.EDITION_ABBR.name()));
+		GridData gda = new GridData(GridData.FILL_VERTICAL);
+		gda.widthHint = ImageCreator.CARD_WIDTH;
+		gda.heightHint = ImageCreator.CARD_HEIGHT;
+		browser.setLayoutData(gda);
 
-		if (!new File(localPath).exists()) {
+		// MULTI-EDIT MODE => blank area
+		if (multi) {
+			browser.setBackground(parent.getDisplay().getSystemColor(SWT.COLOR_WHITE));
+			browser.setText("<html><body style='margin:0;padding:0;background:white;'></body></html>");
 			return;
 		}
 
-		new Job("Load local card image") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
+		// SINGLE-CARD MODE => load actual image
+		IMagicCard card = CardImageUI.buildTemporaryCard(store.getString(MagicCardField.ID.name()),
+				store.getString(MagicCardField.EDITION_ABBR.name()), store.getString(MagicCardField.LANG.name()));
 
-				ImageData data = null;
+		File localFile = CardImageUI.getLocalImageFile(card);
 
-				try {
-					data = ImageCreator.getInstance().createCardImageData(localPath, true);
-				} catch (Exception ex) {
-					StringWriter sw = new StringWriter();
-					ex.printStackTrace(new PrintWriter(sw));
-					MagicUIActivator
-							.log("Error creating ImageData for local image: " + localPath + "\n" + sw.toString());
-					data = null;
-				}
+		if (localFile == null || !localFile.exists()) {
+			browser.setText("<html><body style='margin:0;padding:0;background:#222;color:white;"
+					+ "display:flex;align-items:center;justify-content:center;"
+					+ "font-family:sans-serif;font-size:14px;'>Image not found</body></html>");
+			return;
+		}
 
-				final ImageData finalData = data;
+		String url = localFile.toURI().toString();
 
-				Display.getDefault().asyncExec(() -> {
-
-					if (imageControl.isDisposed())
-						return;
-
-					Image newImg = null;
-
-					try {
-						if (finalData != null) {
-							newImg = new Image(Display.getDefault(), finalData);
-						}
-					} catch (SWTException ex) {
-						MagicUIActivator.log(
-								"Failed to create Image from ImageData for: " + localPath + " - " + ex.getMessage());
-						newImg = null;
-					}
-
-					if (newImg == null) {
-						try {
-							newImg = ImageCreator.getInstance().createCardNotFoundImage(null);
-						} catch (Throwable t) {
-							MagicUIActivator
-									.log("Failed to create not-found image for: " + localPath + " - " + t.getMessage());
-							return;
-						}
-					}
-
-					// disposer l’ancienne image correctement
-					Image old = (Image) imageControl.getData("cardImage");
-					if (old != null && !old.isDisposed()) {
-						imageControl.setImage(null); // ← OBLIGATOIRE
-						old.dispose();
-					}
-
-					// appliquer la nouvelle image
-					imageControl.setImage(newImg);
-					imageControl.setData("cardImage", newImg);
-
-					if (imageControl.getData("disposeListenerAdded") == null) {
-						imageControl.addDisposeListener(ev -> {
-							Image i = (Image) imageControl.getData("cardImage");
-							if (i != null && !i.isDisposed())
-								i.dispose();
-						});
-						imageControl.setData("disposeListenerAdded", Boolean.TRUE);
-					}
-
-					if (!parent.isDisposed()) {
-						parent.layout(true);
-					}
-				});
-
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		browser.setText("<html><body style='margin:0;padding:0;background:#000;'>" + "<img src='" + url
+				+ "' style='width:100%;height:100%;object-fit:contain;'/>" + "</body></html>");
 	}
 
 	public void createOwnershipFieldEditor(Composite area) {
