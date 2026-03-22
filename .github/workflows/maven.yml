@@ -12,6 +12,10 @@ name: Java CI with Maven
 
 on:
   workflow_dispatch:
+   inputs:
+        version:
+          type: string
+          description: version number to release
   #push:
   #  branches: [ "main" ]
   #pull_request:
@@ -19,9 +23,7 @@ on:
 
 jobs:
   build:
-
     runs-on: ubuntu-latest
-
     steps:
     - uses: actions/checkout@v4
     - name: Set up JDK 17
@@ -30,8 +32,12 @@ jobs:
         java-version: '17'
         distribution: 'temurin'
         cache: maven
-    - name: Build with Maven
-      run: mvn -B package --file com.reflexit.magiccards.parent/pom.xml
+    - name: Build with Via Script
+      run: ./build.sh -r -v ${{ github.event.inputs.version }}
+    - name: Create Release with build files
+      run: "create and upload release"
+    - name: Create pull request for ManaDesk self update
+      run: echo "create pull request"
 
     # Optional: Uploads the full dependency graph to GitHub to improve the quality of Dependabot alerts this repository can receive
     #- name: Update dependency graph
