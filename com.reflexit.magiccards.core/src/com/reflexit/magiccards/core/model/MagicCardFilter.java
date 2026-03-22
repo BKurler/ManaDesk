@@ -108,7 +108,7 @@ public class MagicCardFilter implements Cloneable {
 		boolean orOp = true;
 		boolean only = false;
 		if (map.containsKey(ColorTypes.IDENTITY_ID)) {
-			ff = FilterField.COLOR_IDENITY;
+			ff = FilterField.COLOR_IDENTITY;
 			// RD IDENTITY must work like color (using extra fields like and, only, etc...)
 		}
 		if (map.containsKey(ColorTypes.AND_ID)) {

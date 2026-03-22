@@ -207,13 +207,14 @@ class CardDescComposite extends Composite {
 
 		try {
 			if (textBrowser != null) {
-				String data = getCardDataHtml(card);
-				String text = getText(card);
 				String links = getLinks(card);
+				String data = getCardDataHtml(card, links);
+				String text = getText(card);
+
 				String oracle = getOracle(card, text);
 				String rulings = getCardRulingsHtml(card);
 
-				String raw = links + data + text + oracle + rulings;
+				String raw = data + text + oracle + rulings;
 				String html = SymbolRenderer.wrapHtml(raw, textBrowser);
 				this.textBrowser.setText(html);
 
@@ -300,7 +301,7 @@ class CardDescComposite extends Composite {
 		return card.getType() == null ? "Unknown Type" : card.getType();
 	}
 
-	private String getCardDataHtml(IMagicCard card) {
+	private String getCardDataHtml(IMagicCard card, String links) {
 		StringBuilder sb = new StringBuilder();
 
 		// 1. Card image (local cache or remote URL)
@@ -318,6 +319,7 @@ class CardDescComposite extends Composite {
 		text = text.replaceAll("\n", "<br/>\n");
 
 		sb.append("<div class='cardtext'>");
+		sb.append(links);
 		sb.append(text);
 		sb.append("</div>");
 

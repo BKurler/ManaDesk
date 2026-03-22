@@ -9,6 +9,7 @@ import java.util.Date;
 import java.util.LinkedHashMap;
 import java.util.Locale;
 
+import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
@@ -29,6 +30,7 @@ import com.reflexit.magiccards.core.model.aggr.FieldProggressAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldSizeAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldUniqueAggregator;
 import com.reflexit.magiccards.core.model.aggr.StringAggregator;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 
 public enum MagicCardField implements ICardField {
 	ID {
@@ -899,6 +901,286 @@ public enum MagicCardField implements ICardField {
 			card.setError(value);
 		}
 	},
+
+	// Define all the flip fields
+	TYPE_COMBINED {
+		@Override
+		public Object getM(MagicCard card) {
+			StringBuilder sb = new StringBuilder();
+
+			// Front TYPE
+			Object frontType = card.get(TYPE);
+			if (frontType != null)
+				sb.append(frontType.toString());
+
+			// Front ENGLISH_TYPE
+			Object frontEng = card.get(ENGLISH_TYPE);
+			if (frontEng != null) {
+				if (sb.length() > 0)
+					sb.append("\n");
+				sb.append(frontEng.toString());
+			}
+
+			// Flip TYPE + ENGLISH_TYPE
+			String flipId = card.getFlipId();
+			if (flipId != null && !flipId.isEmpty()) {
+				ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+				if (store != null) {
+					IMagicCard flip = store.getCard(flipId);
+					if (flip != null) {
+
+						Object flipType = flip.get(TYPE);
+						if (flipType != null) {
+							if (sb.length() > 0)
+								sb.append("\n");
+							sb.append(flipType.toString());
+						}
+
+						Object flipEng = flip.get(ENGLISH_TYPE);
+						if (flipEng != null) {
+							if (sb.length() > 0)
+								sb.append("\n");
+							sb.append(flipEng.toString());
+						}
+					}
+				}
+			}
+
+			return sb.toString();
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+
+		@Override
+		public void setStr(MagicCard card, String value) {
+			// computed field: ignore writes
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			// computed field: ignore writes
+		}
+	},
+
+	POWER_FLIP {
+		@Override
+		public Object getM(MagicCard card) {
+			String flipId = card.getFlipId();
+			if (flipId == null || flipId.isEmpty())
+				return null;
+
+			ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+			if (store == null)
+				return null;
+
+			IMagicCard flip = store.getCard(flipId);
+			return flip != null ? flip.get(POWER) : null;
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+	},
+
+	TOUGHNESS_FLIP {
+		@Override
+		public Object getM(MagicCard card) {
+			String flipId = card.getFlipId();
+			if (flipId == null || flipId.isEmpty())
+				return null;
+
+			ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+			if (store == null)
+				return null;
+
+			IMagicCard flip = store.getCard(flipId);
+			return flip != null ? flip.get(TOUGHNESS) : null;
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+	},
+
+	CMC_FLIP {
+		@Override
+		public Object getM(MagicCard card) {
+			String flipId = card.getFlipId();
+			if (flipId == null || flipId.isEmpty())
+				return null;
+
+			ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+			if (store == null)
+				return null;
+
+			IMagicCard flip = store.getCard(flipId);
+			return flip != null ? flip.get(CMC) : null;
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+	},
+
+	COLOR_COMBINED {
+		@Override
+		public Object getM(MagicCard card) {
+			StringBuilder sb = new StringBuilder();
+
+			// front color
+			Object front = card.get(COLOR);
+			if (front != null)
+				sb.append(front.toString());
+
+			// flip color
+			String flipId = card.getFlipId();
+			if (flipId != null && !flipId.isEmpty()) {
+				ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+				if (store != null) {
+					IMagicCard flip = store.getCard(flipId);
+					if (flip != null) {
+						Object flipColor = flip.get(COLOR);
+						if (flipColor != null) {
+							if (sb.length() > 0)
+								sb.append("\n");
+							sb.append(flipColor.toString());
+						}
+					}
+				}
+			}
+
+			return sb.toString();
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+
+		@Override
+		public void setStr(MagicCard card, String value) {
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+		}
+	},
+
+	COLOR_IDENTITY_COMBINED {
+		@Override
+		public Object getM(MagicCard card) {
+			StringBuilder sb = new StringBuilder();
+
+			// front identity
+			Object front = card.get(COLOR_IDENTITY);
+			if (front != null)
+				sb.append(front.toString());
+
+			// flip identity
+			String flipId = card.getFlipId();
+			if (flipId != null && !flipId.isEmpty()) {
+				ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+				if (store != null) {
+					IMagicCard flip = store.getCard(flipId);
+					if (flip != null) {
+						Object flipIden = flip.get(COLOR_IDENTITY);
+						if (flipIden != null) {
+							if (sb.length() > 0)
+								sb.append("\n");
+							sb.append(flipIden.toString());
+						}
+					}
+				}
+			}
+
+			return sb.toString();
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+
+		@Override
+		public void setStr(MagicCard card, String value) {
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+		}
+	},
+
+	ORACLE_COMBINED {
+		@Override
+		public Object getM(MagicCard card) {
+			StringBuilder sb = new StringBuilder();
+
+			Object front = card.get(ORACLE);
+			if (front != null)
+				sb.append(front.toString());
+
+			String flipId = card.getFlipId();
+			if (flipId != null && !flipId.isEmpty()) {
+				ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+				if (store != null) {
+					IMagicCard flip = store.getCard(flipId);
+					if (flip != null) {
+						Object flipText = flip.get(ORACLE);
+						if (flipText != null) {
+							if (sb.length() > 0)
+								sb.append("\n");
+							sb.append(flipText.toString());
+						}
+					}
+				}
+			}
+
+			return sb.toString();
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+
+		@Override
+		public void setStr(MagicCard card, String value) {
+			// computed field: ignore writes
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			// computed field: ignore writes
+		}
+	},
+
+	CTYPE_FLIP {
+		@Override
+		public Object getM(MagicCard card) {
+			String flipId = card.getFlipId();
+			if (flipId == null || flipId.isEmpty())
+				return null;
+
+			ICardStore<IMagicCard> store = DataManager.getInstance().getMagicDBStore();
+			if (store == null)
+				return null;
+
+			IMagicCard flip = store.getCard(flipId);
+			return flip != null ? flip.get(CTYPE) : null;
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return getM((MagicCard) card.getBase());
+		}
+	},
+
 	// end of fields
 	;
 
