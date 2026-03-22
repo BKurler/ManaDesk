@@ -98,6 +98,7 @@ public class MagicCardFilter implements Cloneable {
 		// text fields
 		Expr text = FilterField.TEXT_LINE.valueExpr(map).or(FilterField.TEXT_LINE_2.valueExpr(map))
 				.or(FilterField.TEXT_LINE_3.valueExpr(map));
+
 		Expr textNot = FilterField.TEXT_NOT_1.valueExpr(map).and(FilterField.TEXT_NOT_2.valueExpr(map))
 				.and(FilterField.TEXT_NOT_3.valueExpr(map)).not();
 		this.root = expr.and(text).and(textNot);
@@ -109,7 +110,7 @@ public class MagicCardFilter implements Cloneable {
 		boolean only = false;
 		if (map.containsKey(ColorTypes.IDENTITY_ID)) {
 			ff = FilterField.COLOR_IDENTITY;
-			// RD IDENTITY must work like color (using extra fields like and, only, etc...)
+			// IDENTITY must work like color (using extra fields like and, only, etc...)
 		}
 		if (map.containsKey(ColorTypes.AND_ID)) {
 			orOp = false;
@@ -117,7 +118,24 @@ public class MagicCardFilter implements Cloneable {
 		if (map.containsKey(ColorTypes.ONLY_ID)) {
 			only = true;
 		}
-		Expr expr = createGroup(map, Colors.getInstance(), orOp, only, ff);
+
+		// Special handling for Colorless ("C")
+		boolean hasColorless = map.containsKey(Colors.getInstance().getPrefConstant(Colors.getColorName("{C}")));
+
+		Expr expr;
+
+		// If only is not selected but colorless is selected
+		// If only and colorless are selected
+		// We must search for the specified colors, including colorless
+		if ((!only && hasColorless) || (only && hasColorless)) {
+			expr = createGroup(map, Colors.getInstance(), orOp, only, ff);
+		} else {
+			// If only and colorless are not selected
+			// If only is selected but colorless is not selected
+			// We must search for the specified colors, excluding colorless
+			expr = createGroup(map, Colors.getInstanceWithoutColorless(), orOp, only, ff);
+		}
+
 		// remaining color types
 		map.remove(ColorTypes.ONLY_ID);
 		map.remove(ColorTypes.AND_ID);
@@ -158,8 +176,8 @@ public class MagicCardFilter implements Cloneable {
 				throw new IllegalArgumentException();
 		}
 
-		// RD Fix color search... all the ORs must be in a gloal pair of parentheses
-		// Not twice to get that result will minimal code changes
+		// RD Fix color search... all the ORs must be in a global pair of parentheses
+		// "Not" twice to get that result will minimal code changes
 		Expr orsNot = Expr.EMPTY;
 		Expr orsNotNot = Expr.EMPTY;
 		orsNot = orsNot.or(ors.not());

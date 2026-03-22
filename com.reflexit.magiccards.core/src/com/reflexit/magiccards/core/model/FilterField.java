@@ -221,6 +221,7 @@ public enum FilterField {
 							.or(fieldEquals(MagicCardField.CTYPE, "mono-hybrid"))
 							.or(fieldEquals(MagicCardField.CTYPE_FLIP, "multi-hybrid"))
 							.or(fieldEquals(MagicCardField.CTYPE_FLIP, "mono-hybrid"));
+
 				} else if ((en = Colors.getInstance().getEncodeByName(value)) != null) {
 					return BinaryExpr.fieldMatches(MagicCardField.COLOR_COMBINED, en);
 				}

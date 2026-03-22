@@ -1,4 +1,9 @@
-package com.reflexit.magiccards.ui;
+/*
+ * Contributors:
+ *     Rémi Dutil 2026 - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+ 
+ package com.reflexit.magiccards.ui;
 
 import java.io.File;
 import java.io.IOException;
@@ -38,10 +43,12 @@ import org.osgi.framework.BundleContext;
 
 import com.reflexit.magiccards.core.Activator;
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.preferences.PriceProviderManager;
+import com.reflexit.magiccards.ui.utils.UICardImagePathProvider;
 
 /**
  * The activator class controls the plug-in life cycle
@@ -82,6 +89,9 @@ public class MagicUIActivator extends AbstractUIPlugin {
 		Device device = Display.getDefault();
 		COLOR_GREENISH = new Color(device, 255 - 64, 255, 255 - 64);
 		COLOR_PINKINSH = new Color(device, 255, 255 - 64, 255 - 64);
+
+		CardCache.setPathProvider(new UICardImagePathProvider());
+
 	}
 
 	public static boolean isJunitRunning() {

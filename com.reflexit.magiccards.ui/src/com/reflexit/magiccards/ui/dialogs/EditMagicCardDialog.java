@@ -1,4 +1,3 @@
-
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
@@ -37,12 +36,14 @@ import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.utils.CardImageUI;
 import com.reflexit.magiccards.ui.utils.ImageCreator;
 
 public class EditMagicCardDialog extends MagicDialog {
@@ -91,9 +92,11 @@ public class EditMagicCardDialog extends MagicDialog {
 	}
 
 	private void createImageControl(Composite parent) {
+
 		GridData gda1 = new GridData(GridData.GRAB_VERTICAL);
 		gda1.widthHint = ImageCreator.CARD_WIDTH;
 		gda1.heightHint = ImageCreator.CARD_HEIGHT;
+
 		imageButton = createPushButton(parent, "");
 		imageButton.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -102,12 +105,15 @@ public class EditMagicCardDialog extends MagicDialog {
 			}
 		});
 		imageButton.setLayoutData(gda1);
-		// set defaults
-		localPath = CardCache.createLocalImageFilePath(store.getString(MagicCardField.ID.name()),
-				store.getString(MagicCardField.EDITION_ABBR.name()));
-		if (new File(localPath).exists())
+
+		IMagicCard card = CardImageUI.buildTemporaryCard(store.getString(MagicCardField.ID.name()),
+				store.getString(MagicCardField.EDITION_ABBR.name()), store.getString(MagicCardField.LANG.name()));
+
+		localPath = ImageCreator.getInstance().createCardPath(card, false, false);
+
+		if (localPath != null && new File(localPath).exists()) {
 			reloadImage(localPath);
-		return;
+		}
 	}
 
 	private void reloadImage(final String path) {

@@ -80,10 +80,10 @@ public final class ImageCreator {
 			setCode = editionName;
 		}
 
-		// 3. Language
+		// 3. Language (full name)
 		String lang = card.getLanguage();
 		if (lang == null || lang.isEmpty()) {
-			lang = "EN";
+			lang = "English";
 		}
 
 		// 4. Card ID → filename
@@ -93,49 +93,15 @@ public final class ImageCreator {
 		}
 
 		// 5. Base directory where images are stored
-		File base = getBaseImageDirectory(); // same base used everywhere
+		File base = getBaseImageDirectory();
 		File setDir = new File(new File(new File(base, "Cards"), setCode), lang);
 
 		// Ensure directories exist
 		setDir.mkdirs();
 
-		// 6. Final file path: CARD<id>.jpg (same as MagicCard version)
-		File file = new File(setDir, "CARD" + id + ".jpg");
+		// 6. Final file path
+		File file = new File(setDir, "CARD_" + id + ".jpg");
 		return file.getAbsolutePath();
-	}
-
-	public String createCardPath(MagicCard card, boolean useCollectorNumber, boolean hires) {
-		if (card == null)
-			return null;
-
-		// 1. Resolve edition name → Edition object
-		String editionName = card.getSet();
-		if (editionName == null)
-			return null;
-
-		Edition ed = Editions.getInstance().getEditionByName(editionName);
-
-		// 2. Determine the correct set code (abbreviation)
-		String setCode;
-		if (ed != null && ed.getMainAbbreviation() != null && !ed.getMainAbbreviation().isEmpty()) {
-			setCode = ed.getMainAbbreviation(); // e.g. GPT, RVR, WAR
-		} else {
-			// Fallback: assume card already stores the abbreviation
-			setCode = editionName;
-		}
-
-		// 3. Language
-		String lang = card.getLanguage();
-		if (lang == null || lang.isEmpty())
-			lang = "EN";
-
-		// 4. Card ID → filename
-		String id = card.getCardId();
-		if (id == null || id.isEmpty())
-			return null;
-
-		// 5. Final path
-		return "Cards/" + setCode + "/" + lang + "/CARD" + id + ".jpg";
 	}
 
 	public ImageData createCardImageData(String path, boolean hires) {

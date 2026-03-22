@@ -4,6 +4,8 @@
  */
 package com.reflexit.magiccards.ui.graphics;
 
+import java.io.File;
+
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.GC;
 import org.eclipse.swt.graphics.Image;
@@ -14,6 +16,7 @@ import org.eclipse.swt.widgets.Display;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.sync.CardCache;
+import com.reflexit.magiccards.ui.utils.CardImageUI;
 import com.reflexit.magiccards.ui.utils.ImageCreator;
 
 public class CardFigure extends XFigure {
@@ -35,9 +38,16 @@ public class CardFigure extends XFigure {
 	public CardFigure(XFigure parent, IMagicCard card) {
 		super(parent, ImageCreator.CARD_WIDTH, ImageCreator.CARD_HEIGHT);
 		this.card = card;
+
 		if (CardCache.isImageCached(card)) {
-			String path = CardCache.createLocalImageFilePath(card);
-			setImageData(new ImageData(path));
+			File file = CardImageUI.getLocalImageFile(card);
+			if (file != null && file.exists()) {
+				setImageData(new ImageData(file.getAbsolutePath()));
+			} else {
+				Image im = ImageCreator.getInstance().createCardNotFoundImage(card);
+				setCardImage(im);
+				imageNotFound = true;
+			}
 		} else {
 			Image im = ImageCreator.getInstance().createCardNotFoundImage(card);
 			setCardImage(im);
@@ -56,8 +66,10 @@ public class CardFigure extends XFigure {
 						exists = CardCache.isImageCached(card);
 					}
 					if (exists) {
-						String path = CardCache.createLocalImageFilePath(card);
-						setImageData(new ImageData(path));
+						File file = CardImageUI.getLocalImageFile(card);
+						if (file != null && file.exists()) {
+							setImageData(new ImageData(file.getAbsolutePath()));
+						}
 					}
 				}
 			} catch (Exception e) {

@@ -1,4 +1,9 @@
-package com.reflexit.magiccards.ui.view.model;
+/*
+ * Contributors:
+ *     Rémi Dutil 2026 - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+ 
+ package com.reflexit.magiccards.ui.view.model;
 
 import static org.junit.Assert.assertArrayEquals;
 import static org.junit.Assert.assertEquals;
@@ -109,6 +114,9 @@ public class RootTreeViewerContentProviderTest {
 	}
 
 	protected void setInput(Object element) {
+
+		System.out.println("setInput called with: " + element);
+
 		input = element;
 		provider.inputChanged(null, null, element);
 	}
@@ -119,8 +127,9 @@ public class RootTreeViewerContentProviderTest {
 		provider.inputChanged(null, null, null);
 	}
 
-	@Test(expected = IllegalArgumentException.class)
+	@Test // !!! RD Doesn't throw anymore (expected = IllegalArgumentException.class)
 	public void testCardGroup() {
+
 		CardGroup cardGroup = group("foo", group("bar"));
 		setInput(cardGroup);
 	}

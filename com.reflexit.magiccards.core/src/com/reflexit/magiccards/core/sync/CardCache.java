@@ -26,13 +26,37 @@ import java.util.ArrayList;
 import com.reflexit.magiccards.core.CachedImageNotFoundException;
 import com.reflexit.magiccards.core.CannotDetermineSetAbbriviation;
 import com.reflexit.magiccards.core.FileUtils;
-import com.reflexit.magiccards.core.NotNull;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 
 public class CardCache {
+
+	/* ============================================================
+	 *  NEW: Path provider injected by UI
+	 * ============================================================ */
+	private static ICardImagePathProvider pathProvider;
+
+	public static void setPathProvider(ICardImagePathProvider provider) {
+		pathProvider = provider;
+	}
+
+	private static File requireLocalPath(IMagicCard card) {
+		if (pathProvider == null) {
+			throw new IllegalStateException("ICardImagePathProvider not set");
+		}
+		File f = pathProvider.getLocalImagePath(card);
+		if (f == null) {
+			throw new IllegalStateException("ICardImagePathProvider returned null for " + card);
+		}
+		return f;
+	}
+
+	/* ============================================================
+	 *  Existing code (unchanged)
+	 * ============================================================ */
+
 	public static URL createSetImageURL(IMagicCard card, boolean upload) throws IOException {
 		String edition = card.getSet();
 		String rarity = card.getRarity();
@@ -54,28 +78,6 @@ public class CardCache {
 		return new URL(strUrl);
 	}
 
-	@NotNull
-	public static String createLocalImageFilePath(IMagicCard card) {
-		return createLocalImageFilePath(card.getCardId(), card.getEdition().getMainAbbreviation());
-	}
-
-	@NotNull
-	public static String createLocalImageFilePath(String cardId, String abbr) {
-		String editionAbbr = abbr;
-		if (abbr == null)
-			editionAbbr = "unknown";
-		else if (abbr.equals("CON")) // special hack for windows, which cannot
-										// create CON directory
-			editionAbbr = "CONFL";
-		String part;
-		if (cardId == null) {
-			part = "Cards/0.jpg";
-		} else {
-			part = "Cards/" + editionAbbr + "/" + "EN" + "/Card" + cardId + ".jpg";
-		}
-		return new File(FileUtils.getStateLocationFile(), part).getPath();
-	}
-
 	private static boolean isLoadingEnabled() {
 		return !WebUtils.isWorkOffline();
 	}
@@ -92,9 +94,8 @@ public class CardCache {
 				while (true) {
 					IMagicCard card = null;
 					synchronized (cardImageQueue) {
-						if (cardImageQueue.size() > 0) {
-							card = cardImageQueue.get(0);
-							cardImageQueue.remove(0);
+						if (!cardImageQueue.isEmpty()) {
+							card = cardImageQueue.remove(0);
 							cardImageQueue.notifyAll();
 						} else {
 							try {
@@ -102,9 +103,9 @@ public class CardCache {
 							} catch (InterruptedException e) {
 								break;
 							}
-							if (cardImageQueue.size() > 0)
-								continue;
-							break;
+							if (cardImageQueue.isEmpty())
+								break;
+							continue;
 						}
 					}
 					if (card == null)
@@ -113,7 +114,7 @@ public class CardCache {
 						try {
 							downloadAndSaveImage(card, isLoadingEnabled(), true);
 						} catch (Exception e) {
-							continue;
+							// ignore
 						} finally {
 							card.notifyAll();
 						}
@@ -139,38 +140,35 @@ public class CardCache {
 		}
 	}
 
-	/**
-	 * Download and save card image, if not already saved
-	 *
-	 * @param card
-	 * @param caching2
-	 * @return
-	 * @throws IOException
-	 */
+	/* ============================================================
+	 *  UPDATED: downloadAndSaveImage now uses pathProvider
+	 * ============================================================ */
 	public static File downloadAndSaveImage(IMagicCard card, boolean remote, boolean forceRemote) throws IOException {
+
 		synchronized (card) {
-			String path = CardCache.createLocalImageFilePath(card);
-			File file = new File(path);
-			if (forceRemote == false && file.exists()) {
+
+			File file = requireLocalPath(card);
+
+			if (!forceRemote && file.exists()) {
 				return file;
 			}
-			if (!remote)
+
+			if (!remote) {
 				throw new CachedImageNotFoundException("Cannot find cached image for " + card.getName());
+			}
+
 			URL url = createRemoteImageURL(card);
-			if (url == null)
-				throw new CachedImageNotFoundException("Cannot find image for " + card.getName() + " not url");
+			if (url == null) {
+				throw new CachedImageNotFoundException("Cannot find image for " + card.getName() + " (no URL)");
+			}
+
 			return saveCachedFile(file, url);
 		}
 	}
 
-	/**
-	 * Save url content into a local file
-	 *
-	 * @param file - local file
-	 * @param url  - remote url (or any url actually)
-	 * @return
-	 * @throws IOException
-	 */
+	/* ============================================================
+	 *  Existing save logic (unchanged)
+	 * ============================================================ */
 	public static File saveCachedFile(File file, URL url) throws IOException {
 		File dir = file.getParentFile();
 		dir.mkdirs();
@@ -190,61 +188,52 @@ public class CardCache {
 				st.close();
 			}
 			if (file2.exists() && file2.length() > 0) {
-				if (file.exists()) {
-					if (!file.delete())
-						throw new IOException("failed to delete " + file.toString());
-				}
-				if (!file2.renameTo(file)) {
-					throw new IOException("failed to rename into " + file.toString());
-				}
+				if (file.exists() && !file.delete())
+					throw new IOException("failed to delete " + file);
+				if (!file2.renameTo(file))
+					throw new IOException("failed to rename into " + file);
 				return file;
 			} else {
-				throw new IOException("Cannot save file: " + file.toString());
+				throw new IOException("Cannot save file: " + file);
 			}
 		} finally {
 			file2.delete();
 		}
 	}
 
+	/* ============================================================
+	 *  UPDATED: getImageURL now uses provider indirectly
+	 * ============================================================ */
 	public static URL getImageURL(IMagicCard card) throws MalformedURLException {
-		String path = CardCache.createLocalImageFilePath(card);
-		File file = new File(path);
+		File file = requireLocalPath(card);
 		if (file.exists()) {
 			return file.toURI().toURL();
 		}
-		URL url = createRemoteImageURL(card);
-		return url;
+		return createRemoteImageURL(card);
 	}
 
-	/**
-	 * Get card image or schedule a loading job if image not found. This image is
-	 * not managed - to be disposed by called. To get notified when job is done
-	 * loading, can wait on card object
-	 *
-	 * @param card
-	 * @return true if card image exists, schedule update otherwise. If loading is
-	 *         disabled and there is no cached image through an exception
-	 * @throws IOException
-	 */
+	/* ============================================================
+	 *  UPDATED: loadCardImageOffline uses provider
+	 * ============================================================ */
 	public static boolean loadCardImageOffline(IMagicCard card, boolean forceUpdate)
 			throws IOException, CannotDetermineSetAbbriviation {
-		String path = createLocalImageFilePath(card);
-		File file = new File(path);
-		if (file.exists() && forceUpdate == false) {
+
+		File file = requireLocalPath(card);
+
+		if (file.exists() && !forceUpdate) {
 			return true;
 		}
-		if (!isLoadingEnabled())
+
+		if (!isLoadingEnabled()) {
 			throw new CachedImageNotFoundException("Cannot find cached image for " + card.getName());
-		CardCache.queueImageLoading(card);
+		}
+
+		queueImageLoading(card);
 		return false;
 	}
 
 	public static boolean isImageCached(IMagicCard card) {
-		String path = createLocalImageFilePath(card);
-		File file = new File(path);
-		if (file.exists()) {
-			return true;
-		}
-		return false;
+		File file = requireLocalPath(card);
+		return file.exists();
 	}
 }
