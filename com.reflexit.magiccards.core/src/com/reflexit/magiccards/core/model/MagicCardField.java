@@ -903,7 +903,7 @@ public enum MagicCardField implements ICardField {
 	},
 
 	// Define all the flip fields
-	TYPE_COMBINED {
+	TYPE_COMBINED(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			StringBuilder sb = new StringBuilder();
@@ -965,7 +965,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	POWER_FLIP {
+	POWER_FLIP(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			String flipId = card.getFlipId();
@@ -977,16 +977,40 @@ public enum MagicCardField implements ICardField {
 				return null;
 
 			IMagicCard flip = store.getCard(flipId);
-			return flip != null ? flip.get(POWER) : null;
+			if (flip == null)
+				return null;
+
+			Object val = flip.get(POWER);
+			if (val == null)
+				return null;
+
+			// Only accept numeric values
+			if (val instanceof Number)
+				return val;
+
+			// Try parsing string values
+			try {
+				return Integer.parseInt(val.toString());
+			} catch (Exception e) {
+				return null; // non-numeric → ignore
+			}
 		}
 
 		@Override
 		public Object getM(MagicCardPhysical card) {
 			return getM((MagicCard) card.getBase());
 		}
+
+		@Override
+		public void setStr(MagicCard card, String value) {
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+		}
 	},
 
-	TOUGHNESS_FLIP {
+	TOUGHNESS_FLIP(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			String flipId = card.getFlipId();
@@ -1007,7 +1031,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	CMC_FLIP {
+	CMC_FLIP(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			String flipId = card.getFlipId();
@@ -1028,7 +1052,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	COLOR_COMBINED {
+	COLOR_COMBINED(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			StringBuilder sb = new StringBuilder();
@@ -1072,7 +1096,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	COLOR_IDENTITY_COMBINED {
+	COLOR_IDENTITY_COMBINED(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			StringBuilder sb = new StringBuilder();
@@ -1116,7 +1140,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	ORACLE_COMBINED {
+	ORACLE_COMBINED(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			StringBuilder sb = new StringBuilder();
@@ -1160,7 +1184,7 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	CTYPE_FLIP {
+	CTYPE_FLIP(null) {
 		@Override
 		public Object getM(MagicCard card) {
 			String flipId = card.getFlipId();

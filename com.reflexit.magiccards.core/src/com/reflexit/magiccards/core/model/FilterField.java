@@ -160,15 +160,43 @@ public enum FilterField {
 			case FORMAT:
 				TextValue tvalue = new TextValue(value, true, true, false);
 				return new BinaryExpr(new CardFieldExpr(ff.getField()), Operation.MATCHES, tvalue);
-			case CCC:
-				return BinaryExpr.fieldInt(ff.getField(), value)
-						.or(BinaryExpr.fieldInt(MagicCardField.CMC_FLIP, value));
-			case POWER:
-				return BinaryExpr.fieldInt(ff.getField(), value)
-						.or(BinaryExpr.fieldInt(MagicCardField.POWER_FLIP, value));
-			case TOUGHNESS:
-				return BinaryExpr.fieldInt(ff.getField(), value)
-						.or(BinaryExpr.fieldInt(MagicCardField.TOUGHNESS_FLIP, value));
+
+			case CCC: {
+				Expr front = BinaryExpr.fieldInt(ff.getField(), value);
+
+				// flip != null  =>  NOT (flip == null)
+				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.CMC_FLIP, null).not();
+
+				// flip comparison guarded by flipNotNull
+				Expr flip = BinaryExpr.fieldInt(MagicCardField.CMC_FLIP, value).and(flipNotNull);
+
+				return front.or(flip);
+			}
+
+			case POWER: {
+				Expr front = BinaryExpr.fieldInt(MagicCardField.POWER, value);
+
+				// flip != null  =>  NOT (flip == null)
+				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.POWER_FLIP, null).not();
+
+				// flip comparison guarded by flipNotNull
+				Expr flip = BinaryExpr.fieldInt(MagicCardField.POWER_FLIP, value).and(flipNotNull);
+
+				return front.or(flip);
+			}
+
+			case TOUGHNESS: {
+				Expr front = BinaryExpr.fieldInt(MagicCardField.TOUGHNESS, value);
+
+				// flip != null  =>  NOT (flip == null)
+				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.TOUGHNESS_FLIP, null).not();
+
+				// flip comparison guarded by flipNotNull
+				Expr flip = BinaryExpr.fieldInt(MagicCardField.TOUGHNESS_FLIP, value).and(flipNotNull);
+
+				return front.or(flip);
+			}
+
 			case COUNT:
 			case FORTRADECOUNT:
 			case COMMUNITYRATING:
