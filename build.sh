@@ -24,12 +24,9 @@ get_current_version (){
 	local version_number=0
 	while IFS= read -r line
 	do
-	echo "$line"
 	version_number=$(echo "$line" | cut -d "=" -f 2)
 	done < "$filename"
-
 	echo "$version_number"
-	return "$version_number"
 }
 
 write_current_version(){
@@ -57,6 +54,11 @@ shift $((OPTIND-1))
 #needs maven 3.3.9 and java compiler 17+ installed
 export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64/
 PATH=$JAVA_HOME/bin:$PATH
+if [ "$release" = true ] ; then
+	# update the version
+	current_version="$(get_current_version)"
+	change_version "${current_version}" "${version}"
+fi
 mvn -f com.reflexit.magiccards.parent/pom.xml clean verify
 if [ "$release" = true ] ; then
 	# setup release files for self update
@@ -65,9 +67,6 @@ if [ "$release" = true ] ; then
 	time=$(date '+%H%M')
 	targetdir=./updates/releases/${version}v${datestring}-${time}
 	mkdir $targetdir
-	# update the version
-
-	change_version get_current_version "${version}"
 	# insert line into updates/0.x/compositeArtifacts.xml, and compositeContent.xml
 	# create and destroy a venv, to install lxml and do the xml modifications
 	python3 -m venv venv_buildscript
