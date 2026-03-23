@@ -33,7 +33,7 @@ jobs:
         echo "RELEASE_DATE=$(date +%Y%m%d)" >> "$GITHUB_ENV"
         echo "RELEASE_TIME=$(date +%H%M)" >> "$GITHUB_ENV"
     - name: Build with Via Script
-      run: ./build.sh -r -v ${{ github.event.inputs.version }}
+      run: ./build.sh -t -r -v ${{ github.event.inputs.version }}
     - name: Create Branch with build results
       run: |
           git config --global user.name 'github-automation'
