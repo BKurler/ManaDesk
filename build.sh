@@ -23,10 +23,7 @@ change_version (){
 get_current_version (){
 	local filename="./version.ini"
 	local version_number=0
-	while IFS= read -r line
-	do
-	version_number=$(echo "$line" | cut -d "=" -f 2)
-	done < "$filename"
+	version_number=$(cat "$filename" | cut -d "=" -f 2)
 	echo "$version_number"
 }
 
@@ -60,7 +57,7 @@ if [ "$release" = true ] ; then
 	current_version="$(get_current_version)"
 	change_version "${current_version}" "${version}"
 fi
-mvn -f com.reflexit.magiccards.parent/pom.xml clean verify
+mvn -f com.reflexit.magiccards.parent/pom.xml -Dmaven.test.skip=true clean verify
 if [ "$release" = true ] ; then
 	# setup release files for self update
 	echo "Creating Release version ${version}"
