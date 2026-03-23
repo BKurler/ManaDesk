@@ -9,6 +9,7 @@ show_help(){
 	echo "------"
 	echo "-v set new version number"
 	echo "-r create a new release"
+	echo "-t skip tests"
 }
 change_version (){
 	local OLD_VERSION=$1
@@ -34,6 +35,8 @@ write_current_version(){
 
 version=0.9.0
 release=false
+skip_test=false
+skip_test_parameter=""
 while getopts "h?v:r" opt; do
   case "$opt" in
     h|\?)
@@ -43,6 +46,8 @@ while getopts "h?v:r" opt; do
     v)  version=$OPTARG
       ;;
     r)  release=true
+      ;;
+    t)  skip_test=true
       ;;
   esac
 done
@@ -57,7 +62,10 @@ if [ "$release" = true ] ; then
 	current_version="$(get_current_version)"
 	change_version "${current_version}" "${version}"
 fi
-mvn -f com.reflexit.magiccards.parent/pom.xml -Dmaven.test.skip=true clean verify
+if [ "$skip_test" = true ] ; then
+	skip_test_parameter="-Dmaven.test.skip=true"
+fi
+mvn -f com.reflexit.magiccards.parent/pom.xml $skip_test_parameter clean verify
 if [ "$release" = true ] ; then
 	# setup release files for self update
 	echo "Creating Release version ${version}"
