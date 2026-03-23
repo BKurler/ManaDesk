@@ -37,7 +37,7 @@ version=0.9.0
 release=false
 skip_test=false
 skip_test_parameter=""
-while getopts "h?v:r" opt; do
+while getopts "h?v:rt" opt; do
   case "$opt" in
     h|\?)
       show_help
