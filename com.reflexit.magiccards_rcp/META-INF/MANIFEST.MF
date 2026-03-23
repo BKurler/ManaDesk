@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.reflexit.magiccards.rcp
 Bundle-Name: ManaDesk
 Bundle-SymbolicName: com.reflexit.magiccards_rcp;singleton:=true
-Bundle-Version: 0.9.3.qualifier
+Bundle-Version: 0.9.5.qualifier
 Bundle-Activator: com.reflexit.magiccards_rcp.Activator
 Bundle-Vendor: Alena Laskavaia
 Bundle-Localization: plugin

@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ManaDesk Tournament Organizer
 Bundle-SymbolicName: com.reflexit.mtgtournament.ui;singleton:=true
-Bundle-Version: 0.9.3.qualifier
+Bundle-Version: 0.9.5.qualifier
 Bundle-Activator: com.reflexit.mtgtournament.ui.tour.Activator
 Bundle-Vendor: Alena Laskavaia
 Require-Bundle: org.eclipse.ui,
