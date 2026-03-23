@@ -9,10 +9,12 @@ show_help(){
 	echo "------"
 	echo "-v set new version number"
 	echo "-r create a new release"
+	echo "-t skip tests"
 }
 change_version (){
 	local OLD_VERSION=$1
 	local NEW_VERSION=$2
+	echo "Updating version from ${OLD_VERSION} to ${NEW_VERSION}."
 	find . -name "*.xml" -not \( -path "./updates/*" -prune \) | xargs sed -i -e "s/$OLD_VERSION-SNAPSHOT/$NEW_VERSION-SNAPSHOT/" -e "s/$OLD_VERSION.qualifier/$NEW_VERSION.qualifier/"
 	find . -name "*.MF" | xargs sed -i -e "s/$OLD_VERSION.qualifier/$NEW_VERSION.qualifier/"
 	find . -name "*.properties" | xargs sed -i -e "s/$OLD_VERSION/$NEW_VERSION/"
@@ -22,14 +24,8 @@ change_version (){
 get_current_version (){
 	local filename="./version.ini"
 	local version_number=0
-	while IFS= read -r line
-	do
-	echo "$line"
-	version_number=$(echo "$line" | cut -d "=" -f 2)
-	done < "$filename"
-
+	version_number=$(cat "$filename" | cut -d "=" -f 2)
 	echo "$version_number"
-	return "$version_number"
 }
 
 write_current_version(){
@@ -39,7 +35,9 @@ write_current_version(){
 
 version=0.9.0
 release=false
-while getopts "h?v:r" opt; do
+skip_test=false
+skip_test_parameter=""
+while getopts "h?v:rt" opt; do
   case "$opt" in
     h|\?)
       show_help
@@ -49,6 +47,8 @@ while getopts "h?v:r" opt; do
       ;;
     r)  release=true
       ;;
+    t)  skip_test=true
+      ;;
   esac
 done
 shift $((OPTIND-1))
@@ -57,7 +57,15 @@ shift $((OPTIND-1))
 #needs maven 3.3.9 and java compiler 17+ installed
 export JAVA_HOME=/usr/lib/jvm/temurin-17-jdk-amd64/
 PATH=$JAVA_HOME/bin:$PATH
-mvn -f com.reflexit.magiccards.parent/pom.xml clean verify
+if [ "$release" = true ] ; then
+	# update the version
+	current_version="$(get_current_version)"
+	change_version "${current_version}" "${version}"
+fi
+if [ "$skip_test" = true ] ; then
+	skip_test_parameter="-Dmaven.test.skip=true"
+fi
+mvn -f com.reflexit.magiccards.parent/pom.xml $skip_test_parameter clean verify
 if [ "$release" = true ] ; then
 	# setup release files for self update
 	echo "Creating Release version ${version}"
@@ -65,9 +73,6 @@ if [ "$release" = true ] ; then
 	time=$(date '+%H%M')
 	targetdir=./updates/releases/${version}v${datestring}-${time}
 	mkdir $targetdir
-	# update the version
-
-	change_version get_current_version "${version}"
 	# insert line into updates/0.x/compositeArtifacts.xml, and compositeContent.xml
 	# create and destroy a venv, to install lxml and do the xml modifications
 	python3 -m venv venv_buildscript
