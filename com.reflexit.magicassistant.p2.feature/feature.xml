@@ -6,7 +6,7 @@
 <feature
       id="com.reflexit.magicassistant.p2.feature"
       label="ManaDesk Software Update"
-      version="0.9.3.qualifier"
+      version="0.9.5.qualifier"
       provider-name="Reflex IT">
 
    <description url="http://mtgbrowser.sf.net">

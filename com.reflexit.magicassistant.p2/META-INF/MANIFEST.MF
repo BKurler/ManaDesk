@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.reflexit.magicassistant.p2
 Bundle-Name: Install Update
 Bundle-SymbolicName: com.reflexit.magicassistant.p2;singleton:=true
-Bundle-Version: 0.9.3.qualifier
+Bundle-Version: 0.9.5.qualifier
 Bundle-Activator: com.reflexit.magicassistant.p2.Activator
 Bundle-Vendor: Alena Laskavaia
 Require-Bundle: org.eclipse.ui,
