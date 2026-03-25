@@ -43,6 +43,8 @@ jobs:
           git push --set-upstream origin feature/v${{ github.event.inputs.version }}
           git tag v${{ github.event.inputs.version }}
           git push origin v${{ github.event.inputs.version }}
+      env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
     - name: Create Release with build files
       run: |
         ls -al ./com.reflexit.magiccards.product
