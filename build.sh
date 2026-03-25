@@ -84,6 +84,7 @@ if [ "$release" = true ] ; then
 	# copy artifacts into created directory
 	cp -R ./com.reflexit.magiccards.product/target/repository/features $targetdir/
 	cp -R ./com.reflexit.magiccards.product/target/repository/plugins $targetdir/
+	cp -R ./com.reflexit.magiccards.product/target/repository/binary $targetdir/
 	cp -R ./com.reflexit.magiccards.product/target/repository/artifacts.xml.xz $targetdir/
 	cp -R ./com.reflexit.magiccards.product/target/repository/content.xml.xz $targetdir/
 	cp -R ./com.reflexit.magiccards.product/target/repository/p2.index $targetdir/
