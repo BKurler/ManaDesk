@@ -285,7 +285,7 @@ public enum MagicCardField implements ICardField {
 		};
 
 	},
-	GATHERERID("gatheredId") {
+	GATHERERID("gathererId") {
 
 		@Override
 		public ICardVisitor getAggregator() {

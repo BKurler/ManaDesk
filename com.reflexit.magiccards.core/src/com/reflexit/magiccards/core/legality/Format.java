@@ -192,7 +192,7 @@ public class Format {
 		Legality leg = getLegality(card);
 		switch (leg) {
 		case UNKNOWN:
-			return ("Uknown legality for " + this);
+			return ("Unknown legality for " + this);
 		case NOT_LEGAL:
 			return ("Not legal for " + this);
 		case BANNED:
