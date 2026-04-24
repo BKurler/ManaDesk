@@ -146,7 +146,7 @@ public class MagicXmlStreamReader {
 					if (key != null && !key.isEmpty()) {
 						ICardField field = MagicCardField.fieldByName(key);
 						if (field == null)
-							MagicLogger.log("Uknown property " + key);
+							MagicLogger.log("Unknown property " + key);
 						else
 							cardm.set(field, StringCache.intern(value));
 					}
@@ -165,9 +165,14 @@ public class MagicXmlStreamReader {
 					try {
 						switch (states.peek()) {
 						case mc: {
+							// Patch to work around a typo in old files, do not want to break backward compatibility
+							if (last.compareToIgnoreCase("gatheredId") == 0) {
+								last = "gathererId";
+							}
+
 							MagicCardField field = mcpFields.get(last);
 							if (field == null) {
-								MagicLogger.log("Uknown element " + last);
+								MagicLogger.log("Unknown element " + last);
 							} else
 								cardm.set(field, StringCache.intern(ttStr));
 							break;
