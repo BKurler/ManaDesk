@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <?pde version="3.5"?>
 
-<product name="ManaDesk" uid="com.reflexit.magiccards_rcp.product" id="com.reflexit.magiccards_rcp.product" application="com.reflexit.magiccards_rcp.application" version="0.9.5.qualifier" type="features" includeLaunchers="true" autoIncludeRequirements="true">
+<product name="ManaDesk" uid="com.reflexit.magiccards_rcp.product" id="com.reflexit.magiccards_rcp.product" application="com.reflexit.magiccards_rcp.application" version="0.9.6.qualifier" type="features" includeLaunchers="true" autoIncludeRequirements="true">
 
    <aboutInfo>
       <image path="splash.png"/>
@@ -79,7 +79,7 @@
    </plugins>
 
    <features>
-      <feature id="com.reflexit.magiccards.feature.rcp" version="0.9.5.qualifier"/>
+      <feature id="com.reflexit.magiccards.feature.rcp" version="0.9.6.qualifier"/>
    </features>
 
    <configurations>

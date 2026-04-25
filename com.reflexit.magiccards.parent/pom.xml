@@ -10,7 +10,7 @@
 	<modelVersion>4.0.0</modelVersion>
 	<groupId>com.reflexit.magiccards</groupId>
 	<artifactId>com.reflexit.magiccards.parent</artifactId>
-	<version>0.9.5-SNAPSHOT</version>
+	<version>0.9.6-SNAPSHOT</version>
 	<packaging>pom</packaging>
 
 <properties>
@@ -103,7 +103,7 @@
 						<artifact>
 							<groupId>com.reflexit.magiccards</groupId>
 							<artifactId>rcp_master</artifactId>
-							<version>0.9.5-SNAPSHOT</version>
+							<version>0.9.6-SNAPSHOT</version>
 						</artifact>
 					</target>
 					    <executionEnvironment>JavaSE-17</executionEnvironment>

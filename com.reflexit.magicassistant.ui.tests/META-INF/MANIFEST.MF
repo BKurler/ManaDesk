@@ -18,7 +18,7 @@ Require-Bundle: org.junit,
 Bundle-ActivationPolicy: lazy
 Manifest-Version: 1.0
 Bundle-SymbolicName: com.reflexit.magicassistant.ui.tests
-Bundle-Version: 0.9.5.qualifier
+Bundle-Version: 0.9.6.qualifier
 Export-Package: com.reflexit.magicassistant.ui.tests,
  com.reflexit.magiccards.ui.dnd,
  com.reflexit.magiccards.ui.views.nav
