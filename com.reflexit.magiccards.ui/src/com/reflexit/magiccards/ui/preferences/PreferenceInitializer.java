@@ -14,12 +14,10 @@ import org.eclipse.ui.preferences.ScopedPreferenceStore;
 import org.osgi.service.prefs.BackingStoreException;
 
 import com.reflexit.magiccards.core.FileUtils;
-import com.reflexit.magiccards.core.model.GroupOrder;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.gallery.GalleryPreferencePage;
 import com.reflexit.magiccards.ui.views.Presentation;
-import com.reflexit.magiccards.ui.views.collector.CollectorListControl;
 
 /**
  * Class used to initialize default preference values.
@@ -88,7 +86,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 
 		// collector store
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Group,-Name,Progress,-Progress4,-Card Id,-Cost,-Type,-Power,-Toughness,-Oracle Text,-Text,-Set,-Rarity,-Color Type,-Count,"
+				"Name,Progress,-Progress4,-Card Id,-Cost,-Type,-Power,-Toughness,-Oracle Text,-Text,-Set,-Rarity,-Color Type,-Count,"
 						+ "Collector's Number,Artist,Location,-Color,Ownership,User Price,Online Price,-Rating,-For Trade,"
 						+ "Comment,Special,-Language");
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);

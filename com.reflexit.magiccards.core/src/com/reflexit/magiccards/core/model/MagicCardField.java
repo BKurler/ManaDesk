@@ -35,11 +35,6 @@ import com.reflexit.magiccards.core.model.storage.ICardStore;
 public enum MagicCardField implements ICardField {
 	ID {
 		@Override
-		public ICardVisitor getAggregator() {
-			return new CollisionAggregator(this, 0);
-		}
-
-		@Override
 		public void setM(MagicCard card, Object value) {
 			card.setCardId(String.valueOf(value));
 		}
