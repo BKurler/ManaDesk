@@ -322,6 +322,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		case ("split"):
 		case ("flip"):
 		case ("adventure"):
+		case ("prepare"):
 			// Two cards, same face
 			cardLayout = 1;
 			break;
@@ -482,7 +483,14 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			frontCard.setRarity(elem.get("rarity").toString());
 			frontCard.setPower(elem.get("power") != null ? elem.get("power").toString() : "");
 			frontCard.setToughness(elem.get("toughness") != null ? elem.get("toughness").toString() : "");
-			frontCard.setOracleText(elem.get("oracle_text").toString().replace("|", "&vert;") + rulingsUriString);
+			String oracle = "";
+			if (elem.get("oracle_text") != null) {
+				oracle = elem.get("oracle_text").toString();
+			} else {
+				System.err.println("Card " + frontCard.getName() + " has no oracle text, check for new layout");
+			}
+
+			frontCard.setOracleText(oracle.replace("|", "&vert;") + rulingsUriString);
 			frontCard.setArtist(elem.get("artist").toString());
 			frontCard.setCollNumber(elem.get("collector_number").toString());
 
