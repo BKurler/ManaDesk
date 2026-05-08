@@ -85,7 +85,6 @@ import com.reflexit.magiccards.ui.actions.ViewAsAction;
 import com.reflexit.magiccards.ui.commands.ShowFilterHandler;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
 import com.reflexit.magiccards.ui.dnd.MagicCardTransfer;
-import com.reflexit.magiccards.ui.gallery.SplitGalleryViewer;
 import com.reflexit.magiccards.ui.preferences.CustomGroupsPreferencePage;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
@@ -220,7 +219,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		if (presentation == Presentation.SPLITTREE)
 			return new SplitViewer(parent, getPreferencePageId());
 		if (presentation == Presentation.GALLERY)
-			return new SplitGalleryViewer(parent, getPreferencePageId());
+			return new com.reflexit.magiccards.ui.gallery.BrowserGalleryViewer(parent, SWT.NONE);
+
 		throw new IllegalArgumentException(presentation.name());
 	}
 
@@ -844,7 +844,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			quickFilter.setPreferenceStore(store);
 		HashMap<String, String> map = storeToMap(store);
 		filter.update(map);
-		// !!! RD 	filter.setOnlyLastSet(store.getBoolean(EditionsFilterPreferencePage.LAST_SET));
+		// !!! RD
+		// filter.setOnlyLastSet(store.getBoolean(EditionsFilterPreferencePage.LAST_SET));
 		IPersistentPreferenceStore viewSettings = getPresentaionPreferenceStore();
 		String fields = viewSettings.getString(PreferenceConstants.GROUP_FIELD);
 		GroupOrder groupOrder = new GroupOrder(fields);
