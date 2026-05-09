@@ -72,28 +72,30 @@ public final class GalleryHtmlBuilder {
 
 	private static final String GALLERY_CSS = ".gallery { padding: 8px; background: white; color: black; font-family: sans-serif; }"
 			+ ".card { position: relative; display: inline-block; margin: 6px; cursor: pointer; }"
-			+ ".card-inner { position: relative; width: 293px; }"
+			+ ".card-inner { position: relative; width: 325px; }"
 			+ ".card img { width: 100%; border-radius: 4px; box-shadow: 0 0 4px #000; display: block; }"
 			+ ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
 			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 4px 10px;" + "  border-radius: 12px;"
-			+ "  font-size: 16px;" + "  font-weight: bold;" + "}" + ".card.selected img {"
-			+ "  outline: 3px solid #4fa3ff;" + "  outline-offset: -3px;" + "}";
+			+ "  font-size: 16px;" + "  font-weight: bold;" + "}";
 
 	// ============================================================
 	// JS
 	// ============================================================
 
 	private static final String GALLERY_JS = "document.addEventListener('click', function(e) {"
-			+ "  var card = e.target.closest('.card');" + "  if (!card) return;" +
+			+ "  var card = e.target.closest('.card');" + "  if (!card) return;"
 
-			// Remove previous highlight
-			"  document.querySelectorAll('.card.selected').forEach(function(c) {"
-			+ "    c.classList.remove('selected');" + "  });" +
+			// Clear previous highlight
+			+ "  document.querySelectorAll('.card img').forEach(function(img) {" + "    img.style.outline = '';"
+			+ "    img.style.boxShadow = '';" + "    img.style.background = '';" + "  });"
 
-			// Add highlight
-			"  card.classList.add('selected');" +
+			// Apply highlight directly on the image
+			+ "  var img = card.querySelector('img');" + "  if (img) {" + "    img.style.outline = '4px solid #1E90FF';"
+			+ "    img.style.boxShadow = '0 0 20px 6px rgba(30,144,255,0.9)';"
+			+ "    img.style.background = 'rgba(30,144,255,0.15)';" + "  }"
 
 			// Notify Java
-			"  var id = card.getAttribute('data-id');" + "  if (window.javaSelectCard) window.javaSelectCard(id);"
+			+ "  var id = card.getAttribute('data-id');" + "  if (window.javaSelectCard) window.javaSelectCard(id);"
 			+ "});";
+
 }

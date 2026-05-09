@@ -1,44 +1,62 @@
 package com.reflexit.magiccards.ui.gallery;
 
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
 
-import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.viewers.DoubleClickEvent;
+import org.eclipse.jface.viewers.IContentProvider;
+import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredContentProvider;
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.jface.viewers.StructuredViewer;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
-import org.eclipse.swt.widgets.Widget;
+import org.eclipse.swt.widgets.Menu;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.ui.views.IColumnSortAction;
 import com.reflexit.magiccards.ui.views.IMagicViewer;
 
-public class BrowserGalleryViewer extends StructuredViewer implements IMagicViewer {
+public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelectionProvider {
 
+	// --- core widget ---
 	private final Browser browser;
-	private Object lastSelection;
 
-	private final Action dummyAction = new Action() {
-	};
+	// --- content provider ---
+	private IStructuredContentProvider contentProvider;
+
+	// --- current input & selection ---
+	private Object input;
+	private Object currentSelectionElement;
+
+	// --- listeners ---
+	private final List<ISelectionChangedListener> selectionChangedListeners = new ArrayList<>();
+	private final List<IDoubleClickListener> doubleClickListeners = new ArrayList<>();
 
 	public BrowserGalleryViewer(Composite parent, int style) {
-		browser = new Browser(parent, style);
+		this.browser = new Browser(parent, style);
 
-		setContentProvider(new IStructuredContentProvider() {
+		// Disable native browser menu
+		browser.addListener(SWT.MenuDetect, e -> e.doit = false);
+
+		// Default content provider
+		this.contentProvider = new IStructuredContentProvider() {
 			@Override
 			public Object[] getElements(Object inputElement) {
 				if (inputElement instanceof List<?>) {
 					return ((List<?>) inputElement).toArray();
 				}
+				if (inputElement == null)
+					return new Object[0];
 				return new Object[] { inputElement };
 			}
 
@@ -49,10 +67,15 @@ public class BrowserGalleryViewer extends StructuredViewer implements IMagicView
 			@Override
 			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
 			}
-		});
+		};
 
 		hookSelectionBridge();
+		hookDoubleClickBridge();
 	}
+
+	// ============================================================
+	// Viewer implementation
+	// ============================================================
 
 	@Override
 	public Control getControl() {
@@ -60,49 +83,73 @@ public class BrowserGalleryViewer extends StructuredViewer implements IMagicView
 	}
 
 	@Override
-	protected void inputChanged(Object input, Object oldInput) {
-		super.inputChanged(input, oldInput);
+	protected void inputChanged(Object newInput, Object oldInput) {
+		this.input = newInput;
+		if (contentProvider != null) {
+			contentProvider.inputChanged(this, oldInput, newInput);
+		}
 		render();
 	}
 
 	@Override
-	protected void internalRefresh(Object element) {
-		render();
+	public Object getInput() {
+		return input;
 	}
 
 	@Override
-	public void reveal(Object element) {
-		// no-op
+	public void setInput(Object input) {
+		Object old = this.input;
+		this.input = input;
+		inputChanged(input, old);
 	}
 
+	@Override
+	public ISelection getSelection() {
+		if (currentSelectionElement == null)
+			return StructuredSelection.EMPTY;
+		return new StructuredSelection(currentSelectionElement);
+	}
+
+	@Override
+	public void setSelection(ISelection selection, boolean reveal) {
+		if (selection instanceof IStructuredSelection) {
+			Object element = ((IStructuredSelection) selection).getFirstElement();
+			currentSelectionElement = element;
+			fireSelectionChanged();
+		}
+	}
+
+	// ============================================================
+	// Content provider
+	// ============================================================
+
+	public void setContentProvider(IContentProvider provider) {
+		if (provider instanceof IStructuredContentProvider) {
+			this.contentProvider = (IStructuredContentProvider) provider;
+		} else {
+			throw new IllegalArgumentException("BrowserGalleryViewer requires an IStructuredContentProvider");
+		}
+	}
+
+	public IStructuredContentProvider getContentProvider() {
+		return contentProvider;
+	}
+
+	// ============================================================
+	// Rendering
+	// ============================================================
 	private void render() {
-		Object input = getInput();
-		String html = GalleryHtmlBuilder.buildHtml(input);
+		if (browser.isDisposed())
+			return;
+
+		Object input = getInput(); // use the viewer input directly
+		String html = GalleryHtmlBuilder.buildHtml(input); // old, working contract
 		browser.setText(html);
 	}
 
-	// ============================================================
-	// SELECTION BRIDGE (JS → Java → JFace → Workbench)
-	// ============================================================
-
-	private void hookSelectionBridge() {
-		new BrowserFunction(browser, "javaSelectCard") {
-			@Override
-			public Object function(Object[] args) {
-				if (args.length == 0)
-					return null;
-
-				Object id = args[0];
-				Object element = resolveElementFromId(id);
-
-				if (element != null) {
-					lastSelection = element;
-					fireSelectionChangedFromBrowser(element);
-				}
-
-				return null;
-			}
-		};
+	@Override
+	public void refresh() {
+		render();
 	}
 
 	private Object resolveElementFromId(Object id) {
@@ -120,61 +167,91 @@ public class BrowserGalleryViewer extends StructuredViewer implements IMagicView
 		return null;
 	}
 
-	private void fireSelectionChangedFromBrowser(Object element) {
+	// ============================================================
+	// JS → Java selection bridge
+	// ============================================================
+
+	private void hookSelectionBridge() {
+		new BrowserFunction(browser, "javaSelectCard") {
+			@Override
+			public Object function(Object[] args) {
+				if (args != null && args.length > 0) {
+					Object id = args[0];
+					Object element = resolveElementFromId(id);
+
+					if (element != null) {
+						currentSelectionElement = element;
+						fireSelectionChanged();
+					}
+				}
+				return null;
+			}
+		};
+	}
+
+	private void fireSelectionChanged() {
+		ISelection sel = getSelection();
+		SelectionChangedEvent event = new SelectionChangedEvent(this, sel);
+		for (ISelectionChangedListener l : new ArrayList<>(selectionChangedListeners)) {
+			l.selectionChanged(event);
+		}
+	}
+
+	// ============================================================
+	// JS → Java double-click bridge
+	// ============================================================
+
+	private void hookDoubleClickBridge() {
+		new BrowserFunction(browser, "javaDoubleClickCard") {
+			@Override
+			public Object function(Object[] args) {
+				if (args != null && args.length > 0) {
+					Object id = args[0];
+					Object element = resolveElementFromId(id);
+					if (element != null) {
+						fireDoubleClick(element);
+					}
+				}
+				return null;
+			}
+		};
+	}
+
+	private void fireDoubleClick(Object element) {
 		ISelection sel = new StructuredSelection(element);
-
-		// Update StructuredViewer’s internal selection
-		super.setSelection(sel, true);
-
-		// Notify JFace listeners
-		fireSelectionChanged(new SelectionChangedEvent(this, sel));
+		DoubleClickEvent event = new DoubleClickEvent(this, sel);
+		for (IDoubleClickListener l : new ArrayList<>(doubleClickListeners)) {
+			l.doubleClick(event);
+		}
 	}
 
 	// ============================================================
-	// StructuredViewer required methods
+	// ISelectionProvider
 	// ============================================================
 
 	@Override
-	protected Widget doFindItem(Object element) {
-		return null;
+	public void addSelectionChangedListener(ISelectionChangedListener listener) {
+		if (!selectionChangedListeners.contains(listener))
+			selectionChangedListeners.add(listener);
 	}
 
 	@Override
-	protected Widget doFindInputItem(Object element) {
-		return null;
+	public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+		selectionChangedListeners.remove(listener);
 	}
 
 	@Override
-	protected void doUpdateItem(Widget item, Object element, boolean fullMap) {
-		// no per-item widgets
-	}
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	protected List getSelectionFromWidget() {
-		if (lastSelection == null)
-			return Collections.emptyList();
-		return Collections.singletonList(lastSelection);
-	}
-
-	@Override
-	@SuppressWarnings("rawtypes")
-	protected void setSelectionToWidget(List list, boolean reveal) {
-		// TODO: highlight in DOM later
-	}
-
-	@Override
-	public void refresh() {
-		super.refresh();
+	public void setSelection(ISelection selection) {
+		setSelection(selection, true);
 	}
 
 	// ============================================================
-	// IMagicViewer
+	// IMagicViewer implementation
 	// ============================================================
 
 	@Override
 	public ISelectionProvider getSelectionProvider() {
-		return this; // StructuredViewer implements ISelectionProvider
+		return this;
 	}
 
 	@Override
@@ -183,43 +260,49 @@ public class BrowserGalleryViewer extends StructuredViewer implements IMagicView
 	}
 
 	@Override
+	public boolean hookContextMenu(MenuManager mgr) {
+		// The view will call attachContextMenu() with the actual Menu
+		return true;
+	}
+
+	@Override
 	public void hookSortAction(IColumnSortAction sortAction) {
+		// Not implemented yet
 	}
 
 	@Override
 	public void setLinesVisible(boolean grid) {
+		// Not applicable for browser-based gallery
 	}
 
 	@Override
 	public void hookDragAndDrop() {
+		// Not implemented yet
 	}
 
 	@Override
 	public void hookContext(String id) {
-	}
-
-	@Override
-	public boolean hookContextMenu(MenuManager mgr) {
-		return false;
+		// Not implemented yet
 	}
 
 	@Override
 	public void dispose() {
+		if (!browser.isDisposed())
+			browser.dispose();
 	}
 
-	public Action getZoomInAction() {
-		return dummyAction;
+	@Override
+	public void addDoubleClickListener(IDoubleClickListener listener) {
+		if (!doubleClickListeners.contains(listener))
+			doubleClickListeners.add(listener);
 	}
 
-	public Action getZoomOutAction() {
-		return dummyAction;
-	}
+	// ============================================================
+	// Context menu forwarding
+	// ============================================================
 
-	public Action getToggleGroupAction() {
-		return dummyAction;
-	}
-
-	public Action getSortAction() {
-		return dummyAction;
+	public void attachContextMenu(Menu menu) {
+		if (!browser.isDisposed())
+			browser.setMenu(menu);
 	}
 }
