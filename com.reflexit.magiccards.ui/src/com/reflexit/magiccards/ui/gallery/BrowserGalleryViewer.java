@@ -18,6 +18,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
+import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Menu;
@@ -43,34 +44,25 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	private final List<IDoubleClickListener> doubleClickListeners = new ArrayList<>();
 
 	public BrowserGalleryViewer(Composite parent, int style) {
+
 		this.browser = new Browser(parent, style);
+		browser.setLayoutData(new GridData(GridData.FILL_BOTH));
+
+		System.out.println("BROWSER INSTANCE: " + browser.hashCode());
 
 		// Disable native browser menu
 		browser.addListener(SWT.MenuDetect, e -> e.doit = false);
 
-		// Default content provider
-		this.contentProvider = new IStructuredContentProvider() {
-			@Override
-			public Object[] getElements(Object inputElement) {
-				if (inputElement instanceof List<?>) {
-					return ((List<?>) inputElement).toArray();
-				}
-				if (inputElement == null)
-					return new Object[0];
-				return new Object[] { inputElement };
-			}
-
-			@Override
-			public void dispose() {
-			}
-
-			@Override
-			public void inputChanged(Viewer viewer, Object oldInput, Object newInput) {
-			}
-		};
+		browser.addListener(SWT.MouseDown, e -> {
+			System.out.println("BROWSER MOUSEDOWN at " + e.x + "," + e.y);
+		});
 
 		hookSelectionBridge();
 		hookDoubleClickBridge();
+
+		this.getSelectionProvider().addSelectionChangedListener(event -> {
+			System.out.println("SELECTION FIRED: " + event.getSelection());
+		});
 	}
 
 	// ============================================================
@@ -139,12 +131,19 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// Rendering
 	// ============================================================
 	private void render() {
+		System.out.println("===  HTML LOADED INTO BROWSER ===");
 		if (browser.isDisposed())
 			return;
 
+		System.out.println("=== 2 HTML LOADED INTO BROWSER ===");
+
 		Object input = getInput(); // use the viewer input directly
 		String html = GalleryHtmlBuilder.buildHtml(input); // old, working contract
-		browser.setText(html);
+		browser.setText(html, true);
+
+		System.out.println("=== 3 HTML LOADED INTO BROWSER ===");
+		System.out.println(html);
+
 	}
 
 	@Override
@@ -170,11 +169,12 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// ============================================================
 	// JS → Java selection bridge
 	// ============================================================
-
 	private void hookSelectionBridge() {
+		System.out.println("REGISTERING javaSelectCard");
 		new BrowserFunction(browser, "javaSelectCard") {
 			@Override
 			public Object function(Object[] args) {
+				System.out.println("javaSelectCard CALLED, args=" + java.util.Arrays.toString(args));
 				if (args != null && args.length > 0) {
 					Object id = args[0];
 					Object element = resolveElementFromId(id);
@@ -200,11 +200,12 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// ============================================================
 	// JS → Java double-click bridge
 	// ============================================================
-
 	private void hookDoubleClickBridge() {
+		System.out.println("REGISTERING javaDoubleClickCard");
 		new BrowserFunction(browser, "javaDoubleClickCard") {
 			@Override
 			public Object function(Object[] args) {
+				System.out.println("javaDoubleClickCard CALLED, args=" + java.util.Arrays.toString(args));
 				if (args != null && args.length > 0) {
 					Object id = args[0];
 					Object element = resolveElementFromId(id);

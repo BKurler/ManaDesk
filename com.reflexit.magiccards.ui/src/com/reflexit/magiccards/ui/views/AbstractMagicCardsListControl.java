@@ -195,13 +195,19 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				}
 			}
 		}
+
 		mainControl = new Composite(area, SWT.NONE);
 		mainControl.setLayout(GridLayoutFactory.fillDefaults().spacing(0, 0).create());
 		mainControl.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
-		// partControl.setBackground(partControl.getDisplay().getSystemColor(SWT.COLOR_CYAN));
+
 		createTopBar(mainControl);
-		createTableControl(mainControl);
+
+		// ⭐ FIX: search bar must be created BEFORE the viewer
 		createSearchControl(mainControl);
+
+		// ⭐ Viewer created last so it fills remaining space
+		createTableControl(mainControl);
+
 		getSelectionProvider().addSelectionChangedListener(statusSelectionListener);
 	}
 
@@ -521,17 +527,23 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	protected Control createTableControl(Composite parent) {
-		if (viewer != null) {
+		if (viewer != null && !viewer.getControl().isDisposed()) {
+			System.out.println("DISPOSING OLD VIEWER: " + viewer.getControl());
 			viewer.getControl().dispose();
 		}
+
+		viewer = null; // ⭐ absolutely required
 		this.viewer = createViewer(parent);
+
 		Control control = viewer.getControl();
 		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 		// control.setBackground(control.getDisplay().getSystemColor(SWT.COLOR_CYAN));
 		this.viewer.hookContext(PerspectiveFactoryMagic.TABLES_CONTEXT);
 		this.viewer.hookSortAction(this::sort);
-		if (searchControl != null)
-			this.viewer.getControl().moveAbove(searchControl.getControl());
+		/*
+		 * !!! RD if (searchControl != null)
+		 * this.viewer.getControl().moveAbove(searchControl.getControl());
+		 */
 		return control;
 	}
 

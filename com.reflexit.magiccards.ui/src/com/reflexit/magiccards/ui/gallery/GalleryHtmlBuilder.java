@@ -70,32 +70,32 @@ public final class GalleryHtmlBuilder {
 	// CSS
 	// ============================================================
 
-	private static final String GALLERY_CSS = ".gallery { padding: 8px; background: white; color: black; font-family: sans-serif; }"
-			+ ".card { position: relative; display: inline-block; margin: 6px; cursor: pointer; }"
-			+ ".card-inner { position: relative; width: 325px; }"
-			+ ".card img { width: 100%; border-radius: 4px; box-shadow: 0 0 4px #000; display: block; }"
-			+ ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
-			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 4px 10px;" + "  border-radius: 12px;"
-			+ "  font-size: 16px;" + "  font-weight: bold;" + "}";
+	private static final String GALLERY_CSS = "html, body {" + "  margin: 0;" + "  padding: 0;" + "  width: 100%;"
+			+ "  height: 100%;" + "  overflow: auto;" + "}" + ".gallery {" + "  padding: 8px;" + "  background: white;"
+			+ "  color: black;" + "  font-family: sans-serif;" + "  width: 100%;" + "}" + ".card {"
+			+ "  position: relative;" + "  display: inline-block;" + "  margin: 6px;" + "  cursor: pointer;" + "}"
+			+ ".card-inner {" + "  position: relative;" + "  width: 325px;" + "}" + ".card img {" + "  width: 100%;"
+			+ "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;" + "  display: block;" + "}" + ".count-badge {"
+			+ "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;" + "  background: rgba(0,0,0,0.75);"
+			+ "  color: #fff;" + "  padding: 4px 10px;" + "  border-radius: 12px;" + "  font-size: 16px;"
+			+ "  font-weight: bold;" + "}";
 
 	// ============================================================
 	// JS
 	// ============================================================
-
 	private static final String GALLERY_JS = "document.addEventListener('click', function(e) {"
-			+ "  var card = e.target.closest('.card');" + "  if (!card) return;"
-
-			// Clear previous highlight
-			+ "  document.querySelectorAll('.card img').forEach(function(img) {" + "    img.style.outline = '';"
-			+ "    img.style.boxShadow = '';" + "    img.style.background = '';" + "  });"
-
-			// Apply highlight directly on the image
-			+ "  var img = card.querySelector('img');" + "  if (img) {" + "    img.style.outline = '4px solid #1E90FF';"
+			+ "  alert('CLICK HANDLER FIRED');" + "  var target = e.target || e.srcElement;" + "  var node = target;"
+			+ "  var card = null;" + "  while (node && node !== document) {" + "    var cls = node.className || '';"
+			+ "    if (typeof cls === 'string' && cls.indexOf('card') !== -1) {" + "      card = node;" + "      break;"
+			+ "    }" + "    node = node.parentNode;" + "  }" + "  if (!card) { alert('NO CARD FOUND'); return; }"
+			+ "  var id = card.getAttribute('data-id');" + "  alert('JS CLICK: ' + id);"
+			+ "  var imgs = document.getElementsByTagName('img');" + "  for (var i = 0; i < imgs.length; i++) {"
+			+ "    imgs[i].style.outline = '';" + "    imgs[i].style.boxShadow = '';"
+			+ "    imgs[i].style.background = '';" + "  }" + "  var img = card.getElementsByTagName('img')[0];"
+			+ "  if (img) {" + "    img.style.outline = '4px solid #1E90FF';"
 			+ "    img.style.boxShadow = '0 0 20px 6px rgba(30,144,255,0.9)';"
-			+ "    img.style.background = 'rgba(30,144,255,0.15)';" + "  }"
-
-			// Notify Java
-			+ "  var id = card.getAttribute('data-id');" + "  if (window.javaSelectCard) window.javaSelectCard(id);"
-			+ "});";
+			+ "    img.style.background = 'rgba(30,144,255,0.15)';" + "  }" + "  if (window.javaSelectCard) {"
+			+ "    alert('CALLING javaSelectCard WITH ' + id);" + "    window.javaSelectCard(id);" + "  } else {"
+			+ "    alert('javaSelectCard NOT FOUND');" + "  }" + "});";
 
 }
