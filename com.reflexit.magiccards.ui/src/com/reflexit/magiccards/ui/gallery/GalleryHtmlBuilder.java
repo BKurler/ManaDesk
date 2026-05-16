@@ -8,23 +8,45 @@ public final class GalleryHtmlBuilder {
 	private GalleryHtmlBuilder() {
 	}
 
+	private static String escapeHtml(String s) {
+		if (s == null)
+			return "";
+		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;");
+	}
+
 	public static String buildHtml(Object input) {
 		StringBuilder sb = new StringBuilder();
 
 		sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
 		sb.append("<style>").append(GALLERY_CSS).append("</style>");
 		sb.append("</head><body>");
-		sb.append("<div class='gallery'>");
+
+		// --- DEBUG BLOCK: show the generated HTML inside the page ---
+		sb.append("<div style='white-space:pre;font-family:monospace;"
+				+ "background:#222;color:#0f0;padding:10px;margin-bottom:10px;'>");
+
+		// Build the gallery HTML into a separate buffer
+		StringBuilder gallery = new StringBuilder();
+		gallery.append("<div class='gallery'>");
 
 		if (input instanceof Iterable<?>) {
 			for (Object o : (Iterable<?>) input) {
 				if (o instanceof IMagicCard) {
-					appendCard(sb, (IMagicCard) o);
+					appendCard(gallery, (IMagicCard) o);
 				}
 			}
 		}
 
+		gallery.append("</div>");
+
+		// Display the encoded HTML for debugging
+		sb.append(escapeHtml(gallery.toString()));
 		sb.append("</div>");
+		// --- END DEBUG BLOCK ---
+
+		// Insert the actual gallery HTML
+		sb.append(gallery);
+
 		sb.append("<script>").append(GALLERY_JS).append("</script>");
 		sb.append("</body></html>");
 
@@ -32,9 +54,17 @@ public final class GalleryHtmlBuilder {
 	}
 
 	private static void appendCard(StringBuilder sb, IMagicCard card) {
-		String id = safe(card.getCardId());
+		// --- Instrumentation header ---
+		System.out.println("=== appendCard() ===");
+		System.out.println("Card class: " + card.getClass().getName());
+		System.out.println("Card toString(): " + card);
+		System.out.println("Card ID (raw): " + card.getCardId());
 
-		// Convertir l’URL en String
+		// Resolve ID
+		String id = safe(card.getCardId());
+		System.out.println("Card ID (safe): " + id);
+
+		// Resolve image URL
 		String url = "";
 		try {
 			java.net.URL u = com.reflexit.magiccards.core.sync.CardCache.getImageURL(card);
@@ -42,11 +72,17 @@ public final class GalleryHtmlBuilder {
 				url = safe(u.toString());
 			}
 		} catch (Exception e) {
-			// ignore, fallback to empty URL
+			System.out.println("Image URL resolution failed: " + e.getMessage());
 		}
 
+		System.out.println("Image URL: " + url);
+
+		// Resolve count
 		int count = (card instanceof IMagicCardPhysical) ? ((IMagicCardPhysical) card).getCount() : 0;
 
+		System.out.println("Physical count: " + count);
+
+		// --- Build HTML ---
 		sb.append("<div class='card' data-id='").append(id).append("'>");
 		sb.append("<div class='card-inner'>");
 
@@ -57,6 +93,10 @@ public final class GalleryHtmlBuilder {
 		}
 
 		sb.append("</div></div>");
+
+		// --- Instrumentation footer ---
+		System.out.println("HTML appended for card ID: " + id);
+		System.out.println("=======================");
 	}
 
 	private static String safe(Object s) {
@@ -84,18 +124,17 @@ public final class GalleryHtmlBuilder {
 	// JS
 	// ============================================================
 	private static final String GALLERY_JS = "document.addEventListener('click', function(e) {"
-			+ "  alert('CLICK HANDLER FIRED');" + "  var target = e.target || e.srcElement;" + "  var node = target;"
-			+ "  var card = null;" + "  while (node && node !== document) {" + "    var cls = node.className || '';"
+			+ "  var target = e.target || e.srcElement;" + "  var node = target;" + "  var card = null;"
+			+ "  while (node && node !== document) {" + "    var cls = node.className || '';"
 			+ "    if (typeof cls === 'string' && cls.indexOf('card') !== -1) {" + "      card = node;" + "      break;"
-			+ "    }" + "    node = node.parentNode;" + "  }" + "  if (!card) { alert('NO CARD FOUND'); return; }"
-			+ "  var id = card.getAttribute('data-id');" + "  alert('JS CLICK: ' + id);"
-			+ "  var imgs = document.getElementsByTagName('img');" + "  for (var i = 0; i < imgs.length; i++) {"
-			+ "    imgs[i].style.outline = '';" + "    imgs[i].style.boxShadow = '';"
-			+ "    imgs[i].style.background = '';" + "  }" + "  var img = card.getElementsByTagName('img')[0];"
-			+ "  if (img) {" + "    img.style.outline = '4px solid #1E90FF';"
+			+ "    }" + "    node = node.parentNode;" + "  }" + "  if (!card) return;"
+			+ "  var id = card.getAttribute('data-id');" + "  var imgs = document.getElementsByTagName('img');"
+			+ "  for (var i = 0; i < imgs.length; i++) {" + "    imgs[i].style.outline = '';"
+			+ "    imgs[i].style.boxShadow = '';" + "    imgs[i].style.background = '';" + "  }"
+			+ "  var img = card.getElementsByTagName('img')[0];" + "  if (img) {"
+			+ "    img.style.outline = '4px solid #1E90FF';"
 			+ "    img.style.boxShadow = '0 0 20px 6px rgba(30,144,255,0.9)';"
 			+ "    img.style.background = 'rgba(30,144,255,0.15)';" + "  }" + "  if (window.javaSelectCard) {"
-			+ "    alert('CALLING javaSelectCard WITH ' + id);" + "    window.javaSelectCard(id);" + "  } else {"
-			+ "    alert('javaSelectCard NOT FOUND');" + "  }" + "});";
+			+ "    window.javaSelectCard(id);" + "  }" + "});";
 
 }

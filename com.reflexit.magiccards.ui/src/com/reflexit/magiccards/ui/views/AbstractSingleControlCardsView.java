@@ -52,6 +52,8 @@ public abstract class AbstractSingleControlCardsView extends AbstractCardsView {
 	@Override
 	protected void createMainControl(Composite parent) {
 		getMagicControl().createContents(parent);
+
+		getSite().setSelectionProvider(getMagicControl().getSelectionProvider());
 	}
 
 	@Override

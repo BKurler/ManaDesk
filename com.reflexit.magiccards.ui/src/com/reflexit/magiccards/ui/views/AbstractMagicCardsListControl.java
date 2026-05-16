@@ -124,6 +124,11 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	protected IFilteredCardStore<ICard> fstore;
 	private Presentation presentation = Presentation.TABLE;
 	private final boolean fixedPresentation;
+
+	private Object lastInput;
+
+// !!! RD 	private final java.util.List<ISelectionChangedListener> selectionListeners = new java.util.ArrayList<>();
+
 	private ISelectionChangedListener statusSelectionListener = new ISelectionChangedListener() {
 		@Override
 		public void selectionChanged(SelectionChangedEvent event) {
@@ -142,6 +147,38 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	private boolean isFiltered = false;
 	private boolean isGroupped = false;
 	private Composite mainControl;
+	// ⭐ Stable selection provider bridge
+	private final java.util.List<ISelectionChangedListener> selectionListeners = new java.util.ArrayList<>();
+
+	private final ISelectionProvider selectionProviderBridge = new ISelectionProvider() {
+		@Override
+		public ISelection getSelection() {
+			return viewer == null ? StructuredSelection.EMPTY : viewer.getSelectionProvider().getSelection();
+		}
+
+		@Override
+		public void setSelection(ISelection selection) {
+			if (viewer != null) {
+				viewer.getSelectionProvider().setSelection(selection);
+			}
+		}
+
+		@Override
+		public void addSelectionChangedListener(ISelectionChangedListener listener) {
+			selectionListeners.add(listener);
+			if (viewer != null) {
+				viewer.getSelectionProvider().addSelectionChangedListener(listener);
+			}
+		}
+
+		@Override
+		public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+			selectionListeners.remove(listener);
+			if (viewer != null) {
+				viewer.getSelectionProvider().removeSelectionChangedListener(listener);
+			}
+		}
+	};
 
 	public AbstractMagicCardsListControl(Presentation pres) {
 		this.presentation = pres;
@@ -224,8 +261,9 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		}
 		if (presentation == Presentation.SPLITTREE)
 			return new SplitViewer(parent, getPreferencePageId());
+
 		if (presentation == Presentation.GALLERY)
-			return new com.reflexit.magiccards.ui.gallery.BrowserGalleryViewer(parent, SWT.NONE);
+			return new com.reflexit.magiccards.ui.gallery.SplitGalleryViewer(parent, getPreferencePageId());
 
 		throw new IllegalArgumentException(presentation.name());
 	}
@@ -535,6 +573,16 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		viewer = null; // ⭐ absolutely required
 		this.viewer = createViewer(parent);
 
+		// ⭐ Reattach all selection listeners to the new viewer
+		for (ISelectionChangedListener l : selectionListeners) {
+			viewer.getSelectionProvider().addSelectionChangedListener(l);
+		}
+
+		// ⭐ Reapply input to the new viewer
+		if (lastInput != null) {
+			viewer.setInput(lastInput);
+		}
+
 		Control control = viewer.getControl();
 		control.setLayoutData(new GridData(GridData.FILL_BOTH));
 		// control.setBackground(control.getDisplay().getSystemColor(SWT.COLOR_CYAN));
@@ -621,7 +669,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	@Override
 	public ISelectionProvider getSelectionProvider() {
-		return viewer.getSelectionProvider();
+		return selectionProviderBridge;
 	}
 
 	/**
@@ -923,6 +971,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			ISelection selection = getSelection();
 			getSelectionProvider().setSelection(new StructuredSelection());
 			viewer.setInput(filteredStore);
+			lastInput = filteredStore;
 			restoreSelection(selection);
 			updateStatus();
 			syncSortColumnIndicator();
