@@ -113,12 +113,20 @@ public final class GalleryHtmlBuilder {
 	private static final String GALLERY_CSS = "html, body {" + "  margin: 0;" + "  padding: 0;" + "  width: 100%;"
 			+ "  height: 100%;" + "  overflow: auto;" + "}" + ".gallery {" + "  padding: 8px;" + "  background: white;"
 			+ "  color: black;" + "  font-family: sans-serif;" + "  width: 100%;" + "}" + ".card {"
-			+ "  position: relative;" + "  display: inline-block;" + "  margin: 6px;" + "  cursor: pointer;" + "}"
-			+ ".card-inner {" + "  position: relative;" + "  width: 325px;" + "}" + ".card img {" + "  width: 100%;"
-			+ "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;" + "  display: block;" + "}" + ".count-badge {"
-			+ "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;" + "  background: rgba(0,0,0,0.75);"
-			+ "  color: #fff;" + "  padding: 4px 10px;" + "  border-radius: 12px;" + "  font-size: 16px;"
-			+ "  font-weight: bold;" + "}";
+			+ "  position: relative;" + "  display: inline-block;" + "  margin: 6px;" + "  cursor: pointer;"
+			+ "  vertical-align: top;" /* prevents layout jumps */
+			+ "}" + ".card-inner {" + "  position: relative;" + "  width: 260px;" + "}" + ".card img {"
+			+ "  width: 100%;" + "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;" + "  display: block;" + "}"
+			+ ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
+			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 3px 8px;" /*
+																							 * scaled down for smaller
+																							 * cards
+																							 */
+			+ "  border-radius: 10px;" + "  font-size: 14px;" /* scaled down */
+			+ "  font-weight: bold;" + "}" + ".group-title {" /* NEW: fix truncated set names */
+			+ "  display: block;" + "  max-width: 100%;" + "  white-space: normal;" /* allow wrapping */
+			+ "  word-break: break-word;" /* prevent mid-word truncation */
+			+ "  margin-bottom: 4px;" + "  font-size: 14px;" + "  font-weight: bold;" + "}";
 
 	// ============================================================
 	// JS
@@ -126,13 +134,13 @@ public final class GalleryHtmlBuilder {
 	private static final String GALLERY_JS = "document.addEventListener('click', function(e) {"
 			+ "  var target = e.target || e.srcElement;" + "  var node = target;" + "  var card = null;"
 			+ "  while (node && node !== document) {" + "    var cls = node.className || '';"
-			+ "    if (typeof cls === 'string' && cls.indexOf('card') !== -1) {" + "      card = node;" + "      break;"
-			+ "    }" + "    node = node.parentNode;" + "  }" + "  if (!card) return;"
-			+ "  var id = card.getAttribute('data-id');" + "  var imgs = document.getElementsByTagName('img');"
-			+ "  for (var i = 0; i < imgs.length; i++) {" + "    imgs[i].style.outline = '';"
-			+ "    imgs[i].style.boxShadow = '';" + "    imgs[i].style.background = '';" + "  }"
-			+ "  var img = card.getElementsByTagName('img')[0];" + "  if (img) {"
-			+ "    img.style.outline = '4px solid #1E90FF';"
+			+ "    if (typeof cls === 'string' && cls.split(' ').indexOf('card') !== -1) {" + "      card = node;"
+			+ "      break;" + "    }" + "    node = node.parentNode;" + "  }" + "  if (!card) return;"
+			+ "  var id = card.getAttribute('data-id');" + "  if (!id) return;"
+			+ "  var imgs = document.getElementsByTagName('img');" + "  for (var i = 0; i < imgs.length; i++) {"
+			+ "    imgs[i].style.outline = '';" + "    imgs[i].style.boxShadow = '';"
+			+ "    imgs[i].style.background = '';" + "  }" + "  var img = card.getElementsByTagName('img')[0];"
+			+ "  if (img) {" + "    img.style.outline = '4px solid #1E90FF';"
 			+ "    img.style.boxShadow = '0 0 20px 6px rgba(30,144,255,0.9)';"
 			+ "    img.style.background = 'rgba(30,144,255,0.15)';" + "  }" + "  if (window.javaSelectCard) {"
 			+ "    window.javaSelectCard(id);" + "  }" + "});";

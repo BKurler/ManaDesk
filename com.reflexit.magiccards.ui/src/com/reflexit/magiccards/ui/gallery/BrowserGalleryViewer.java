@@ -25,11 +25,11 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchPartSite;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.ui.views.IColumnSortAction;
 import com.reflexit.magiccards.ui.views.IMagicViewer;
-import com.reflexit.magiccards.ui.views.model.ExpandContentProvider;
 
 public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelectionProvider {
 
@@ -46,6 +46,8 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// --- listeners ---
 	private final List<ISelectionChangedListener> selectionChangedListeners = new ArrayList<>();
 	private final List<IDoubleClickListener> doubleClickListeners = new ArrayList<>();
+
+	private java.util.List<ICard> flatInput = java.util.Collections.emptyList();
 
 	public BrowserGalleryViewer(Composite parent, int style) {
 
@@ -94,7 +96,58 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	public void setInput(Object input) {
 		Object old = this.input;
 		this.input = input;
-		inputChanged(input, old);
+
+		// cache the flattened list used everywhere else
+		this.flatInput = flatten(input);
+
+		// notify with the flattened input
+		inputChanged(flatInput, old);
+	}
+
+	/**
+	 * Flattens any supported input into a List<ICard>. Works with: -
+	 * IFilteredCardStore (root group) - List<ICardGroup> - List<ICard> - Single
+	 * ICardGroup - Already-flat lists
+	 */
+	@SuppressWarnings("unchecked")
+	private List<ICard> flatten(Object input) {
+		List<ICard> result = new ArrayList<>();
+
+		if (input == null) {
+			return result;
+		}
+
+		// Case 1 — Store root
+		if (input instanceof IFilteredCardStore) {
+			IFilteredCardStore store = (IFilteredCardStore) input;
+			return flatten(store.getCardGroupRoot());
+		}
+
+		// Case 2 — Single CardGroup
+		if (input instanceof ICardGroup) {
+			ICardGroup group = (ICardGroup) input;
+			for (Object child : group.getChildrenList()) {
+				result.addAll(flatten(child));
+			}
+			return result;
+		}
+
+		// Case 3 — Single card
+		if (input instanceof ICard) {
+			result.add((ICard) input);
+			return result;
+		}
+
+		// Case 4 — List of mixed objects
+		if (input instanceof List<?>) {
+			for (Object o : (List<?>) input) {
+				result.addAll(flatten(o));
+			}
+			return result;
+		}
+
+		// Case 5 — Unknown type → ignore
+		return result;
 	}
 
 	@Override
@@ -137,56 +190,22 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		if (browser.isDisposed())
 			return;
 
-		Object input = getInput();
+		Object input = flatInput; // <- key change
 
 		if (input == null) {
 			System.out.println("GALLERY: input is null, skipping render");
 			return;
 		}
 
-		System.out.println("GALLERY INPUT CLASS = " + input.getClass());
 		if (input instanceof java.util.List) {
-			System.out.println("GALLERY INPUT SIZE = " + ((java.util.List) input).size());
-		}
-
-		// Case 1: Expand grouped store into physical cards (root)
-		if (input instanceof IFilteredCardStore) {
-			IFilteredCardStore store = (IFilteredCardStore) input;
-
-			ExpandContentProvider provider = new ExpandContentProvider(true);
-			provider.inputChanged(null, null, store.getCardGroupRoot());
-			Object[] expanded = provider.getElements(store.getCardGroupRoot());
-
-			input = java.util.Arrays.asList(expanded);
-
-			System.out.println("GALLERY EXPANDED SIZE = " + expanded.length);
-		}
-
-		// Case 2: Expand a list of CardGroup into physical cards (SplitGalleryViewer)
-		if (input instanceof java.util.List) {
-			java.util.List<?> list = (java.util.List<?>) input;
-			if (!list.isEmpty() && list.get(0) instanceof ICardGroup) {
-				java.util.List<Object> expandedAll = new java.util.ArrayList<>();
-				ExpandContentProvider provider = new ExpandContentProvider(true);
-
-				for (Object o : list) {
-					ICardGroup group = (ICardGroup) o;
-					provider.inputChanged(null, null, group);
-					Object[] expanded = provider.getElements(group);
-					java.util.Collections.addAll(expandedAll, expanded);
-				}
-
-				input = expandedAll;
-				System.out.println("GALLERY EXPANDED FROM GROUP LIST, SIZE = " + expandedAll.size());
-			}
+			System.out.println("GALLERY INPUT CLASS = " + input.getClass());
+			System.out.println("GALLERY INPUT SIZE = " + ((java.util.List<?>) input).size());
 		}
 
 		String html = GalleryHtmlBuilder.buildHtml(input);
 
 		browser.setUrl("about:blank");
 		browser.setText(html, true);
-
-		System.out.println(html);
 	}
 
 	@Override
@@ -208,8 +227,8 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			return null;
 		}
 
-		Object input = getInput();
-		System.out.println("resolveElementFromId: input class = " + (input == null ? "null" : input.getClass()));
+		java.util.List<ICard> list = flatInput;
+		System.out.println("resolveElementFromId: input class = " + list.getClass());
 
 		// Case 1: input is a plain List<IMagicCard>
 		if (input instanceof java.util.List<?>) {
@@ -249,19 +268,30 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		new BrowserFunction(browser, "javaSelectCard") {
 			@Override
 			public Object function(Object[] args) {
-				System.out.println(">>> javaSelectCard CALLED, args = " + java.util.Arrays.toString(args));
-				if (args != null && args.length > 0) {
-					Object id = args[0];
-					Object element = resolveElementFromId(id);
-					System.out.println(">>> javaSelectCard RESOLVED ELEMENT = " + element);
+				System.out.println(">>> javaSelectCard CALLED, raw args = " + java.util.Arrays.toString(args));
 
-					if (element != null) {
-						System.out.println(">>> javaSelectCard BEFORE setSelection, currentSelectionElement = "
-								+ currentSelectionElement);
-						setSelection(new StructuredSelection(element), true);
-						System.out.println(">>> javaSelectCard AFTER setSelection, currentSelectionElement = "
-								+ currentSelectionElement);
-					}
+				if (args == null || args.length == 0) {
+					System.out.println(">>> javaSelectCard: NO ARGS");
+					return null;
+				}
+
+				String id = (args[0] != null) ? args[0].toString() : null;
+				System.out.println(">>> javaSelectCard: converted id = " + id);
+
+				if (id == null || id.isEmpty()) {
+					System.out.println(">>> javaSelectCard: NULL ID, ignoring");
+					return null;
+				}
+
+				Object element = resolveElementFromId(id);
+				System.out.println(">>> javaSelectCard RESOLVED ELEMENT = " + element);
+
+				if (element != null) {
+					System.out.println(">>> javaSelectCard BEFORE setSelection, currentSelectionElement = "
+							+ currentSelectionElement);
+					setSelection(new StructuredSelection(element), true);
+					System.out.println(">>> javaSelectCard AFTER setSelection, currentSelectionElement = "
+							+ currentSelectionElement);
 				}
 				return null;
 			}
