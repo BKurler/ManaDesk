@@ -34,7 +34,6 @@ import org.eclipse.swt.widgets.Menu;
 import org.eclipse.ui.IWorkbenchPartSite;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
-import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.ui.views.IColumnSortAction;
@@ -56,7 +55,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	private final List<ISelectionChangedListener> selectionChangedListeners = new ArrayList<>();
 	private final List<IDoubleClickListener> doubleClickListeners = new ArrayList<>();
 
-	private java.util.List<ICard> flatInput = java.util.Collections.emptyList();
+	private java.util.List<IMagicCard> flatInput = java.util.Collections.emptyList();
 
 	public BrowserGalleryViewer(Composite parent, int style) {
 
@@ -70,6 +69,20 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 
 		hookSelectionBridge();
 		hookDoubleClickBridge();
+
+		// Virtual scrolling: JS → Java
+		new BrowserFunction(browser, "loadCardRange") {
+			@Override
+			public Object function(Object[] args) {
+				int start = ((Double) args[0]).intValue();
+				int count = ((Double) args[1]).intValue();
+
+				int end = Math.min(start + count, flatInput.size());
+				List<IMagicCard> slice = flatInput.subList(start, end);
+
+				return cardsToJson(slice);
+			}
+		};
 
 		// Removed debug selection logging
 		// this.getSelectionProvider().addSelectionChangedListener(event -> {
@@ -118,8 +131,8 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	 * ICardGroup - Already-flat lists
 	 */
 	@SuppressWarnings("unchecked")
-	private List<ICard> flatten(Object input) {
-		List<ICard> result = new ArrayList<>();
+	private List<IMagicCard> flatten(Object input) {
+		List<IMagicCard> result = new ArrayList<>();
 
 		if (input == null) {
 			return result;
@@ -141,8 +154,8 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		}
 
 		// Case 3 — Single card
-		if (input instanceof ICard) {
-			result.add((ICard) input);
+		if (input instanceof IMagicCard) {
+			result.add((IMagicCard) input);
 			return result;
 		}
 
@@ -197,22 +210,9 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		if (browser.isDisposed())
 			return;
 
-		Object input = flatInput; // <- key change
+		int total = flatInput.size();
+		String html = GalleryHtmlBuilder.buildVirtualGalleryHtml(total);
 
-		if (input == null) {
-			System.out.println("GALLERY: input is null, skipping render");
-			return;
-		}
-
-		// if (input instanceof java.util.List) {
-		// System.out.println("GALLERY INPUT CLASS = " + input.getClass());
-		// System.out.println("GALLERY INPUT SIZE = " + ((java.util.List<?>)
-		// input).size());
-		// }
-
-		String html = GalleryHtmlBuilder.buildHtml(input);
-
-		browser.setUrl("about:blank");
 		browser.setText(html, true);
 	}
 
@@ -235,7 +235,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			return null;
 		}
 
-		java.util.List<ICard> list = flatInput;
+		// !!! RD java.util.List<ICard> list = flatInput;
 		// System.out.println("resolveElementFromId: input class = " + list.getClass());
 
 		// Case 1: input is a plain List<IMagicCard>
@@ -444,4 +444,83 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		if (!browser.isDisposed())
 			browser.setMenu(menu);
 	}
+
+	private static String cardsToJson(List<IMagicCard> cards) {
+		StringBuilder sb = new StringBuilder();
+		sb.append('[');
+		boolean first = true;
+
+		for (IMagicCard c : cards) {
+			if (!first)
+				sb.append(',');
+			first = false;
+
+			// Resolve image URL
+			String img = "";
+			try {
+				java.net.URL u = com.reflexit.magiccards.core.sync.CardCache.getImageURL(c);
+				if (u != null)
+					img = u.toString();
+			} catch (Exception e) {
+				// ignore
+			}
+
+			// Resolve count (0 for non-physical cards)
+			int count = 0;
+			if (c instanceof com.reflexit.magiccards.core.model.IMagicCardPhysical) {
+				count = ((com.reflexit.magiccards.core.model.IMagicCardPhysical) c).getCount();
+			}
+
+			sb.append('{');
+			sb.append("\"id\":\"").append(escapeJson(String.valueOf(c.getCardId()))).append("\",");
+			sb.append("\"name\":\"").append(escapeJson(c.getName())).append("\",");
+			sb.append("\"set\":\"").append(escapeJson(c.getSet())).append("\",");
+			sb.append("\"image\":\"").append(escapeJson(img)).append("\",");
+			sb.append("\"count\":").append(count);
+			sb.append('}');
+		}
+
+		sb.append(']');
+		return sb.toString();
+	}
+
+	private static String escapeJson(String s) {
+		if (s == null)
+			return "";
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < s.length(); i++) {
+			char ch = s.charAt(i);
+			switch (ch) {
+			case '\\':
+				sb.append("\\\\");
+				break;
+			case '"':
+				sb.append("\\\"");
+				break;
+			case '\b':
+				sb.append("\\b");
+				break;
+			case '\f':
+				sb.append("\\f");
+				break;
+			case '\n':
+				sb.append("\\n");
+				break;
+			case '\r':
+				sb.append("\\r");
+				break;
+			case '\t':
+				sb.append("\\t");
+				break;
+			default:
+				if (ch < 0x20) {
+					sb.append(String.format("\\u%04x", (int) ch));
+				} else {
+					sb.append(ch);
+				}
+			}
+		}
+		return sb.toString();
+	}
+
 }

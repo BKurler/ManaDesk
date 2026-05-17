@@ -93,6 +93,108 @@ public final class GalleryHtmlBuilder {
 				"&quot;");
 	}
 
+	public static String buildVirtualGalleryHtml(int totalCards) {
+
+		StringBuilder sb = new StringBuilder();
+
+		sb.append("<!DOCTYPE html><html><head><meta charset='UTF-8'>");
+
+		// Reuse your existing gallery CSS so the layout matches the old viewer
+		sb.append("<style>").append(GALLERY_CSS).append("</style>");
+
+		sb.append("</head><body>");
+
+		// Same structure as your old gallery: a <div class='gallery'>
+		sb.append("<div class='gallery' id='gallery'></div>");
+
+		sb.append("<script>");
+
+		// Paging state
+		sb.append("window.totalCards=").append(totalCards).append(";");
+		sb.append("var pageSize=80;");
+		sb.append("var loadedUntil=0;");
+		sb.append("var loading=false;");
+
+		// Load a page of cards from Java
+		sb.append("function loadNextPage(){");
+		sb.append(" if(loading) return;");
+		sb.append(" loading=true;");
+		sb.append(" var json=window.loadCardRange(loadedUntil,pageSize);");
+		sb.append(" var cards=JSON.parse(json);");
+		sb.append(" appendCards(cards);");
+		sb.append(" loadedUntil+=cards.length;");
+		sb.append(" loading=false;");
+		sb.append("}");
+
+		// Append cards using the SAME DOM structure as your old appendCard()
+		sb.append("function appendCards(cards){");
+		sb.append(" var gallery=document.getElementById('gallery');");
+		sb.append(" for(var i=0;i<cards.length;i++){");
+		sb.append("  var c=cards[i];");
+
+		// <div class='card' data-id='...'>
+		sb.append("  var card=document.createElement('div');");
+		sb.append("  card.className='card';");
+		sb.append("  card.setAttribute('data-id', c.id);");
+
+		// <div class='card-inner'>
+		sb.append("  var inner=document.createElement('div');");
+		sb.append("  inner.className='card-inner';");
+
+		// <img src='...'>
+		sb.append("  var img=document.createElement('img');");
+		sb.append("  img.src=c.image;");
+		sb.append("  img.loading='lazy';");
+		sb.append("  inner.appendChild(img);");
+
+		// Count badge (only if count > 1)
+		sb.append("  if(c.count && c.count > 1){");
+		sb.append("    var badge=document.createElement('div');");
+		sb.append("    badge.className='count-badge';");
+		sb.append("    badge.textContent='x' + c.count;");
+		sb.append("    inner.appendChild(badge);");
+		sb.append("  }");
+
+		// Close structure
+		sb.append("  card.appendChild(inner);");
+		sb.append("  gallery.appendChild(card);");
+		sb.append(" }");
+		sb.append("}");
+
+		// SAFE viewport fill (NO while loop)
+		sb.append("function fillViewport(){");
+		sb.append(" if(loadedUntil < window.totalCards && ");
+		sb.append("    document.body.offsetHeight < window.innerHeight + 100){");
+		sb.append("    loadNextPage();");
+		sb.append(" }");
+		sb.append("}");
+
+		// Infinite scroll
+		sb.append("window.addEventListener('scroll', function(){");
+		sb.append(" if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 300){");
+		sb.append("  loadNextPage();");
+		sb.append(" }");
+		sb.append("});");
+
+		// Resize handling
+		sb.append("window.addEventListener('resize', function(){");
+		sb.append(" fillViewport();");
+		sb.append("});");
+
+		// Initial load
+		sb.append("loadNextPage();");
+		sb.append("fillViewport();");
+
+		sb.append("</script>");
+
+		// Reuse your existing selection JS (GALLERY_JS)
+		sb.append("<script>").append(GALLERY_JS).append("</script>");
+
+		sb.append("</body></html>");
+
+		return sb.toString();
+	}
+
 	// ============================================================
 	// CSS
 	// ============================================================
