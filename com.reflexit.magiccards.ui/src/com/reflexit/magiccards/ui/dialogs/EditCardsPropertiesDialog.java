@@ -83,6 +83,9 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		// Always create the Browser so the layout stays aligned
 		Browser browser = new Browser(parent, SWT.NONE);
 
+		// Disable the native browser context menu
+		browser.addListener(SWT.MenuDetect, e -> e.doit = false);
+
 		GridData gda = new GridData(GridData.FILL_VERTICAL);
 		gda.widthHint = ImageCreator.CARD_WIDTH;
 		gda.heightHint = ImageCreator.CARD_HEIGHT;

@@ -18,13 +18,14 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IContributionItem;
-import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.resource.ImageDescriptor;
 import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.ISelectionChangedListener;
+import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.swt.SWT;
@@ -303,21 +304,37 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 		hookContextMenu();
 		contributeToActionBars();
 		revealCurrentSelection();
+
+		getSite().setSelectionProvider(new ISelectionProvider() {
+			@Override
+			public void addSelectionChangedListener(ISelectionChangedListener listener) {
+			}
+
+			@Override
+			public void removeSelectionChangedListener(ISelectionChangedListener listener) {
+			}
+
+			@Override
+			public ISelection getSelection() {
+				return StructuredSelection.EMPTY;
+			}
+
+			@Override
+			public void setSelection(ISelection selection) {
+			}
+		});
+
 	}
 
 	private void hookContextMenu() {
-		MenuManager menuMgr = new MenuManager("#PopupMenu");
-		menuMgr.setRemoveAllWhenShown(true);
-		menuMgr.addMenuListener(new IMenuListener() {
-			@Override
-			public void menuAboutToShow(IMenuManager manager) {
-				fillContextMenu(manager);
-			}
-		});
-		Menu menu = menuMgr.createContextMenu(getControl());
-		getControl().setMenu(menu);
-		getSite().registerContextMenu(menuMgr, panel.getSelectionProvider());
-		getSite().setSelectionProvider(panel.getSelectionProvider());
+		// Remove / comment out everything Eclipse-related:
+		// - MenuManager
+		// - registerContextMenu
+		// - setSelectionProvider
+
+		// Just create a raw empty SWT menu and attach it.
+		Menu empty = new Menu(panel); // or textBrowser if that’s what you right-click
+		panel.setMenu(empty);
 	}
 
 	private Control getControl() {
@@ -564,6 +581,15 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	@Override
 	public ShowInContext getShowInContext() {
-		return new ShowInContext(null, getSite().getSelectionProvider().getSelection());
+		ISelectionProvider sp = getSite().getSelectionProvider();
+		ISelection sel = StructuredSelection.EMPTY;
+		if (sp != null) {
+			ISelection s = sp.getSelection();
+			if (s != null) {
+				sel = s;
+			}
+		}
+		return new ShowInContext(null, sel);
 	}
+
 }

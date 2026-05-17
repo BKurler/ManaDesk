@@ -153,14 +153,24 @@ class CardDescComposite extends Composite {
 		}
 	}
 
+	private Menu forcedMenu;
+
 	@Override
 	public void setMenu(Menu menu) {
-		super.setMenu(menu);
-		if (textBrowser != null && !textBrowser.isDisposed()) {
-			textBrowser.setMenu(menu);
-		}
-		if (textBackup != null && !textBackup.isDisposed()) {
-			textBackup.setMenu(menu);
+		// If this is the menu we installed, accept it
+		if (forcedMenu == null || menu == forcedMenu) {
+			forcedMenu = menu;
+			super.setMenu(menu);
+
+			if (textBrowser != null && !textBrowser.isDisposed()) {
+				textBrowser.setMenu(menu);
+			}
+			if (textBackup != null && !textBackup.isDisposed()) {
+				textBackup.setMenu(menu);
+			}
+		} else {
+			// Eclipse is trying to override our menu → block it
+			// System.out.println("[CardInfo] BLOCKED external menu: " + menu);
 		}
 	}
 
