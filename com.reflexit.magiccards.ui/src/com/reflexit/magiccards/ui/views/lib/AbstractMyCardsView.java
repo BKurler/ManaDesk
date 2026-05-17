@@ -18,9 +18,16 @@ package com.reflexit.magiccards.ui.views.lib;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Properties;
 import java.util.Set;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -40,22 +47,27 @@ import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
+import com.reflexit.magiccards.core.model.xml.XmlCardHolder;
+import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
+import com.reflexit.magiccards.core.monitor.SubCoreProgressMonitor;
+import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.DeleteCardAction;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardPhysicalDialog;
 import com.reflexit.magiccards.ui.dialogs.MyCardsFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.SplitDialog;
 import com.reflexit.magiccards.ui.exportWizards.ExportAction;
+import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.AbstractGroupPageCardsView;
 import com.reflexit.magiccards.ui.views.IViewPage;
 import com.reflexit.magiccards.ui.views.ViewPageGroup;
-
 
 public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView implements ICardEventListener {
 	private final DataManager DM = DataManager.getInstance();
@@ -67,6 +79,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	private MenuManager addToDeck;
 	private IDeckAction copyToDeck;
 	private LibraryEventListener eventListener = new LibraryEventListener();
+	private Action updateSet;
 
 	@Override
 	protected ViewPageGroup createPageGroup() {
@@ -75,6 +88,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 
 	@Override
 	protected void makeActions() {
+
 		super.makeActions();
 		ISharedImages sharedImages = PlatformUI.getWorkbench().getSharedImages();
 		this.delete = new DeleteCardAction(this::removeSelected);
@@ -125,6 +139,37 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 				}
 			}
 		};
+
+		this.updateSet = new Action("Update cards of selected set(s)") {
+			@Override
+			public void run() {
+				ISelection selection = getSelectionProvider().getSelection();
+				if (!(selection instanceof IStructuredSelection))
+					return;
+
+				IStructuredSelection ss = (IStructuredSelection) selection;
+
+				// Collect unique sets
+				Set<String> sets = new HashSet<>();
+				for (Object o : ss.toList()) {
+					if (o instanceof MagicCardPhysical) {
+						MagicCardPhysical card = (MagicCardPhysical) o;
+						String set = card.getSet();
+						if (set != null && !set.isEmpty()) {
+							sets.add(set);
+						}
+					}
+				}
+
+				if (sets.isEmpty())
+					return;
+
+				UpdateMultipleSetsJob job = new UpdateMultipleSetsJob(sets);
+				job.setUser(true);
+				job.schedule();
+			}
+		};
+
 	}
 
 	protected ExportAction createExportAction() {
@@ -274,6 +319,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		manager.add(this.actionCopy);
 		manager.add(this.moveToDeckMenu);
 		manager.add(this.addToDeck);
+		manager.add(this.updateSet);
 		manager.add(this.split);
 		manager.add(this.edit);
 		// !!! RD		manager.add(this.buyCards);
@@ -341,4 +387,44 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		this.addToDeck.dispose();
 		super.preActivate(activePage);
 	}
+
+	public class UpdateMultipleSetsJob extends Job {
+		private final Set<String> sets;
+
+		public UpdateMultipleSetsJob(Set<String> sets) {
+			super("Updating " + sets.size() + " sets");
+			this.sets = sets;
+		}
+
+		@Override
+		protected IStatus run(IProgressMonitor monitor) {
+			try {
+				monitor.beginTask("Updating sets", sets.size() * 100);
+
+				XmlCardHolder holder = new XmlCardHolder();
+				Properties options = new Properties();
+
+				for (String set : sets) {
+					if (monitor.isCanceled())
+						return Status.CANCEL_STATUS;
+
+					monitor.subTask("Updating set: " + set);
+
+					ICoreProgressMonitor core = new CoreMonitorAdapter(new SubProgressMonitor(monitor, 100));
+
+					SubCoreProgressMonitor sub = new SubCoreProgressMonitor(core, 100);
+
+					holder.downloadUpdates(set, options, sub);
+				}
+
+				monitor.done();
+				return Status.OK_STATUS;
+
+			} catch (Exception e) {
+				MagicLogger.log(e);
+				return new Status(IStatus.ERROR, MagicUIActivator.PLUGIN_ID, "Failed to update sets", e);
+			}
+		}
+	}
+
 }
