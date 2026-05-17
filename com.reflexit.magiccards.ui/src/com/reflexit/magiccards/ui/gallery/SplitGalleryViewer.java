@@ -9,6 +9,7 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.custom.SashForm;
 import org.eclipse.swt.layout.FillLayout;
@@ -28,7 +29,7 @@ import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 
 public class SplitGalleryViewer implements IMagicColumnViewer {
 	private Composite control;
-	protected LazyGalleryTreeViewer galleryviewer;
+	protected Viewer galleryviewer;
 	private SingleColumnTreeViewer viewer;
 
 	public SplitGalleryViewer(Composite parent, String preferencePageId) {
@@ -47,9 +48,9 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 		control.setLayout(new FillLayout());
 		viewer = new SingleColumnTreeViewer(control);
 		viewer.getTree().setHeaderVisible(false);
-		galleryviewer = new LazyGalleryTreeViewer(control);
+		galleryviewer = new BrowserGalleryViewer(control, SWT.NONE);
+
 		galleryviewer.getControl().setFont(MagicUIActivator.getDefault().getFont());
-		galleryviewer.setGroupsVisible(false);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -76,7 +77,6 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 	public void dispose() {
 		this.viewer.getLabelProvider().dispose();
 		this.viewer.getControl().dispose();
-		this.galleryviewer.getLabelProvider().dispose();
 		this.galleryviewer.getControl().dispose();
 		this.galleryviewer = null;
 	}
@@ -97,7 +97,7 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 	}
 
 	public StructuredViewer getStructuredViewer() {
-		return galleryviewer;
+		return viewer;
 	}
 
 	@Override
@@ -107,7 +107,7 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 
 	@Override
 	public void hookDragAndDrop() {
-		viewer.hookDragAndDrop(getStructuredViewer());
+		// no-op: gallery does not support DnD
 	}
 
 	@Override
@@ -134,7 +134,7 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 			} else {
 				viewer.setSelection(selection, true);
 			}
-			galleryviewer.refresh(true);
+			galleryviewer.refresh();
 		}
 	}
 
