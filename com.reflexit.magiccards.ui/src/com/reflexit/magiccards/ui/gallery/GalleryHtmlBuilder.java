@@ -1,3 +1,14 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *     Rémi Dutil - created for ManaDesk
+ *******************************************************************************/
+
 package com.reflexit.magiccards.ui.gallery;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -21,11 +32,7 @@ public final class GalleryHtmlBuilder {
 		sb.append("<style>").append(GALLERY_CSS).append("</style>");
 		sb.append("</head><body>");
 
-		// --- DEBUG BLOCK: show the generated HTML inside the page ---
-		sb.append("<div style='white-space:pre;font-family:monospace;"
-				+ "background:#222;color:#0f0;padding:10px;margin-bottom:10px;'>");
-
-		// Build the gallery HTML into a separate buffer
+		// Build the gallery HTML
 		StringBuilder gallery = new StringBuilder();
 		gallery.append("<div class='gallery'>");
 
@@ -39,11 +46,6 @@ public final class GalleryHtmlBuilder {
 
 		gallery.append("</div>");
 
-		// Display the encoded HTML for debugging
-		sb.append(escapeHtml(gallery.toString()));
-		sb.append("</div>");
-		// --- END DEBUG BLOCK ---
-
 		// Insert the actual gallery HTML
 		sb.append(gallery);
 
@@ -54,15 +56,8 @@ public final class GalleryHtmlBuilder {
 	}
 
 	private static void appendCard(StringBuilder sb, IMagicCard card) {
-		// --- Instrumentation header ---
-		System.out.println("=== appendCard() ===");
-		System.out.println("Card class: " + card.getClass().getName());
-		System.out.println("Card toString(): " + card);
-		System.out.println("Card ID (raw): " + card.getCardId());
-
 		// Resolve ID
 		String id = safe(card.getCardId());
-		System.out.println("Card ID (safe): " + id);
 
 		// Resolve image URL
 		String url = "";
@@ -72,17 +67,13 @@ public final class GalleryHtmlBuilder {
 				url = safe(u.toString());
 			}
 		} catch (Exception e) {
-			System.out.println("Image URL resolution failed: " + e.getMessage());
+			// ignore: fallback to empty URL
 		}
-
-		System.out.println("Image URL: " + url);
 
 		// Resolve count
 		int count = (card instanceof IMagicCardPhysical) ? ((IMagicCardPhysical) card).getCount() : 0;
 
-		System.out.println("Physical count: " + count);
-
-		// --- Build HTML ---
+		// Build HTML
 		sb.append("<div class='card' data-id='").append(id).append("'>");
 		sb.append("<div class='card-inner'>");
 
@@ -93,10 +84,6 @@ public final class GalleryHtmlBuilder {
 		}
 
 		sb.append("</div></div>");
-
-		// --- Instrumentation footer ---
-		System.out.println("HTML appended for card ID: " + id);
-		System.out.println("=======================");
 	}
 
 	private static String safe(Object s) {
@@ -114,19 +101,13 @@ public final class GalleryHtmlBuilder {
 			+ "  height: 100%;" + "  overflow: auto;" + "}" + ".gallery {" + "  padding: 8px;" + "  background: white;"
 			+ "  color: black;" + "  font-family: sans-serif;" + "  width: 100%;" + "}" + ".card {"
 			+ "  position: relative;" + "  display: inline-block;" + "  margin: 6px;" + "  cursor: pointer;"
-			+ "  vertical-align: top;" /* prevents layout jumps */
-			+ "}" + ".card-inner {" + "  position: relative;" + "  width: 260px;" + "}" + ".card img {"
-			+ "  width: 100%;" + "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;" + "  display: block;" + "}"
-			+ ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
-			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 3px 8px;" /*
-																							 * scaled down for smaller
-																							 * cards
-																							 */
-			+ "  border-radius: 10px;" + "  font-size: 14px;" /* scaled down */
-			+ "  font-weight: bold;" + "}" + ".group-title {" /* NEW: fix truncated set names */
-			+ "  display: block;" + "  max-width: 100%;" + "  white-space: normal;" /* allow wrapping */
-			+ "  word-break: break-word;" /* prevent mid-word truncation */
-			+ "  margin-bottom: 4px;" + "  font-size: 14px;" + "  font-weight: bold;" + "}";
+			+ "  vertical-align: top;" + "}" + ".card-inner {" + "  position: relative;" + "  width: 220px;" + "}"
+			+ ".card img {" + "  width: 100%;" + "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;"
+			+ "  display: block;" + "}" + ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
+			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 3px 8px;" + "  border-radius: 10px;"
+			+ "  font-size: 14px;" + "  font-weight: bold;" + "}" + ".group-title {" + "  display: block;"
+			+ "  max-width: 100%;" + "  white-space: normal;" + "  word-break: break-word;" + "  margin-bottom: 4px;"
+			+ "  font-size: 14px;" + "  font-weight: bold;" + "}";
 
 	// ============================================================
 	// JS

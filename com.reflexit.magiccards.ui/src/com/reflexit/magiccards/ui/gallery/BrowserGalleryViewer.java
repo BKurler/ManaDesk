@@ -1,3 +1,13 @@
+/*******************************************************************************
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *     Rémi Dutil - created for ManaDesk
+ *******************************************************************************/
 package com.reflexit.magiccards.ui.gallery;
 
 import java.util.ArrayList;
@@ -15,7 +25,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
 import org.eclipse.swt.browser.BrowserFunction;
 import org.eclipse.swt.layout.GridData;
@@ -54,19 +63,18 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		this.browser = new Browser(parent, style);
 		browser.setLayoutData(new GridData(GridData.FILL_BOTH));
 
-		System.out.println("BROWSER INSTANCE: " + browser.hashCode());
-
-		browser.addListener(SWT.MouseDown, e -> {
-			System.out.println("BROWSER MOUSEDOWN at " + e.x + "," + e.y);
-		});
+		// Removed debug mouse logging
+		// browser.addListener(SWT.MouseDown, e -> {
+		// System.out.println("BROWSER MOUSEDOWN at " + e.x + "," + e.y);
+		// });
 
 		hookSelectionBridge();
 		hookDoubleClickBridge();
 
-		this.getSelectionProvider().addSelectionChangedListener(event -> {
-			System.out.println("SELECTION FIRED: " + event.getSelection());
-		});
-
+		// Removed debug selection logging
+		// this.getSelectionProvider().addSelectionChangedListener(event -> {
+		// System.out.println("SELECTION FIRED: " + event.getSelection());
+		// });
 	}
 
 	// ============================================================
@@ -186,7 +194,6 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// Rendering
 	// ============================================================
 	private void render() {
-		System.out.println("===  HTML LOADED INTO BROWSER ===");
 		if (browser.isDisposed())
 			return;
 
@@ -197,10 +204,11 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			return;
 		}
 
-		if (input instanceof java.util.List) {
-			System.out.println("GALLERY INPUT CLASS = " + input.getClass());
-			System.out.println("GALLERY INPUT SIZE = " + ((java.util.List<?>) input).size());
-		}
+		// if (input instanceof java.util.List) {
+		// System.out.println("GALLERY INPUT CLASS = " + input.getClass());
+		// System.out.println("GALLERY INPUT SIZE = " + ((java.util.List<?>)
+		// input).size());
+		// }
 
 		String html = GalleryHtmlBuilder.buildHtml(input);
 
@@ -228,7 +236,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 		}
 
 		java.util.List<ICard> list = flatInput;
-		System.out.println("resolveElementFromId: input class = " + list.getClass());
+		// System.out.println("resolveElementFromId: input class = " + list.getClass());
 
 		// Case 1: input is a plain List<IMagicCard>
 		if (input instanceof java.util.List<?>) {
@@ -236,7 +244,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 				if (o instanceof IMagicCard) {
 					IMagicCard card = (IMagicCard) o;
 					if (sid.equals(String.valueOf(card.getCardId()))) {
-						System.out.println("resolveElementFromId: matched card in List = " + card);
+						// System.out.println("resolveElementFromId: matched card in List = " + card);
 						return card;
 					}
 				}
@@ -249,14 +257,14 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 				if (o instanceof IMagicCard) {
 					IMagicCard card = (IMagicCard) o;
 					if (sid.equals(String.valueOf(card.getCardId()))) {
-						System.out.println("resolveElementFromId: matched card in store = " + card);
+						// System.out.println("resolveElementFromId: matched card in store = " + card);
 						return card;
 					}
 				}
 			}
 		}
 
-		System.out.println("resolveElementFromId: no match for id = " + sid);
+		// System.out.println("resolveElementFromId: no match for id = " + sid);
 		return null;
 	}
 
@@ -264,11 +272,12 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// JS → Java selection bridge
 	// ============================================================
 	private void hookSelectionBridge() {
-		System.out.println("REGISTERING javaSelectCard");
+		// System.out.println("REGISTERING javaSelectCard");
 		new BrowserFunction(browser, "javaSelectCard") {
 			@Override
 			public Object function(Object[] args) {
-				System.out.println(">>> javaSelectCard CALLED, raw args = " + java.util.Arrays.toString(args));
+				// System.out.println(">>> javaSelectCard CALLED, raw args = " +
+				// java.util.Arrays.toString(args));
 
 				if (args == null || args.length == 0) {
 					System.out.println(">>> javaSelectCard: NO ARGS");
@@ -276,7 +285,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 				}
 
 				String id = (args[0] != null) ? args[0].toString() : null;
-				System.out.println(">>> javaSelectCard: converted id = " + id);
+				// System.out.println(">>> javaSelectCard: converted id = " + id);
 
 				if (id == null || id.isEmpty()) {
 					System.out.println(">>> javaSelectCard: NULL ID, ignoring");
@@ -284,14 +293,20 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 				}
 
 				Object element = resolveElementFromId(id);
-				System.out.println(">>> javaSelectCard RESOLVED ELEMENT = " + element);
+				// System.out.println(">>> javaSelectCard RESOLVED ELEMENT = " + element);
 
 				if (element != null) {
-					System.out.println(">>> javaSelectCard BEFORE setSelection, currentSelectionElement = "
-							+ currentSelectionElement);
+					/*
+					 * System.out.
+					 * println(">>> javaSelectCard BEFORE setSelection, currentSelectionElement = "
+					 * + currentSelectionElement);
+					 */
 					setSelection(new StructuredSelection(element), true);
-					System.out.println(">>> javaSelectCard AFTER setSelection, currentSelectionElement = "
-							+ currentSelectionElement);
+					/*
+					 * System.out.
+					 * println(">>> javaSelectCard AFTER setSelection, currentSelectionElement = " +
+					 * currentSelectionElement);
+					 */
 				}
 				return null;
 			}
@@ -312,7 +327,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 
 	private void fireSelectionChanged() {
 		ISelection sel = getSelection();
-		System.out.println("fireSelectionChanged() with selection = " + sel);
+
 		SelectionChangedEvent event = new SelectionChangedEvent(this, sel);
 		for (ISelectionChangedListener l : new ArrayList<>(selectionChangedListeners)) {
 			l.selectionChanged(event);
@@ -323,11 +338,12 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	// JS → Java double-click bridge
 	// ============================================================
 	private void hookDoubleClickBridge() {
-		System.out.println("REGISTERING javaDoubleClickCard");
+
 		new BrowserFunction(browser, "javaDoubleClickCard") {
 			@Override
 			public Object function(Object[] args) {
-				System.out.println("javaDoubleClickCard CALLED, args=" + java.util.Arrays.toString(args));
+				// System.out.println("javaDoubleClickCard CALLED, args=" +
+				// java.util.Arrays.toString(args));
 				if (args != null && args.length > 0) {
 					Object id = args[0];
 					Object element = resolveElementFromId(id);

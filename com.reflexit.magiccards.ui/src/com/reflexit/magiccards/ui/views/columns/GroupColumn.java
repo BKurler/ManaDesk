@@ -85,7 +85,7 @@ public class GroupColumn extends AbstractImageColumn implements Listener {
 
 	@Override
 	public int getColumnWidth() {
-		return 300;
+		return 280;
 	}
 
 	@Override

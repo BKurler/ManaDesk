@@ -88,7 +88,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 	// !!! RD private Action actionAsScanned;
 	// !!! RD private boolean asScanned;
 	private Action open;
-	// !!! RD private Action edit;
+	// !!! RD 	private Action edit;
 	private Image cardImage;
 	private IWebBrowser browser;
 	// ensure this field exists in the class
@@ -335,14 +335,14 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 		// !!! RD manager.add(open);
 		// !!! RD manager.add(actionAsScanned);
 		// !!! RD manager.add(sync);
-		// !!! RD manager.add(edit);
+		// !!! RD		manager.add(edit);
 	}
 
 	private void fillContextMenu(IMenuManager manager) {
 		fillShowInMenu(manager);
-		// !!! RD manager.add(open);
-		// !!! RD manager.add(sync);
-		// !!! RD manager.add(edit);
+		// !!! RD		manager.add(open);
+		//		!!! RD		manager.add(sync);
+		// !!! RD 		manager.add(edit);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
@@ -360,40 +360,31 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 	void makeActions() {
 
 		/*
-		 * !!! RD must be Disabled this.sync = new Action("Update card info from web",
-		 * SWT.NONE) { { setImageDescriptor(MagicUIActivator.getImageDescriptor(
-		 * "icons/clcl16/software_update.png")); }
+		 * !!! RD must be Disabled this.sync = new Action("Update card info from web", SWT.NONE) { { setImageDescriptor(MagicUIActivator.getImageDescriptor( "icons/clcl16/software_update.png")); }
 		 * 
-		 * @Override public void run() { LoadCardJob job = new LoadCardJob();
-		 * job.setUser(true); job.schedule(); } };
+		 * @Override public void run() { LoadCardJob job = new LoadCardJob(); job.setUser(true); job.schedule(); } };
 		 */
+		/*	this.actionAsScanned = new Action("When depressed - scanned image is not scaled", IAction.AS_CHECK_BOX) {
+				{
+					setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/clcl16/zoom_original.png"));
+				}
+		
+				@Override
+				public void run() {
+					// Keep the UI state only. Do not change image loading or panel behavior.
+					asScanned = actionAsScanned.isChecked();
+		
+					// Optional: update the action state only, no reload, no panel flag changes.
+					// This makes the checkbox inert with respect to image scaling.
+				}
+			};
+		*/
 		/*
-		 * this.actionAsScanned = new
-		 * Action("When depressed - scanned image is not scaled", IAction.AS_CHECK_BOX)
-		 * { { setImageDescriptor(MagicUIActivator.getImageDescriptor(
-		 * "icons/clcl16/zoom_original.png")); }
+		 * !!! RD this.open = new Action("Open card in browser", SWT.NONE) { { setImageDescriptor(MagicUIActivator.getImageDescriptor( "icons/clcl16/discovery.gif")); }
 		 * 
-		 * @Override public void run() { // Keep the UI state only. Do not change image
-		 * loading or panel behavior. asScanned = actionAsScanned.isChecked();
+		 * @Override public void run() { try { if (panel.getCard() == null) return; String url = getUrl(); if (WebUtils.isWorkOffline()) return; IWebBrowser browser = getBrowser(); browser.openURL(new URL(url)); } catch (Exception e) { MessageDialog.openError(getControl().getShell(), "Error", "Well that kind of failed... " + e.getMessage()); MagicUIActivator.log(e); } } };
 		 * 
-		 * // Optional: update the action state only, no reload, no panel flag changes.
-		 * // This makes the checkbox inert with respect to image scaling. } };
-		 */
-		/*
-		 * !!! RD this.open = new Action("Open card in browser", SWT.NONE) { {
-		 * setImageDescriptor(MagicUIActivator.getImageDescriptor(
-		 * "icons/clcl16/discovery.gif")); }
-		 * 
-		 * @Override public void run() { try { if (panel.getCard() == null) return;
-		 * String url = getUrl(); if (WebUtils.isWorkOffline()) return; IWebBrowser
-		 * browser = getBrowser(); browser.openURL(new URL(url)); } catch (Exception e)
-		 * { MessageDialog.openError(getControl().getShell(), "Error",
-		 * "Well that kind of failed... " + e.getMessage()); MagicUIActivator.log(e); }
-		 * } };
-		 * 
-		 * edit = new Action("Edit...") { {
-		 * setImageDescriptor(MagicUIActivator.getImageDescriptor(
-		 * "icons/clcl16/edit.png")); }
+		 * edit = new Action("Edit...") { { setImageDescriptor(MagicUIActivator.getImageDescriptor( "icons/clcl16/edit.png")); }
 		 * 
 		 * @Override public void run() { editCard(); } };
 		 */
@@ -503,8 +494,6 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection sel) {
-		System.out.println("CardDescView.selectionChanged: part=" + part.getClass().getName() + ", sel=" + sel);
-
 		if (part instanceof AbstractCardsView)
 			runLoadJob(sel);
 	}

@@ -51,7 +51,6 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 		galleryviewer = new BrowserGalleryViewer(control, SWT.NONE);
 
 		galleryviewer.getControl().setFont(MagicUIActivator.getDefault().getFont());
-// !!! RD 		galleryviewer.setGroupsVisible(false);
 		viewer.addSelectionChangedListener(new ISelectionChangedListener() {
 			@Override
 			public void selectionChanged(SelectionChangedEvent event) {
@@ -78,7 +77,6 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 	public void dispose() {
 		this.viewer.getLabelProvider().dispose();
 		this.viewer.getControl().dispose();
-// !!! RD 		this.galleryviewer.getLabelProvider().dispose();
 		this.galleryviewer.getControl().dispose();
 		this.galleryviewer = null;
 	}

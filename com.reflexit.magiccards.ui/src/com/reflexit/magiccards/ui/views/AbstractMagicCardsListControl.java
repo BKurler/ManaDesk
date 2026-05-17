@@ -232,7 +232,6 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				}
 			}
 		}
-
 		mainControl = new Composite(area, SWT.NONE);
 		mainControl.setLayout(GridLayoutFactory.fillDefaults().spacing(0, 0).create());
 		mainControl.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
@@ -566,7 +565,6 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	protected Control createTableControl(Composite parent) {
 		if (viewer != null && !viewer.getControl().isDisposed()) {
-			System.out.println("DISPOSING OLD VIEWER: " + viewer.getControl());
 			viewer.getControl().dispose();
 		}
 
@@ -588,10 +586,6 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		// control.setBackground(control.getDisplay().getSystemColor(SWT.COLOR_CYAN));
 		this.viewer.hookContext(PerspectiveFactoryMagic.TABLES_CONTEXT);
 		this.viewer.hookSortAction(this::sort);
-		/*
-		 * !!! RD if (searchControl != null)
-		 * this.viewer.getControl().moveAbove(searchControl.getControl());
-		 */
 		return control;
 	}
 

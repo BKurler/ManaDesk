@@ -257,7 +257,7 @@ public class Colors implements ISearchableProperty {
 
 	public String getCostByName(String r) {
 		try {
-			if (r == null || r.charAt(0) == '*' | r.equals("costless"))
+			if (r == null || r.charAt(0) == '*' | r.equals("Costless"))
 				return "";
 			String colors[] = r.split("-");
 			String res = "";
