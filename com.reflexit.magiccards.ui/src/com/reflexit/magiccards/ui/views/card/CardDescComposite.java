@@ -214,7 +214,7 @@ class CardDescComposite extends Composite {
 				String oracle = getOracle(card, text);
 				String rulings = getCardRulingsHtml(card);
 
-				String raw = data + text + oracle + rulings;
+				String raw = data + oracle + text + rulings;
 				String html = SymbolRenderer.wrapHtml(raw, textBrowser);
 				this.textBrowser.setText(html);
 
@@ -247,7 +247,7 @@ class CardDescComposite extends Composite {
 	protected String getOracle(IMagicCard card, String text) {
 		String oracle = card.getOracleText();
 		if (text != null && text.length() != 0 && !text.equals(oracle)) {
-			oracle = "<br><br>Oracle:<br>" + oracle;
+			oracle = "Oracle:<br>" + oracle + "<br><br>";
 		} else {
 			oracle = "";
 		}

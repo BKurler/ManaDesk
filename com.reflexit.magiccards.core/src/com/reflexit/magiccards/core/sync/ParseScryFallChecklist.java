@@ -56,6 +56,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 	private final Set<String> costSymbols = new TreeSet<>();
 	private final Set<String> textSymbols = new TreeSet<>();
+	private String updateString = "";
 
 	private static final Pattern SYMBOL_PATTERN = Pattern.compile("\\{[^}]+\\}");
 
@@ -455,6 +456,12 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			priceString = BuildPrice((JSONObject) elem.get("prices"));
 		}
 
+		if (!generateFlat) {
+			updateString = "<br>Updated on " + java.time.LocalDateTime.now()
+					.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+
+		}
+
 		JSONObject relatedUri = (JSONObject) elem.get("related_uris");
 		String gathererUriString = "";
 
@@ -490,7 +497,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				System.err.println("Card " + frontCard.getName() + " has no oracle text, check for new layout");
 			}
 
-			frontCard.setOracleText(oracle.replace("|", "&vert;") + rulingsUriString);
+			frontCard.setOracleText(oracle.replace("|", "&vert;"));
 			frontCard.setArtist(elem.get("artist").toString());
 			frontCard.setCollNumber(elem.get("collector_number").toString());
 
@@ -522,7 +529,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			// We will use the Text field to store and display that information
 			cardText = priceString + frontMultiverseString + finishesString + fullArtString + textlessString
 					+ boosterString + storySpotlightString + promoTypesString + scryfallUriString + gathererUriString
-					+ tcgUriString;
+					+ tcgUriString + rulingsUriString + updateString;
 
 			frontCard.setText(cardText);
 			frontCard.setLanguage(languageString);
@@ -577,10 +584,10 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			backCard.setToughness(backFace.get("toughness") != null ? backFace.get("toughness").toString() : "");
 
 			frontCard.setOracleText(frontFace.get("oracle_text") != null
-					? (frontFace.get("oracle_text").toString().replace("|", "&vert;") + rulingsUriString)
+					? (frontFace.get("oracle_text").toString().replace("|", "&vert;"))
 					: "");
 			backCard.setOracleText(backFace.get("oracle_text") != null
-					? (backFace.get("oracle_text").toString().replace("|", "&vert;") + rulingsUriString)
+					? (backFace.get("oracle_text").toString().replace("|", "&vert;"))
 					: "");
 
 			frontCard.setArtist(frontFace.get("artist") != null ? frontFace.get("artist").toString() : "");
@@ -649,7 +656,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 			// Useful for collectors
 			cardText = finishesString + fullArtString + textlessString + boosterString + storySpotlightString
-					+ promoTypesString + scryfallUriString + gathererUriString + tcgUriString;
+					+ promoTypesString + scryfallUriString + gathererUriString + tcgUriString + rulingsUriString
+					+ updateString;
 
 			frontCard.setText(priceString + frontMultiverseString + cardText);
 			backCard.setText(backMultiverseString + cardText);
