@@ -24,6 +24,7 @@ import org.eclipse.swt.graphics.Rectangle;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 
+import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -79,6 +80,8 @@ public final class ImageCreator {
 			// Fallback: assume card already stores the abbreviation
 			setCode = editionName;
 		}
+
+		setCode = FileUtils.getAgnosticFilename(setCode);
 
 		// 3. Language (full name)
 		String lang = card.getLanguage();
