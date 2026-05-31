@@ -217,10 +217,7 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	public void setProperty(String key, String value) {
 		if (isReadOnly() && !key.equals(READ_ONLY))
 			throw new MagicException("Read Only");
-		/*
-		 * !!! RD Don't understand this if (isUnsorted() && !key.equals(UNSORTED)) throw
-		 * new MagicException("Unsorted");
-		 */
+
 		Object old = properties.setProperty(key, value);
 		if (old != null && old.equals(value))
 			return;

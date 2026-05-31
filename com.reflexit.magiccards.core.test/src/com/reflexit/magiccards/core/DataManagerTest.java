@@ -22,6 +22,7 @@ import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.core.test.assist.Profiler;
 import com.reflexit.unittesting.TestFileUtils;
 
@@ -68,8 +69,14 @@ public class DataManagerTest extends TestCase {
 	public CardCollection createDeck(boolean vir) {
 		i++;
 		CardCollection deck2 = dm.getModelRoot().getDeckContainer().addDeck("bla" + i, false, vir);
-		ICardStore<IMagicCard> store2 = deck2.getStore();
-		assertNotNull(store2);
+
+		// Storage now exists because associate() has already run.
+		IStorageInfo info = deck2.getStorageInfo();
+		assertNotNull(info);
+
+		info.setVirtual(vir);
+		info.setType(IStorageInfo.DECK_TYPE);
+
 		return deck2;
 	}
 

@@ -123,13 +123,24 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	}
 
 	private void save() {
-		boolean isReadOnly = protection.getSelection();
-		info.setReadOnly(isReadOnly);
-		if (!isReadOnly) {
-			info.setComment(text.getText());
-			info.setVirtual(virtual.getSelection());
-			info.setUnsorted(unsorted.getSelection());
-			info.setType(type.getText());
+		boolean newRO = protection.getSelection();
+		boolean oldRO = info.isReadOnly();
+
+		// Case 1: disabling read-only → must disable first
+		if (oldRO && !newRO) {
+			info.setReadOnly(false);
+		}
+
+		// Apply all editable properties
+		info.setComment(text.getText());
+		info.setVirtual(virtual.getSelection());
+		info.setUnsorted(unsorted.getSelection());
+		info.setType(type.getText());
+
+		// Case 2: enabling read-only → must enable last
+		if (!oldRO && newRO) {
+			info.setReadOnly(true);
 		}
 	}
+
 }
