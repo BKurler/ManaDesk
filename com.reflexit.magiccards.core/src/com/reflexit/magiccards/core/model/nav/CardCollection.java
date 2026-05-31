@@ -1,4 +1,3 @@
-
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
@@ -66,13 +65,11 @@ public class CardCollection extends CardElement {
 			if (getStore() == null)
 				return null;
 		} catch (MagicException e) {
-			// MagicLogger.log(e);
 			return null;
 		}
 		IStorage storage = ((IStorageContainer) getStore()).getStorage();
 		if (storage instanceof IStorageInfo) {
-			IStorageInfo si = ((IStorageInfo) storage);
-			return si;
+			return (IStorageInfo) storage;
 		}
 		return null;
 	}
@@ -95,21 +92,23 @@ public class CardCollection extends CardElement {
 		}
 	}
 
+	/**
+	 * Associate this collection with a card store.
+	 * IMPORTANT: This method must NOT write transient values into storage.
+	 * It must only synchronize storage => transient.
+	 */
 	public synchronized void associate(ICardStore<IMagicCard> store) {
 		if (store == null)
 			return;
+
 		this.store = store;
+
 		IStorageInfo info = getStorageInfo();
 		if (info != null) {
-			if (deck != null) {
-				info.setType(deck ? IStorageInfo.DECK_TYPE : IStorageInfo.COLLECTION_TYPE);
-			}
-			if (virtual != null) {
-				info.setVirtual(virtual);
-			}
-			if (unsorted != null) {
-				info.setUnsorted(unsorted);
-			}
+			// Synchronize transient fields from storage (never the opposite)
+			this.deck = IStorageInfo.DECK_TYPE.equals(info.getType());
+			this.virtual = info.isVirtual();
+			this.unsorted = info.isUnsorted();
 		}
 	}
 
@@ -118,9 +117,7 @@ public class CardCollection extends CardElement {
 		if (info != null) {
 			return IStorageInfo.DECK_TYPE.equals(info.getType());
 		}
-		if (deck != null)
-			return deck;
-		return false;
+		return deck != null ? deck : false;
 	}
 
 	public void close() {
@@ -131,22 +128,12 @@ public class CardCollection extends CardElement {
 		return getPath().getId();
 	}
 
-	public void setVirtual(boolean virtual) {
-		this.virtual = virtual;
-		IStorageInfo info = getStorageInfo();
-		if (info != null) {
-			info.setVirtual(virtual);
-		}
-	}
-
 	public boolean isVirtual() {
 		IStorageInfo info = getStorageInfo();
 		if (info != null) {
 			return info.isVirtual();
 		}
-		if (virtual != null)
-			return virtual;
-		return true;
+		return virtual != null ? virtual : true;
 	}
 
 	public boolean isUnsorted() {
@@ -154,9 +141,7 @@ public class CardCollection extends CardElement {
 		if (info != null) {
 			return info.isUnsorted();
 		}
-		if (unsorted != null)
-			return unsorted;
-		return true;
+		return unsorted != null ? unsorted : true;
 	}
 
 }

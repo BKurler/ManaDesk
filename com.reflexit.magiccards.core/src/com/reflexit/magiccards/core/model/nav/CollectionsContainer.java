@@ -11,6 +11,7 @@ import java.io.FileInputStream;
 import java.io.InputStream;
 
 import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 
 public class CollectionsContainer extends CardOrganizer {
 	public CollectionsContainer(String name, CardOrganizer parent) {
@@ -52,8 +53,7 @@ public class CollectionsContainer extends CardOrganizer {
 				if (name.endsWith(".xml")) {
 					if (el == null) {
 						boolean deck = checkType(mem);
-						boolean unsorted = checkSort(mem);
-						CardCollection cardCollection = new CardCollection(name, this, deck, null, unsorted);
+						CardCollection cardCollection = new CardCollection(name, this, deck, null, null);
 					}
 				}
 			}
@@ -80,36 +80,21 @@ public class CollectionsContainer extends CardOrganizer {
 		return false;
 	}
 
-	private boolean checkSort(File mem) {
-		try {
-			byte[] headerBytes = new byte[1000];
-			InputStream openStream = new FileInputStream(mem);
-			try {
-				int k = openStream.read(headerBytes);
-				if (k == -1)
-					return false;
-				String header = new String(headerBytes, 0, k);
-				if (header.contains("<property name=\"unsorted\" value=\"true\"/>")) {
-					return true;
-				} else {
-					return false;
-				}
-
-			} finally {
-				openStream.close();
-			}
-		} catch (Exception e) {
-			// skip
-		}
-		return false;
-	}
-
 	public CollectionsContainer addCollectionsContainer(String name) {
 		return (CollectionsContainer) newElement(name, this);
 	}
 
 	public CardCollection addDeck(String filename, boolean isDeck, boolean virtual) {
 		CardCollection d = new CardCollection(filename, this, isDeck, virtual, false);
+
+		// After creation, set storage properties BEFORE associate() overwrites transients
+		IStorageInfo info = d.getStorageInfo();
+		if (info != null) {
+			info.setVirtual(virtual);
+			info.setType(isDeck ? IStorageInfo.DECK_TYPE : IStorageInfo.COLLECTION_TYPE);
+			info.setUnsorted(false); // or whatever default you want
+		}
+
 		return d;
 	}
 
