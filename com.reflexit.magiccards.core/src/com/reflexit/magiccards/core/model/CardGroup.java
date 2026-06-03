@@ -18,6 +18,7 @@ import java.util.NoSuchElementException;
 
 import com.reflexit.magiccards.core.model.abs.CardList;
 import com.reflexit.magiccards.core.model.abs.ICard;
+import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 
@@ -323,32 +324,32 @@ public final class CardGroup extends MagicCardHash implements ICardGroup, Iterab
 			if (ifield instanceof MagicCardField) {
 				MagicCardField field = (MagicCardField) ifield;
 				switch (field) {
-					case NAME:
-						return elem.getEnglishName();
-					case COST:
-						return Colors.getColorName(elem.getCost());
-					case CMC:
-						int ccc = elem.getCmc();
-						if (ccc == 0 && elem.getType() != null && elem.getType().contains("Land")) {
-							return "Land";
-						} else {
-							return String.valueOf(ccc);
+				case NAME:
+					return elem.getEnglishName();
+				case COST:
+					return Colors.getColorName(elem.getCost());
+				case CMC:
+					int ccc = elem.getCmc();
+					if (ccc == 0 && elem.getType() != null && elem.getType().contains("Land")) {
+						return "Land";
+					} else {
+						return String.valueOf(ccc);
+					}
+				case LANG:
+					String language = elem.getLanguage();
+					if (language == null)
+						return "English";
+					else
+						return language;
+				case SIDEBOARD:
+					if (elem instanceof MagicCardPhysical) {
+						if (((MagicCardPhysical) elem).isSideboard()) {
+							return "Sideboard";
 						}
-					case LANG:
-						String language = elem.getLanguage();
-						if (language == null)
-							return "English";
-						else
-							return language;
-					case SIDEBOARD:
-						if (elem instanceof MagicCardPhysical) {
-							if (((MagicCardPhysical) elem).isSideboard()) {
-								return "Sideboard";
-							}
-						}
-						return "Main Deck";
-					default:
-						break;
+					}
+					return "Main Deck";
+				default:
+					break;
 				}
 			}
 			return String.valueOf(elem.get(ifield));
@@ -467,4 +468,21 @@ public final class CardGroup extends MagicCardHash implements ICardGroup, Iterab
 	public boolean isTransient() {
 		return size() == 1 || (size() > 0 && getFieldIndex() == MagicCardField.NAME);
 	}
+
+	public int getRecursiveCount() {
+		int total = 0;
+
+		for (Object child : getChildren()) {
+			if (child instanceof CardGroup) {
+				// Recurse into subgroups
+				total += ((CardGroup) child).getRecursiveCount();
+			} else if (child instanceof ICardCountable) {
+				// Count physical cards
+				total += ((ICardCountable) child).getCount();
+			}
+		}
+
+		return total;
+	}
+
 }

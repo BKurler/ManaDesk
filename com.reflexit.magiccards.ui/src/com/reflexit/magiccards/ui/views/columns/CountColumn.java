@@ -10,6 +10,7 @@ import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
+import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
@@ -28,6 +29,10 @@ public class CountColumn extends GenColumn {
 
 	@Override
 	public String getText(Object element) {
+		if (element instanceof CardGroup) {
+			return String.valueOf(((CardGroup) element).getRecursiveCount());
+		}
+		// For cards, use the model count (COUNT field)
 		return super.getText(element);
 	}
 
