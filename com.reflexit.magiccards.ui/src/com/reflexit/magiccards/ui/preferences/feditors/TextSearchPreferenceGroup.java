@@ -15,7 +15,7 @@ import com.reflexit.magiccards.core.model.Languages;
 import com.reflexit.magiccards.ui.widgets.ContextAssist;
 
 public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
-	private Collection<String> ids = new ArrayList<String>(6);
+	private Collection<String> ids = new ArrayList<>(6);
 
 	@Override
 	public Collection<String> getIds() {
@@ -58,6 +58,25 @@ public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
 		addField(textSfe);
 		addTooltip(textSfe, toolTip);
 		ids.add(textId);
+		// legality
+		String legalityId = FilterField.FORMAT_TEXT.getPrefConstant();
+		getPreferenceStore().setDefault(legalityId, "");
+
+		String[] formats = new String[] { "", // no filter
+				"Standard", "Pioneer", "Modern", "Commander", "Legacy", "Vintage" };
+
+		// Convert to label/value pairs (label == value)
+		String[][] legalities = new String[formats.length][2];
+		for (int i = 0; i < formats.length; i++) {
+			legalities[i][0] = formats[i];
+			legalities[i][1] = formats[i];
+		}
+
+		ComboFieldEditor legalitySfe = new ComboFieldEditor(legalityId, "Legality", legalities, getFieldEditorParent());
+
+		addField(legalitySfe);
+		ids.add(legalityId);
+
 		// artist
 		String artistId = FilterField.ARTIST.getPrefConstant();
 		getPreferenceStore().setDefault(artistId, "");
@@ -80,9 +99,9 @@ public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
 		ids.add(langId);
 	}
 
-	static String[] textProposals = new String[] { "Flying", "Haste", "Persist", "Wither", "Lifelink",
-			"First Strike", "Double Strike",
-			"Protection", "Reach", "Deathtouch", "Unblockable", "Fear", "Changeling", "Trample", "Vigilance", };
+	static String[] textProposals = new String[] { "Flying", "Haste", "Persist", "Wither", "Lifelink", "First Strike",
+			"Double Strike", "Protection", "Reach", "Deathtouch", "Unblockable", "Fear", "Changeling", "Trample",
+			"Vigilance", };
 
 	/**
 	 * TODO: refactor

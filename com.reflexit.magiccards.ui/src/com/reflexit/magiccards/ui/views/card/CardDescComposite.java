@@ -297,8 +297,8 @@ class CardDescComposite extends Composite {
 		String num = getCollectorNumber(card);
 
 		String abbr = card.getEdition().getIconAbbreviation();
-		data += "\n{SETICON:" + abbr + "-" + getRarity(card) + "} " + card.getSet() + " (" + getRarity(card) + ") "
-				+ num + "\n";
+		data += "\n{SETICON:" + abbr + "-" + getRarity(card) + "} [" + abbr + "] " + card.getSet() + " ("
+				+ getRarity(card) + ") " + num + "\n";
 
 		return data;
 	}

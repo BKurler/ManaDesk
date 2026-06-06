@@ -15,7 +15,7 @@ public class LegalityColumn extends GenColumn {
 			IMagicCard card = (IMagicCard) element;
 			LegalityMap map = card.getLegalityMap();
 			if (map.isEmpty()) {
-				return "Unknown. Go to Legality tab and update latest legality of this card from internet.";
+				return "Unknown. Update card to get legality.";
 			}
 			return "Legality column shows the newest\n" //
 					+ "legality formats where card is legal,\n" //
@@ -30,6 +30,9 @@ public class LegalityColumn extends GenColumn {
 		if (element instanceof IMagicCard) {
 			IMagicCard card = (IMagicCard) element;
 			LegalityMap map = card.getLegalityMap();
+			if (map.isEmpty()) {
+				return "Unknown";
+			}
 			return map.getLabel();
 		}
 		return null;

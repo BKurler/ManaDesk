@@ -40,6 +40,7 @@ public enum FilterField {
 	COLLNUM(MagicCardField.COLLNUM, Postfix.NUMERIC_POSTFIX), SPECIAL(MagicCardField.SPECIAL, Postfix.TEXT_POSTFIX),
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
+	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
 	COLOR_IDENTITY(MagicCardField.COST, "identity", Postfix.ENUM_POSTFIX),;
 
 	// fields
@@ -117,7 +118,7 @@ public enum FilterField {
 		ids.add(FORTRADECOUNT.getPrefConstant());
 		ids.add(SPECIAL.getPrefConstant());
 		ids.add(LANG.getPrefConstant());
-		ids.add(FORMAT.getPrefConstant());
+		ids.add(FORMAT_TEXT.getPrefConstant());
 		// TODO add the rest
 		return ids;
 	}
@@ -157,10 +158,17 @@ public enum FilterField {
 			case COMMENT:
 			case SPECIAL:
 				return BinaryExpr.textSearch(ff.getField(), value);
-			case FORMAT:
+			case FORMAT: {
 				TextValue tvalue = new TextValue(value, true, true, false);
 				return new BinaryExpr(new CardFieldExpr(ff.getField()), Operation.MATCHES, tvalue);
+			}
+			case FORMAT_TEXT: {
+				if (value == null || value.isEmpty())
+					return Expr.TRUE;
 
+				// LEGALITY_FILTER contains list of legal format.
+				return BinaryExpr.textSearch(MagicCardField.LEGALITY_FILTER, value);
+			}
 			case CCC: {
 				Expr front = BinaryExpr.fieldInt(ff.getField(), value);
 

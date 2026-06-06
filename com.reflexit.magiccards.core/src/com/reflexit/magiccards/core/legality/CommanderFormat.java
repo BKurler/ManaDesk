@@ -2,7 +2,7 @@ package com.reflexit.magiccards.core.legality;
 
 public class CommanderFormat extends Format {
 	public CommanderFormat() {
-		super("Commander", 9);
+		super("Commander", 4);
 	}
 
 	@Override
@@ -20,8 +20,7 @@ public class CommanderFormat extends Format {
 		int min = getMainDeckCount();
 		if (count == min)
 			return null;
-		return "Deck card count is " + count + " expected to be exactly " + min
-				+ ". Commander should be in sideboard.";
+		return "Deck card count is " + count + " expected to be exactly " + min + ". Commander should be in sideboard.";
 	}
 
 	@Override

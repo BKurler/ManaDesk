@@ -157,14 +157,14 @@ public class LegalityMapTest extends TestCase {
 		card2 = card2.put(STANDARD, Legality.BANNED);
 		card1 = card1.put(Format.MODERN, Legality.RESTRICTED);
 		card2 = card2.put(Format.MODERN, Legality.LEGAL);
-		card1 = card1.put(BLA_BLA, Legality.LEGAL);
+		// !!! RD Not applicable anymore    card1 = card1.put(BLA_BLA, Legality.LEGAL);
 		ArrayList<LegalityMap> list = new ArrayList<LegalityMap>();
 		list.add(card1);
 		list.add(card2);
 		map = LegalityMap.calculateDeckLegality(list);
 		assertEquals(Legality.BANNED, map.get(STANDARD));
 		assertEquals(Legality.RESTRICTED, map.get(Format.MODERN));
-		assertEquals(Legality.NOT_LEGAL, map.get(BLA_BLA));
+		// !!! RD Not applicable anymore    assertEquals(Legality.NOT_LEGAL, map.get(BLA_BLA));
 	}
 
 	/*
