@@ -46,7 +46,7 @@ public abstract class AbstractParseJson {
 					String ts = java.time.LocalTime.now()
 							.format(java.time.format.DateTimeFormatter.ofPattern("mm:ss.SSS"));
 
-					System.out.println(ts + "  === Url sleep === " + sleep + "ms ===");
+					// Debug System.out.println(ts + "  === Url sleep === " + sleep + "ms ===");
 
 					try {
 						Thread.sleep(sleep);
