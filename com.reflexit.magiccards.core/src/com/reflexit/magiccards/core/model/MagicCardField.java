@@ -476,14 +476,65 @@ public enum MagicCardField implements ICardField {
 
 		@Override
 		public void setM(MagicCard card, Object value) {
+			// store raw legality only
 			card.setProperty(MagicCardField.LEGALITY, value);
-		};
+		}
 
 		@Override
 		public Object get(IMagicCard card) {
 			return card.getLegalityMap();
 		};
+
 	},
+	LEGALITY_FILTER(null) {
+		@Override
+		public boolean isTransient() {
+			return true;
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			// ignore anything loaded from XML
+		}
+
+		@Override
+		public Object get(IMagicCard card) {
+			MagicCard base = (card instanceof MagicCardPhysical) ? ((MagicCardPhysical) card).getBase()
+					: (MagicCard) card;
+
+			Object raw = base.getProperty(MagicCardField.LEGALITY);
+			if (raw == null)
+				return "";
+
+			return normalizeLegality(raw.toString());
+		}
+
+		private String normalizeLegality(String raw) {
+			if (raw == null)
+				return "";
+
+			String s = raw.replace(";", " ").replace("|", " ").trim();
+			s = s.replaceAll("\\s+", " ");
+			String[] tokens = s.split(" ");
+
+			StringBuilder out = new StringBuilder();
+			for (String t : tokens) {
+				if (t.isEmpty())
+					continue;
+				if (t.endsWith("?") || t.endsWith("-") || t.endsWith("!"))
+					continue;
+				if (t.endsWith("1") || t.endsWith("+"))
+					t = t.substring(0, t.length() - 1);
+				out.append(t).append(" ");
+			}
+
+			if (out.length() == 0)
+				return "Unknown";
+
+			return out.toString().trim();
+		}
+	},
+
 	COLOR(null) {
 		@Override
 		public Object get(IMagicCard card) {

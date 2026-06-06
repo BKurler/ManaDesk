@@ -38,7 +38,6 @@ import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.layout.FillLayout;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
-import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
@@ -133,15 +132,18 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 	private void createInfoPanel(Composite parent) {
 		info = new Composite(parent, SWT.BORDER);
 		info.setLayout(new GridLayout(2, false));
-		Button update = new Button(info, SWT.PUSH);
-		update.setText("Check Deck Legality Online...");
-		update.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				performUpdate();
-			}
-		});
-		update.setLayoutData(GridDataFactory.fillDefaults().span(2, 1).create());
+
+		/* !!! RD Not supported		
+				Button update = new Button(info, SWT.PUSH);
+				update.setText("Check Deck Legality Online...");
+				update.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						performUpdate();
+					}
+				});
+				update.setLayoutData(GridDataFactory.fillDefaults().span(2, 1).create());
+				*/
 		// createBlueLabel("Format");
 		comboLegality = createLegalityCombo(info);
 		comboLegality.setLayoutData(GridDataFactory.fillDefaults().span(2, 1).create());

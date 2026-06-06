@@ -94,7 +94,7 @@ public class MagicCardFilter implements Cloneable {
 				.and(FilterField.OWNERSHIP.valueExpr(map)).and(FilterField.COMMUNITYRATING.valueExpr(map))
 				.and(FilterField.COLLNUM.valueExpr(map)).and(FilterField.ARTIST.valueExpr(map))
 				.and(FilterField.SPECIAL.valueExpr(map)).and(FilterField.FORTRADECOUNT.valueExpr(map))
-				.and(FilterField.FORMAT.valueExpr(map));
+				.and(FilterField.FORMAT.valueExpr(map)).and(FilterField.FORMAT_TEXT.valueExpr(map));
 		// text fields
 		Expr text = FilterField.TEXT_LINE.valueExpr(map).or(FilterField.TEXT_LINE_2.valueExpr(map))
 				.or(FilterField.TEXT_LINE_3.valueExpr(map));

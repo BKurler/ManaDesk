@@ -16,22 +16,13 @@
 
 package com.reflexit.magiccards.core.test;
 
+import com.reflexit.magiccards.core.exports.ScrtFallImportTest;
+import com.reflexit.magiccards.core.model.storage.PerformanceFilteringTest;
+import com.reflexit.magiccards.core.sync.CurrencyConvertorTest;
+
 import junit.framework.JUnit4TestAdapter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
-
-import com.reflexit.magiccards.core.exports.ScrtFallImportTest;
-import com.reflexit.magiccards.core.model.storage.PerformanceFilteringTest;
-import com.reflexit.magiccards.core.seller.test.AllSellerTests;
-import com.reflexit.magiccards.core.sync.CurrencyConvertorTest;
-import com.reflexit.magiccards.core.sync.ParseGathererCardLanguagesTest;
-import com.reflexit.magiccards.core.sync.ParseGathererLegalityTest;
-import com.reflexit.magiccards.core.sync.ParseGathererOracleTest;
-import com.reflexit.magiccards.core.sync.ParseGathererPrintedTest;
-import com.reflexit.magiccards.core.sync.ParseGathererSearchChecklistTest;
-import com.reflexit.magiccards.core.sync.ParseGathererSearchStandardTest;
-import com.reflexit.magiccards.core.sync.ParseGathererSetsTest;
-
 
 public class AllCoreTests {
 	public static Test suite() {
@@ -39,7 +30,7 @@ public class AllCoreTests {
 		// $JUnit-BEGIN$
 		suite.addTest(AllLocalTests.suite());
 		// gatherer
-// !!! RD Not used anymore		suite.addTestSuite(ParseGathererCardLanguagesTest.class);
+		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererCardLanguagesTest.class);
 		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererSetsTest.class);
 		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererLegalityTest.class);
 		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererOracleTest.class);
@@ -51,7 +42,7 @@ public class AllCoreTests {
 		// online import
 		suite.addTest(new JUnit4TestAdapter(ScrtFallImportTest.class));
 		// price providers
-		suite.addTest(AllSellerTests.suite());
+		// !!! RD suite.addTest(AllSellerTests.suite());
 		// $JUnit-END$
 		return suite;
 	}

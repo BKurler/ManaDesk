@@ -348,7 +348,7 @@ public class LegalityMap {
 
 	public Format getFirstLegal() {
 		if (isEmpty())
-			return Format.LEGACY;
+			return Format.VINTAGE;
 		LegalityHashMap map = map();
 		for (Format format : map.keySet()) {
 			if (format.ordinal() < Format.SAN_ORDINAL) {
@@ -358,9 +358,7 @@ public class LegalityMap {
 				}
 			}
 		}
-		if (!map.containsKey(Format.LEGACY))
-			return Format.LEGACY;
-		return Format.FREEFORM;
+		return Format.VINTAGE;
 	}
 
 	public boolean isLegal(Format format) {

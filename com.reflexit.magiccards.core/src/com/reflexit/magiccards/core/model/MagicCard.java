@@ -689,21 +689,7 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 	private LegalityMap induceLegality() {
 		if (isBasicLand())
 			return LegalityMap.createFromLegal(Format.STANDARD.name());
-		Edition edition = getEdition();
-		if (edition.isUnknown())
-			return LegalityMap.EMPTY;
-		LegalityMap legalityMap = edition.getLegalityMap();
-		if (legalityMap == null)
-			return LegalityMap.EMPTY;
-		if (legalityMap.isLegal(Format.STANDARD))
-			return legalityMap;
-		// check printings
-		IMagicCard prime = db().getPrime(name);
-		if (prime != null && prime != this) {
-			LegalityMap candMap = prime.getLegalityMap();
-			return legalityMap.merge(candMap);
-		}
-		return legalityMap;
+		return LegalityMap.createFromLegal("");
 	}
 
 	public void setLegalityMap(LegalityMap map) {

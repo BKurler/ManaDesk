@@ -19,10 +19,10 @@ public class Format {
 	public static final Format MODERN = new ConstructedFormat("Modern", 3);
 	public static final Format LEGACY = new ConstructedFormat("Legacy", 5);
 	public static final Format VINTAGE = new ConstructedFormat("Vintage", 6);
-	public static final Format CLASSIC = new ConstructedFormat("Classic", 7);
-	public static final Format FREEFORM = new Format("Freeform", 8);
+	// !!! RD public static final Format CLASSIC = new ConstructedFormat("Classic", 7);
+	// !!! RD public static final Format FREEFORM = new Format("Freeform", 8);
 	public static final int SAN_ORDINAL = 10;
-	public static int ordcount = 11;
+	public static int ordcount = 6;
 	private final static LinkedHashMap<String, Format> formats = new LinkedHashMap<>();
 	static {
 		add(Format.STANDARD);
@@ -31,8 +31,8 @@ public class Format {
 		add(new CommanderFormat());
 		add(Format.LEGACY);
 		add(Format.VINTAGE);
-		add(Format.CLASSIC);
-		add(Format.FREEFORM);
+		// !!! RD add(Format.CLASSIC);
+		// !!! RD add(Format.FREEFORM);
 	}
 	@NotNull
 	private final String name;

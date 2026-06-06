@@ -19,6 +19,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -221,43 +222,52 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	}
 
 	private String BuildLegalities(JSONObject object) {
-		String legalitiesStr = "";
+		if (object == null || object.isEmpty())
+			return "";
 
-		if (object != null && object.size() > 0) {
-			if (object.get("standard").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Standard;";
-			} else {
-				legalitiesStr += "Standard-;";
-			}
+		StringBuilder sb = new StringBuilder();
 
-			if (object.get("pioneer").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Pioneer;";
-			} else {
-				legalitiesStr += "Pioneer-;";
-			}
-			if (object.get("modern").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Modern;";
-			} else {
-				legalitiesStr += "Modern-;";
-			}
-			if (object.get("commander").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Commander;";
-			} else {
-				legalitiesStr += "Commander-;";
-			}
-			if (object.get("vintage").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Vintage;";
-			} else {
-				legalitiesStr += "Vintage-;";
-			}
-			if (object.get("legacy").toString().compareTo("legal") == 0) {
-				legalitiesStr += "Legacy";
-			} else {
-				legalitiesStr += "Legacy-";
-			}
+		appendLegality(sb, "Standard", object.get("standard"));
+		appendLegality(sb, "Pioneer", object.get("pioneer"));
+		appendLegality(sb, "Modern", object.get("modern"));
+		appendLegality(sb, "Commander", object.get("commander"));
+		appendLegality(sb, "Vintage", object.get("vintage"));
+		appendLegality(sb, "Legacy", object.get("legacy"));
+
+		return sb.toString();
+	}
+
+	private void appendLegality(StringBuilder sb, String name, Object value) {
+		if (value == null) {
+			sb.append(name).append("-;");
+			return;
 		}
 
-		return legalitiesStr;
+		String v = value.toString().toLowerCase(Locale.ROOT);
+
+		switch (v) {
+		case "legal":
+			sb.append(name).append("+;");
+			break;
+
+		case "not_legal":
+		case "illegal":
+			sb.append(name).append("-;");
+			break;
+
+		case "banned":
+			sb.append(name).append("!;");
+			break;
+
+		case "restricted":
+			sb.append(name).append("1;");
+			break;
+
+		default:
+			// Unknown → treat as not legal
+			sb.append(name).append("-;");
+			break;
+		}
 	}
 
 	private String BuildPrice(JSONObject prices) {
@@ -402,7 +412,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		String languageString = BuildLanguage(elem.get("lang").toString());
 		String finishesString = BuildFinishes((JSONArray) elem.get("finishes"));
 		String legalitiesString = BuildLegalities((JSONObject) elem.get("legalities"));
-
+		String legalitiesText = "";
 		String scryfallUriString = "<br><a href=\"" + ((String) elem.get("scryfall_uri")) + "\">Scryfall</a>";
 		String fullArtString = BuildText("FullArt: ", elem.get("full_art").toString());
 		String textlessString = BuildText("TextLess: ", elem.get("textless").toString());
@@ -454,9 +464,9 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		if (!generateFlat) {
 			priceString = BuildPrice((JSONObject) elem.get("prices"));
-		}
 
-		if (!generateFlat) {
+			legalitiesText = "<br>" + legalitiesString.replace(";", "<br>");
+
 			updateString = "<br>Updated on " + java.time.LocalDateTime.now()
 					.format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
 
@@ -529,7 +539,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			// We will use the Text field to store and display that information
 			cardText = priceString + frontMultiverseString + finishesString + fullArtString + textlessString
 					+ boosterString + storySpotlightString + promoTypesString + scryfallUriString + gathererUriString
-					+ tcgUriString + rulingsUriString + updateString;
+					+ tcgUriString + rulingsUriString + legalitiesText + updateString;
 
 			frontCard.setText(cardText);
 			frontCard.setLanguage(languageString);
@@ -657,7 +667,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			// Useful for collectors
 			cardText = finishesString + fullArtString + textlessString + boosterString + storySpotlightString
 					+ promoTypesString + scryfallUriString + gathererUriString + tcgUriString + rulingsUriString
-					+ updateString;
+					+ legalitiesText + updateString;
 
 			frontCard.setText(priceString + frontMultiverseString + cardText);
 			backCard.setText(backMultiverseString + cardText);
