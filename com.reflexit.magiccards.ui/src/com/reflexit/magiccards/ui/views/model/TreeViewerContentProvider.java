@@ -21,7 +21,7 @@ import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 
 public class TreeViewerContentProvider implements ITreeContentProvider, ISelectionTranslator, ISizeContentProvider {
 	public static final Object[] EMPTY_CHILDREN = new Object[] {};
-	private int maxCount = 300;
+	private int maxCount = 999;
 	private Object input;
 
 	@Override

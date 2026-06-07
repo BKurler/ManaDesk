@@ -6,14 +6,20 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.widgets.Composite;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.GroupOrder;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Languages.Language;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -63,6 +69,17 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 			return "No card";
 		}
 		return card.getName() + ": " + getStatusMessage1();
+	}
+
+	@Override
+	protected void makeActions() {
+		super.makeActions();
+
+		// Disable default sorting (CRITICAL)
+		getFilter().setSortOrder(new SortOrder());
+
+		// Apply custom instance sorting
+		applyInstanceSort();
 	}
 
 	@Override
@@ -166,6 +183,47 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 
 	@Override
 	public void saveColumnLayout() {
-		// ignore?
+		super.saveColumnLayout();
 	}
+
+	private void applyInstanceSort() {
+		if (viewer == null)
+			return;
+
+		Viewer jfaceViewer = viewer.getViewer();
+		if (!(jfaceViewer instanceof StructuredViewer))
+			return;
+
+		StructuredViewer sv = (StructuredViewer) jfaceViewer;
+
+		sv.setComparator(new ViewerComparator() {
+			@Override
+			public int compare(Viewer v, Object a, Object b) {
+
+				// 0. Handle CardGroup (when list >300)
+				boolean aGroup = a instanceof CardGroup;
+				boolean bGroup = b instanceof CardGroup;
+
+				if (aGroup && bGroup)
+					return 0;
+				if (aGroup)
+					return -1;
+				if (bGroup)
+					return 1;
+
+				// 1. Now both are MagicCardPhysical
+				MagicCardPhysical p1 = (MagicCardPhysical) a;
+				MagicCardPhysical p2 = (MagicCardPhysical) b;
+
+				// 2. Sort by location ONLY
+				int d = p1.getLocation().compareTo(p2.getLocation());
+				if (d != 0)
+					return d;
+
+				// 3. Same location -> preserve original order
+				return 0;
+			}
+		});
+	}
+
 }
