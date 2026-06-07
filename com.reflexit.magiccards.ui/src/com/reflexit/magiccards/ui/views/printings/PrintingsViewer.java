@@ -1,5 +1,4 @@
 
-
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
@@ -55,12 +54,12 @@ public class PrintingsViewer extends ExtendedTreeViewer implements IDisposable {
 
 	@Override
 	public void updateColumns(String preferenceValue) {
-		// ignore
+		super.updateColumns(preferenceValue);
 	}
 
 	@Override
 	public String getColumnLayoutProperty() {
-		// ignore
-		return "";
+		return super.getColumnLayoutProperty();
 	}
+
 }

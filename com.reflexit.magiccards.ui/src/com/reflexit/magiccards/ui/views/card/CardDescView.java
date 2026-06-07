@@ -466,15 +466,24 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
 					public void run() {
-						IWorkbenchPage page = getViewSite().getWorkbenchWindow().getActivePage();
-						if (page != null) {
-							IViewPart dbview = page.findView(MagicDbView.ID);
-							if (dbview != null) {
-								dbview.getSite().getSelectionProvider().setSelection(sel);
-							}
+						if (getViewSite() == null)
+							return;
+
+						IWorkbenchWindow win = getViewSite().getWorkbenchWindow();
+						if (win == null)
+							return;
+
+						IWorkbenchPage page = win.getActivePage();
+						if (page == null)
+							return;
+
+						IViewPart dbview = page.findView(MagicDbView.ID);
+						if (dbview != null) {
+							dbview.getSite().getSelectionProvider().setSelection(sel);
 						}
 					}
 				});
+
 				return Status.OK_STATUS;
 			}
 		}.schedule(5000);

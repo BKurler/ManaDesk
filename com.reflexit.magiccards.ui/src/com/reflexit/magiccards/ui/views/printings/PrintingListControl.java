@@ -8,11 +8,16 @@ import java.util.LinkedHashSet;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.jface.action.IToolBarManager;
+import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.widgets.Composite;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
+import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
@@ -56,6 +61,17 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 			return "No card";
 		}
 		return card.getName() + ": " + getStatusMessage1();
+	}
+
+	@Override
+	protected void makeActions() {
+		super.makeActions();
+
+		// Disable default sorting
+		getFilter().setSortOrder(new SortOrder()); // empty
+
+		// Now apply your comparator
+		applyPrintingSort();
 	}
 
 	@Override
@@ -133,4 +149,58 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 	public IFilteredCardStore doGetFilteredStore() {
 		return new MemoryFilteredCardStore();
 	}
+
+	private void applyPrintingSort() {
+		if (viewer == null)
+			return;
+
+		Viewer jfaceViewer = viewer.getViewer();
+		if (!(jfaceViewer instanceof StructuredViewer))
+			return;
+
+		StructuredViewer sv = (StructuredViewer) jfaceViewer;
+
+		sv.setComparator(new ViewerComparator() {
+			@Override
+			public int compare(Viewer v, Object a, Object b) {
+
+				// Handle CardGroup BEFORE casting
+				boolean aGroup = a instanceof CardGroup;
+				boolean bGroup = b instanceof CardGroup;
+
+				if (aGroup && bGroup)
+					return 0; // keep group order
+				if (aGroup)
+					return -1; // group above cards
+				if (bGroup)
+					return 1;
+
+				// Now safe to cast
+				MagicCard c1 = (MagicCard) a;
+				MagicCard c2 = (MagicCard) b;
+
+				// Release date - oldest first
+				int d = c1.getEdition().getReleaseDate().compareTo(c2.getEdition().getReleaseDate());
+				if (d != 0)
+					return d;
+
+				// Collector number - smallest first
+				try {
+					int n1 = Integer.parseInt(c1.getCollNumber());
+					int n2 = Integer.parseInt(c2.getCollNumber());
+					d = Integer.compare(n1, n2);
+					if (d != 0)
+						return d;
+				} catch (NumberFormatException ignore) {
+					d = c1.getCollectorId().compareTo(c2.getCollectorId());
+					if (d != 0)
+						return d;
+				}
+
+				// Fallback: set code
+				return c1.getSet().compareTo(c2.getSet());
+			}
+		});
+	}
+
 }
