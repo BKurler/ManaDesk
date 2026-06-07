@@ -312,18 +312,31 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	@Override
 	public ISelection getSelection() {
-		ISelection selection[] = new ISelection[] { new StructuredSelection() };
-		PlatformUI.getWorkbench().getDisplay().syncExec(new Runnable() {
-			@Override
-			public void run() {
-				try {
-					selection[0] = viewer.getSelectionProvider().getSelection();
-				} catch (Exception e) {
-					MagicUIActivator.log(e);
+		// If viewer is gone, return empty selection
+		if (viewer == null)
+			return StructuredSelection.EMPTY;
+
+		Control ctrl = viewer.getControl();
+		if (ctrl == null || ctrl.isDisposed())
+			return StructuredSelection.EMPTY;
+
+		Display display = ctrl.getDisplay();
+		if (display == null || display.isDisposed())
+			return StructuredSelection.EMPTY;
+
+		final ISelection[] result = new ISelection[] { StructuredSelection.EMPTY };
+
+		display.syncExec(() -> {
+			try {
+				if (!viewer.getControl().isDisposed()) {
+					result[0] = viewer.getSelectionProvider().getSelection();
 				}
+			} catch (Exception e) {
+				MagicUIActivator.log(e);
 			}
 		});
-		return selection[0];
+
+		return result[0];
 	}
 
 	public Action getShowFilterAction() {
