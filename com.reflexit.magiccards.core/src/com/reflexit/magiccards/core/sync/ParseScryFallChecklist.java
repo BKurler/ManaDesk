@@ -18,6 +18,7 @@ import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.Currency;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -273,6 +274,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	private String BuildPrice(JSONObject prices) {
 		String priceStr = "";
 		String foilPriceStr = "";
+		String etchedPriceStr = "";
 
 		if (prices == null || prices.size() == 0) {
 			return "";
@@ -282,15 +284,49 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		if (obj != null) {
 			priceStr = "R$ " + obj.toString() + " ";
+		} else {
+
+			// Try EUR price if USD is not available
+			obj = prices.get("eur");
+			if (obj != null) {
+
+				float eur = Float.parseFloat(obj.toString());
+
+				// If EUR exists, convert it to USD
+				if (eur != 0f) {
+					double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+							Currency.getInstance("USD"));
+					priceStr = "RE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
+				}
+			}
 		}
 
 		obj = prices.get("usd_foil");
 		if (obj != null) {
 			foilPriceStr = "F$ " + obj.toString();
+		} else {
+			// Try EUR price if USD is not available
+			obj = prices.get("eur_foil");
+			if (obj != null) {
+
+				float eur = Float.parseFloat(obj.toString());
+
+				// If EUR exists, convert it to USD
+				if (eur != 0f) {
+					double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+							Currency.getInstance("USD"));
+					priceStr = "FE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
+				}
+			}
 		}
 
-		if (!priceStr.isEmpty() || !foilPriceStr.isEmpty()) {
-			return priceStr + foilPriceStr + "<br>";
+		obj = prices.get("usd_etched");
+		if (obj != null) {
+			etchedPriceStr = "E$ " + obj.toString();
+		}
+
+		if (!priceStr.isEmpty() || !foilPriceStr.isEmpty() || !etchedPriceStr.isEmpty()) {
+			return priceStr + foilPriceStr + etchedPriceStr + "<br>";
 		}
 		return "";
 	}
@@ -432,6 +468,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 					float price = 0f;
 					float price_foil = 0f;
+
 					JSONObject prices = (JSONObject) elem.get("prices");
 
 					if (prices != null && prices.size() >= 0) {
@@ -441,16 +478,60 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 							price = Float.parseFloat(obj.toString());
 						}
 
+						if (price == 0f) {
+
+							// Try EUR price if USD is not available
+							obj = prices.get("eur");
+							if (obj != null) {
+
+								float eur = Float.parseFloat(obj.toString());
+
+								// If EUR exists, convert it to USD
+								if (eur != 0f) {
+									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+											Currency.getInstance("USD"));
+									price = eur * (float) eurToUsd;
+								}
+							}
+
+							if (price == 0f) {
+								price = -0.0001f;
+							}
+						}
+
 						obj = prices.get("usd_foil");
 						if (obj != null) {
 							price_foil = Float.parseFloat(obj.toString());
 						}
 
-						if (price == 0f) {
-							price = -0.0001f;
-						}
 						if (price_foil == 0f) {
-							price_foil = -0.0001f;
+
+							// Try Etched
+							obj = prices.get("usd_etched");
+							if (obj != null) {
+								price_foil = Float.parseFloat(obj.toString());
+							}
+
+							if (price_foil == 0f) {
+
+								// Try EUR price if USD is not available
+								obj = prices.get("eur_foil");
+								if (obj != null) {
+
+									float eur_foil = Float.parseFloat(obj.toString());
+
+									// If EUR exists, convert it to USD
+									if (eur_foil != 0f) {
+										double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+												Currency.getInstance("USD"));
+										price_foil = eur_foil * (float) eurToUsd;
+									}
+								}
+							}
+
+							if (price_foil == 0f) {
+								price_foil = -0.0001f;
+							}
 						}
 						priceStore.setDbPrice(frontCard, price);
 						priceStore.setDbPriceFoil(frontCard, price_foil);
