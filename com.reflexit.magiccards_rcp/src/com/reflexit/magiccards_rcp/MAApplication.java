@@ -134,8 +134,7 @@ public class MAApplication implements IApplication, IExecutableExtension {
 			try {
 				String osarch = System.getProperty("os.arch");
 				String libarch = System.getProperty("osgi.arch");
-				AwtFatalErrorDialog.openError("Error: Java/App platform mismatch. Java " + osarch + ", App "
- + libarch
+				AwtFatalErrorDialog.openError("Error: Java/App platform mismatch. Java " + osarch + ", App " + libarch
 						+ "\nThis is likely 32/64 bit mismatch\nPlease check installation guide for solution.");
 			} catch (Throwable e1) {
 				// ignore
@@ -217,7 +216,18 @@ public class MAApplication implements IApplication, IExecutableExtension {
 		}
 		// -data @noDefault or -data not specified, prompt and set
 		ChooseWorkspaceData launchData = new ChooseWorkspaceData(instanceLoc.getDefault());
+
 		boolean force = false;
+
+		// If the stored workspace no longer exists, force the dialog to open
+		String[] recent = launchData.getRecentWorkspaces();
+		if (recent != null && recent.length > 0) {
+			File stored = new File(recent[0]);
+			if (!stored.exists()) {
+				force = true;
+			}
+		}
+
 		while (true) {
 			URL workspaceUrl = promptForWorkspace(shell, launchData, force);
 			if (workspaceUrl == null) {
