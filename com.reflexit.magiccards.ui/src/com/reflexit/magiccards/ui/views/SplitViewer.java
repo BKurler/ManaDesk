@@ -37,6 +37,16 @@ public class SplitViewer implements IMagicColumnViewer {
 	private IFilteredCardStore fstore;
 	private Composite main;
 
+	private SashForm form;
+
+	public SashForm getSashForm() {
+		return form;
+	}
+
+	public Control getRightControl() {
+		return viewer.getControl();
+	}
+
 	public SplitViewer(Composite parent, String id) {
 		main = (Composite) createContents(parent, id);
 	}
@@ -48,7 +58,7 @@ public class SplitViewer implements IMagicColumnViewer {
 
 	public Control createContents(Composite parent, String id) {
 		// Composite comp = new Composite(parent, SWT.NONE);
-		SashForm form = new SashForm(parent, SWT.HORIZONTAL);
+		form = new SashForm(parent, SWT.HORIZONTAL);
 		Composite comp = form;
 		treeviewer = new SingleColumnTreeViewer(comp) {
 			@Override

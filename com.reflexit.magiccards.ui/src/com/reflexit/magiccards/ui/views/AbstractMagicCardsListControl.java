@@ -127,7 +127,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	private Object lastInput;
 
-// !!! RD 	private final java.util.List<ISelectionChangedListener> selectionListeners = new java.util.ArrayList<>();
+	// !!! RD 	private final java.util.List<ISelectionChangedListener> selectionListeners = new java.util.ArrayList<>();
 
 	private ISelectionChangedListener statusSelectionListener = new ISelectionChangedListener() {
 		@Override
@@ -429,6 +429,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	public void reGroup() {
 		refresh();
+		updateGroupingVisibility();
+
 	}
 
 	@Override
@@ -586,6 +588,9 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		// control.setBackground(control.getDisplay().getSystemColor(SWT.COLOR_CYAN));
 		this.viewer.hookContext(PerspectiveFactoryMagic.TABLES_CONTEXT);
 		this.viewer.hookSortAction(this::sort);
+
+		updateGroupingVisibility();
+
 		return control;
 	}
 
@@ -1239,4 +1244,29 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 		getSelectionProvider().setSelection(new StructuredSelection(element));
 	}
+
+	private void updateGroupingVisibility() {
+		if (viewer instanceof com.reflexit.magiccards.ui.views.SplitViewer) {
+			com.reflexit.magiccards.ui.views.SplitViewer sv = (com.reflexit.magiccards.ui.views.SplitViewer) viewer;
+
+			if (!isGroupped) {
+				sv.getSashForm().setMaximizedControl(sv.getRightControl());
+			} else {
+				sv.getSashForm().setMaximizedControl(null);
+				sv.getSashForm().setWeights(new int[] { 22, 78 });
+			}
+		}
+
+		if (viewer instanceof com.reflexit.magiccards.ui.gallery.SplitGalleryViewer) {
+			com.reflexit.magiccards.ui.gallery.SplitGalleryViewer gv = (com.reflexit.magiccards.ui.gallery.SplitGalleryViewer) viewer;
+
+			if (!isGroupped) {
+				gv.getSashForm().setMaximizedControl(gv.getRightControl());
+			} else {
+				gv.getSashForm().setMaximizedControl(null);
+				gv.getSashForm().setWeights(new int[] { 22, 78 });
+			}
+		}
+	}
+
 }

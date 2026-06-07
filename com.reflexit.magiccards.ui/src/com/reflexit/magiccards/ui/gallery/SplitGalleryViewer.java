@@ -32,6 +32,16 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 	protected Viewer galleryviewer;
 	private SingleColumnTreeViewer viewer;
 
+	private SashForm form;
+
+	public SashForm getSashForm() {
+		return form;
+	}
+
+	public Control getRightControl() {
+		return galleryviewer.getControl();
+	}
+
 	public SplitGalleryViewer(Composite parent, String preferencePageId) {
 		createContents(parent);
 	}
@@ -43,7 +53,7 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 
 	public Control createContents(Composite parent) {
 		// Composite comp = new Composite(parent, SWT.NONE);
-		SashForm form = new SashForm(parent, SWT.HORIZONTAL);
+		form = new SashForm(parent, SWT.HORIZONTAL);
 		control = form;
 		control.setLayout(new FillLayout());
 		viewer = new SingleColumnTreeViewer(control);
