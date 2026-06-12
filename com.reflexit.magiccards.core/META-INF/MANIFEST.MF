@@ -2,7 +2,7 @@ Manifest-Version: 1.0
 Bundle-ManifestVersion: 2
 Bundle-Name: ManaDesk Core Plug-in
 Bundle-SymbolicName: com.reflexit.magiccards.core;singleton:=true
-Bundle-Version: 0.9.6.qualifier
+Bundle-Version: 0.9.7.qualifier
 Bundle-Activator: com.reflexit.magiccards.core.Activator
 Bundle-Vendor: Alena Laskavaia
 Bundle-Localization: plugin

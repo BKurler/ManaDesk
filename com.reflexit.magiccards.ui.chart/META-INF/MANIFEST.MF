@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.reflexit.magiccards.ui.chart
 Bundle-Name: ManaDesk Chart Plugin
 Bundle-SymbolicName: com.reflexit.magiccards.ui.chart;singleton:=true
-Bundle-Version: 0.9.6.qualifier
+Bundle-Version: 0.9.7.qualifier
 Bundle-Activator: com.reflexit.magiccards.ui.chart.Activator
 Bundle-Vendor: Alena Laskavaia
 Require-Bundle: org.eclipse.ui,

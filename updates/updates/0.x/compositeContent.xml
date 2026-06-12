@@ -9,7 +9,7 @@
     <property name="p2.timestamp" value="1615539125093"/>
     <property name="p2.atomic.composite.loading" value="false"/>
   </properties>
-  <children size="7">
+  <children size="8">
     <child location="../../releases/0.0.5.v20251226-1002"/>
     <child location="../../releases/0.0.9.v20260105-0939"/>
     <child location="../../releases/0.9.1v20260111-2205"/>
@@ -17,5 +17,6 @@
     <child location="../../releases/0.9.3v20260118-1812"/>
     <child location="../../releases/0.9.5v20260323-1627"/>
     <child location="../../releases/0.9.6v20260424-2052"/>
+    <child location="../../releases/0.9.7v20260611-2229"/>
   </children>
 </repository>
