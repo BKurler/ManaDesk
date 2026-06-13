@@ -3,7 +3,7 @@ Bundle-ManifestVersion: 2
 Automatic-Module-Name: com.reflexit.mtgtournament.core.tests
 Bundle-Name: Tests Plug-in
 Bundle-SymbolicName: com.reflexit.mtgtournament.core.tests
-Bundle-Version: 0.9.6.qualifier
+Bundle-Version: 0.9.7.qualifier
 Bundle-Activator: com.reflexit.mtgtournament.core.tests.Activator
 Bundle-Vendor: Alena Laskavaia
 Require-Bundle: org.eclipse.core.runtime,
