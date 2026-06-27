@@ -587,22 +587,47 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			viewer.getControl().dispose();
 		}
 
-		viewer = null; // ⭐ absolutely required
+		viewer = null; // absolutely required
 		this.viewer = createViewer(parent);
 
-		// ⭐ Reattach all selection listeners to the new viewer
+		// Reattach all selection listeners to the new viewer
 		for (ISelectionChangedListener l : selectionListeners) {
 			viewer.getSelectionProvider().addSelectionChangedListener(l);
 		}
 
-		// ⭐ Reapply input to the new viewer
+		// update search anchor when user selects a card
+		viewer.getSelectionProvider().addSelectionChangedListener(event -> {
+			if (suppressBridgeForwarding)
+				return; // ignore programmatic selection (highlight)
+
+			ISelection sel = event.getSelection();
+			if (!(sel instanceof IStructuredSelection))
+				return;
+
+			Object first = ((IStructuredSelection) sel).getFirstElement();
+			if (first == null)
+				return;
+
+			// Convert to TreePath if possible
+			TreePath path = null;
+			if (first instanceof ICard) {
+				path = findPathForCard((ICard) first);
+			} else if (first instanceof TreePath) {
+				path = (TreePath) first;
+			}
+
+			if (path != null) {
+				searchControl.getContext().setLast(path);
+			}
+		});
+
+		// Reapply input to the new viewer
 		if (lastInput != null) {
 			viewer.setInput(lastInput);
 		}
 
 		Control control = viewer.getControl();
 		control.setLayoutData(new GridData(GridData.FILL_BOTH));
-		// control.setBackground(control.getDisplay().getSystemColor(SWT.COLOR_CYAN));
 		this.viewer.hookContext(PerspectiveFactoryMagic.TABLES_CONTEXT);
 		this.viewer.hookSortAction(this::sort);
 
