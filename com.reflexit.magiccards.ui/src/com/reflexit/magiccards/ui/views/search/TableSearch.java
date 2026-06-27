@@ -24,7 +24,11 @@ import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
  *
  */
 public class TableSearch {
+
+	private static final boolean DEBUG = false;
+
 	public static void search(SearchContext context, IFilteredCardStore store) {
+
 		Object last;
 		String inputText;
 		boolean wholeWord;
@@ -44,6 +48,7 @@ public class TableSearch {
 		} else {
 			matchCase = false;
 		}
+
 		String escapedInput = escapeAndCamelCase(inputText);
 		String pattern = escapedInput;
 		if (wholeWord)
@@ -71,77 +76,357 @@ public class TableSearch {
 		}
 	}
 
-	public static int getIndex(Object last, Object[] elements) {
-		if (last != null) {
-			for (int i = 0; i < elements.length; i++) {
-				Object card = elements[i];
-				if (card == last) {
-					return i;
+	private static int getIndex(Object anchor, Object[] elements) {
+
+		if (DEBUG) {
+			System.out.println("[GETINDEX] anchor=" + anchor);
+			System.out.println("[GETINDEX] anchorKey=" + (anchor == null ? null : anchor.toString()));
+		}
+
+		String anchorKey = (anchor == null ? null : anchor.toString());
+
+		for (int i = 0; i < elements.length; i++) {
+			Object elem = elements[i];
+			boolean eq = elem.equals(anchor);
+
+			String elemKey = (elem == null ? null : elem.toString());
+			boolean keyEq = (anchorKey != null && anchorKey.equals(elemKey));
+
+			if (DEBUG) {
+				System.out.println("  [GETINDEX] i=" + i + " elem=" + elem + " eq=" + eq + " keyEq=" + keyEq);
+			}
+
+			if (eq || keyEq) {
+				if (DEBUG) {
+					System.out.println("[GETINDEX] FOUND by " + (eq ? "equals()" : "key") + " i=" + i);
 				}
+				return i;
 			}
 		}
+
+		if (DEBUG) {
+			System.out.println("[GETINDEX] NOT FOUND");
+		}
+
 		return -1;
+	}
+
+	private static String extractKey(Object o) {
+		if (o == null)
+			return null;
+
+		String s = o.toString().trim();
+
+		// CASE 1 : CARD (has UUID prefix)
+		// UUID pattern: 8-4-4-4-12 hex chars
+		if (s.matches("^[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}.*")) {
+			int idx = s.indexOf(':');
+			if (idx > 0) {
+				return s.substring(0, idx).trim(); // return UUID
+			}
+		}
+
+		// CASE 2 : GROUP (no UUID)
+		// Group name is everything before the first colon (if any)
+		int idx = s.indexOf(':');
+		if (idx > 0) {
+			return s.substring(0, idx).trim();
+		}
+
+		// No colon -> whole string is the group name
+		return s;
 	}
 
 	private static void searchTree(SearchContext context, TreePath last, boolean needWrap, Pattern pat,
 			ICardGroup group, TreePath path) {
+
 		Object[] elements = group.getChildren();
 		int lastIndex = -1;
 		int len = elements.length;
 		int i1 = 0, i2 = len - 1;
+
+		// Debug header
+		if (DEBUG) {
+			System.out.println("=== TREE DEBUG ===");
+			System.out.println("Forward: " + context.isForward());
+			System.out.println("Group: " + group);
+			System.out.println("Path: " + path);
+			System.out.println("Children count: " + elements.length);
+			for (int k = 0; k < elements.length; k++) {
+				System.out.println("  child[" + k + "]: " + elements[k]);
+			}
+			if (last != null) {
+				System.out.println("Last TreePath: " + last);
+				System.out.println("  First segment: " + last.getFirstSegment());
+				System.out.println("  Last segment: " + last.getLastSegment());
+			} else {
+				System.out.println("Last TreePath: null");
+			}
+			System.out.println("==================");
+		}
+
+		// Anchor logic
 		if (last != null) {
-			lastIndex = getIndex(last.getFirstSegment(), elements);
-			if (lastIndex != -1) {
-				if (last.getSegmentCount() == 1) {
-					i1 = lastIndex + 1;
-				} else {
+
+			if (DEBUG) {
+				System.out.println("  [ANCHOR] segmentCount=" + last.getSegmentCount());
+			}
+
+			if (group.equals(last.getFirstSegment())) {
+				// Inside anchor group -> anchor on card
+				Object anchor = last.getLastSegment();
+				lastIndex = getIndex(anchor, elements);
+
+				if (DEBUG) {
+					System.out.println("  [ANCHOR] inside group, anchor card=" + anchor + " lastIndex=" + lastIndex);
+				}
+
+				if (lastIndex != -1) {
+					i1 = context.isForward() ? lastIndex + 1 : lastIndex - 1;
+				}
+
+			} else {
+				// Parent group -> anchor on subgroup
+				Object anchor = last.getFirstSegment();
+				lastIndex = getIndex(anchor, elements);
+
+				if (DEBUG) {
+					System.out
+							.println("  [ANCHOR] parent group, anchor subgroup=" + anchor + " lastIndex=" + lastIndex);
+				}
+
+				if (lastIndex != -1) {
 					i1 = lastIndex;
 				}
 			}
+
+			if (DEBUG) {
+				System.out.println("  Anchor segmentCount " + last.getSegmentCount() + " lastIndex " + lastIndex);
+			}
 		}
-		int start = i1, end = i2, off = 1;
-		if (context.isForward() == false) {
-			start = i2;
-			end = i1;
-			off = -1;
+
+		// Wrap-around start
+		if (last == null) {
+			i1 = context.isForward() ? 0 : len - 1;
 		}
-		for (int i = start; i * off <= end * off && context.isFound() == false
-				&& context.isCancelled() == false; i += off) {
-			int j = i % elements.length;
-			ICard card = (ICard) elements[j];
-			TreePath fullPath = path.createChildPath(card);
-			if (j != lastIndex && match(pat, card)) {
-				context.setFound(true, fullPath);
+
+		int start = i1;
+		int end = i2;
+		int off = context.isForward() ? 1 : -1;
+
+		if (!context.isForward()) {
+			end = 0;
+		}
+
+		if (DEBUG) {
+			System.out.println("  [LOOP-SETUP] start=" + start + " end=" + end + " off=" + off + " len=" + len);
+			System.out.println("  For loop : start " + start + " end " + end);
+		}
+
+		// Main loop
+		for (int i = start; !context.isFound() && !context.isCancelled(); i += off) {
+
+			if (DEBUG) {
+				System.out.println("  [LOOP] raw i=" + i + " off=" + off);
+			}
+
+			if (i < 0 && !context.isForward())
 				break;
+			if (i >= len && context.isForward())
+				break;
+
+			int j = (i + len) % len;
+			Object child = elements[j];
+			TreePath fullPath = path.createChildPath(child);
+
+			if (DEBUG) {
+				System.out.println("  [LOOP] i=" + i + " j=" + j + " child=" + child + " lastIndex=" + lastIndex
+						+ " forward=" + context.isForward());
 			}
-			if (card instanceof ICardGroup) {
+
+			// GROUP
+			if (child instanceof ICardGroup) {
+
+				ICardGroup g = (ICardGroup) child;
+
+				if (DEBUG) {
+					System.out.println(
+							"    [RECURSE] child is ICardGroup, j=" + j + " equals lastIndex? " + (j == lastIndex));
+					System.out.println("    [RECURSE] group name=" + g.getName() + " size=" + g.size());
+				}
+
+				// Detect if anchor is inside this group
+				boolean anchorInsideThisGroup = false;
+				if (last != null) {
+					for (int si = 0; si < last.getSegmentCount() - 1; si++) {
+						if (last.getSegment(si).equals(g)) {
+							anchorInsideThisGroup = true;
+							break;
+						}
+					}
+				}
+
+				if (DEBUG) {
+					System.out.println("    [RECURSE] group name=" + g.getName() + " size=" + g.size()
+							+ " anchorInsideThisGroup=" + anchorInsideThisGroup);
+				}
+
+				// SAME-NAME GROUP FAST PATH
+				if (!anchorInsideThisGroup && isSameNameGroup(g)) {
+
+					boolean groupMatches = pat.matcher(g.getName()).find();
+
+					if (DEBUG) {
+						System.out.println("    [RECURSE] same-name group? groupMatches=" + groupMatches);
+					}
+
+					if (groupMatches) {
+						Object[] kids = g.getChildren();
+						int index = context.isForward() ? 0 : kids.length - 1;
+						ICard targetCard = (ICard) kids[index];
+
+						if (DEBUG) {
+							System.out.println("    [RECURSE] SAME-NAME GROUP MATCH → "
+									+ (context.isForward() ? "first" : "last") + " card=" + targetCard.getName());
+						}
+
+						TreePath matchPath = fullPath.createChildPath(targetCard);
+						context.setFound(true, matchPath);
+						continue;
+					}
+				}
+
+				// NORMAL RECURSION
 				if (j == lastIndex) {
-					searchTree(context, cutHead(last), needWrap, pat, (ICardGroup) card, fullPath);
+					if (DEBUG)
+						System.out.println("    [RECURSE] using cutHead(last) for anchor subgroup");
+					searchTree(context, cutHead(last), needWrap, pat, g, fullPath);
 					lastIndex = -1;
-				} else
-					searchTree(context, null, needWrap, pat, (ICardGroup) card, fullPath);
+					if (DEBUG)
+						System.out.println("    [RECURSE] returned from anchor subgroup, lastIndex reset to -1");
+				} else {
+					if (DEBUG)
+						System.out.println("    [RECURSE] normal recursion with last=null");
+					searchTree(context, null, needWrap, pat, g, fullPath);
+				}
+
+				if (DEBUG) {
+					System.out.println("    [RECURSE] after recursion, found=" + context.isFound() + " cancelled="
+							+ context.isCancelled());
+				}
+
+				continue;
+			}
+
+			// CARD
+			ICard card = (ICard) child;
+			boolean skip = (j == lastIndex);
+
+			if (DEBUG) {
+				System.out.println(
+						"    [MATCH] card=" + card + " j=" + j + " lastIndex=" + lastIndex + " skipAnchorCard=" + skip);
+			}
+
+			if (!skip) {
+				boolean m = match(pat, card);
+
+				if (DEBUG) {
+					System.out.println("[MATCH] name=\"" + card.getName() + "\" pattern=" + pat.pattern() + " j=" + j
+							+ " lastIndex=" + lastIndex + " skipAnchorCard=" + skip + " result=" + m);
+				}
+
+				if (m) {
+					if (DEBUG)
+						System.out.println("    [MATCH] FOUND → setFound, fullPath=" + fullPath);
+					context.setFound(true, fullPath);
+					break;
+				}
 			}
 		}
-	}
 
-	private static TreePath cutHead(TreePath last) {
-		int l = last.getSegmentCount();
-		if (l <= 1)
-			throw new IllegalArgumentException();
-		Object[] arr = new Object[l - 1];
-		for (int i = 1; i < l; i++) {
-			Object segment = last.getSegment(i);
-			arr[i - 1] = segment;
+		if (DEBUG) {
+			System.out.println(">>> LOOP END for group " + group + " found=" + context.isFound() + " cancelled="
+					+ context.isCancelled());
 		}
-		return new TreePath(arr);
 	}
 
-	private static void searchFlat(SearchContext context, IFilteredCardStore store, Object last,
-			boolean needWrap, Pattern pat) {
+	private static boolean isSameNameGroup(ICardGroup g) {
+
+		Object[] kids = g.getChildren();
+		if (kids.length == 0) {
+			return false;
+		}
+
+		// All children must be cards
+		for (Object k : kids) {
+			if (!(k instanceof ICard)) {
+				return false;
+			}
+		}
+
+		// All cards must have the same name
+		String name = ((ICard) kids[0]).getName();
+		for (Object k : kids) {
+			if (!((ICard) k).getName().equals(name)) {
+				return false;
+			}
+		}
+
+		// Group name must match card name
+		boolean result = g.getName().equals(name);
+
+		if (DEBUG) {
+			System.out.println("[SAME-NAME] group=" + g.getName() + " children=" + kids.length + " result=" + result);
+		}
+
+		return result;
+	}
+
+	private static TreePath cutHead(TreePath path) {
+
+		if (DEBUG) {
+			System.out.println(
+					"[CUTHEAD] in=" + path + " segmentCount=" + (path == null ? "null" : path.getSegmentCount()));
+		}
+
+		if (path == null || path.getSegmentCount() <= 1) {
+			if (DEBUG) {
+				System.out.println("[CUTHEAD] out=null (<=1 segment)");
+			}
+			return null;
+		}
+
+		Object[] segments = new Object[path.getSegmentCount() - 1];
+		for (int i = 1; i < path.getSegmentCount(); i++) {
+			segments[i - 1] = path.getSegment(i);
+		}
+
+		TreePath result = new TreePath(segments);
+
+		if (DEBUG) {
+			System.out.println("[CUTHEAD] out=" + result + " first=" + result.getFirstSegment() + " last="
+					+ result.getLastSegment());
+		}
+
+		return result;
+	}
+
+	private static void searchFlat(SearchContext context, IFilteredCardStore store, Object last, boolean needWrap,
+			Pattern pat) {
 		if (store == null)
 			return;
 		Object[] elements = store.getElements();
 		int lastIndex = getIndex(last, elements);
+
+		// ⭐ INSERT DEBUG HERE
+		System.out.println("=== Flat DEBUG ===");
+		System.out.println("Forward: " + context.isForward());
+		System.out.println("Text: " + context.getText());
+		System.out.println("Last: " + last);
+		System.out.println("LastIndex: " + lastIndex);
+		System.out.println("Elements length: " + elements.length);
+		System.out.println("================");
+
 		if (context.isForward()) {
 			lastIndex++;
 			for (int i = lastIndex; i < elements.length; i++) {
@@ -231,8 +516,14 @@ public class TableSearch {
 	 * @return
 	 */
 	protected static boolean match(Pattern pat, ICard card) {
-		if (!(card instanceof ICardGroup) && pat.matcher(card.getName()).matches())
-			return true;
-		return false;
+		String name = card.getName();
+		boolean result = pat.matcher(name).find();
+
+		if (DEBUG) {
+			System.out.println("[MATCH] name=\"" + name + "\" pattern=" + pat.pattern() + " result=" + result);
+		}
+
+		return result;
 	}
+
 }

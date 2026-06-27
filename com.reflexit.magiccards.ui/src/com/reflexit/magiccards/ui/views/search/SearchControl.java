@@ -29,6 +29,7 @@ import org.eclipse.swt.widgets.ToolItem;
 import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl;
 import com.reflexit.magiccards.ui.widgets.SearchContextFocusListener;
 
 /**
@@ -45,8 +46,11 @@ public class SearchControl {
 	private boolean searchAsYouType;
 	private Composite comp;
 
-	public SearchControl(ISearchRunnable runnable) {
+	private final AbstractMagicCardsListControl view;
+
+	public SearchControl(ISearchRunnable runnable, AbstractMagicCardsListControl view) {
 		this.runnable = runnable;
+		this.view = view;
 		this.context = new SearchContext();
 		this.context.setWrapAround(true);
 	}
@@ -117,17 +121,25 @@ public class SearchControl {
 		// this.searchText.setText("search...");
 		GridData td = new GridData(GridData.FILL_HORIZONTAL);
 		this.searchText.setLayoutData(td);
+
 		this.searchText.addModifyListener(new ModifyListener() {
 			@Override
 			public void modifyText(ModifyEvent e) {
 				resetBoxColor();
 				context.setCancelled(true);
-				context.setText(SearchControl.this.searchText.getText());
+
+				String newText = SearchControl.this.searchText.getText();
+				context.setText(newText);
+
+				// Only force forward direction when the user is typing
+				// (not when buttons trigger a search)
 				if (searchAsYouType) {
+					context.setForward(true);
 					search();
 				}
 			}
 		});
+
 		this.searchText.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetDefaultSelected(SelectionEvent e) {
@@ -141,14 +153,14 @@ public class SearchControl {
 		// next
 		ToolItem next = new ToolItem(toolbar, SWT.PUSH);
 		next.setImage(getPlugin().getImage("icons/clcl16/arrow_down.png"));
-		next.setToolTipText("Next");
 		next.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				SearchControl.this.context.setForward(true);
+				context.setForward(true);
 				search();
 			}
 		});
+
 		// prev
 		ToolItem prev = new ToolItem(toolbar, SWT.PUSH);
 		prev.setImage(getPlugin().getImage("icons/clcl16/arrow_up.png"));
@@ -156,7 +168,7 @@ public class SearchControl {
 		prev.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				SearchControl.this.context.setForward(false);
+				context.setForward(false);
 				search();
 			}
 		});

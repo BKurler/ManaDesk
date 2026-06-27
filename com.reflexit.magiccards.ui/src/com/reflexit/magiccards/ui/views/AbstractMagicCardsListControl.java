@@ -35,6 +35,7 @@ import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreePath;
 import org.eclipse.jface.viewers.TreeSelection;
+import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
@@ -67,6 +68,7 @@ import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.abs.ICardField;
+import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -124,8 +126,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	protected IFilteredCardStore<ICard> fstore;
 	private Presentation presentation = Presentation.TABLE;
 	private final boolean fixedPresentation;
+	private boolean suppressBridgeForwarding = false;
 
 	private Object lastInput;
+	private static final boolean DEBUG = false;
 
 	// !!! RD 	private final java.util.List<ISelectionChangedListener> selectionListeners = new java.util.ArrayList<>();
 
@@ -158,6 +162,9 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 		@Override
 		public void setSelection(ISelection selection) {
+			if (suppressBridgeForwarding)
+				return; // highlightCard is calling us; do not forward back to viewer
+
 			if (viewer != null) {
 				viewer.getSelectionProvider().setSelection(selection);
 			}
@@ -566,7 +573,9 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			public void run(SearchContext context) {
 				runSearch(context);
 			}
-		});
+		}, this // pass the view
+		);
+
 		this.searchControl.createFindBar(composite);
 		this.searchControl.setVisible(false);
 		this.searchControl.setSearchAsYouType(true);
@@ -682,19 +691,68 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	/**
 	 * @param last
 	 */
+
+	// Cleaned highlightCard(...)
 	protected void highlightCard(Object last) {
-		ISelectionProvider selectionProvider = getSelectionProvider();
-		StructuredSelection selection;
+
+		StructuredSelection selection = (last instanceof TreePath) ? new TreeSelection((TreePath) last)
+				: new StructuredSelection(last);
+
+		if (DEBUG) {
+			System.out.println(
+					"[HIGHLIGHT] last=" + last + " class=" + (last == null ? "null" : last.getClass().getName()));
+			System.out.println("[HIGHLIGHT] selection=" + selection);
+		}
+
+		// Expand parent groups before selecting
 		if (last instanceof TreePath) {
-			selection = new TreeSelection((TreePath) last);
-		} else {
-			selection = new StructuredSelection(last);
+			TreePath path = (TreePath) last;
+			Viewer v = viewer.getViewer();
+
+			if (v instanceof TreeViewer) {
+				TreeViewer tv = (TreeViewer) v;
+
+				// Expand all parent segments (except the last one, which is the card)
+				for (int i = 0; i < path.getSegmentCount() - 1; i++) {
+					Object segment = path.getSegment(i);
+					tv.expandToLevel(segment, 1);
+				}
+			}
 		}
-		if (selectionProvider instanceof Viewer) {
-			((Viewer) selectionProvider).setSelection(selection, true);
-		} else {
-			selectionProvider.setSelection(selection);
+
+		// Update the viewer (reveal = true)
+		viewer.getViewer().setSelection(selection, true);
+
+		// Update the global selection provider (bridge)
+		suppressBridgeForwarding = true;
+		try {
+			if (DEBUG) {
+				System.out.println("[HIGHLIGHT] pushing to bridge: " + selection);
+			}
+			selectionProviderBridge.setSelection(selection);
+		} finally {
+			suppressBridgeForwarding = false;
 		}
+	}
+
+	// REPLACE the body of getCurrentSelectionElement() with this
+	public Object getCurrentSelectionElement() {
+		ISelection sel = getSelection();
+
+		System.out.println(
+				"[CURRENT] raw selection=" + sel + " class=" + (sel == null ? "null" : sel.getClass().getName()));
+
+		if (sel instanceof IStructuredSelection) {
+			IStructuredSelection ss = (IStructuredSelection) sel;
+			Object first = ss.getFirstElement();
+
+			System.out.println("[CURRENT] firstElement=" + first + " class="
+					+ (first == null ? "null" : first.getClass().getName()));
+
+			return first;
+		}
+
+		return null;
 	}
 
 	protected void hookDoubleClickAction() {
@@ -841,10 +899,29 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	 */
 	protected void runSearch(final SearchContext context) {
 		TableSearch.search(context, getFilteredStore());
-		if (context.isFound()) {
-			final Object last = context.getLast();
-			WaitUtils.syncExec(() -> highlightCard(last));
+
+		if (!context.isFound())
+			return;
+
+		Object last = context.getLast();
+		TreePath lastPath = null;
+
+		// Case 1: already a TreePath
+		if (last instanceof TreePath) {
+			lastPath = (TreePath) last;
 		}
+
+		// Case 2: selection was an ICard (Split Table View)
+		else if (last instanceof ICard) {
+			lastPath = findPathForCard((ICard) last);
+		}
+
+		// Store normalized anchor back into context
+		context.setLast(lastPath);
+
+		// Highlight on UI thread
+		final Object finalLast = lastPath;
+		WaitUtils.syncExec(() -> highlightCard(finalLast));
 	}
 
 	protected void runShowFilter() {
@@ -1275,6 +1352,62 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				gv.getSashForm().setWeights(new int[] { 22, 78 });
 			}
 		}
+	}
+
+	/**
+	 * Reconstruct a TreePath for a given card by walking the grouped store.
+	 * Works for Split Table View where selection is an ICard, not a TreePath.
+	 */
+	private TreePath findPathForCard(ICard target) {
+		if (target == null || fstore == null)
+			return null;
+
+		ICardGroup root = fstore.getCardGroupRoot();
+		if (root == null)
+			return null;
+
+		return findPathRecursive(root, target, TreePath.EMPTY);
+	}
+
+	private TreePath findPathRecursive(ICardGroup group, ICard target, TreePath base) {
+		Object[] children = group.getChildren();
+
+		// Extract target ID using MagicCardField
+		String targetId = null;
+		Object tid = target.get(MagicCardField.ID);
+		if (tid instanceof String) {
+			targetId = (String) tid;
+		}
+
+		for (Object child : children) {
+
+			// Subgroup
+			if (child instanceof ICardGroup) {
+				ICardGroup g = (ICardGroup) child;
+				TreePath p = findPathRecursive(g, target, base.createChildPath(g));
+				if (p != null)
+					return p;
+				continue;
+			}
+
+			// Card
+			if (child instanceof ICard) {
+				ICard c = (ICard) child;
+
+				// Match by object identity
+				if (c == target)
+					return base.createChildPath(c);
+
+				// Match by CARD_ID
+				if (targetId != null) {
+					Object cid = c.get(MagicCardField.ID);
+					if (cid instanceof String && targetId.equals(cid))
+						return base.createChildPath(c);
+				}
+			}
+		}
+
+		return null;
 	}
 
 }
