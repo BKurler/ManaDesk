@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.gallery;
 
 import org.eclipse.jface.action.MenuManager;
@@ -130,21 +135,26 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 	public void setInput(Object input) {
 		if (viewer == null || viewer.getControl().isDisposed())
 			return;
+		if (!(input instanceof IFilteredCardStore)) {
+			viewer.setInput(input);
+			return;
+		}
+		// Same dance as SplitViewer (the split-table): a store rebuild replaces
+		// every CardGroup instance, so JFace can't keep the tree selection by
+		// itself. Capture it, rebuild, then re-apply the SAME group object - that
+		// re-fires selectionChanged so the gallery reloads fresh content while
+		// the user's chosen scope (root "All", or a set/type group) is kept. If
+		// nothing was selected, fall back to the root group.
 		IStructuredSelection selection = (IStructuredSelection) viewer.getSelection();
 		viewer.setSelection(new StructuredSelection());
 		viewer.setInput(input);
 		if (galleryviewer == null || this.galleryviewer.getControl().isDisposed())
 			return;
-		if (input instanceof IFilteredCardStore) {
-			if (selection.isEmpty()) {
-				IFilteredCardStore fstore = (IFilteredCardStore) input;
-				ICardGroup group = fstore.getCardGroupRoot();
-				selection = new StructuredSelection(group);
-				viewer.setSelection(selection, true);
-			} else {
-				viewer.setSelection(selection, true);
-			}
-			galleryviewer.refresh();
+		if (selection.isEmpty()) {
+			ICardGroup group = ((IFilteredCardStore) input).getCardGroupRoot();
+			viewer.setSelection(new StructuredSelection(group), true);
+		} else {
+			viewer.setSelection(selection, true);
 		}
 	}
 

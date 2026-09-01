@@ -52,7 +52,21 @@ public class MemoryCardStorage<T> extends AbstractStorage<T> {
 
 	@Override
 	public boolean doRemoveCard(T card) {
-		return this.getList().remove(card);
+		// Remove by identity first: MagicCardPhysical.equals() is value based, so
+		// List.remove(Object) would happily delete a *different* copy that has the
+		// same name / set / count (which reorders the rest of the collection and
+		// leaves the intended card behind). Only fall back to equals when the
+		// exact instance is not in the list.
+		List<T> l = getList();
+		synchronized (l) {
+			for (int i = 0; i < l.size(); i++) {
+				if (l.get(i) == card) {
+					l.remove(i);
+					return true;
+				}
+			}
+			return l.remove(card);
+		}
 	}
 
 	@Override

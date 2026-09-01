@@ -66,6 +66,7 @@ import com.reflexit.magiccards.ui.dialogs.SplitDialog;
 import com.reflexit.magiccards.ui.exportWizards.ExportAction;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.AbstractGroupPageCardsView;
+import com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl;
 import com.reflexit.magiccards.ui.views.IViewPage;
 import com.reflexit.magiccards.ui.views.ViewPageGroup;
 
@@ -80,6 +81,14 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	private IDeckAction copyToDeck;
 	private LibraryEventListener eventListener = new LibraryEventListener();
 	private Action updateSet;
+
+	/** Flip to {@code true} for a console trace of move / remove / next-selection. */
+	private static final boolean DEBUG = false;
+
+	private static void trace(String msg) {
+		if (DEBUG)
+			System.out.println("[myCards] " + msg);
+	}
 
 	@Override
 	protected ViewPageGroup createPageGroup() {
@@ -181,13 +190,31 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		public void run(String id) {
 			try {
 				ISelection selection = getSelectionProvider().getSelection();
-				if (selection instanceof IStructuredSelection) {
-					IStructuredSelection sel = (IStructuredSelection) selection;
-					if (!sel.isEmpty()) {
-						ICardStore cardStore = DM.getCardHandler().getCardCollectionFilteredStore(id).getCardStore();
-						DM.moveCards(DM.expandGroups(sel.toList()), cardStore);
-					}
-				}
+				if (!(selection instanceof IStructuredSelection))
+					return;
+				IStructuredSelection sel = (IStructuredSelection) selection;
+				if (sel.isEmpty())
+					return;
+
+				Object first = sel.getFirstElement();
+				com.reflexit.magiccards.core.model.storage.ICardStore srcStore = getFilteredStore().getCardStore();
+				trace("moveToDeck id=" + id + " selection=" + sel.toList());
+				trace("moveToDeck src location=" + (first instanceof MagicCardPhysical
+						? ((MagicCardPhysical) first).getLocation() : "?")
+						+ " srcStore=" + System.identityHashCode(srcStore) + " size=" + srcStore.size()
+						+ " containsSelected=" + srcStore.contains((com.reflexit.magiccards.core.model.IMagicCard) first));
+
+				// Before the move (which removes these cards from this view) ask
+				// the list control to select the following row afterwards.
+				IViewPage page = getActivePage();
+				if (page instanceof AbstractMagicCardsListControl)
+					((AbstractMagicCardsListControl) page).selectNeighbourAfterRemoval(sel.toList());
+
+				// Everything below is exactly as before the "select next" feature.
+				ICardStore cardStore = DM.getCardHandler().getCardCollectionFilteredStore(id).getCardStore();
+				boolean res = DM.moveCards(DM.expandGroups(sel.toList()), cardStore);
+				trace("moveToDeck DM.moveCards -> " + res + " ; srcStore size=" + srcStore.size()
+						+ " stillContainsSelected=" + srcStore.contains((com.reflexit.magiccards.core.model.IMagicCard) first));
 			} catch (MagicException e) {
 				MessageDialog.openError(getShell(), "Error", e.getMessage());
 			}
@@ -232,12 +259,20 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	protected void removeSelected() {
 		ICardStore cardStore = getFilteredStore().getCardStore();
 		ISelection selection = getSelectionProvider().getSelection();
-		if (selection instanceof IStructuredSelection) {
-			IStructuredSelection sel = (IStructuredSelection) selection;
-			if (!sel.isEmpty()) {
-				DM.remove(DM.expandGroups(sel.toList()), cardStore);
-			}
-		}
+		if (!(selection instanceof IStructuredSelection))
+			return;
+		IStructuredSelection sel = (IStructuredSelection) selection;
+		if (sel.isEmpty())
+			return;
+
+		trace("removeSelected selection=" + sel.toList());
+
+		// Select the following row once the view has reloaded.
+		IViewPage page = getActivePage();
+		if (page instanceof AbstractMagicCardsListControl)
+			((AbstractMagicCardsListControl) page).selectNeighbourAfterRemoval(sel.toList());
+
+		DM.remove(DM.expandGroups(sel.toList()), cardStore);
 	}
 
 	/**
@@ -369,7 +404,8 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 
 	@Override
 	public void handleEvent(CardEvent event) {
-		// do nothing
+		// The active list control refreshes itself from its own
+		// mcpEventHandler / mcEventHandler; nothing to do here.
 	}
 
 	@Override

@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 /*******************************************************************************
  * Copyright (c) 2003, 2011 IBM Corporation and others.
  * All rights reserved. This program and the accompanying materials
@@ -76,6 +81,12 @@ public class MAApplication implements IApplication, IExecutableExtension {
 	@Override
 	public Object start(IApplicationContext appContext) throws Exception {
 		System.setProperty("file.encoding", "utf-8");
+		// The card group tree is sorted while the background DataManager.reconcile()
+		// is still filling in card data, so a comparison value can change between
+		// two calls within one Arrays.sort() pass. TimSort turns that into a fatal
+		// "Comparison method violates its general contract"; the legacy merge sort
+		// tolerates it (the order just self-corrects on the next stable refresh).
+		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
 		Display display = createDisplay();
 		// processor must be created before we start event loop
 		try {

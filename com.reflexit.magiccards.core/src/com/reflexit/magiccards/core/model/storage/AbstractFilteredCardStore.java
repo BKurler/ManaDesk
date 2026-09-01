@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.model.storage;
 
 import java.util.ArrayList;
@@ -227,8 +232,15 @@ public class AbstractFilteredCardStore<T> implements IFilteredCardStore<T> {
 			return;
 		if (group.getFieldIndex() == MagicCardField.NAME) {
 			if (group.size() == 1) {
-				group.getParent().remove(group);
-				group.getParent().add(group.getChildAtIndex(0));
+				ICardGroup parent = group.getParent();
+				if (parent instanceof CardGroup) {
+					// keep the lone card where its group was - do NOT re-append
+					// it at the end (that moves a card that must not move)
+					((CardGroup) parent).collapseSubGroup(group);
+				} else {
+					parent.remove(group);
+					parent.add(group.getChildAtIndex(0));
+				}
 			}
 		} else {
 			Collection<CardGroup> subGroups = new ArrayList<CardGroup>(group.getSubGroups());

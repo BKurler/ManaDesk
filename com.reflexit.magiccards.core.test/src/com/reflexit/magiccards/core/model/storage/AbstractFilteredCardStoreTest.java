@@ -101,6 +101,33 @@ public class AbstractFilteredCardStoreTest extends TestCase {
 		assertEquals("Red", ((CardGroup) cardGroups[2]).getName());
 	}
 
+	/**
+	 * ManaDesk (branch 120-search): when a NAME sub-group inside a grouped view
+	 * drops to a single member it must be replaced by its lone card <em>at the
+	 * same position</em>. The old code detached the group and re-appended the
+	 * card at the end of the parent, which relocated it - a card in a collection
+	 * must never move because a different card was touched.
+	 */
+	@Test
+	public void testSingleNameGroupCollapseKeepsPosition() {
+		addCard(BLACK_COST, ARTIFACT, "Alpha"); // unique name
+		addCard(BLACK_COST, ARTIFACT, "Beta");
+		addCard(BLACK_COST, ARTIFACT, "Beta"); // same name -> kept as a group
+		this.filter.setGroupFields(MagicCardField.COST);
+		this.deck.update();
+
+		Object[] roots = this.deck.getCardGroupRoot().getChildren();
+		assertEquals(1, roots.length); // one cost bucket
+		Object[] kids = ((CardGroup) roots[0]).getChildren();
+		assertEquals(2, kids.length);
+		// index 0: the collapsed Alpha, still a loose card and still first
+		assertFalse("Alpha's 1-member name group was relocated", kids[0] instanceof CardGroup);
+		assertEquals("Alpha", ((IMagicCard) kids[0]).getName());
+		// index 1: the surviving 2-member Beta name group
+		assertTrue(kids[1] instanceof CardGroup);
+		assertEquals(2, ((CardGroup) kids[1]).size());
+	}
+
 	protected MagicCard[] getFilteredCards() {
 		this.deck.update();
 		Object[] cards = this.deck.getElements();

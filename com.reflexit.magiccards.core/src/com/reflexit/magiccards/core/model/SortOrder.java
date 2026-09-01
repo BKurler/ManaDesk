@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.model;
 
 import java.util.Arrays;
@@ -13,9 +18,14 @@ public class SortOrder implements Comparator {
 	private int curSize;
 
 	public SortOrder() {
-		// these are always there
-		order[0] = (new MagicCardComparator(MagicCardField.NAME, true));
-		order[1] = (new MagicCardComparator(MagicCardField.ID, true));
+		// Always-present tie-breakers, lowest priority last. compare() walks
+		// order[] from high index to low, so order[0] is the very last word:
+		// ID only separates two entries that are otherwise identical *including
+		// name*. NAME must outrank ID - otherwise a loose card (unique id) gets
+		// ordered against sibling name groups (id "*") or other loose cards by
+		// id instead of name, which is both non-transitive and visibly wrong.
+		order[0] = (new MagicCardComparator(MagicCardField.ID, true));
+		order[1] = (new MagicCardComparator(MagicCardField.NAME, true));
 		curSize = MIN;
 	}
 
@@ -31,7 +41,17 @@ public class SortOrder implements Comparator {
 				return d; // no "dir" since comparator has it already
 		}
 		int dir = isAccending() ? 1 : -1;
-		return dir * (System.identityHashCode(o1) - System.identityHashCode(o2));
+		// Every sort field (incl. NAME and ID) tied. Only now keep a CardGroup
+		// and a loose card of the same name in a stable, deterministic order -
+		// never earlier, or the loose card jumps past unrelated groups.
+		if (o1 != null && o2 != null && o1.getClass() != o2.getClass())
+			return dir * o1.getClass().getName().compareTo(o2.getClass().getName());
+		// Integer.compare, NOT subtraction: identity hashes span the whole int
+		// range, so (hashA - hashB) overflows and flips sign -> compare(a,b) and
+		// compare(b,a) can both be > 0 -> "Comparison method violates its general
+		// contract" from TimSort (hit hard by collections full of duplicate cards
+		// that tie on every real field).
+		return dir * Integer.compare(System.identityHashCode(o1), System.identityHashCode(o2));
 	}
 
 	public Comparator getComparator() {

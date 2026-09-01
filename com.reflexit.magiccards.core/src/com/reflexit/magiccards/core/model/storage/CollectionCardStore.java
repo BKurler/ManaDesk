@@ -146,10 +146,14 @@ public class CollectionCardStore extends AbstractCardStoreWithStorage<IMagicCard
 		if (cards != null) {
 			for (Object card2 : cards) {
 				MagicCardPhysical candy = (MagicCardPhysical) card2;
+				// exact instance wins - avoids picking a value-equal sibling
+				if (candy == phi) {
+					found = candy;
+					break;
+				}
 				if (phi.matching(candy)) {
-					if (phi.getCount() == candy.getCount()) {
+					if (found == null && phi.getCount() == candy.getCount()) {
 						found = candy;
-						break;
 					}
 					if (max == null || max.getCount() < candy.getCount())
 						max = candy;

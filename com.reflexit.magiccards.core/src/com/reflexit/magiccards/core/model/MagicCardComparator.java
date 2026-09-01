@@ -75,8 +75,14 @@ public class MagicCardComparator implements Comparator {
 		if (c1 == c2)
 			return 0;
 		int dir = accending ? 1 : -1;
-		if (c1.getClass() != c2.getClass())
-			return dir * c1.getClass().getName().compareTo(c2.getClass().getName());
+		// Order strictly by this sort field's value, whether the operands are
+		// cards or CardGroups (a loose card sits among sibling groups after
+		// removeSingleNameGroups() dissolves a one-card name group). Do NOT
+		// discriminate on class here: doing so per-field makes the comparator
+		// non-transitive and, because this field outranks NAME, shoves the lone
+		// card clear across its group - relocating a card that must not move.
+		// Keeping groups and loose cards apart is a *final* tie-break and now
+		// lives in SortOrder.compare().
 		int d = compare(c1, c2, field);
 		if (d != 0)
 			return dir * d;
@@ -86,6 +92,12 @@ public class MagicCardComparator implements Comparator {
 	protected int compare(ICard c1, ICard c2, ICardField sort) {
 		Object a1 = c1.get(sort);
 		Object a2 = c2.get(sort);
+		// NOTE: a CardGroup returns "*" for a field whose members disagree. We
+		// deliberately compare that "*" as a plain string - it sorts low and,
+		// crucially, CONSISTENTLY. An earlier "if either side is a colliding
+		// group, return 0" guard broke transitivity (pair A/B decided by field
+		// N, pairs A/G and B/G by field N+1 -> cycles -> TimSort throws
+		// "Comparison method violates its general contract").
 		if (a1 == null && a2 == null)
 			return 0;
 		int d = 0;
