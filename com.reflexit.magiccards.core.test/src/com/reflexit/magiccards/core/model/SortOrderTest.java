@@ -162,6 +162,85 @@ public class SortOrderTest extends TestCase {
 		contractTest3();
 	}
 
+	// --- ManaDesk: regressions fixed on branch 120-search ---
+
+	/**
+	 * With an empty sort order (only the built-in tie-breakers) NAME must
+	 * outrank ID: a card named "a" sorts before one named "b" no matter what
+	 * their ids are. Before the fix ID was the higher tie-breaker, which put a
+	 * loose card (unique id) in the wrong place among same-name siblings.
+	 */
+	@Test
+	public void testNameOutranksId() {
+		IMagicCard a = cloneFull(theCard);
+		setField(a, MagicCardField.NAME, "a");
+		setField(a, MagicCardField.ID, "9000");
+		IMagicCard b = cloneFull(theCard);
+		setField(b, MagicCardField.NAME, "b");
+		setField(b, MagicCardField.ID, "1");
+		assertEquals(-1, sign(order.compare(a, b)));
+		assertEquals(1, sign(order.compare(b, a)));
+	}
+
+	/**
+	 * A bag of value-equal duplicate cards must sort without TimSort throwing
+	 * "Comparison method violates its general contract". The old identity
+	 * tie-breaker did {@code hashA - hashB}, which overflows (identity hashes
+	 * span the whole int range) and flips sign, so compare(x,y) and compare(y,x)
+	 * could both be positive.
+	 */
+	@Test
+	public void testContractManyDuplicates() {
+		java.util.List<IMagicCard> list = new java.util.ArrayList<>();
+		for (int i = 0; i < 60; i++)
+			list.add(cloneFull(theCard)); // all equals(), distinct instances
+		java.util.Collections.shuffle(list, new java.util.Random(42));
+		list.sort(order); // must not throw
+
+		// antisymmetry holds for every pair
+		for (int i = 0; i < list.size(); i++) {
+			for (int j = 0; j < list.size(); j++) {
+				assertEquals(-sign(order.compare(list.get(j), list.get(i))),
+						sign(order.compare(list.get(i), list.get(j))));
+			}
+		}
+		// and the order is now stable
+		java.util.List<IMagicCard> again = new java.util.ArrayList<>(list);
+		again.sort(order);
+		for (int i = 0; i < list.size(); i++)
+			assertSame(list.get(i), again.get(i));
+	}
+
+	/**
+	 * A {@link CardGroup} and a loose card that share the same name are ordered
+	 * against each other only by the very last tie-breaker (class name), and
+	 * that must be stable and transitive - never earlier, or the loose card
+	 * jumps past unrelated groups.
+	 */
+	@Test
+	public void testGroupVsLooseCardStable() {
+		IMagicCard loose = cloneFull(theCard);
+		setField(loose, MagicCardField.NAME, "same");
+		IMagicCard loose2 = cloneFull(theCard);
+		setField(loose2, MagicCardField.NAME, "same");
+		IMagicCard inGroup = cloneFull(theCard);
+		setField(inGroup, MagicCardField.NAME, "same");
+		CardGroup g = new CardGroup(MagicCardField.NAME, "same");
+		g.add(inGroup);
+		g.add(cloneFull(inGroup));
+
+		int d1 = order.compare(g, loose);
+		assertTrue(d1 != 0);
+		assertEquals(-sign(d1), sign(order.compare(loose, g)));
+
+		@SuppressWarnings("unchecked")
+		java.util.List<Object> l = new java.util.ArrayList<>(java.util.Arrays.asList(g, loose, loose2));
+		l.sort(order);
+		java.util.List<Object> l2 = new java.util.ArrayList<>(l);
+		l2.sort(order);
+		assertEquals(l, l2); // idempotent
+	}
+
 	public void testFieldSpecGone() {
 		order.setSortField(MagicCardField.NAME, true);
 		order.setSortField(MagicCardField.SPECIAL, true);

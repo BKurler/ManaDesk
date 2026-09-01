@@ -41,6 +41,9 @@ import com.reflexit.magiccards.ui.views.IMagicViewer;
 
 public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelectionProvider {
 
+	/** Flip to {@code true} for a JS/Java console trace of gallery selection. */
+	private static final boolean DEBUG = false;
+
 	// --- core widget ---
 	private final Browser browser;
 
@@ -56,11 +59,25 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	private final List<IDoubleClickListener> doubleClickListeners = new ArrayList<>();
 
 	private java.util.List<IMagicCard> flatInput = java.util.Collections.emptyList();
+	/** id of the card a programmatic setSelection() wants highlighted once the page is ready */
+	private String pendingSelectId;
 
 	public BrowserGalleryViewer(Composite parent, int style) {
 
 		this.browser = new Browser(parent, style);
 		browser.setLayoutData(new GridData(GridData.FILL_BOTH));
+		// re-apply a queued programmatic selection after each (re)render
+		browser.addProgressListener(new org.eclipse.swt.browser.ProgressListener() {
+			@Override
+			public void changed(org.eclipse.swt.browser.ProgressEvent event) {
+				// nothing
+			}
+
+			@Override
+			public void completed(org.eclipse.swt.browser.ProgressEvent event) {
+				applyPendingSelect();
+			}
+		});
 
 		// Removed debug mouse logging
 		// browser.addListener(SWT.MouseDown, e -> {
@@ -69,6 +86,19 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 
 		hookSelectionBridge();
 		hookDoubleClickBridge();
+
+		// JS -> Java debug log (visible on -consoleLog). The JS side guards every
+		// call with `if (window.javaLog)`, so when DEBUG is off we simply don't
+		// register it and the trace calls become no-ops.
+		if (DEBUG) {
+			new BrowserFunction(browser, "javaLog") {
+				@Override
+				public Object function(Object[] args) {
+					System.out.println("[gallery-js] " + (args != null && args.length > 0 ? args[0] : ""));
+					return null;
+				}
+			};
+		}
 
 		// Virtual scrolling: JS → Java
 		new BrowserFunction(browser, "loadCardRange") {
@@ -182,9 +212,64 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	public void setSelection(ISelection selection, boolean reveal) {
 		if (selection instanceof IStructuredSelection) {
 			Object element = ((IStructuredSelection) selection).getFirstElement();
+			String id = element instanceof IMagicCard ? String.valueOf(((IMagicCard) element).getCardId()) : null;
+			// Ignore a request to select a card that is not in the current input.
+			// refreshViewer() re-asserts the pre-move selection (the card that was
+			// just moved away) right before the reveal runs; honouring it would
+			// stomp the real pending reveal and make the selection flicker
+			// (select next -> deselect -> reselect).
+			if (id != null && indexOfCardId(id) < 0)
+				return;
 			currentSelectionElement = element;
 			fireSelectionChanged();
+			// push the highlight into the browser (JFace setSelection alone does
+			// nothing visible here). Queue it - the page may still be rendering.
+			pendingSelectId = id;
+			applyPendingSelect();
 		}
+	}
+
+	/**
+	 * Tell the gallery which card to highlight <em>before</em> its next render,
+	 * so the selection is baked into the generated HTML - no separate
+	 * highlight-flash after the page loads. Call this before triggering the
+	 * setInput/render (e.g. before selecting the enclosing group in the tree).
+	 */
+	public void setPendingSelectId(String cardId) {
+		this.pendingSelectId = cardId;
+	}
+
+	private void applyPendingSelect() {
+		if (pendingSelectId == null || browser == null || browser.isDisposed())
+			return;
+		String id = pendingSelectId.replace("\\", "\\\\").replace("'", "\\'");
+		int idx = indexOfCardId(pendingSelectId);
+		boolean ok;
+		try {
+			ok = browser.execute(
+					"if(window.selectCardById){selectCardById('" + id + "'," + idx + ");true;}else{false;}");
+		} catch (Exception e) {
+			ok = false;
+		}
+		if (DEBUG)
+			System.out.println(
+					"[gallery-java] applyPendingSelect id=" + pendingSelectId + " idx=" + idx + " execute=" + ok);
+	}
+
+	/** @return the flat index of the card with this id in the current input, or -1. */
+	public int indexOfCardId(String cardId) {
+		if (cardId == null)
+			return -1;
+		for (int i = 0; i < flatInput.size(); i++) {
+			if (cardId.equals(String.valueOf(flatInput.get(i).getCardId())))
+				return i;
+		}
+		return -1;
+	}
+
+	/** @return true if a card with this id is in the gallery's current input. */
+	public boolean isShowingCardId(String cardId) {
+		return indexOfCardId(cardId) >= 0;
 	}
 
 	// ============================================================
@@ -211,7 +296,13 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			return;
 
 		int total = flatInput.size();
-		String html = GalleryHtmlBuilder.buildVirtualGalleryHtml(total);
+		int selIdx = pendingSelectId != null ? indexOfCardId(pendingSelectId) : -1;
+		// Never pre-seed a card that isn't in this input - a stale id left over
+		// from the previous move makes the fresh page hunt for a card that was
+		// moved away (20 empty retries) and show nothing selected in between.
+		if (selIdx < 0)
+			pendingSelectId = null;
+		String html = GalleryHtmlBuilder.buildVirtualGalleryHtml(total, pendingSelectId, selIdx);
 
 		browser.setText(html, true);
 	}

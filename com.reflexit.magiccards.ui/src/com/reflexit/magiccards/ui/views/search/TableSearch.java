@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 /*******************************************************************************
  * Copyright (c) 2008 Alena Laskavaia.
  * All rights reserved. This program and the accompanying materials
@@ -28,6 +33,16 @@ public class TableSearch {
 	private static final boolean DEBUG = false;
 
 	public static void search(SearchContext context, IFilteredCardStore store) {
+		search(context, store, store == null ? null : store.getCardGroupRoot());
+	}
+
+	/**
+	 * Search within {@code searchRoot} only. In the split viewer this is the
+	 * group the user selected in the tree, so Find is restricted to what the
+	 * right pane actually shows (not the whole collection). {@code store} is
+	 * still used for the flat fall-back when there is no group tree.
+	 */
+	public static void search(SearchContext context, IFilteredCardStore store, ICardGroup searchRoot) {
 
 		Object last;
 		String inputText;
@@ -58,15 +73,19 @@ public class TableSearch {
 		if (matchCase)
 			flags = 0;
 		Pattern pat = Pattern.compile(pattern, flags);
-		if (store != null && store.getCardGroupRoot() != null && store.getCardGroupRoot().size() > 0) {
+		if (searchRoot != null && searchRoot.size() > 0) {
+			// The anchor path may be rooted at the store root; make it relative
+			// to searchRoot so searchTree() can follow it.
+			if (last instanceof TreePath)
+				last = relativizePath((TreePath) last, searchRoot);
 			if (last instanceof TreePath) {
-				searchTree(context, (TreePath) last, needWrap, pat, store.getCardGroupRoot(), TreePath.EMPTY);
+				searchTree(context, (TreePath) last, needWrap, pat, searchRoot, TreePath.EMPTY);
 				if (!context.isFound() && needWrap) {
 					context.setDidWrap(true);
-					searchTree(context, null, needWrap, pat, store.getCardGroupRoot(), TreePath.EMPTY);
+					searchTree(context, null, needWrap, pat, searchRoot, TreePath.EMPTY);
 				}
 			} else {
-				searchTree(context, null, needWrap, pat, store.getCardGroupRoot(), TreePath.EMPTY);
+				searchTree(context, null, needWrap, pat, searchRoot, TreePath.EMPTY);
 			}
 		} else {
 			if (last instanceof TreePath) {
@@ -74,6 +93,32 @@ public class TableSearch {
 			}
 			searchFlat(context, store, last, needWrap, pat);
 		}
+	}
+
+	/**
+	 * Drop leading segments up to and including {@code root}. If {@code root} is
+	 * not on the path (e.g. it already starts below it) the path is returned
+	 * unchanged; if the path ends at {@code root} the result is empty/null.
+	 */
+	private static TreePath relativizePath(TreePath path, ICardGroup root) {
+		if (path == null || root == null)
+			return path;
+		int cut = -1;
+		for (int i = 0; i < path.getSegmentCount(); i++) {
+			if (root.equals(path.getSegment(i))) {
+				cut = i;
+				break;
+			}
+		}
+		if (cut < 0)
+			return path; // already relative
+		int remaining = path.getSegmentCount() - cut - 1;
+		if (remaining <= 0)
+			return null;
+		Object[] seg = new Object[remaining];
+		for (int i = 0; i < remaining; i++)
+			seg[i] = path.getSegment(cut + 1 + i);
+		return new TreePath(seg);
 	}
 
 	private static int getIndex(Object anchor, Object[] elements) {
@@ -418,14 +463,15 @@ public class TableSearch {
 		Object[] elements = store.getElements();
 		int lastIndex = getIndex(last, elements);
 
-		// ⭐ INSERT DEBUG HERE
-		System.out.println("=== Flat DEBUG ===");
-		System.out.println("Forward: " + context.isForward());
-		System.out.println("Text: " + context.getText());
-		System.out.println("Last: " + last);
-		System.out.println("LastIndex: " + lastIndex);
-		System.out.println("Elements length: " + elements.length);
-		System.out.println("================");
+		if (DEBUG) {
+			System.out.println("=== Flat DEBUG ===");
+			System.out.println("Forward: " + context.isForward());
+			System.out.println("Text: " + context.getText());
+			System.out.println("Last: " + last);
+			System.out.println("LastIndex: " + lastIndex);
+			System.out.println("Elements length: " + elements.length);
+			System.out.println("================");
+		}
 
 		if (context.isForward()) {
 			lastIndex++;

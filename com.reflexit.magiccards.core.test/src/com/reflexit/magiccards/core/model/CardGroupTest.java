@@ -555,6 +555,48 @@ public class CardGroupTest extends TestCase {
 		assertEquals(2, group.getInt(MagicCardField.CREATURE_COUNT));
 	}
 
+	/**
+	 * A NAME sub-group that drops to one member must be replaced by its lone
+	 * card <em>in place</em> - the old behaviour (remove + append at end) moved
+	 * the card, which must never happen for a collection.
+	 */
+	@Test
+	public void testCollapseSubGroupKeepsPosition() {
+		group = new CardGroup(MagicCardField.SET, "Lorwyn");
+		IMagicCard a = generateCard();
+		IMagicCard b = generateCard();
+		IMagicCard c = generateCard();
+		CardGroup sub = new CardGroup(MagicCardField.NAME, "sub");
+		sub.add(b);
+		group.add(a);
+		group.add(sub);
+		group.add(c);
+		assertEquals(3, group.size());
+
+		group.collapseSubGroup(sub);
+
+		assertEquals(3, group.size());
+		assertSame(a, group.getChildAtIndex(0));
+		assertSame(b, group.getChildAtIndex(1)); // lone card took the group's slot
+		assertSame(c, group.getChildAtIndex(2));
+		assertNull(group.getSubGroup("sub"));
+	}
+
+	@Test
+	public void testCollapseSubGroupNoopWhenEmpty() {
+		group = new CardGroup(MagicCardField.SET, "Lorwyn");
+		IMagicCard a = generateCard();
+		CardGroup empty = new CardGroup(MagicCardField.NAME, "empty");
+		group.add(a);
+		group.add(empty);
+
+		group.collapseSubGroup(empty); // cannot collapse to a card - no-op
+
+		assertEquals(2, group.size());
+		assertSame(a, group.getChildAtIndex(0));
+		assertSame(empty, group.getChildAtIndex(1));
+	}
+
 	public void testPowerAggrMC() {
 		group = new CardGroup(MagicCardField.POWER, "power");
 		for (int j = 0; j < cards.length; j++) {

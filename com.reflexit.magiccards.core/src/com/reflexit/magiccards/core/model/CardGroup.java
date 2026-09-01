@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 /*******************************************************************************
  * Copyright (c) 2008 Alena Laskavaia. All rights reserved. This program and the accompanying materials are made available under the terms
  * of the Eclipse Public License v1.0 which accompanies this distribution, and is available at http://www.eclipse.org/legal/epl-v10.html
@@ -171,6 +176,27 @@ public final class CardGroup extends MagicCardHash implements ICardGroup, Iterab
 			subs.put(cardGroup.getName(), (CardGroup) elem);
 			cardGroup.parent = this;
 		}
+	}
+
+	/**
+	 * Replace the direct child group {@code sub} by its single remaining card,
+	 * keeping that card at the exact position the group occupied. Used when a
+	 * name sub-group drops to one member: appending the lone card at the end
+	 * instead (the old behaviour) relocates it, which must never happen.
+	 */
+	public synchronized void collapseSubGroup(CardGroup sub) {
+		int idx = -1;
+		for (int i = 0; i < children.size(); i++) {
+			if (children.get(i) == sub) {
+				idx = i;
+				break;
+			}
+		}
+		if (idx < 0 || sub.children.isEmpty())
+			return;
+		children.set(idx, sub.children.get(0));
+		subs.remove(sub.getName());
+		recache();
 	}
 
 	public void addToSubGroup(String subGroupName, ICard elem) {

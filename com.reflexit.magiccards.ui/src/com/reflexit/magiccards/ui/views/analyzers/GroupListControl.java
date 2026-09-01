@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.views.analyzers;
 
 import java.util.List;
@@ -48,22 +53,21 @@ public abstract class GroupListControl extends AbstractMagicCardsListControl {
 	}
 
 	/**
-	 * Update view in UI thread after data load is finished
+	 * Update view in UI thread after data load is finished. Unlike the base
+	 * class this viewer only refreshes the tree (it does not rebuild the input),
+	 * so the previous selection instances stay valid and can be re-applied
+	 * directly. A pending reveal request still takes precedence.
 	 */
 	@Override
 	public void refreshViewer() {
 		if (viewer.getControl().isDisposed())
 			return;
-		ISelection selection = getSelection();
+		ISelection previous = getSelection();
 		viewer.getViewer().refresh();
-		if (revealSelection != null) {
-			// set desired selection
-			getSelectionProvider().setSelection(revealSelection);
-			revealSelection = null;
-		} else {
-			// restore selection
-			getSelectionProvider().setSelection(selection);
-		}
+		// viewer.refresh() already preserved the selection; only re-apply if the
+		// tree lost it (e.g. the selected group disappeared) or a reveal is pending.
+		if (!applyPendingReveal() && getSelection().isEmpty() && previous != null && !previous.isEmpty())
+			getSelectionProvider().setSelection(previous);
 		updateStatus();
 	}
 

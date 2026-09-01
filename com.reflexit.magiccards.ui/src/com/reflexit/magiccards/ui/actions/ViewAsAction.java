@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.actions;
 
 import java.util.Collection;
@@ -12,12 +17,46 @@ import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.views.Presentation;
 
 public class ViewAsAction extends DropDownAction<Presentation> {
+	private static final boolean DEBUG = false;
 	private IPreferenceStore store;
 
 	public ViewAsAction(Collection<Presentation> pres, IPreferenceStore store, Consumer<Presentation> onSelect) {
 		super(pres, "View As", MagicUIActivator.getImageDescriptor("icons/obj16/pres_tree16.png"), onSelect);
 		this.store = store;
 		setToolTipText("View As");
+		// Show the icon of the presentation that is actually active (default:
+		// Table), not a hard-coded tree icon.
+		syncIcon();
+	}
+
+	/** Re-point the toolbar icon at whatever presentation is currently in effect. */
+	public void syncIcon() {
+		setImageDescriptor(getImageDesc(currentPresentation()));
+	}
+
+	/**
+	 * The presentation currently in effect: the stored value when it is a valid
+	 * {@link Presentation} name, otherwise {@link #getDefault()} (Table). An
+	 * unset preference reads back as "" from {@link IPreferenceStore}, so it must
+	 * be treated as "use the default", not "nothing selected".
+	 */
+	private Presentation currentPresentation() {
+		Presentation res = getDefault();
+		String cur = null;
+		if (store != null) {
+			cur = store.getString(PreferenceConstants.PRESENTATION_VIEW);
+			if (cur != null && !cur.isEmpty()) {
+				try {
+					res = Presentation.valueOf(cur);
+				} catch (RuntimeException e) {
+					// fall through to default
+				}
+			}
+		}
+		if (DEBUG)
+			System.out.println("[ViewAsAction] currentPresentation: stored='" + cur + "' -> " + res
+					+ " (store=" + (store == null ? "null" : store.getClass().getSimpleName()) + ")");
+		return res;
 	}
 
 	@Override
@@ -58,14 +97,7 @@ public class ViewAsAction extends DropDownAction<Presentation> {
 
 	@Override
 	public boolean isChecked(Object element) {
-		if (store != null) {
-			String cur = store.getString(PreferenceConstants.PRESENTATION_VIEW);
-			if (cur != null && cur.equals(((Presentation) element).key())) {
-				return true;
-			}
-			return false;
-		}
-		return element.equals(getSelected());
+		return currentPresentation() == element;
 	}
 
 	@Override
