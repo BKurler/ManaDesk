@@ -40,6 +40,7 @@ public class NewCardCollectionWizard extends NewCardElementWizard implements INe
 	protected CardCollection doCreateCardElement(CollectionsContainer parent, final String name, final boolean virtual,
 			final boolean unsorted) {
 		final CardCollection col = new CardCollection(name + ".xml", parent, false, virtual, unsorted);
+		col.persistInitialSettings(false, virtual, unsorted);
 		return col;
 	}
 }

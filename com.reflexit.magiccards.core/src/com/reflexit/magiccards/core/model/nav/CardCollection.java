@@ -37,6 +37,29 @@ public class CardCollection extends CardElement {
 		parent.fireCreationEvent(this);
 	}
 
+	/**
+	 * Persist the type / virtual / unsorted flags chosen when a brand-new
+	 * deck/collection is created (the file starts empty, and {@link #associate}
+	 * only ever syncs storage -&gt; transient, so without this the settings are
+	 * lost and the user has to reopen the element and set them again).
+	 * Call this once, right after the constructor.
+	 */
+	public void persistInitialSettings(boolean deck, boolean virtual, boolean unsorted) {
+		try {
+			IStorageInfo info = getStorageInfo();
+			if (info == null)
+				return;
+			info.setType(deck ? IStorageInfo.DECK_TYPE : IStorageInfo.COLLECTION_TYPE);
+			info.setVirtual(virtual);
+			info.setUnsorted(unsorted);
+			this.deck = deck;
+			this.virtual = virtual;
+			this.unsorted = unsorted;
+		} catch (RuntimeException e) {
+			// non-fatal - the user can still fix it via Edit Properties
+		}
+	}
+
 	private void createFile() {
 		File file = getFile();
 		try {

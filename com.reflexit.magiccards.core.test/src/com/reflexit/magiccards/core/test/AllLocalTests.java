@@ -41,6 +41,7 @@ import com.reflexit.magiccards.core.model.MagicCardTest_failure_2;
 import com.reflexit.magiccards.core.model.PlayingDeckTest;
 import com.reflexit.magiccards.core.model.SortOrderTest;
 import com.reflexit.magiccards.core.model.nav.CardElementTest;
+import com.reflexit.magiccards.core.model.nav.NewCardCollectionSettingsTest;
 // !!! RD import com.reflexit.magiccards.core.model.nav.CardOrganizerTest;
 import com.reflexit.magiccards.core.model.storage.AbstractFilteredCardStoreTest;
 import com.reflexit.magiccards.core.model.storage.CardCollectionStoreObjectTest;
@@ -74,6 +75,7 @@ public class AllLocalTests {
 		suite.addTestSuite(MagicCardFilterTest.class);
 		suite.addTestSuite(MagicXmlHandlerTest.class);
 		suite.addTestSuite(DataManagerTest.class);
+		suite.addTestSuite(NewCardCollectionSettingsTest.class);
 		suite.addTestSuite(FileUtilsTest.class);
 		// suite.addTestSuite(CardTextNL1Test.class); TODO
 		suite.addTestSuite(CardElementTest.class);
