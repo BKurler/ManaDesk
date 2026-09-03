@@ -38,6 +38,7 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.core.sync.GatherHelper;
+import com.reflexit.magiccards.core.sync.ScryfallRulings;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.ImageCreator;
@@ -98,6 +99,14 @@ class CardDescComposite extends Composite {
 					if (location.equals("about:blank"))
 						return;
 					try {
+						if (ScryfallRulings.isRulingsUrl(location)) {
+							// Show a formatted rulings page in the dedicated
+							// Rulings view instead of dumping raw JSON to an
+							// external browser.
+							event.doit = false;
+							RulingsView.show(location, card == null ? null : card.getName());
+							return;
+						}
 						if (location.contains("https:")) {
 							if (WebUtils.isWorkOffline())
 								return;
@@ -210,6 +219,7 @@ class CardDescComposite extends Composite {
 		if (card == IMagicCard.DEFAULT) {
 			return;
 		}
+		this.card = card; // keep current, e.g. for the rulings "back" link
 
 		// --- NEW: ensure the image is cached on disk ---
 		ensureCardImageCached(card);

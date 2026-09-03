@@ -13,6 +13,7 @@ import org.eclipse.ui.actions.BaseNewWizardMenu;
 
 import com.reflexit.magiccards.ui.views.MagicDbView;
 import com.reflexit.magiccards.ui.views.card.CardDescView;
+import com.reflexit.magiccards.ui.views.card.RulingsView;
 import com.reflexit.magiccards.ui.views.collector.CollectorView;
 import com.reflexit.magiccards.ui.views.instances.InstancesView;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
@@ -39,6 +40,8 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, (float) 0.8, "main");
 		IPlaceholderFolderLayout pf = layout.createPlaceholderFolder("up", IPageLayout.TOP, 0.5f, "main");
 		IFolderLayout rightTop = layout.createFolder("rightTop", IPageLayout.TOP, 0.5f, "right");
+		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.72f, "main");
+		bottom.addView(RulingsView.ID);
 		left.addView(CardDescView.ID);
 		rightTop.addView(CardsNavigatorView.ID);
 		right.addView(PrintingsView.ID);
@@ -54,6 +57,7 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		// layout.addStandaloneView(MagicDbView.ID, false, IPageLayout.LEFT,
 		// 1.0f, editorArea);
 		layout.addShowViewShortcut(CardDescView.ID);
+		layout.addShowViewShortcut(RulingsView.ID);
 		layout.addShowViewShortcut(MagicDbView.ID);
 		layout.addShowViewShortcut(CardsNavigatorView.ID);
 		layout.addShowViewShortcut(MyCardsView.ID);

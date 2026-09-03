@@ -106,6 +106,15 @@
             name="Card Info">
       </view>
       <view
+            allowMultiple="false"
+            category="com.reflexit.magiccards"
+            class="com.reflexit.magiccards.ui.views.card.RulingsView"
+            icon="icons/one_card24.png"
+            id="com.reflexit.magiccards.ui.views.card.RulingsView"
+            name="Rulings"
+            restorable="false">
+      </view>
+      <view
             allowMultiple="true"
             category="com.reflexit.magiccards"
             class="com.reflexit.magiccards.ui.views.lib.MyCardsView"
