@@ -124,6 +124,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	protected Action actionShowFind;
 	protected Action actionShowPrefs;
 	protected SortByAction actionSortBy;
+	protected ImageAction actionUnsort;
 	protected IMagicViewer viewer;
 	protected IFilteredCardStore<ICard> fstore;
 	private Presentation presentation = Presentation.TABLE;
@@ -634,7 +635,19 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		loadData(null);
 	}
 
+	/** Grey out Unsort / Reset Filter when the list is already unsorted / at default filter. */
+	protected void syncToolbarActionState() {
+		MagicCardFilter f = getFilter();
+		if (actionUnsort != null)
+			actionUnsort.setEnabled(f != null && !f.getSortOrder().isEmpty());
+		if (actionResetFilter != null) {
+			String[] names = PreferenceInitializer.preferenceNames(getElementPreferenceStore());
+			actionResetFilter.setEnabled(names != null && names.length > 0);
+		}
+	}
+
 	protected void syncSortColumnIndicator() {
+		syncToolbarActionState();
 		if (viewer instanceof IMagicColumnViewer) {
 			IMagicColumnViewer cviewer = (IMagicColumnViewer) viewer;
 			SortOrder o = getFilter().getSortOrder();
@@ -1023,6 +1036,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	public void fillLocalPullDown(IMenuManager manager) {
 		if (actionSortBy != null)
 			manager.add(this.actionSortBy.createMenuManager());
+		if (actionUnsort != null)
+			manager.add(this.actionUnsort);
 		if (actionGroupBy != null)
 			manager.add(this.actionGroupBy.createMenuManager());
 		manager.add(this.actionShowFilter);
@@ -1038,6 +1053,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			manager.add(this.actionGroupBy);
 		if (actionSortBy != null)
 			manager.add(this.actionSortBy);
+		if (actionUnsort != null)
+			manager.add(this.actionUnsort);
 		if (actionShowFind != null)
 			manager.add(this.actionShowFind);
 		manager.add(this.actionShowFilter);
@@ -1140,6 +1157,11 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				"Resets the filter to default values", this::runResetFilter);
 		this.actionSortBy = new SortByAction(getSortColumnCollection(), null, getPresentaionPreferenceStore(),
 				this::refresh);
+		this.actionUnsort = new ImageAction("Unsort", "icons/clcl16/unsort.png",
+				"Clear the sort and show cards in their natural (entry) order", () -> {
+					unsort();
+					refresh();
+				});
 		this.actionGroupBy = new GroupByAction(getGroups(), null, getPresentaionPreferenceStore(), this::reGroup);
 		this.actionShowPrefs = new ShowPreferencesAction(getPreferencePageId()) {
 			@Override
@@ -1998,6 +2020,14 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			IMagicColumnViewer cviewer = (IMagicColumnViewer) viewer;
 			GroupOrder groupOrder = null; // do not sort by group order
 											// automatically
+			// Persist to the SAME SORT_ORDER preference the "Sort By" button
+			// writes, so a header-click sort and a button sort are one thing -
+			// both survive a filter change and an app restart.
+			final IPersistentPreferenceStore sortStore = getPresentaionPreferenceStore();
+			final java.util.function.Consumer<SortOrder> persist = (o) -> {
+				if (sortStore != null)
+					sortStore.setValue(PreferenceConstants.SORT_ORDER, o.getStringValue());
+			};
 			if (index >= 0) {
 				AbstractColumn man = (AbstractColumn) cviewer.getColumnViewer().getLabelProvider(index);
 				ICardField sortField = man != null ? man.getSortField() : null;
@@ -2007,10 +2037,12 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 					return;
 				final ICardField so = sortField;
 				new SortAction(sortField.getLabel(), sortField, getFilter().getSortOrder(), groupOrder, (o) -> {
+					persist.accept(o);
 					cviewer.setSortColumn(index, o.isAccending(so) ? -1 : 1);
 				}).force();
 			} else {
 				new UnsortAction(getFilter().getSortOrder(), groupOrder, (o) -> {
+					persist.accept(o);
 					cviewer.setSortColumn(-1, 0);
 				}).force();
 			}
