@@ -97,6 +97,11 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		return card.getRulings();
 	}
 
+	@Override
+	public String getAccessories() {
+		return card.getAccessories();
+	}
+
 	public MagicCard getCard() {
 		return this.card;
 	}

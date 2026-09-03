@@ -28,6 +28,7 @@ import com.reflexit.magiccards.core.FileUtilsTest;
 import com.reflexit.magiccards.core.exports.ExportImportSuite;
 import com.reflexit.magiccards.core.model.AbilitiesTest;
 import com.reflexit.magiccards.core.model.CardGroupTest;
+import com.reflexit.magiccards.core.model.DeckAccessoriesTest;
 import com.reflexit.magiccards.core.model.ColorsTest;
 import com.reflexit.magiccards.core.model.EditionsTest;
 import com.reflexit.magiccards.core.model.GrouppingPerformanceTest;
@@ -50,6 +51,7 @@ import com.reflexit.magiccards.core.model.storage.DbMultiFileCardStoreTest;
 import com.reflexit.magiccards.core.model.storage.DeckStoreTest;
 import com.reflexit.magiccards.core.model.storage.MultiFileCollectionStoreTest;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtilsTest;
+import com.reflexit.magiccards.core.sync.AccessoryExtractorTest;
 import com.reflexit.magiccards.core.sync.ScryfallBulkSplitTest;
 import com.reflexit.magiccards.core.model.utils.SearchStringTokenizerTest;
 import com.reflexit.magiccards.core.xml.MagicXmlHandlerTest;
@@ -91,6 +93,8 @@ public class AllLocalTests {
 		suite.addTest(new JUnit4TestAdapter(MagicCardListTest.class));
 		suite.addTest(new JUnit4TestAdapter(PlayingDeckTest.class));
 		suite.addTest(new JUnit4TestAdapter(ScryfallBulkSplitTest.class));
+		suite.addTest(new JUnit4TestAdapter(AccessoryExtractorTest.class));
+		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
 		// editions
 		suite.addTestSuite(EditionsTest.class);
 		// Perf

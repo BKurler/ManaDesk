@@ -578,6 +578,14 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		JSONObject image_uris = (JSONObject) elem.get("image_uris");
 
+		// Physical accessories the card needs (tokens/emblems from all_parts,
+		// counters/dice/markers from the rules text). Same for both faces.
+		String accessories = AccessoryExtractor.extract(elem);
+		if (accessories != null) {
+			frontCard.set(MagicCardField.ACCESSORIES, accessories);
+			backCard.set(MagicCardField.ACCESSORIES, accessories);
+		}
+
 		switch (cardLayout) {
 		// Standard single face card
 		case 0:

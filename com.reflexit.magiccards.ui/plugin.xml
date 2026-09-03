@@ -817,6 +817,9 @@
         <page name="Legality" id="com.reflexit.magiccards.ui.views.lib.DeckLegalityPage2"
         class="com.reflexit.magiccards.ui.views.analyzers.DeckLegalityPage2"
         />
+        <page name="Accessories" id="com.reflexit.magiccards.ui.views.analyzers.AccessoriesPage"
+        class="com.reflexit.magiccards.ui.views.analyzers.AccessoriesPage"
+        />
         <page class="com.reflexit.magiccards.ui.views.analyzers.ExportDeckPage"
                       id="com.reflexit.magiccards.ui.views.analyzers.WizardsHtmlPage"
                       name="Export">

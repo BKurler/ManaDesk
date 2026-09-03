@@ -129,6 +129,13 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 			if (prev.equals(card)) {
 				// merge
 				((MagicCard) prev).setNonEmptyFromCard(card.getBase());
+				// ACCESSORIES is fully re-derived from Scryfall on every split, so
+				// an incoming empty value must be allowed to clear a stale one
+				// (setNonEmptyFromCard would keep the old value). A null means the
+				// incoming record simply has no accessories column - leave prev be.
+				String acc = card.getAccessories();
+				if (acc != null)
+					((MagicCard) prev).set(MagicCardField.ACCESSORIES, acc);
 				return true;
 			}
 			String id = card.getCardId();

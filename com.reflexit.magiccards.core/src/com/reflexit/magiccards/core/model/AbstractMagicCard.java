@@ -296,6 +296,11 @@ public abstract class AbstractMagicCard implements ICard, ICardModifiable, IMagi
 	}
 
 	@Override
+	public String getAccessories() {
+		return getString(MagicCardField.ACCESSORIES);
+	}
+
+	@Override
 	public MagicCard getBase() {
 		return null;
 	}
