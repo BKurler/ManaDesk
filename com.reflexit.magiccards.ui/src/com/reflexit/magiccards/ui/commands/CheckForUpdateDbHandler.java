@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.commands;
 
 import java.util.Collection;
@@ -22,6 +27,7 @@ import com.reflexit.magiccards.core.model.ICardHandler;
 import com.reflexit.magiccards.core.monitor.SubCoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.core.sync.ParseScryFallSets;
+import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
@@ -48,6 +54,32 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 		}
 		doCheckForCardUpdates();
 		return null;
+	}
+
+	/**
+	 * Independent startup task: bring the local Scryfall bulk split up to date -
+	 * download the "Default Cards" bulk file if Scryfall published a newer one,
+	 * then split it into one file per set - so later set updates are just a file
+	 * read. Runs in its own background job; no-op when working offline.
+	 */
+	public static void primeCardDatabaseSplit() {
+		new Job("Preparing card database") {
+			@Override
+			protected IStatus run(IProgressMonitor imonitor) {
+				if (WebUtils.isWorkOffline()) {
+					System.err.println("[ScryfallBulk] startup: offline, card-data split not checked");
+					return Status.OK_STATUS;
+				}
+				System.err.println("[ScryfallBulk] startup: checking card-data split...");
+				try {
+					ScryfallBulkCache.ensureSplitAll(new CoreMonitorAdapter(imonitor));
+					System.err.println("[ScryfallBulk] startup: card-data split ready");
+				} catch (Exception e) {
+					MagicUIActivator.log(e);
+				}
+				return Status.OK_STATUS;
+			}
+		}.schedule(5000);
 	}
 
 	public static void doCheckForCardUpdates() {

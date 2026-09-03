@@ -27,6 +27,7 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
@@ -424,34 +425,44 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		super.preActivate(activePage);
 	}
 
+	/**
+	 * Shared mutex so two set-update jobs cannot run at the same time (they race
+	 * on the card DB and editions.txt).
+	 */
+	private static final ISchedulingRule UPDATE_SETS_RULE = new ISchedulingRule() {
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return rule == this;
+		}
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return rule == this;
+		}
+	};
+
 	public class UpdateMultipleSetsJob extends Job {
 		private final Set<String> sets;
 
 		public UpdateMultipleSetsJob(Set<String> sets) {
 			super("Updating " + sets.size() + " sets");
 			this.sets = sets;
+			setRule(UPDATE_SETS_RULE);
 		}
 
 		@Override
 		protected IStatus run(IProgressMonitor monitor) {
 			try {
-				monitor.beginTask("Updating sets", sets.size() * 100);
+				monitor.beginTask("Updating sets", 100);
 
 				XmlCardHolder holder = new XmlCardHolder();
 				Properties options = new Properties();
 
-				for (String set : sets) {
-					if (monitor.isCanceled())
-						return Status.CANCEL_STATUS;
-
-					monitor.subTask("Updating set: " + set);
-
-					ICoreProgressMonitor core = new CoreMonitorAdapter(new SubProgressMonitor(monitor, 100));
-
-					SubCoreProgressMonitor sub = new SubCoreProgressMonitor(core, 100);
-
-					holder.downloadUpdates(set, options, sub);
-				}
+				// One batch operation: the set list is refreshed once, the
+				// Scryfall bulk card file is fetched and parsed once, and
+				// editions.txt is saved once - not once per selected set.
+				ICoreProgressMonitor core = new CoreMonitorAdapter(new SubProgressMonitor(monitor, 100));
+				holder.downloadUpdates(sets, options, core);
 
 				monitor.done();
 				return Status.OK_STATUS;

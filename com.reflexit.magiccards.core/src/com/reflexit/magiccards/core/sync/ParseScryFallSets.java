@@ -126,11 +126,8 @@ public class ParseScryFallSets extends AbstractParseJson {
 			if (generateFlat) {
 				handler.handleEdition(ed);
 			}
-		} else {
-			System.err.println(
-					"Skip Set " + set + " digital:" + digital + " count:" + cardCount + " date: " + setDate.toString());
 		}
-
+		// else: digital-only / empty / future set - silently skipped
 	}
 
 	// Scryfall doesn't provide alternate code. This is typically for older sets, so

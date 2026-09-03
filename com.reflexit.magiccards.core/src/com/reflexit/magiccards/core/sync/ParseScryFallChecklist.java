@@ -7,20 +7,29 @@
 package com.reflexit.magiccards.core.sync;
 
 import java.io.BufferedInputStream;
+import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
+import java.nio.file.Files;
+import java.nio.file.StandardCopyOption;
+import java.util.zip.GZIPInputStream;
+import java.util.zip.GZIPOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.Currency;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 import java.util.TreeSet;
 import java.util.regex.Matcher;
@@ -895,23 +904,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	public void downloadAndSaveEdition(File dir, String set) {
 		System.out.println("Downloading " + set + " from Scryfall");
 
-		BufferedInputStream st;
-		try {
-			File pricesDir = DataManager.getInstance().getPricesDir();
-
-			// !!! RD For now, hardcoded
-			String fileLocation = pricesDir + "\\TCG_Player__Medium_.xml";
-			if (new File(fileLocation).exists()) {
-				st = new BufferedInputStream(new FileInputStream(new File(fileLocation)),
-						FileUtils.DEFAULT_BUFFER_SIZE);
-
-				priceProvider.loadPrices(st);
-			}
-
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
+		loadTcgMediumPrices();
 
 		try (PrintStream out = new PrintStream(dir)) {
 			SortedOutputHanlder handler = new SortedOutputHanlder(out, true, true);
@@ -924,6 +917,195 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		} catch (IOException e) {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
+		}
+	}
+
+	/**
+	 * Load the locally cached "TCG Player (Medium)" price file into
+	 * {@link #priceProvider} so that generated flat files carry price data. Silent
+	 * no-op when the file is not present.
+	 */
+	private void loadTcgMediumPrices() {
+		File pricesDir = DataManager.getInstance().getPricesDir();
+		// !!! RD For now, hardcoded
+		File file = new File(pricesDir, "TCG_Player__Medium_.xml");
+		if (!file.exists())
+			return;
+		try (BufferedInputStream st = new BufferedInputStream(new FileInputStream(file),
+				FileUtils.DEFAULT_BUFFER_SIZE)) {
+			priceProvider.loadPrices(st);
+		} catch (IOException e) {
+			MagicLogger.log(e);
+		}
+	}
+
+	/**
+	 * Single streaming pass over the Scryfall "Default Cards" bulk file (see
+	 * {@link ScryfallBulkCache}), grouping printings by lower-cased {@code set}
+	 * code. The bulk file is gzip-compressed JSON Lines (one card object per
+	 * line), so it is never held whole in memory.
+	 *
+	 * @param bulkFile
+	 *            the local Default Cards file ({@code .jsonl.gz})
+	 * @param onlyLower
+	 *            if non-null, keep only these (lower-cased) set codes; if null,
+	 *            keep every set found in the file
+	 * @return a map from lower-cased set code to that set's cards
+	 */
+	private Map<String, List<MagicCard>> parseBulkGrouped(File bulkFile, Set<String> onlyLower) throws IOException {
+		loadTcgMediumPrices();
+		Map<String, List<MagicCard>> result = new HashMap<>();
+		if (onlyLower != null)
+			for (String code : onlyLower)
+				result.put(code, new ArrayList<>());
+
+		// parseRecord() pushes cards through ILoadCardHander#handleCard; route
+		// each card into the bucket for the line currently being parsed.
+		@SuppressWarnings("unchecked")
+		final List<MagicCard>[] bucket = new List[1];
+		ILoadCardHander router = new ILoadCardHander() {
+			@Override
+			public void handleCard(MagicCard card) {
+				if (bucket[0] != null)
+					bucket[0].add(card);
+			}
+
+			@Override
+			public void handleSecondary(MagicCard primary, MagicCard secondary) {
+				handleCard(secondary);
+			}
+
+			@Override
+			public void handleEdition(Edition ed) {
+				// set list is refreshed separately
+			}
+
+			@Override
+			public void setCardCount(int count) {
+				// not applicable for a bulk pass
+			}
+
+			@Override
+			public int getCardCount() {
+				return 0;
+			}
+
+			@Override
+			public int getRealCount() {
+				return bucket[0] == null ? 0 : bucket[0].size();
+			}
+		};
+
+		JSONParser parser = new JSONParser();
+		long records = 0;
+		long matched = 0;
+		long t0 = System.currentTimeMillis();
+		try (BufferedReader reader = new BufferedReader(
+				new InputStreamReader(new GZIPInputStream(new FileInputStream(bulkFile)), FileUtils.CHARSET_UTF_8),
+				FileUtils.DEFAULT_BUFFER_SIZE)) {
+			String line;
+			while ((line = reader.readLine()) != null) {
+				line = line.trim();
+				if (line.isEmpty() || line.charAt(0) != '{') {
+					// tolerate a stray wrapping "[" / "]" / "," if Scryfall ever
+					// switches back to a plain JSON array
+					int b = line.indexOf('{');
+					if (b < 0)
+						continue;
+					line = line.substring(b);
+				}
+				if (line.endsWith(","))
+					line = line.substring(0, line.length() - 1);
+				records++;
+				try {
+					JSONObject elem = (JSONObject) parser.parse(line);
+					Object set = elem.get("set");
+					if (set == null)
+						continue;
+					String code = set.toString().toLowerCase(Locale.ROOT);
+					List<MagicCard> b;
+					if (onlyLower == null) {
+						b = result.computeIfAbsent(code, k -> new ArrayList<>());
+					} else {
+						b = result.get(code);
+						if (b == null)
+							continue;
+					}
+					bucket[0] = b;
+					parseRecord(elem, router);
+					matched++;
+				} catch (ParseException e) {
+					MagicLogger.log(e);
+				}
+			}
+		} finally {
+			bucket[0] = null;
+		}
+		try {
+			priceProvider.save();
+		} catch (IOException e) {
+			MagicLogger.log(e);
+		}
+		System.err.println("[ScryfallBulk] parsed " + records + " records in " + (System.currentTimeMillis() - t0)
+				+ " ms, matched " + matched + " printing(s) for "
+				+ (onlyLower == null ? result.size() + " set(s) (full split)" : "abbreviations " + onlyLower));
+		return result;
+	}
+
+	/**
+	 * Cards for the given (lower-cased) set codes, from one filtered pass over the
+	 * bulk file. A key is present for every requested code (possibly empty).
+	 */
+	public Map<String, List<MagicCard>> groupSetsFromBulk(File bulkFile, Set<String> setCodesLower) throws IOException {
+		return parseBulkGrouped(bulkFile, setCodesLower);
+	}
+
+	/**
+	 * One pass over the bulk file, writing {@code <outDir>/<code>.txt.gz} for
+	 * every set that has at least one paper printing.
+	 *
+	 * @return the set codes written
+	 */
+	public Set<String> splitAllFromBulk(File bulkFile, File outDir) throws IOException {
+		Map<String, List<MagicCard>> all = parseBulkGrouped(bulkFile, null);
+		outDir.mkdirs();
+		Set<String> written = new java.util.HashSet<>();
+		for (Map.Entry<String, List<MagicCard>> e : all.entrySet()) {
+			if (e.getValue().isEmpty())
+				continue;
+			writeSetFlatGz(e.getValue(), new File(outDir, e.getKey() + ".txt.gz"));
+			written.add(e.getKey());
+		}
+		return written;
+	}
+
+	/**
+	 * Write the flat text (header + collector-number-sorted lines) for one set's
+	 * cards, using the same {@link SortedOutputHanlder} the REST path uses.
+	 */
+	public void writeSetFlat(List<MagicCard> cards, PrintStream out) {
+		SortedOutputHanlder handler = new SortedOutputHanlder(out, true, true);
+		for (MagicCard card : cards)
+			handler.handleCard(card);
+		handler.onEnd();
+	}
+
+	/** {@link #writeSetFlat} to a gzip file, written atomically (temp + rename). */
+	public void writeSetFlatGz(List<MagicCard> cards, File gzFile) throws IOException {
+		File parent = gzFile.getParentFile();
+		if (parent != null)
+			parent.mkdirs();
+		File tmp = File.createTempFile(gzFile.getName() + "-", ".tmp", parent);
+		try {
+			try (PrintStream out = new PrintStream(
+					new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(tmp)),
+							FileUtils.DEFAULT_BUFFER_SIZE),
+					false, FileUtils.UTF8)) {
+				writeSetFlat(cards, out);
+			}
+			Files.move(tmp.toPath(), gzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
+		} finally {
+			tmp.delete();
 		}
 	}
 
