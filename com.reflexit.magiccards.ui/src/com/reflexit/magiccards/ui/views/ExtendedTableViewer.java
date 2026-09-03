@@ -50,6 +50,20 @@ import com.reflexit.magiccards.ui.views.model.TableViewerContentProvider;
 public class ExtendedTableViewer extends TableViewer implements IMagicColumnViewer {
 	protected final ViewerManager manager;
 	protected int filler = 0;
+	private Runnable columnLayoutListener;
+	private final org.eclipse.swt.events.ControlListener columnLayoutTracker = new org.eclipse.swt.events.ControlAdapter() {
+		@Override
+		public void controlResized(org.eclipse.swt.events.ControlEvent e) {
+			if (columnLayoutListener != null)
+				columnLayoutListener.run();
+		}
+
+		@Override
+		public void controlMoved(org.eclipse.swt.events.ControlEvent e) {
+			if (columnLayoutListener != null)
+				columnLayoutListener.run();
+		}
+	};
 
 	protected ExtendedTableViewer(Composite parent, int style) {
 		super(parent, style);
@@ -187,6 +201,7 @@ public class ExtendedTableViewer extends TableViewer implements IMagicColumnView
 			col.setText(man.getColumnName());
 			col.setWidth(man.getUserWidth());
 			col.setToolTipText(man.getColumnTooltip());
+			col.addControlListener(columnLayoutTracker);
 			final int coln = i;
 			col.addSelectionListener(new SelectionAdapter() {
 				@Override
@@ -277,6 +292,11 @@ public class ExtendedTableViewer extends TableViewer implements IMagicColumnView
 		applyColumnProperties();
 		ColumnCollection columnsCollection = getColumnsCollection();
 		return columnsCollection.getColumnLayoutProperty();
+	}
+
+	@Override
+	public void setColumnLayoutListener(Runnable listener) {
+		this.columnLayoutListener = listener;
 	}
 
 	@Override

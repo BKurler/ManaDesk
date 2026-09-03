@@ -53,6 +53,20 @@ import com.reflexit.magiccards.ui.views.model.TreeViewerContentProvider;
 public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer, ISelectionTranslator {
 	protected final ViewerManager manager;
 	private int filler = 0;
+	private Runnable columnLayoutListener;
+	private final org.eclipse.swt.events.ControlListener columnLayoutTracker = new org.eclipse.swt.events.ControlAdapter() {
+		@Override
+		public void controlResized(org.eclipse.swt.events.ControlEvent e) {
+			if (columnLayoutListener != null)
+				columnLayoutListener.run();
+		}
+
+		@Override
+		public void controlMoved(org.eclipse.swt.events.ControlEvent e) {
+			if (columnLayoutListener != null)
+				columnLayoutListener.run();
+		}
+	};
 
 	protected ExtendedTreeViewer(Composite parent) {
 		this(parent, SWT.FULL_SELECTION | SWT.MULTI | SWT.BORDER | SWT.VIRTUAL);
@@ -188,6 +202,7 @@ public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer
 		col.setText(man.getColumnName());
 		col.setWidth(man.getUserWidth());
 		col.setToolTipText(man.getColumnTooltip());
+		col.addControlListener(columnLayoutTracker);
 		final int coln = i;
 		col.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -275,6 +290,11 @@ public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer
 		applyColumnProperties();
 		ColumnCollection columnsCollection = getColumnsCollection();
 		return columnsCollection.getColumnLayoutProperty();
+	}
+
+	@Override
+	public void setColumnLayoutListener(Runnable listener) {
+		this.columnLayoutListener = listener;
 	}
 
 	@Override
