@@ -1041,9 +1041,13 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		} finally {
 			bucket[0] = null;
 		}
+		int priceCount = priceProvider.getPriceMap().size();
 		try {
 			priceProvider.save();
-		} catch (IOException e) {
+			System.err.println("[ScryfallBulk] saved " + priceCount + " prices to "
+					+ com.reflexit.magiccards.core.xml.PricesXmlStreamWriter.getPricesFile(priceProvider));
+		} catch (Exception e) {
+			System.err.println("[ScryfallBulk] FAILED to save " + priceCount + " prices: " + e);
 			MagicLogger.log(e);
 		}
 		System.err.println("[ScryfallBulk] parsed " + records + " records in " + (System.currentTimeMillis() - t0)

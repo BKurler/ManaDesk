@@ -261,4 +261,10 @@ public class SplitViewer implements IMagicColumnViewer {
 	public String getColumnLayoutProperty() {
 		return viewer.getColumnLayoutProperty();
 	}
+
+	@Override
+	public void setColumnLayoutListener(Runnable listener) {
+		viewer.setColumnLayoutListener(listener);
+		treeviewer.setColumnLayoutListener(listener);
+	}
 }

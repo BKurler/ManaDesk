@@ -16,4 +16,12 @@ public interface IMagicColumnViewer extends IMagicViewer {
 	public abstract int getSortDirection();
 
 	public abstract String getColumnLayoutProperty();
+
+	/**
+	 * Register a callback fired whenever the user resizes or reorders a column, so
+	 * the owning control can persist the new layout.
+	 */
+	default void setColumnLayoutListener(Runnable listener) {
+		// optional
+	}
 }

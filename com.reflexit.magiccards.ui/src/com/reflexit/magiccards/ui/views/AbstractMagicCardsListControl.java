@@ -903,6 +903,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		viewer = null; // absolutely required
 		this.viewer = createViewer(parent);
 
+		// Persist column widths / order whenever the user changes them.
+		if (viewer instanceof IMagicColumnViewer)
+			((IMagicColumnViewer) viewer).setColumnLayoutListener(this::scheduleColumnLayoutSave);
+
 		// Reattach all selection listeners to the new viewer
 		for (ISelectionChangedListener l : selectionListeners) {
 			viewer.getSelectionProvider().addSelectionChangedListener(l);
@@ -2228,6 +2232,20 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	@Override
 	public void saveState(IMemento memento) {
 		saveColumnLayout();
+	}
+
+	private final Runnable columnLayoutSaver = this::saveColumnLayout;
+
+	/**
+	 * Debounced {@link #saveColumnLayout()} - column resize fires a burst of
+	 * events during a drag, so wait for it to settle.
+	 */
+	private void scheduleColumnLayoutSave() {
+		Control c = getControl();
+		if (c == null || c.isDisposed())
+			return;
+		c.getDisplay().timerExec(-1, columnLayoutSaver);
+		c.getDisplay().timerExec(500, columnLayoutSaver);
 	}
 
 	public void saveColumnLayout() {
