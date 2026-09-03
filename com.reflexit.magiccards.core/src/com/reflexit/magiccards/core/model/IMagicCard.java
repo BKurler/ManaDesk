@@ -55,6 +55,9 @@ public interface IMagicCard extends ICard {
 
 	public abstract String getRulings();
 
+	/** Encoded list of physical accessories the card needs (tokens/emblems/counters/dice/markers). */
+	public abstract String getAccessories();
+
 	@Override
 	public IMagicCard cloneCard();
 

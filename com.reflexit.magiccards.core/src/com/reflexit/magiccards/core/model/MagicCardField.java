@@ -1251,6 +1251,18 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
+	ACCESSORIES {
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setAccessories(value);
+		}
+
+		@Override
+		public Object get(IMagicCard card) {
+			return card.getAccessories();
+		};
+	},
+
 	// end of fields
 	;
 
