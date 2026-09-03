@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.model;
 
 import java.io.BufferedReader;
@@ -23,7 +28,9 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 
-// Name|Abbr|otherAbbr|ReleaseDate|Type|Block|Legality|iconAbbr|Unused(Name aliases)
+// Name|Abbr|otherAbbr|ReleaseDate|Type|Block|iconAbbr|Unused(Name aliases)
+// field 6 (iconAbbr) is the set-symbol SVG token, e.g. "star" for the generic
+// star icon - it is NOT a legality value and NOT a set code.
 // Limited Edition Alpha|LEA|1E|August 1993|Core|Core Set|lea|
 
 public class Editions implements ISearchableProperty {
@@ -281,7 +288,7 @@ public class Editions implements ISearchableProperty {
 						MagicLogger.log("Missing block " + line);
 					if (attrs.length <= 6)
 						continue;
-					// Legality
+					// iconAbbr (set-symbol SVG token)
 					String iconAbbr = attrs[6].trim();
 					set.setIconAbbr(iconAbbr);
 					if (attrs.length <= 7)

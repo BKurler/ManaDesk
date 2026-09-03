@@ -68,6 +68,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		try {
 			installSoftwareUpdate();
 			checkForCardUpdates();
+			// Independent of the "check for card updates" flow: bring the local
+			// Scryfall bulk split up to date in the background so set updates are
+			// fast.
+			CheckForUpdateDbHandler.primeCardDatabaseSplit();
 		} catch (Throwable e) {
 			Activator.log(e);
 		}
