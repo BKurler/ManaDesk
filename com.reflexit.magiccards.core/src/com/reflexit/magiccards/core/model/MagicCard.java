@@ -34,7 +34,6 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 	private String lang;
 	private String num;
 	private String rulings;
-	private String accessories;
 	private String text;
 	private String gathererId;
 	private String tcgId;
@@ -266,11 +265,11 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 
 	@Override
 	public String getAccessories() {
-		return this.accessories;
+		return (String) getProperty(MagicCardField.ACCESSORIES);
 	}
 
 	void setAccessories(String accessories) {
-		this.accessories = accessories;
+		setPropertyString(MagicCardField.ACCESSORIES, accessories);
 	}
 
 	@Override

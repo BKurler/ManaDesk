@@ -1251,14 +1251,14 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	ACCESSORIES {
+	ACCESSORIES(null) { // Scryfall-derived (token ids + counters); kept in the property map, not exported
 		@Override
 		protected void setStr(MagicCard card, String value) {
 			card.setAccessories(value);
 		}
 
 		@Override
-		public Object get(IMagicCard card) {
+		public Object getM(MagicCard card) {
 			return card.getAccessories();
 		};
 	},

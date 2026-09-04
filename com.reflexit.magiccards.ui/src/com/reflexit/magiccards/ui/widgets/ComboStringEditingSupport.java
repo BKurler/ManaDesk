@@ -26,8 +26,16 @@ public abstract class ComboStringEditingSupport extends EditingSupport {
 		String[] sets = getItems(element);
 		if (sets == null)
 			return null;
-		CellEditor editor = new ComboBoxCellEditor((Composite) getViewer().getControl(), sets, getStyle());
-		return editor;
+		return new ComboBoxCellEditor((Composite) getViewer().getControl(), sets, getStyle()) {
+			@Override
+			public LayoutData getLayoutData() {
+				// ComboBoxCellEditor defaults minimumWidth to ~10 chars, which
+				// overflows narrow columns (e.g. "Num"). Let the column width drive it.
+				LayoutData d = super.getLayoutData();
+				d.minimumWidth = 20;
+				return d;
+			}
+		};
 	}
 
 	public int getStyle() {
