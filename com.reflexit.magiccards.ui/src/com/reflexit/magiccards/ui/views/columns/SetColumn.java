@@ -196,22 +196,19 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 		protected void setValue(Object element, Object value) {
 			if (element instanceof MagicCardPhysical) {
 				MagicCardPhysical card = (MagicCardPhysical) element;
-				// set
-				Collection<IMagicCard> cards = DataManager.getInstance().getMagicDBStore()
-						.getCandidates(card.getName());
-				String set = (String) value;
-				String oldSet = card.getSet();
-				if (oldSet != null && oldSet.equals(set))
-					return;
-				for (Iterator iterator = cards.iterator(); iterator.hasNext();) {
-					IMagicCard base = (IMagicCard) iterator.next();
-					if (base.getSet().equals(set)) {
-						card.setMagicCard((MagicCard) base);
+					String set = (String) value;
+					String oldSet = card.getSet();
+					if (oldSet != null && oldSet.equals(set))
+						return;
+					// land on the lowest collector number in that set (the "main"
+					// printing, not a showcase / borderless / promo)
+					java.util.List<IMagicCard> printings = Printings.inSet(card.getName(), set);
+					if (!printings.isEmpty()) {
+						card.setMagicCard((MagicCard) printings.get(0));
 						updateOnEdit(getViewer(), card);
 						return;
 					}
-				}
-				MagicUIActivator.log("Cannot set new set for " + card + " of value " + set);
+					MagicUIActivator.log("Cannot set new set for " + card + " of value " + set);
 			}
 		}
 	}

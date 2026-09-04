@@ -29,6 +29,7 @@ import com.reflexit.magiccards.core.exports.ExportImportSuite;
 import com.reflexit.magiccards.core.model.AbilitiesTest;
 import com.reflexit.magiccards.core.model.CardGroupTest;
 import com.reflexit.magiccards.core.model.DeckAccessoriesTest;
+import com.reflexit.magiccards.core.model.CollectorNumberTest;
 import com.reflexit.magiccards.core.model.ColorsTest;
 import com.reflexit.magiccards.core.model.EditionsTest;
 import com.reflexit.magiccards.core.model.GrouppingPerformanceTest;
@@ -84,6 +85,7 @@ public class AllLocalTests {
 		suite.addTestSuite(CardElementTest.class);
 		suite.addTestSuite(CardGroupTest.class);
 		suite.addTest(new JUnit4TestAdapter(ColorsTest.class));
+		suite.addTest(new JUnit4TestAdapter(CollectorNumberTest.class));
 		suite.addTestSuite(SortOrderTest.class);
 		suite.addTestSuite(SearchStringTokenizerTest.class);
 		suite.addTest(new JUnit4TestAdapter(CardStoreUtilsTest.class));
