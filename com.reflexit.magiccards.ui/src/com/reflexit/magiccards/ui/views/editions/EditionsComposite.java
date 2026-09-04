@@ -19,13 +19,16 @@ package com.reflexit.magiccards.ui.views.editions;
 import java.io.FileNotFoundException;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashSet;
 import java.util.Iterator;
+import java.util.Set;
 
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.viewers.CheckboxTreeViewer;
 import org.eclipse.jface.viewers.ColumnViewerToolTipSupport;
+import org.eclipse.jface.viewers.ICheckStateProvider;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
@@ -40,6 +43,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.swt.widgets.TreeColumn;
@@ -92,6 +96,9 @@ public class EditionsComposite extends Composite {
 	private boolean checkedTree = false;
 	private Button selAll;
 	private Button deselAll;
+	private Label countLabel;
+	/** Checked sets, tracked independently of the tree so the filter box can't drop them. */
+	private final Set<Edition> checkedSet = new HashSet<>();
 	private ArrayList<AbstractEditionColumn> columns;
 	private EditionsViewerComparator vcomp;
 
@@ -132,10 +139,41 @@ public class EditionsComposite extends Composite {
 		gd.heightHint = 300;
 		filteredTree.setLayoutData(gd);
 		createDefaultColumns();
+		this.countLabel = new Label(panel, SWT.NONE);
+		this.countLabel.setFont(panel.getFont());
+		this.countLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		Composite buttons = new Composite(parent, SWT.NONE);
 		buttons.setLayout(GridLayoutFactory.fillDefaults().numColumns(5).create());
 		createButtonsControls(buttons);
 		this.treeViewer.setInput(Editions.getInstance());
+		if (checkedTree) {
+			CheckboxTreeViewer ctv = (CheckboxTreeViewer) this.treeViewer;
+			// the tree asks the model for each row's checked state, so a row that
+			// scrolls out of view (or is hidden by the filter) keeps its check
+			ctv.setCheckStateProvider(new ICheckStateProvider() {
+				@Override
+				public boolean isChecked(Object element) {
+					return element instanceof Edition && checkedSet.contains(element);
+				}
+
+				@Override
+				public boolean isGrayed(Object element) {
+					return false;
+				}
+			});
+			ctv.addCheckStateListener(e -> {
+				if (e.getElement() instanceof Edition) {
+					if (e.getChecked())
+						checkedSet.add((Edition) e.getElement());
+					else
+						checkedSet.remove((Edition) e.getElement());
+					updateCount();
+				}
+			});
+		} else {
+			this.treeViewer.addSelectionChangedListener(e -> updateCount());
+		}
+		updateCount();
 		return this.panel;
 	}
 
@@ -186,6 +224,19 @@ public class EditionsComposite extends Composite {
 	protected void sort(int index) {
 		updateSortColumn(index);
 		treeViewer.refresh();
+	}
+
+	/** Shows how many sets are selected in total - the filter box hides rows, not the count. */
+	private void updateCount() {
+		if (countLabel == null || countLabel.isDisposed())
+			return;
+		int n;
+		if (checkedTree)
+			n = checkedSet.size();
+		else
+			n = ((IStructuredSelection) treeViewer.getSelection()).size();
+		int total = Editions.getInstance().getEditions().size();
+		countLabel.setText(n + " of " + total + " sets selected");
 	}
 
 	public void updateSortColumn(int index) {
@@ -272,26 +323,24 @@ public class EditionsComposite extends Composite {
 		this.treeViewer.setInput(Editions.getInstance());
 		Collection<Edition> names = Editions.getInstance().getEditions();
 		ArrayList<Edition> sel = new ArrayList<>();
+		if (this.checkedTree)
+			this.checkedSet.clear();
 		for (Iterator<Edition> iterator = names.iterator(); iterator.hasNext();) {
 			Edition ed = iterator.next();
 			String abbr = ed.getMainAbbreviation();
 			String id = FilterField.getPrefConstant(FilterField.EDITION, abbr);
 			boolean checked = getPreferenceStore().getBoolean(id);
-			if (checked) {
-				if (this.checkedTree) {
-					((CheckboxTreeViewer) this.treeViewer).setChecked(ed, checked);
-				} else {
-					sel.add(ed);
-				}
-			} else {
-				if (this.checkedTree) {
-					((CheckboxTreeViewer) this.treeViewer).setChecked(ed, checked);
-				}
+			if (this.checkedTree) {
+				if (checked)
+					this.checkedSet.add(ed);
+			} else if (checked) {
+				sel.add(ed);
 			}
 		}
 		if (!this.checkedTree) {
 			this.treeViewer.setSelection(new StructuredSelection(sel));
 		}
+		updateCount();
 		String colName = getPreferenceStore().getString(SORT_COLUMN);
 		if (colName != null)
 			for (int i = 0; i < columns.size(); i++) {
@@ -329,7 +378,8 @@ public class EditionsComposite extends Composite {
 			Edition ed = iterator.next();
 			boolean checked = false;
 			if (this.checkedTree) {
-				checked = ((CheckboxTreeViewer) this.treeViewer).getChecked(ed);
+				// from the model, not the tree - filtered-out rows must still count
+				checked = this.checkedSet.contains(ed);
 			}
 			String abbr = ed.getMainAbbreviation();
 			String id = FilterField.getPrefConstant(FilterField.EDITION, abbr);
