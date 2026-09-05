@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.dialogs;
 
 import java.io.IOException;
@@ -5,6 +10,8 @@ import java.io.IOException;
 import org.eclipse.core.runtime.NullProgressMonitor;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.preference.StringButtonFieldEditor;
+import org.eclipse.jface.util.IPropertyChangeListener;
+import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
@@ -93,7 +100,34 @@ public class EditExporterDialog extends MagicDialog {
 		ld1.horizontalSpan = 4;
 		createPreviewGroup(area).setLayoutData(ld1);
 		updateFormatterControls();
+		// the format string, fields list, header/footer, separators, name and
+		// extension all write through the shared store, so one listener on it
+		// keeps the preview in sync with every change (the Method combo already
+		// refreshes via updateFormatterControls()).
+		store.addPropertyChangeListener(new IPropertyChangeListener() {
+			@Override
+			public void propertyChange(PropertyChangeEvent evt) {
+				schedulePreviewRefresh();
+			}
+		});
 		name.setFocus();
+	}
+
+	private boolean previewRefreshQueued;
+
+	/** Coalesce a burst of edits into a single preview refresh on the next UI tick. */
+	private void schedulePreviewRefresh() {
+		if (previewText == null || previewText.isDisposed() || previewRefreshQueued)
+			return;
+		previewRefreshQueued = true;
+		previewText.getDisplay().asyncExec(new Runnable() {
+			@Override
+			public void run() {
+				previewRefreshQueued = false;
+				if (previewText != null && !previewText.isDisposed())
+					updatePreview();
+			}
+		});
 	}
 
 	public void createFieldsControl(Composite area) {
@@ -189,15 +223,24 @@ public class EditExporterDialog extends MagicDialog {
 	}
 
 	protected void updatePreview() {
-		if (previewText == null)
+		if (previewText == null || previewText.isDisposed())
 			return;
 		ReportType type = getReportType("preview");
 		String text;
 		try {
 			text = ExportersPreferencePage.exportDeck(new NullProgressMonitor(), type, true, true);
-			type.delete();
 		} catch (Exception e) {
-			text = "Error: " + e;
+			// exportDeck wraps the real failure in an InvocationTargetException
+			Throwable cause = e.getCause() != null ? e.getCause() : e;
+			text = "Error: " + cause.getMessage();
+		} finally {
+			// always drop the throwaway "preview" report type, even on failure,
+			// so a leftover doesn't get reused by the next refresh
+			try {
+				type.delete();
+			} catch (Exception ignore) {
+				// nothing to do
+			}
 		}
 		previewText.setText(text);
 	}

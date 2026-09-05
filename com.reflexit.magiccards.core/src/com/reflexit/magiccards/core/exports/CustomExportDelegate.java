@@ -8,6 +8,12 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.OutputStream;
@@ -85,6 +91,40 @@ public class CustomExportDelegate extends AbstractExportDelegatePerLine<IMagicCa
 			else
 				format = "%d %s";
 		}
+		// every selected field should appear: if the format has fewer slots than
+		// there are fields, append a slot per extra field so nothing is silently
+		// dropped (a custom format that already covers every field is untouched).
+		if (!isFieldSeparated() && columns != null) {
+			int slots = countFormatSlots(format, itype == FORMAT_JAVA);
+			StringBuilder sb = new StringBuilder(format);
+			for (int i = slots; i < columns.length; i++)
+				sb.append(itype == FORMAT_JAVA ? " {" + i + "}" : " %s");
+			format = sb.toString();
+		}
+	}
+
+	/** Number of value slots a format string references: {@code %x} (not {@code %%})
+	 * for printf, distinct {@code {n}} argument indices for a Java MessageFormat. */
+	static int countFormatSlots(String fmt, boolean javaMessage) {
+		if (fmt == null || fmt.isEmpty())
+			return 0;
+		if (javaMessage) {
+			java.util.Set<Integer> idx = new java.util.HashSet<Integer>();
+			java.util.regex.Matcher m = java.util.regex.Pattern.compile("\\{\\s*(\\d+)").matcher(fmt);
+			while (m.find())
+				idx.add(Integer.valueOf(m.group(1)));
+			return idx.isEmpty() ? 0 : java.util.Collections.max(idx).intValue() + 1;
+		}
+		int n = 0;
+		for (int i = 0; i < fmt.length() - 1; i++) {
+			if (fmt.charAt(i) == '%') {
+				if (fmt.charAt(i + 1) == '%')
+					i++;
+				else
+					n++;
+			}
+		}
+		return n;
 	}
 
 	@Override
@@ -129,9 +169,17 @@ public class CustomExportDelegate extends AbstractExportDelegatePerLine<IMagicCa
 	public void printLine(Object[] values) {
 		String line;
 		if (itype == FORMAT_JAVA) {
-			line = new MessageFormat(format).format(values);
+			try {
+				line = new MessageFormat(format == null ? "" : format).format(values);
+			} catch (RuntimeException e) {
+				line = "<bad format \"" + format + "\": " + e.getMessage() + ">";
+			}
 		} else if (itype == FORMAT_PRINTF) {
-			line = String.format(format, values);
+			try {
+				line = String.format(format == null ? "" : format, values);
+			} catch (RuntimeException e) {
+				line = "<bad format \"" + format + "\": " + e.getMessage() + ">";
+			}
 		} else {
 			super.printLine(values);
 			return;
