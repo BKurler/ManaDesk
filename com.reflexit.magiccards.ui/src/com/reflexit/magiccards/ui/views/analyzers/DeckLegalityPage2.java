@@ -295,7 +295,7 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 			mstore.getCardStore().addAll(sideStore.getCards());
 		mstore.setLocation(loc.toMainDeck());
 		filter.getSortOrder().setSortField(MagicCardField.LEGALITY, true);
-		filter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, false);
+		filter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, true);
 		filter.setGroupFields(MagicCardField.SIDEBOARD);
 		mstore.update(filter);
 		this.fstore = mstore;

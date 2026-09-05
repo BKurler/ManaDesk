@@ -97,6 +97,7 @@ public class AllLocalTests {
 		suite.addTest(new JUnit4TestAdapter(ScryfallBulkSplitTest.class));
 		suite.addTest(new JUnit4TestAdapter(AccessoryExtractorTest.class));
 		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.LocationExtraTest.class));
 		// editions
 		suite.addTestSuite(EditionsTest.class);
 		// Perf

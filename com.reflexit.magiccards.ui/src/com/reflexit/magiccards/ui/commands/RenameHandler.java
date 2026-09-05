@@ -80,15 +80,25 @@ public class RenameHandler extends AbstractHandler {
 					"Cannot rename sideboard. Rename the parent decl/collection of this sideboard instead.");
 			return null;
 		}
+		if (loc.isExtra()) {
+			MessageDialog.openInformation(window.getShell(), "Cannot Rename",
+					"Cannot rename an accessories list. Rename the parent deck instead.");
+			return null;
+		}
 		InputDialog inputDialog = new InputDialog(window.getShell(), "Rename", "New Name", f.getName(), null);
 		if (inputDialog.open() == Dialog.OK) {
 			String newName = inputDialog.getValue();
 			if (!f.getName().equals(newName)) {
 				Location sb = loc.toSideboard();
+				Location acc = loc.toExtra();
 				CardElement el = f.rename(newName);
 				CardElement fsb = f.getParent().findChieldByName(sb.getBaseFileName());
 				if (fsb != null) {
 					fsb.rename(Location.valueOf(newName).toSideboard().toString());
+				}
+				CardElement facc = f.getParent().findChieldByName(acc.getBaseFileName());
+				if (facc != null) {
+					facc.rename(Location.valueOf(newName).toExtra().toString());
 				}
 			}
 		}

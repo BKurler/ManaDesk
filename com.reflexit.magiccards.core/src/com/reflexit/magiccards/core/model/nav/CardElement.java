@@ -217,8 +217,29 @@ public abstract class CardElement extends EventManager implements ILocatable {
 
 	public CardElement getRelated() {
 		Location loc = getLocation();
-		if (loc.isSideboard())
+		if (loc.isSideboard() || loc.isExtra())
 			return getParent().findChieldByName(loc.toMainDeck().getBaseFileName());
 		return getParent().findChieldByName(loc.toSideboard().getBaseFileName());
+	}
+
+	/**
+	 * Every sibling list that belongs to the same deck as this element - the main
+	 * deck, its sideboard and its accessories list - except this element itself.
+	 * Used when a whole deck is renamed or deleted so its extra lists follow.
+	 */
+	public java.util.List<CardElement> getRelatedElements() {
+		java.util.List<CardElement> res = new java.util.ArrayList<>(2);
+		if (getParent() == null)
+			return res;
+		Location loc = getLocation();
+		Location main = loc.toMainDeck();
+		for (Location other : new Location[] { main, main.toSideboard(), main.toExtra() }) {
+			if (other.equals(loc))
+				continue;
+			CardElement el = getParent().findChieldByName(other.getBaseFileName());
+			if (el != null)
+				res.add(el);
+		}
+		return res;
 	}
 }

@@ -328,7 +328,7 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 				getViewer().refresh(true);
 			}
 		};
-		this.showSideboards = new Action("Show Sideboads", SWT.TOGGLE) {
+		this.showSideboards = new Action("Show Sideboards and Extras", SWT.TOGGLE) {
 			@Override
 			public void run() {
 				showSideboardFilter();
@@ -464,6 +464,15 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 		DeckView.openCollection(d, null);
 	}
 
+	/** Sideboard/extra lists are opened deliberately via their own Open
+	 * Sideboard/Open Extra buttons, never automatically - e.g. when the "New
+	 * Deck" wizard creates one alongside the main deck, only the deck itself
+	 * should end up open. */
+	private static boolean isSideboardOrExtra(CardCollection coll) {
+		Location loc = coll.getLocation();
+		return loc.isSideboard() || loc.isExtra();
+	}
+
 	public Shell getShell() {
 		return getViewSite().getShell();
 	}
@@ -474,7 +483,7 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 		switch (type) {
 		case CardEvent.ADD_CONTAINER:
 			Object obj = event.getData();
-			if (obj instanceof CardCollection) {
+			if (obj instanceof CardCollection && !isSideboardOrExtra((CardCollection) obj)) {
 				WaitUtils.scheduleJob("Opening deck", () -> {
 					CardCollection coll = (CardCollection) obj;
 					boolean gotit = WaitUtils.waitForCondition(() -> (coll.getStorageInfo() != null), 3000, 100);

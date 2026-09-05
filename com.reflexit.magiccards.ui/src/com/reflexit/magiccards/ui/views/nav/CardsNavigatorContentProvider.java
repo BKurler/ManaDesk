@@ -79,7 +79,7 @@ public class CardsNavigatorContentProvider implements ITreeContentProvider {
 
 			private boolean isFiltered(CardElement element) {
 				if (checkSet(FILTER_SIDEBOARDS)) {
-					return element.getLocation().isSideboard();
+					return element.getLocation().isSideboard() || element.getLocation().isExtra();
 				}
 				if (checkSet(FILTER_NON_FOLDERS)) {
 					if (!(element instanceof CardOrganizer)) {

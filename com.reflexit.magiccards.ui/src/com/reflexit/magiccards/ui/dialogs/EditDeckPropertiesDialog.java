@@ -73,6 +73,9 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			type.setText(IStorageInfo.DECK_TYPE.equals(info.getType()) ? IStorageInfo.DECK_TYPE
 					: IStorageInfo.COLLECTION_TYPE);
 			GridData gd = new GridData(GridData.FILL_HORIZONTAL);
+			// take the rest of the row so the checkboxes below aren't
+			// crowded onto the same line - easier to read as its own row
+			gd.horizontalSpan = ((GridLayout) comp.getLayout()).numColumns - 1;
 			type.setLayoutData(gd);
 		}
 		{

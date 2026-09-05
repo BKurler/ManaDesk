@@ -22,12 +22,48 @@ public class CollectionsContainer extends CardOrganizer {
 		super(path, parent);
 	}
 
+	/**
+	 * Orders siblings alphabetically by deck name, but keeps a deck's own
+	 * sideboard and extra list right after it (in that order) instead of wherever
+	 * "-sideboard"/"-extra" would fall alphabetically on their own (which would
+	 * put "-extra" before "-sideboard" for the same deck - "e" &lt; "s").
+	 */
+	private static final java.util.Comparator<File> DECK_FAMILY_ORDER = (a, b) -> {
+		String an = stripXml(a.getName());
+		String bn = stripXml(b.getName());
+		int c = familyName(an).compareToIgnoreCase(familyName(bn));
+		if (c != 0)
+			return c;
+		return familyRank(an) - familyRank(bn);
+	};
+
+	private static String stripXml(String name) {
+		return name.endsWith(".xml") ? name.substring(0, name.length() - 4) : name;
+	}
+
+	private static String familyName(String name) {
+		if (name.endsWith(Location.SIDEBOARD_SUFFIX))
+			return name.substring(0, name.length() - Location.SIDEBOARD_SUFFIX.length());
+		if (name.endsWith(Location.EXTRA_SUFFIX))
+			return name.substring(0, name.length() - Location.EXTRA_SUFFIX.length());
+		return name;
+	}
+
+	private static int familyRank(String name) {
+		if (name.endsWith(Location.SIDEBOARD_SUFFIX))
+			return 1;
+		if (name.endsWith(Location.EXTRA_SUFFIX))
+			return 2;
+		return 0;
+	}
+
 	@SuppressWarnings("unused")
 	public void loadChildren() {
 		File dir = getFile();
 		File[] listFiles = dir.listFiles();
 		if (listFiles == null)
 			return;
+		java.util.Arrays.sort(listFiles, DECK_FAMILY_ORDER);
 		for (File mem : listFiles) {
 			if (!mem.exists())
 				continue;

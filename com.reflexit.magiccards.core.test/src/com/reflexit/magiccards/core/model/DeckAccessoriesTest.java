@@ -78,10 +78,41 @@ public class DeckAccessoriesTest {
 			keywords.add(n.label);
 		Assert.assertTrue(counters.contains("+1/+1 counter"));
 		Assert.assertTrue(counters.contains("Loyalty counter"));
-		Assert.assertTrue(keywords.contains("Stun counter"));
-		Assert.assertTrue(keywords.contains("First strike counter"));
-		Assert.assertTrue(keywords.contains("Shield counter"));
+		// markers are on/off, not accumulating counters - no "counter" suffix on the name
+		Assert.assertTrue(keywords.contains("Stun"));
+		Assert.assertTrue(keywords.contains("First strike"));
+		Assert.assertTrue(keywords.contains("Shield"));
 		Assert.assertTrue(r.counters.stream().noneMatch(n -> n.label.contains("Stun")));
+	}
+
+	@Test
+	public void incompleteFlaggedWhenOracleMakesTokenButNoAllParts() {
+		Result r = DeckAccessories.compute(java.util.Arrays.asList(
+				phys("Chatterfang, Squirrel General", 1, "create a 1/1 green Squirrel creature token")), null);
+		Assert.assertTrue(r.incomplete.contains("Chatterfang, Squirrel General"));
+	}
+
+	@Test
+	public void noIncompleteWhenOracleDoesNotMakeTokens() {
+		Result r = DeckAccessories.compute(java.util.Arrays.asList(phys("Grizzly Bears", 1, "")), null);
+		Assert.assertTrue(r.incomplete.isEmpty());
+	}
+
+	@Test
+	public void noIncompleteForDoublingEffectsThatDoNotMakeTheirOwnToken() {
+		Result r = DeckAccessories.compute(java.util.Arrays.asList(phys("Doubling Season", 1,
+				"If an effect would create one or more tokens under your control, it creates twice that many of "
+						+ "those tokens instead.")),
+				null);
+		Assert.assertTrue(r.incomplete.isEmpty());
+	}
+
+	@Test
+	public void noIncompleteForPayoffsThatOnlyCountTokensMadeElsewhere() {
+		Result r = DeckAccessories.compute(java.util.Arrays.asList(phys("Ellyn Harbreeze, Busybody", 1,
+				"Look at the top X cards of your library, where X is the number of tokens you created this turn.")),
+				null);
+		Assert.assertTrue(r.incomplete.isEmpty());
 	}
 
 	@Test
@@ -139,13 +170,16 @@ public class DeckAccessoriesTest {
 	}
 
 	@Test
-	public void sameSourceCardInTwoPrintingsCountsOnce() {
+	public void samePrintingCardCountedSeparately() {
+		// two printings of the same card (e.g. one from ORI, one from DFT) each get
+		// their own source/tile - they are never merged, matching the detail panel
 		List<IMagicCard> deck = new ArrayList<>();
-		deck.add(phys("Hardened Scales", 1, "put a +1/+1 counter"));
-		deck.add(phys("Hardened Scales", 1, "put a +1/+1 counter")); // e.g. one from ORI, one from DFT
+		deck.add(phys("Hardened Scales", 3, "put a +1/+1 counter"));
+		deck.add(phys("Hardened Scales", 2, "put a +1/+1 counter"));
 		Result r = DeckAccessories.compute(deck, null);
 		Assert.assertEquals(1, r.counters.size());
-		Assert.assertEquals(1, r.counters.get(0).getDeckCards());
+		Assert.assertEquals(2, r.counters.get(0).getDeckCards());
+		Assert.assertEquals(5, r.counters.get(0).copies);
 	}
 
 	@Test

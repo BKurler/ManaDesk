@@ -31,12 +31,9 @@ public class OpenSideboardAction extends ImageAction {
 		if (location.equals(sideboard))
 			return;
 		CollectionsContainer parent = (CollectionsContainer) deck.getParent();
-		CardCollection s;
-		if (!deck.getParent().contains(sideboard)) {
-			s = parent.addDeck(sideboard.getBaseFileName(), true, deck.isVirtual());
-		} else {
-			s = (CardCollection) parent.findChield(sideboard);
-		}
+		if (!deck.getParent().contains(sideboard))
+			return; // doesn't exist yet - the button is disabled for this case, never create it here
+		CardCollection s = (CardCollection) parent.findChield(sideboard);
 		DeckView.openCollection(s, new StructuredSelection());
 	}
 

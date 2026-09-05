@@ -543,8 +543,19 @@ public class TableSearch {
 		StringBuffer res = new StringBuffer();
 		for (int i = 0; i < charArray.length; i++) {
 			char c = charArray[i];
+			if (c == '*') {
+				// '*' never appears in a card name, so it's free to use as an
+				// explicit wildcard standing for exactly one arbitrary character
+				// (e.g. "Jace*" matches a 5-letter name starting with "Jace")
+				res.append(".");
+				continue;
+			}
 			if (!(Character.isLetter(c) || c == ',' || c == ' ')) {
-				res.append('.');
+				// digits/punctuation must match literally - quote them so a regex
+				// metacharacter (".", "(", "+"...) is escaped, not turned into a
+				// "match any character" wildcard (searching "17-" must not match
+				// every 3-character name, it must match the literal text "17-")
+				res.append(Pattern.quote(String.valueOf(c)));
 				continue;
 			}
 			if (Character.isUpperCase(c)) {

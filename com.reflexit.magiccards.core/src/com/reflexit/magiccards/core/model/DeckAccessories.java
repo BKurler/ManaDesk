@@ -17,6 +17,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
@@ -57,7 +58,9 @@ public final class DeckAccessories {
 		/** an on/off counter, tracked with a marker not a die: stun, shield, flying, first strike... */
 		KEYWORD,
 		/** a die or a coin flip */
-		DIE
+		DIE,
+		/** stocked in the deck's extra list but not needed by anything in the deck. */
+		USELESS
 	}
 
 	/** One decoded entry, before any deck aggregation. */
@@ -83,7 +86,19 @@ public final class DeckAccessories {
 		public String label;
 		/** a card to show the picture of, or {@code null} when the UI should draw a badge. */
 		public IMagicCard card;
-		/** the distinct deck cards that call for this accessory. */
+		/** {@code true} when {@link #card} is a printing the user put in the deck's extra list. */
+		public boolean ownedByUser;
+		/**
+		 * how many copies of this accessory the user has stocked in the deck's extra
+		 * list - {@code 0} when {@link #card} is {@code null} (nothing to stock: a
+		 * bare counter/keyword/die) or nothing matching is in the extra list yet.
+		 */
+		public int haveCount;
+		/**
+		 * The deck cards that call for this accessory - one entry per physical
+		 * printing (two different printings of the same card name each get their own
+		 * entry; they are NOT merged), matching exactly what the detail panel shows.
+		 */
 		public final List<IMagicCard> sources = new ArrayList<>();
 		/** sum of the copies of those deck cards. */
 		public int copies;
@@ -93,15 +108,12 @@ public final class DeckAccessories {
 			this.key = key;
 		}
 
-		/** number of distinct deck cards that need it. */
+		/** number of printings (each counted separately) that need it - matches {@link #sources}.size(). */
 		public int getDeckCards() {
 			return sources.size();
 		}
 
 		void addSource(IMagicCard card, int copies) {
-			for (IMagicCard s : sources)
-				if (eq(s.getName(), card.getName()))
-					return; // same card, another printing - count it once
 			sources.add(card);
 			this.copies += copies;
 		}
@@ -118,14 +130,29 @@ public final class DeckAccessories {
 		public final List<Need> keywords = new ArrayList<>();
 		/** dice and coin flips. */
 		public final List<Need> dice = new ArrayList<>();
+		/**
+		 * Deck cards whose rules text makes a token / emblem we could not identify
+		 * (no Scryfall {@code all_parts} on the card, or the token is not in the
+		 * database) - so the Tokens / Emblems lists above may be incomplete.
+		 */
+		public final List<String> incomplete = new ArrayList<>();
+		/**
+		 * Cards stocked in the deck's extra list that no computed need actually
+		 * claimed - a wrong printing, or a token/marker the deck simply doesn't call
+		 * for. Each is a real {@link Need} (kind {@link Kind#USELESS}) with no
+		 * sources, so it's selectable and shows its own picture, exactly like any
+		 * other row.
+		 */
+		public final List<Need> useless = new ArrayList<>();
 
 		public boolean isEmpty() {
 			return all().isEmpty();
 		}
 
-		/** every entry, in display order. */
+		/** every entry, in display order - useless cards lead the list. */
 		public List<Need> all() {
 			List<Need> l = new ArrayList<>();
+			l.addAll(useless);
 			l.addAll(tokens);
 			l.addAll(emblems);
 			l.addAll(playerMarkers);
@@ -162,6 +189,9 @@ public final class DeckAccessories {
 				break;
 			case DIE:
 				dice.add(n);
+				break;
+			case USELESS:
+				useless.add(n);
 				break;
 			}
 		}
@@ -270,18 +300,61 @@ public final class DeckAccessories {
 
 	/**
 	 * @param deck the deck's cards (main + sideboard already merged by the caller);
-	 *             {@link ICardCountable} copies are respected
+	 *             {@link ICardCountable} copies are respected. If it happens to
+	 *             contain accessory cards (a token in the sideboard, say) they are
+	 *             skipped for needs but do NOT count as "owned" - only
+	 *             {@link #compute(Collection, Collection, IDbCardStore)}'s
+	 *             {@code extra} list does.
 	 * @param db   the card database, for resolving token ids and helper cards
 	 */
 	public static Result compute(Collection<? extends IMagicCard> deck, IDbCardStore<IMagicCard> db) {
+		return compute(deck, null, db);
+	}
+
+	/**
+	 * @param deck  the deck's cards (main + sideboard already merged by the
+	 *              caller) - what the deck needs is computed from these
+	 * @param extra the deck's extra list, or {@code null} - what the user already
+	 *              has stocked ({@link Need#ownedByUser}/{@link Need#haveCount})
+	 *              is computed ONLY from these, never from {@code deck}
+	 * @param db    the card database, for resolving token ids and helper cards
+	 */
+	public static Result compute(Collection<? extends IMagicCard> deck, Collection<? extends IMagicCard> extra,
+			IDbCardStore<IMagicCard> db) {
 		Map<String, Need> byKey = new LinkedHashMap<>();
+		// token / emblem / helper cards the user has stocked in the extra list:
+		// keyed by identity so we can show that exact printing, and how many copies.
+		Map<String, IMagicCard> owned = new LinkedHashMap<>();
+		Map<String, Integer> ownedCount = new LinkedHashMap<>();
+		if (extra != null) {
+			for (IMagicCard c : extra) {
+				if (c == null || !isAccessoryCard(c))
+					continue;
+				IMagicCard base = c instanceof MagicCardPhysical ? ((MagicCardPhysical) c).getCard() : c;
+				String id = identity(base);
+				owned.putIfAbsent(id, base);
+				int have = (c instanceof ICardCountable) ? Math.max(0, ((ICardCountable) c).getCount()) : 1;
+				ownedCount.merge(id, have, Integer::sum);
+			}
+		}
+		List<String> incompleteNames = new ArrayList<>();
 		if (deck != null) {
 			for (IMagicCard c : deck) {
-				if (c == null || isAccessoryCard(c))
+				if (c == null)
+					continue;
+				if (isAccessoryCard(c))
 					continue; // a token / helper card in the deck must not point at itself
 				int copies = (c instanceof ICardCountable) ? Math.max(1, ((ICardCountable) c).getCount()) : 1;
-				for (Ref ref : refsFor(c, db)) {
+				List<Ref> refs = refsFor(c, db);
+				boolean gotToken = false;
+				boolean unresolved = false;
+				for (Ref ref : refs) {
 					Need seed = resolve(ref, db);
+					if (ref.kind == Kind.TOKEN) {
+						gotToken = true;
+						if (seed.card == null)
+							unresolved = true;
+					}
 					Need need = byKey.get(seed.key);
 					if (need == null) {
 						need = seed;
@@ -289,12 +362,28 @@ public final class DeckAccessories {
 					}
 					need.addSource(c, copies);
 				}
+				if (unresolved || (!gotToken && makesToken(fullOracle(c, db)))) {
+					String nm = nz(c.getName());
+					if (!nm.isEmpty() && !incompleteNames.contains(nm))
+						incompleteNames.add(nm);
+				}
 			}
 		}
-		// second pass: pick the printing that best matches the card that needs it
+		// second pass: pick the printing that best matches the card that needs it -
+		// unless the user has pinned a specific printing in the extra list.
+		Set<String> claimed = new java.util.HashSet<>();
 		for (Need n : byKey.values()) {
 			if (n.card == null || n.sources.isEmpty())
 				continue;
+			String ownedKey = identity(n.card);
+			IMagicCard pinned = owned.get(ownedKey);
+			if (pinned != null) {
+				n.card = pinned;
+				n.ownedByUser = true;
+				n.haveCount = ownedCount.getOrDefault(ownedKey, 0);
+				claimed.add(ownedKey);
+				continue;
+			}
 			String srcSet = n.sources.get(0).getSet();
 			if (n.kind == Kind.PLAYER_MARKER) {
 				IMagicCard better = bestPrinting(n.card.getName(), srcSet, db);
@@ -309,13 +398,55 @@ public final class DeckAccessories {
 		Result r = new Result();
 		for (Need n : byKey.values())
 			r.add(n);
+		// third pass: cards stocked in extra that no need actually claimed - the
+		// user put something in there the deck doesn't call for (wrong printing,
+		// wrong token entirely...). Each becomes a real, selectable row with its
+		// own picture, sources left empty since nothing in the deck needs it.
+		for (Map.Entry<String, IMagicCard> e : owned.entrySet()) {
+			if (claimed.contains(e.getKey()))
+				continue;
+			IMagicCard card = e.getValue();
+			Need n = new Need(Kind.USELESS, "useless:" + e.getKey());
+			n.label = nz(card.getName());
+			n.card = card;
+			n.haveCount = ownedCount.getOrDefault(e.getKey(), 0);
+			r.add(n);
+		}
 		sort(r.tokens);
 		sort(r.emblems);
 		sort(r.playerMarkers);
 		sort(r.counters);
 		sort(r.keywords);
 		sort(r.dice);
+		sort(r.useless);
+		r.incomplete.addAll(incompleteNames);
 		return r;
+	}
+
+	/**
+	 * A rough "this card makes a token / emblem" test on already-lower-cased rules
+	 * text - used only to hint that the token list might be missing something, so a
+	 * few false positives are acceptable.
+	 */
+	private static boolean makesToken(String oracleLower) {
+		if (oracleLower == null || oracleLower.isEmpty())
+			return false;
+		String s = oracleLower.toLowerCase(Locale.ROOT);
+		if (s.contains("get an emblem"))
+			return true;
+		if (!s.contains("token"))
+			return false;
+		// doubling/redirection effects ("if an effect would create...") mention
+		// create+token without making their own specific token (Doubling Season,
+		// Anointed Procession...) - Scryfall correctly has no all_parts for these
+		if (s.contains("would create"))
+			return false;
+		// payoffs that only count tokens already made elsewhere, not make one
+		// (Ellyn Harbreeze: "the number of tokens you created this turn")
+		if (s.contains("tokens you created") || s.contains("token you created")
+				|| s.contains("tokens created this turn") || s.contains("token created this turn"))
+			return false;
+		return s.contains("create");
 	}
 
 	/**
@@ -422,8 +553,10 @@ public final class DeckAccessories {
 		}
 		case COUNTER: {
 			if (CounterTypes.isKeyword(ref.payload)) {
+				// these are markers (on/off), not accumulating counters - the Type
+				// column already says "Marker", so the name shouldn't also say "counter"
 				Need n = new Need(Kind.KEYWORD, ref.raw);
-				n.label = titleCase(ref.payload) + " counter";
+				n.label = titleCase(ref.payload);
 				return n;
 			}
 			if (PLAYER_COUNTERS.containsKey(ref.payload)) {
@@ -538,10 +671,6 @@ public final class DeckAccessories {
 		if (c == null && name.contains(" // "))
 			c = bestPrinting(name.substring(0, name.indexOf(" // ")), null, db);
 		return c;
-	}
-
-	private static boolean eq(String a, String b) {
-		return a == null ? b == null : a.equals(b);
 	}
 
 	private static String nz(String s) {
