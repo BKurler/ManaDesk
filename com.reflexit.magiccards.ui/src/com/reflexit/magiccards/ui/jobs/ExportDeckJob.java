@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.jobs;
 
 import java.io.IOException;
@@ -24,6 +29,7 @@ public class ExportDeckJob extends Job {
 	private IFilteredCardStore<IMagicCard> filteredLibrary;
 	private OutputStream outStream;
 	private ICardField[] columns;
+	private boolean multiDeck;
 
 	public ExportDeckJob(OutputStream outStream, ReportType reportType, boolean header,
 			IFilteredCardStore<IMagicCard> filteredLibrary) {
@@ -41,6 +47,13 @@ public class ExportDeckJob extends Job {
 		this.columns = columns;
 	}
 
+	/** When true, several decks are being combined into one file - the export
+	 * gets a LOCATION column so rows stay identifiable. */
+	public ExportDeckJob setMultiDeck(boolean multiDeck) {
+		this.multiDeck = multiDeck;
+		return this;
+	}
+
 	@Override
 	protected IStatus run(IProgressMonitor monitor) {
 		final IExportDelegate<IMagicCard> worker;
@@ -54,6 +67,7 @@ public class ExportDeckJob extends Job {
 			return new Status(IStatus.ERROR, MagicUIActivator.PLUGIN_ID, e.getMessage(), e);
 		}
 		worker.init(outStream, header, filteredLibrary);
+		worker.setMultiDeck(multiDeck);
 		try {
 			worker.run(new CoreMonitorAdapter(monitor));
 			outStream.flush();

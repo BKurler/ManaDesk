@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.actions;
 
 import org.eclipse.jface.action.IAction;
@@ -12,7 +17,7 @@ public class OpenSideboardAction extends ImageAction {
 	private CardCollection deck;
 
 	public OpenSideboardAction() {
-		super("Open Sideboard", "icons/obj16/sideboard16.png", IAction.AS_PUSH_BUTTON);
+		super("Open Sideboard", "icons/obj16/open_sideboard16.png", IAction.AS_PUSH_BUTTON);
 	}
 
 	public OpenSideboardAction(CardCollection deck) {

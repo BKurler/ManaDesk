@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.File;
@@ -275,6 +280,24 @@ public class ReportType {
 			}
 		}
 		return selected;
+	}
+
+	/**
+	 * Slug for a proposed export file name, so each export type suggests its
+	 * own name ({@code <deck>-<slug>.<ext>}). Uses the delegate's
+	 * {@link IExportDelegate#getContentSlug()} when it defines one, otherwise a
+	 * slugified label ("ManaDesk Minimum CSV" &rarr; "minimum-csv").
+	 */
+	public String getFileNameSlug() {
+		IExportDelegate del = getExportDelegate();
+		String slug = del != null ? del.getContentSlug() : null;
+		if (slug != null && !slug.isEmpty())
+			return slug;
+		String label = getLabel();
+		if (label == null)
+			return "";
+		label = label.replaceFirst("(?i)^manadesk\\s+", "");
+		return label.toLowerCase().replaceAll("[^a-z0-9]+", "-").replaceAll("(^-+|-+$)", "");
 	}
 
 	public String getExample() {

@@ -8,6 +8,12 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.OutputStream;
@@ -38,4 +44,40 @@ public interface IExportDelegate<T> {
 	public boolean isMultipleLocationSupported();
 
 	public String getExample();
+
+	/**
+	 * Short slug describing what this export produces (e.g. "sideboard-list").
+	 * The export wizard drops it into the proposed file name between the deck
+	 * name and the extension - "deck1-sideboard-list.html". Empty (the default)
+	 * means the proposed name is just "deckname.ext".
+	 */
+	default String getContentSlug() {
+		return "";
+	}
+
+	/**
+	 * True when this export is scoped to the sideboard (never the main deck) -
+	 * e.g. the printable sideboard list. The deck-view Export tab uses it to
+	 * disable the "add main deck" toggle while keeping "include extra" live.
+	 */
+	default boolean isSideboardOnly() {
+		return false;
+	}
+
+	/**
+	 * True when this export type is most useful as ONE file spanning every
+	 * selected deck (a proxies sheet, a printable sideboard-list booklet).
+	 * Seeds the export wizard's "Combine in one file" checkbox.
+	 */
+	default boolean isCombineByDefault() {
+		return false;
+	}
+
+	/**
+	 * Set by the export wizard when several decks are combined into one file, so
+	 * the output carries a "Deck" column and rows stay identifiable. No-op for
+	 * delegates that render their own per-deck sections.
+	 */
+	default void setMultiDeck(boolean multiDeck) {
+	}
 }

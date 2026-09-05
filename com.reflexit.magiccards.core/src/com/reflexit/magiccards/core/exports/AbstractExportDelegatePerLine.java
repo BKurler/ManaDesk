@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.util.ArrayList;
@@ -23,6 +28,8 @@ public abstract class AbstractExportDelegatePerLine<T extends ICard> extends Abs
 			if (columns == null) {
 				columns = deterimeColumns();
 			}
+			if (multiDeck && addsLocationColumnWhenMultiDeck())
+				columns = withLocationColumn(columns);
 			location = store.getLocation();
 			if (store.getSize() > 0)
 				location = ((ILocatable) store.iterator().next()).getLocation();
@@ -140,6 +147,30 @@ public abstract class AbstractExportDelegatePerLine<T extends ICard> extends Abs
 
 	protected boolean isForExport(ICardField field) {
 		return !field.isTransient();
+	}
+
+	/** True if, when several decks are exported into one file, this format should
+	 * gain a {@link MagicCardField#LOCATION} column so rows stay identifiable.
+	 * Off by default: most formats either already carry LOCATION in their column
+	 * set, or section the output by location, or have a rigid line format that an
+	 * extra column would break (e.g. {@code %dx %s}). */
+	protected boolean addsLocationColumnWhenMultiDeck() {
+		return false;
+	}
+
+	/** Prepend the {@link MagicCardField#LOCATION} column if it is not there yet -
+	 * used when several decks are combined into one file so each row still says
+	 * which deck it came from. */
+	protected ICardField[] withLocationColumn(ICardField[] cols) {
+		if (cols == null)
+			return new ICardField[] { MagicCardField.LOCATION };
+		for (ICardField c : cols)
+			if (c == MagicCardField.LOCATION)
+				return cols;
+		ICardField[] out = new ICardField[cols.length + 1];
+		out[0] = MagicCardField.LOCATION;
+		System.arraycopy(cols, 0, out, 1, cols.length);
+		return out;
 	}
 
 	public String escapeQuot(String str) {

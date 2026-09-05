@@ -1,10 +1,19 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.views.analyzers;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.Path;
 import org.eclipse.jface.action.Action;
@@ -48,6 +57,7 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardFilter;
+import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
@@ -72,8 +82,11 @@ public class ExportDeckPage extends AbstractDeckPage {
 	private Text textArea;
 	StatusLineContributionItem a;
 	private ImageAction sideboard;
+	private ImageAction extra;
 	private ImageAction header;
 	private boolean includeSideboard = true;
+	private boolean includeExtra = false;
+	private boolean secondaryDefaultsApplied = false;
 	private boolean includeHeader = true;
 	private Action actionShowPrefs;
 	private MagicCardFilter filter;
@@ -158,11 +171,18 @@ public class ExportDeckPage extends AbstractDeckPage {
 	}
 
 	protected void setTopControl() {
-		if (reportType != null && reportType.getLabel().contains("HTML") && textBrowser != null) {
-			stackLayout.topControl = textBrowser;
-		} else {
-			stackLayout.topControl = textArea;
-		}
+		// render in the embedded browser for any markup export (html) - the old
+		// check only looked for "HTML" in the label, so "Print Sideboard List"
+		// (and any other html export not named "... HTML ...") fell through to
+		// the raw-text area
+		boolean markup = reportType != null && textBrowser != null
+				&& ("html".equalsIgnoreCase(reportType.getExtension()) || reportType.getLabel().contains("HTML"));
+		stackLayout.topControl = markup ? textBrowser : textArea;
+	}
+
+	private boolean isSecondaryView() {
+		return store != null && store.getLocation() != null
+				&& (store.getLocation().isSideboard() || store.getLocation().isExtra());
 	}
 
 	@Override
@@ -177,6 +197,7 @@ public class ExportDeckPage extends AbstractDeckPage {
 		manager.add(actionSort);
 		manager.add(this.actionShowPrefs);
 		manager.add(this.sideboard);
+		manager.add(this.extra);
 		// manager.add(this.header);
 		manager.add(new Separator());
 		manager.add(actionRefresh);
@@ -191,13 +212,21 @@ public class ExportDeckPage extends AbstractDeckPage {
 				saveAs();
 			}
 		};
-		this.sideboard = new ImageAction("Include Sideboard", "icons/obj16/sideboard16.png", IAction.AS_CHECK_BOX) {
+		this.sideboard = new ImageAction("Include Sideboard", "icons/obj16/include_sideboard16.png",
+				IAction.AS_CHECK_BOX) {
 			@Override
 			public void run() {
 				triggerSideboard(!isInludeSideboard());
 			}
 		};
 		this.sideboard.setChecked(isInludeSideboard());
+		this.extra = new ImageAction("Include Extra", "icons/obj16/include_extra16.png", IAction.AS_CHECK_BOX) {
+			@Override
+			public void run() {
+				triggerExtra(!isInludeExtra());
+			}
+		};
+		this.extra.setChecked(isInludeExtra());
 		this.header = new ImageAction("Include Header", "icons/obj16/header16.png", IAction.AS_CHECK_BOX) {
 			@Override
 			public void run() {
@@ -226,14 +255,84 @@ public class ExportDeckPage extends AbstractDeckPage {
 		return includeSideboard;
 	}
 
+	protected boolean isInludeExtra() {
+		return includeExtra;
+	}
+
 	public void triggerSideboard(boolean mode) {
 		includeSideboard = mode;
 		sideboard.setChecked(mode);
-		if (!mode)
-			sideboard.setToolTipText("Include sideboard");
-		else
-			sideboard.setToolTipText("Do not include sideboard");
+		updateSecondaryActionLabels();
 		refresh();
+	}
+
+	public void triggerExtra(boolean mode) {
+		includeExtra = mode;
+		extra.setChecked(mode);
+		updateSecondaryActionLabels();
+		refresh();
+	}
+
+	private boolean isSideboardOnlyExport() {
+		IExportDelegate<?> d = reportType != null ? reportType.getExportDelegate() : null;
+		return d != null && d.isSideboardOnly();
+	}
+
+	private boolean isMultiLocationExport() {
+		IExportDelegate<?> d = reportType != null ? reportType.getExportDelegate() : null;
+		return d == null || d.isMultipleLocationSupported();
+	}
+
+	/**
+	 * Sets the enabled / checked / tooltip state of the two include toggles.
+	 * <p>
+	 * Normal exports: each toggle acts on the list that is <b>not</b> the one
+	 * currently shown - from the main deck the sideboard button adds the
+	 * sideboard and the extra button adds the extra; from the sideboard view
+	 * the sideboard button adds the <i>main deck</i> instead; from the extra
+	 * view the extra button adds the main deck. So both stay useful in every
+	 * view.
+	 * <p>
+	 * Sideboard-only exports (the printable list): the sideboard is always in
+	 * and "add main deck" is meaningless, so the sideboard button is checked +
+	 * disabled and only the extra button stays live.
+	 */
+	private void updateSecondaryActionLabels() {
+		Location loc = store != null ? store.getLocation() : null;
+		boolean onSideboard = loc != null && loc.isSideboard();
+		boolean onExtra = loc != null && loc.isExtra();
+
+		if (isSideboardOnlyExport()) {
+			if (sideboard != null) {
+				sideboard.setChecked(true);
+				sideboard.setEnabled(false);
+				sideboard.setToolTipText("Sideboard (always included in this export)");
+			}
+			if (extra != null) {
+				extra.setEnabled(true);
+				extra.setChecked(includeExtra);
+				extra.setToolTipText(includeExtra ? "Do not include extra" : "Include extra");
+			}
+			return;
+		}
+
+		boolean multi = isMultiLocationExport();
+		if (sideboard != null) {
+			sideboard.setEnabled(multi);
+			sideboard.setChecked(includeSideboard);
+			if (onSideboard)
+				sideboard.setToolTipText(includeSideboard ? "Exclude the main deck" : "Also include the main deck");
+			else
+				sideboard.setToolTipText(includeSideboard ? "Do not include sideboard" : "Include sideboard");
+		}
+		if (extra != null) {
+			extra.setEnabled(multi);
+			extra.setChecked(includeExtra);
+			if (onExtra)
+				extra.setToolTipText(includeExtra ? "Exclude the main deck" : "Also include the main deck");
+			else
+				extra.setToolTipText(includeExtra ? "Do not include extra" : "Include extra");
+		}
 	}
 
 	protected boolean isInludeHeader() {
@@ -266,26 +365,60 @@ public class ExportDeckPage extends AbstractDeckPage {
 			actionSort.setFilter(filter);
 		}
 		Location loc = store.getLocation();
+		Location main = loc.toMainDeck();
+		Location sb = main.toSideboard();
+		Location ex = main.toExtra();
 		fstore.clear();
-		// filter = (MagicCardFilter) view.getFilter().clone();
-		if (includeSideboard) {
-			ICardStore<IMagicCard> mainStore = getCardStore(loc.toMainDeck());
-			// if (mainStore == null)
-			// mainStore = getCardStore();
-			ICardStore<IMagicCard> sideStore = getCardStore(loc.toSideboard());
-			if (mainStore != null)
-				fstore.getCardStore().addAll(mainStore.getCards());
-			if (sideStore != null)
-				fstore.getCardStore().addAll(sideStore.getCards());
-			fstore.setLocation(loc.toMainDeck());
-			if (filter.getSortOrder().isEmpty()) {
-				filter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, true);
-			}
-		} else {
-			ICardStore mainStore = getCardStore(loc);
-			fstore.getCardStore().addAll(mainStore.getCards());
-			fstore.setLocation(loc);
+
+		// From a sideboard/extra view that list is the base content and both
+		// toggles start off - so opening a sideboard's Export tab shows just
+		// the sideboard, not the whole deck.
+		if ((loc.isSideboard() || loc.isExtra()) && !secondaryDefaultsApplied) {
+			includeSideboard = false;
+			includeExtra = false;
+			secondaryDefaultsApplied = true;
+			if (sideboard != null)
+				sideboard.setChecked(false);
+			if (extra != null)
+				extra.setChecked(false);
 		}
+
+		// Which lists to include: the current view (base) always, plus - per
+		// toggle - the "other" list. On a secondary view the toggle for THAT
+		// list means "also the main deck".
+		Set<Location> want = new LinkedHashSet<>();
+		if (isSideboardOnlyExport()) {
+			// the printable sideboard list: sideboard always, never the main
+			// deck, extra only when its toggle is on
+			want.add(sb);
+			if (includeExtra)
+				want.add(ex);
+		} else {
+			want.add(loc);
+			if (isMultiLocationExport()) {
+				if (includeSideboard)
+					want.add(loc.isSideboard() ? main : sb);
+				if (includeExtra)
+					want.add(loc.isExtra() ? main : ex);
+			}
+		}
+
+		// Always emit main deck first, then sideboard, then extra - name-sorted
+		// within each section. fstore keeps no sort of its own so this grouping
+		// survives (unless the user picks an explicit column sort).
+		SortOrder nameSort = new SortOrder();
+		for (Location l : new Location[] { main, sb, ex }) {
+			if (!want.contains(l))
+				continue;
+			ICardStore<IMagicCard> s = getCardStore(l);
+			if (s == null)
+				continue;
+			List<IMagicCard> group = new ArrayList<>(s.getCards());
+			group.sort(nameSort);
+			fstore.getCardStore().addAll(group);
+		}
+		fstore.setLocation(main);
+		updateSecondaryActionLabels();
 		fstore.update();
 	}
 
@@ -302,9 +435,13 @@ public class ExportDeckPage extends AbstractDeckPage {
 		String selcolumns = getDeckView().getLocalPreferenceStore().getString(PreferenceConstants.LOCAL_COLUMNS);
 		MagicColumnCollection magicColumnCollection = new MagicColumnCollection(null);
 		magicColumnCollection.updateColumnsFromPropery(selcolumns);
-		if (includeSideboard) {
+		Location loc = store != null ? store.getLocation() : null;
+		boolean sbShown = includeSideboard || (loc != null && loc.isSideboard()) || isSideboardOnlyExport();
+		boolean exShown = includeExtra || (loc != null && loc.isExtra());
+		if (sbShown && magicColumnCollection.getColumn(MagicCardField.SIDEBOARD) != null)
 			magicColumnCollection.getColumn(MagicCardField.SIDEBOARD).setVisible(true);
-		}
+		if (exShown && magicColumnCollection.getColumn(MagicCardField.EXTRA) != null)
+			magicColumnCollection.getColumn(MagicCardField.EXTRA).setVisible(true);
 		ICardField[] columns = magicColumnCollection.getColumnFields();
 		ex.setColumns(columns);
 		ex.init(byteSt, includeHeader, fstore);
@@ -354,9 +491,31 @@ public class ExportDeckPage extends AbstractDeckPage {
 		return dialog.getReturnCode() < 0 ? CANCEL : response[dialog.getReturnCode()];
 	}
 
+	/**
+	 * Suggested save name for the current export: {@code <deck>[-<content>].<ext>}
+	 * - e.g. "deck1-sideboard-list.html" - so each export type proposes its own
+	 * name.
+	 */
+	private String suggestedFileName() {
+		String deckName = "deck";
+		if (fstore != null && fstore.getLocation() != null) {
+			Location loc = fstore.getLocation().toMainDeck();
+			if (loc != null && loc.getName() != null && !loc.getName().isEmpty())
+				deckName = new File(loc.getName()).getName();
+		}
+		String slug = reportType != null ? reportType.getFileNameSlug() : "";
+		String base = (slug == null || slug.isEmpty()) ? deckName : deckName + "-" + slug;
+		String ext = reportType != null ? reportType.getExtension() : null;
+		return (ext != null && !ext.isEmpty()) ? base + "." + ext : base;
+	}
+
 	public void saveAs() {
 		if (textResult != null) {
 			FileDialog fileDialog = new FileDialog(getArea().getShell(), SWT.SAVE | SWT.SHEET);
+			fileDialog.setFileName(suggestedFileName());
+			String ext = reportType != null ? reportType.getExtension() : null;
+			if (ext != null && !ext.isEmpty())
+				fileDialog.setFilterExtensions(new String[] { "*." + ext, "*.*" });
 			String fileStr = fileDialog.open();
 			if (fileStr != null) {
 				boolean succ = false;
@@ -383,13 +542,12 @@ public class ExportDeckPage extends AbstractDeckPage {
 	public void setReportType(final ReportType rt) {
 		reportType = rt;
 		actionShowPrefs.setEnabled(true);
-		sideboard.setEnabled(true);
 		if (reportType.getExportDelegate() instanceof AbstractExportDelegate) {
 			AbstractExportDelegate<IMagicCard> delegate = (AbstractExportDelegate<IMagicCard>) reportType
 					.getExportDelegate();
 			actionShowPrefs.setEnabled(delegate.isColumnChoiceSupported());
-			sideboard.setEnabled(delegate.isMultipleLocationSupported());
 		}
+		updateSecondaryActionLabels();
 		refresh();
 	}
 

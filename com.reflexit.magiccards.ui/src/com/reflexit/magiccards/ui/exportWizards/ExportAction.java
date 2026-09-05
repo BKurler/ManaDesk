@@ -5,6 +5,12 @@
  * Created on: 13-Feb-07
  * Last modified by: $Author: elaskavaia $
  */
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.exportWizards;
 
 import org.eclipse.jface.action.Action;
@@ -81,15 +87,9 @@ public class ExportAction extends Action implements ISelectionChangedListener {
 		dialog.create();
 		dialog.getShell().setText(wizard.getWindowTitle());
 		int result = dialog.open();
-		boolean succ = result == Window.OK;
-		if (succ) {
-			try {
-				java.awt.Desktop.getDesktop().open(wizard.getFile());
-			} catch (Throwable e) {
-				MagicUIActivator.log(e);
-			}
-		}
-		return succ;
+		// opening the generated file(s) is handled by the wizard page itself,
+		// gated by its "Automatically open the generated file(s)" checkbox
+		return result == Window.OK;
 	}
 
 	public void dispose() {

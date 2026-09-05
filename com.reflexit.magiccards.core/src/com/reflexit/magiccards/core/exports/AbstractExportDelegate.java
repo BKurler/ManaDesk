@@ -31,6 +31,13 @@ public abstract class AbstractExportDelegate<T extends ICard> implements IExport
 	protected boolean header;
 	protected IFilteredCardStore<T> store;
 	protected Location location;
+	/** Set by the wizard when several decks are combined into one file - the
+	 * output should then carry a "Deck" column so rows stay identifiable. */
+	protected boolean multiDeck;
+
+	public void setMultiDeck(boolean multiDeck) {
+		this.multiDeck = multiDeck;
+	}
 
 	@Override
 	public void init(OutputStream st, boolean header, IFilteredCardStore<T> filteredLibrary) {
@@ -42,6 +49,9 @@ public abstract class AbstractExportDelegate<T extends ICard> implements IExport
 		this.header = header;
 		this.store = filteredLibrary;
 		this.location = store.getLocation();
+		// the delegate is a cached singleton; clear per-run state so a previous
+		// combined multi-deck export does not leak into the next one
+		this.multiDeck = false;
 	}
 
 	protected String getLabel() {

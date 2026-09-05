@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.preferences;
 
 import java.io.ByteArrayInputStream;
@@ -37,7 +42,13 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 	private Composite panel;
 	private TreeViewer treeViewer;
 	private int mode;
+	private boolean hideSideboards;
 	private CardOrganizer top;
+
+	/** Hide {@code -sideboard}/{@code -extra} collections from the tree (export picker). */
+	public void setHideSideboards(boolean hide) {
+		this.hideSideboards = hide;
+	}
 
 	/**
 	 * 
@@ -75,7 +86,7 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 		layout.marginWidth = 0;
 		this.panel.setLayout(layout);
 		this.panel.setFont(parent.getFont());
-		if (mode == SWT.MULTI) {
+		if ((mode & SWT.MULTI) != 0) {
 			CheckedTreeSelectionComposite treeViewerComp = new CheckedTreeSelectionComposite(this.panel);
 			this.treeViewer = treeViewerComp.getTreeViewer();
 		} else {
@@ -92,6 +103,9 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 				return true;
 			}
 		});
+		if (hideSideboards)
+			this.treeViewer.addFilter(CardsNavigatorContentProvider
+					.getFilter(CardsNavigatorContentProvider.FILTER_SIDEBOARDS));
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.horizontalSpan = 3;
 		gd.heightHint = 400;
@@ -248,5 +262,27 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 		} else {
 			return treeViewer.getSelection().isEmpty();
 		}
+	}
+
+	/**
+	 * The elements the user picked - the checked (not grayed) nodes in
+	 * checkbox/MULTI mode, or the highlighted rows otherwise. A fully-checked
+	 * folder is returned as-is (its children are not enumerated here).
+	 */
+	public java.util.List<CardElement> getCheckedElements() {
+		java.util.List<CardElement> res = new java.util.ArrayList<>();
+		if (treeViewer instanceof CheckboxTreeViewer) {
+			CheckboxTreeViewer box = (CheckboxTreeViewer) treeViewer;
+			for (Object o : box.getCheckedElements()) {
+				if (o instanceof CardElement && !box.getGrayed(o))
+					res.add((CardElement) o);
+			}
+		} else if (treeViewer.getSelection() instanceof IStructuredSelection) {
+			for (Object o : ((IStructuredSelection) treeViewer.getSelection()).toList()) {
+				if (o instanceof CardElement)
+					res.add((CardElement) o);
+			}
+		}
+		return res;
 	}
 }

@@ -28,7 +28,7 @@ public class OpenExtraAction extends ImageAction {
 	private CardCollection deck;
 
 	public OpenExtraAction() {
-		super("Open Extra", "icons/obj16/sideboard16.png", IAction.AS_PUSH_BUTTON);
+		super("Open Extra", "icons/obj16/open_extra16.png", IAction.AS_PUSH_BUTTON);
 		setToolTipText("Open the deck's extra list (tokens, emblems, markers)");
 	}
 
