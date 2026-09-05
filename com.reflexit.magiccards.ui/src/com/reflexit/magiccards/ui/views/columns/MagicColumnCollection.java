@@ -73,6 +73,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		columns.add(new LegalityColumn());
 		if (myCards) {
 			columns.add(new GenColumn(MagicCardField.SIDEBOARD, "Sideboard"));
+			columns.add(new GenColumn(MagicCardField.EXTRA, "Extra"));
 			columns.add(new GenColumn(MagicCardField.ERROR, "Error"));
 			columns.add(new CreationDateColumn());
 		}

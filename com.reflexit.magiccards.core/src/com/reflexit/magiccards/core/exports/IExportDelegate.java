@@ -38,4 +38,23 @@ public interface IExportDelegate<T> {
 	public boolean isMultipleLocationSupported();
 
 	public String getExample();
+
+	/**
+	 * Short slug describing what this export produces (e.g. "sideboard-list").
+	 * The export wizard drops it into the proposed file name between the deck
+	 * name and the extension - "deck1-sideboard-list.html". Empty (the default)
+	 * means the proposed name is just "deckname.ext".
+	 */
+	default String getContentSlug() {
+		return "";
+	}
+
+	/**
+	 * True when this export is scoped to the sideboard (never the main deck) -
+	 * e.g. the printable sideboard list. The deck-view Export tab uses it to
+	 * disable the "add main deck" toggle while keeping "include extra" live.
+	 */
+	default boolean isSideboardOnly() {
+		return false;
+	}
 }

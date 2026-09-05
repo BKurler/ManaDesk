@@ -23,6 +23,7 @@ import com.reflexit.magiccards.core.sync.TextPrinterTest;
 // !!! RD Disable for now	MTGStudioImportTest.class,
 		PipedTableExportText.class, CsvExportDelegateTest.class, CsvImportDelegateTest.class,
 		ClassicExportDelegateTest.class, ClassicImportDelegateTest.class, CustomExportDelegateTest.class,
+		SideboardHelpHtmlExportDelegateTest.class,
 		// !!! RD DeckBoxImportTest.class,
 		TextPrinterTest.class,
 // !!! RD 		HtmlTableImportTest.class, //

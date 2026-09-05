@@ -789,6 +789,35 @@ public enum MagicCardField implements ICardField {
 			MagicLogger.log(new Exception("Attempt to set sideboad field"));
 		}
 	},
+	EXTRA(null, true) {
+		@Override
+		public ICardVisitor getAggregator() {
+			return new CollisionAggregator(this, Boolean.FALSE);
+		}
+
+		@Override
+		public Object aggregateValueOf(ICard card) {
+			Location l = ((IMagicCardPhysical) card).getLocation();
+			return l != null && l.isExtra();
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			Location l = card.getLocation();
+			return l != null && l.isExtra();
+		};
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			Location l = card.getLocation();
+			return l != null && l.isExtra();
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			MagicLogger.log(new Exception("Attempt to set extra field"));
+		}
+	},
 	OWN_COUNT(null, true) {
 		@Override
 		public ICardVisitor getAggregator() {

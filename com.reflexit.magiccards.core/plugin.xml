@@ -171,6 +171,13 @@
              label="Print Proxies HTML Mobile"
              xmlFormat="true">
        </deckFormat>
+       <deckFormat
+             exportDelegate="com.reflexit.magiccards.core.exports.SideboardHelpHtmlExportDelegate"
+             extension="html"
+             id="sideboardHelp"
+             label="Print Sideboard List"
+             xmlFormat="true">
+       </deckFormat>
               <!-- !!! RD       
        <deckFormat
              exportDelegate="com.reflexit.magiccards.core.exports.CompactHtmlExportDelegate"

@@ -12,7 +12,7 @@ public class OpenSideboardAction extends ImageAction {
 	private CardCollection deck;
 
 	public OpenSideboardAction() {
-		super("Open Sideboard", "icons/obj16/sideboard16.png", IAction.AS_PUSH_BUTTON);
+		super("Open Sideboard", "icons/obj16/open_sideboard16.png", IAction.AS_PUSH_BUTTON);
 	}
 
 	public OpenSideboardAction(CardCollection deck) {

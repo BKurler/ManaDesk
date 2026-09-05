@@ -67,6 +67,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private static final String REPORT_TYPE_SETTING = "reportType"; //$NON-NLS-1$
 	private static final String INCLUDE_HEADER_SETTING = "includeHeader"; //$NON-NLS-1$
 	private static final String INCLUDE_SIDEBOARD = "includeSideBoard"; //$NON-NLS-1$
+	private static final String INCLUDE_EXTRA = "includeExtra"; //$NON-NLS-1$
 	FileFieldEditor editor;
 	private String fileName = "";
 	private IStructuredSelection resourceSelection;
@@ -76,6 +77,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 	// private LocationFilterPreferencePage locPage;
 	private Combo typeCombo;
 	private Button includeSideBoard;
+	private Button includeExtra;
 	private StringButtonFieldEditor collection;
 	private Text previewText;
 	private Job previewJob;
@@ -86,7 +88,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 		resourceSelection = selection == null ? null : new StructuredSelection(selection.toList());
 	}
 
-	HashMap<String, String> storeToMap(boolean sideboard, boolean sideboardSupported) {
+	HashMap<String, String> storeToMap(boolean sideboard, boolean extra, boolean sideboardSupported) {
 		HashMap<String, String> map = new HashMap<String, String>();
 		if (resourceSelection == null || resourceSelection.isEmpty())
 			return map;
@@ -96,14 +98,11 @@ public class DeckExportPage extends WizardDataTransferPage {
 			String deckId = locs.getPrefConstant(myDeck.getLocation());
 			map.put(deckId, "true");
 		} else {
-			String deckId = locs.getPrefConstant(myDeck.getLocation().toMainDeck());
-			String sbId = locs.getPrefConstant(myDeck.getLocation().toSideboard());
-			if (sideboard) {
-				map.put(sbId, "true");
-				map.put(deckId, "true");
-			} else {
-				map.put(deckId, "true");
-			}
+			map.put(locs.getPrefConstant(myDeck.getLocation().toMainDeck()), "true");
+			if (sideboard)
+				map.put(locs.getPrefConstant(myDeck.getLocation().toSideboard()), "true");
+			if (extra)
+				map.put(locs.getPrefConstant(myDeck.getLocation().toExtra()), "true");
 		}
 		return map;
 	}
@@ -232,6 +231,9 @@ public class DeckExportPage extends WizardDataTransferPage {
 		if (dialogSettings.get(INCLUDE_SIDEBOARD) != null) {
 			includeSideBoard.setSelection(dialogSettings.getBoolean(INCLUDE_SIDEBOARD));
 		}
+		if (dialogSettings.get(INCLUDE_EXTRA) != null) {
+			includeExtra.setSelection(dialogSettings.getBoolean(INCLUDE_EXTRA));
+		}
 	}
 
 	private void loadFromMemento(String ids) {
@@ -255,6 +257,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 			dialogSettings.put(REPORT_TYPE_SETTING, reportType.getLabel());
 			dialogSettings.put(INCLUDE_HEADER_SETTING, includeHeader.getSelection());
 			dialogSettings.put(INCLUDE_SIDEBOARD, includeSideBoard.getSelection());
+			dialogSettings.put(INCLUDE_EXTRA, includeExtra.getSelection());
 			// save into file
 			MagicUIActivator.getDefault().saveDialogSetting(dialogSettings);
 		} catch (IOException e) {
@@ -357,16 +360,28 @@ public class DeckExportPage extends WizardDataTransferPage {
 				updatePageCompletion();
 			}
 		});
-		// options to include sideboard
-		includeSideBoard = new Button(buttonComposite, SWT.CHECK | SWT.LEFT);
-		includeSideBoard.setText("Include sideboard");
-		includeSideBoard.setSelection(true);
-		includeSideBoard.addSelectionListener(new SelectionAdapter() {
+		// sideboard + extra options, kept together (stacked)
+		Composite locChecks = new Composite(buttonComposite, SWT.NONE);
+		GridLayout locLayout = new GridLayout(1, false);
+		locLayout.marginWidth = 0;
+		locLayout.marginHeight = 0;
+		locLayout.verticalSpacing = 2;
+		locChecks.setLayout(locLayout);
+		locChecks.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		SelectionAdapter recompute = new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				updatePageCompletion();
 			}
-		});
+		};
+		includeSideBoard = new Button(locChecks, SWT.CHECK | SWT.LEFT);
+		includeSideBoard.setText("Include sideboard");
+		includeSideBoard.setSelection(true);
+		includeSideBoard.addSelectionListener(recompute);
+		includeExtra = new Button(locChecks, SWT.CHECK | SWT.LEFT);
+		includeExtra.setText("Include extra");
+		includeExtra.setSelection(false);
+		includeExtra.addSelectionListener(recompute);
 		createFieldsControl(buttonComposite);
 	}
 
@@ -505,23 +520,36 @@ public class DeckExportPage extends WizardDataTransferPage {
 		includeHeader.setEnabled(!reportType.isXmlFormat());
 		String ext = getFileExtension();
 		editor.setFileExtensions(new String[] { "*" + ext });
-		if (fileName.length() > 0) {
-			File file = new File(fileName);
-			String name = new File(collection.getStringValue()).getName();
-			if (file.getParent() != null) {
-				String fileName2 = file.getParent() + File.separator + name + ext;
-				if (!fileName2.equals(fileName)) {
-					fileName = fileName2;
-					editor.setStringValue(fileName);
-				}
+		IExportDelegate delegate = reportType.getExportDelegate();
+		// propose a file name: <deck name>[-<export content>].<format>
+		String deckName = collection.getStringValue().length() > 0
+				? new File(collection.getStringValue()).getName() : "";
+		if (deckName.length() > 0) {
+			String slug = reportType != null ? reportType.getFileNameSlug() : "";
+			String base = (slug == null || slug.isEmpty()) ? deckName : deckName + "-" + slug;
+			String dir = (fileName.length() > 0 && new File(fileName).getParent() != null)
+					? new File(fileName).getParent()
+					: System.getProperty("user.home");
+			String proposed = dir + File.separator + base + ext;
+			if (!proposed.equals(fileName)) {
+				fileName = proposed;
+				editor.setStringValue(fileName);
 			}
 		}
-		IExportDelegate delegate = reportType.getExportDelegate();
 		if (delegate != null) {
-			includeSideBoard.setEnabled(delegate.isMultipleLocationSupported());
+			if (delegate.isSideboardOnly()) {
+				// the sideboard is always in this export; extra stays optional
+				includeSideBoard.setSelection(true);
+				includeSideBoard.setEnabled(false);
+				includeExtra.setEnabled(true);
+			} else {
+				includeSideBoard.setEnabled(delegate.isMultipleLocationSupported());
+				includeExtra.setEnabled(delegate.isMultipleLocationSupported());
+			}
 			columnsChoice.setEnabled(delegate.isColumnChoiceSupported(), columnsChoiceParent);
 		} else {
 			includeSideBoard.setEnabled(false);
+			includeExtra.setEnabled(false);
 			columnsChoice.setEnabled(false, columnsChoiceParent);
 		}
 	}
@@ -540,6 +568,10 @@ public class DeckExportPage extends WizardDataTransferPage {
 
 	public boolean getIncludeSideBoard() {
 		return includeSideBoard.getSelection();
+	}
+
+	public boolean getIncludeExtra() {
+		return includeExtra.getSelection();
 	}
 
 	public CardElement getFirstCardElement() {
@@ -563,6 +595,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 		saveWidgetValues();
 		final boolean header = getIncludeHeader();
 		final boolean sideboard = getIncludeSideBoard();
+		final boolean extra = getIncludeExtra();
 		final ReportType type = getReportType();
 		if (previewJob != null) {
 			previewJob.cancel();
@@ -571,7 +604,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
 				try {
-					exportDeck(outStream, monitor, type, header, sideboard);
+					exportDeck(outStream, monitor, type, header, sideboard, extra);
 					if (!monitor.isCanceled())
 						updatePreview(outStream.toString());
 				} catch (InvocationTargetException e) {
@@ -618,11 +651,12 @@ public class DeckExportPage extends WizardDataTransferPage {
 			final OutputStream outStream = new FileOutputStream(fileName);
 			final boolean header = getIncludeHeader();
 			final boolean sideboard = getIncludeSideBoard();
+			final boolean extra = getIncludeExtra();
 			IRunnableWithProgress work = new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException {
 					try {
-						exportDeck(outStream, monitor, reportType, header, sideboard);
+						exportDeck(outStream, monitor, reportType, header, sideboard, extra);
 						outStream.close();
 					} catch (Exception e) {
 						throw new InvocationTargetException(e);
@@ -645,17 +679,23 @@ public class DeckExportPage extends WizardDataTransferPage {
 	}
 
 	public void exportDeck(final OutputStream outStream, IProgressMonitor monitor, ReportType reportType,
-			boolean header, boolean sideboard)
+			boolean header, boolean sideboard, boolean extra)
 			throws InvocationTargetException, InterruptedException {
 		// TODO: export selection only
 		IExportDelegate exportDelegate = reportType.getExportDelegate();
-		final HashMap<String, String> map = storeToMap(sideboard, exportDelegate.isSideboardSupported());
+		final HashMap<String, String> map = storeToMap(sideboard, extra, exportDelegate.isSideboardSupported());
 		IFilteredCardStore filteredLibrary = DataManager.getCardHandler()
 				.getLibraryFilteredStoreWorkingCopy();
 		MagicCardFilter locFilter = filteredLibrary.getFilter();
 		locFilter.update(map);
-		if (sideboard)
+		// group the output main deck -> sideboard -> extra. Order of these two
+		// calls matters: the last one added is the primary sort key, so EXTRA
+		// (false before true) splits extra off last, then SIDEBOARD splits the
+		// sideboard from the main deck, then NAME/ID inside each section.
+		if (sideboard || extra)
 			locFilter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, true);
+		if (extra)
+			locFilter.getSortOrder().setSortField(MagicCardField.EXTRA, true);
 		filteredLibrary.update();
 		new ExportDeckJob(outStream, reportType, header, filteredLibrary, columns).syncRun();
 	}
