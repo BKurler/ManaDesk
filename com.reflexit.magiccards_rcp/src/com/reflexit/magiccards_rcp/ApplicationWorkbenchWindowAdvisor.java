@@ -89,6 +89,33 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				}
 			}
 		}
+
+		restoreDeckFamilyIcons();
+	}
+
+	/**
+	 * On startup Eclipse restores every deck/sideboard/extra tab lazily: only the
+	 * tab that ends up on top of its stack actually gets createPartControl()/
+	 * activate() called, so only that tab recomputes its icon/name. Every other
+	 * restored tab keeps showing whatever icon was cached in the previous
+	 * session's workbench layout until the user clicks into it. Force all of
+	 * them to materialize once, right after the window opens, so every tab's
+	 * icon is correct without requiring a click.
+	 */
+	private void restoreDeckFamilyIcons() {
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window == null) {
+			return;
+		}
+		IWorkbenchPage page = window.getActivePage();
+		if (page == null) {
+			return;
+		}
+		for (IViewReference ref : page.getViewReferences()) {
+			if (com.reflexit.magiccards.ui.views.lib.DeckView.ID.equals(ref.getId())) {
+				ref.getView(true);
+			}
+		}
 	}
 
 	private void hookWorkbenchFolderPatching() {

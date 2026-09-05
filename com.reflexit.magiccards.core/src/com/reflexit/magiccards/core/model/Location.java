@@ -21,6 +21,8 @@ import com.reflexit.magiccards.core.model.nav.LocationPath;
 public class Location implements Comparable<Location> {
 	private static final String XML_SUFFIX = ".xml";
 	public static final String SIDEBOARD_SUFFIX = "-sideboard";
+	/** Suffix of the deck's third list: token / emblem / marker cards the deck needs at the table. */
+	public static final String EXTRA_SUFFIX = "-extra";
 	public static final Location NO_WHERE = new Location();
 	private static final String SEP = "/";
 	private final String path;
@@ -120,10 +122,18 @@ public class Location implements Comparable<Location> {
 		return path.endsWith(SIDEBOARD_SUFFIX);
 	}
 
+	public boolean isExtra() {
+		return path.endsWith(EXTRA_SUFFIX);
+	}
+
 	public Location toSideboard() {
-		if (isSideboard())
-			return this;
-		return new Location(path + SIDEBOARD_SUFFIX);
+		Location main = toMainDeck();
+		return new Location(main.path + SIDEBOARD_SUFFIX);
+	}
+
+	public Location toExtra() {
+		Location main = toMainDeck();
+		return new Location(main.path + EXTRA_SUFFIX);
 	}
 
 	public Location getParent() {
@@ -148,9 +158,11 @@ public class Location implements Comparable<Location> {
 	}
 
 	public Location toMainDeck() {
-		if (!isSideboard())
-			return this;
-		return new Location(path.replaceAll(SIDEBOARD_SUFFIX + "$", ""));
+		if (isSideboard())
+			return new Location(path.substring(0, path.length() - SIDEBOARD_SUFFIX.length()));
+		if (isExtra())
+			return new Location(path.substring(0, path.length() - EXTRA_SUFFIX.length()));
+		return this;
 	}
 
 	public Location append(String name) {

@@ -9,6 +9,7 @@ package com.reflexit.magiccards.core.model;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.regex.Pattern;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.abs.ICardField;
@@ -148,6 +149,24 @@ public enum FilterField {
 			case EDITION:
 				return BinaryExpr.fieldEquals(ff.getField(), value);
 			case NAME_LINE:
+				if (value.indexOf('*') >= 0) {
+					// '*' never appears in a card name, so it's free to use as an
+					// explicit wildcard standing for exactly one arbitrary character
+					// (e.g. "Jace*" matches a 5-letter name starting with "Jace") -
+					// bypasses the normal word tokenizer, which would otherwise treat
+					// the whole value as a literal string containing a literal '*'.
+					// QuickFilterControl always wraps its stored value in a literal
+					// "\"...\"" pair (a signal the tokenizer would normally strip to mean
+					// "treat as one literal phrase"), unlike the filter dialog's
+					// StringFieldEditor, which stores the typed text bare - strip that
+					// pair here too, or the wildcard pattern ends up requiring literal
+					// quote characters around the match and never finds anything.
+					String unquoted = value;
+					if (unquoted.length() >= 2 && unquoted.startsWith("\"") && unquoted.endsWith("\""))
+						unquoted = unquoted.substring(1, unquoted.length() - 1);
+					return wildcardNameExpr(ff.getField(), unquoted)
+							.or(wildcardNameExpr(MagicCardField.ENGLISH_NAME, unquoted));
+				}
 				return BinaryExpr.textSearch(ff.getField(), value)
 						.or(BinaryExpr.textSearch(MagicCardField.ENGLISH_NAME, value));
 			case CARD_TYPE:
@@ -284,6 +303,28 @@ public enum FilterField {
 			throw new IllegalArgumentException();
 		}
 		return Expr.EMPTY;
+	}
+
+	/**
+	 * Builds a NAME_LINE search expression where each {@code '*'} in
+	 * {@code value} stands for exactly one arbitrary character and every other
+	 * character must match literally - e.g. "Jace*" matches a 5-letter name
+	 * starting with "Jace". Case-insensitive, substring match (same as the
+	 * normal text-search path), but bypasses the word tokenizer entirely, so
+	 * only single-word/no-tokenizer semantics apply once '*' is used.
+	 */
+	private static Expr wildcardNameExpr(ICardField field, String value) {
+		StringBuilder pattern = new StringBuilder();
+		for (int i = 0; i < value.length(); i++) {
+			char c = value.charAt(i);
+			if (c == '*') {
+				pattern.append('.');
+			} else {
+				pattern.append(Pattern.quote(String.valueOf(c)));
+			}
+		}
+		TextValue tvalue = new TextValue(Pattern.compile(pattern.toString(), Pattern.CASE_INSENSITIVE | Pattern.UNICODE_CASE));
+		return new BinaryExpr(new CardFieldExpr(field), Operation.MATCHES, tvalue);
 	}
 
 	public static BinaryExpr fieldEquals(ICardField field, String value) {

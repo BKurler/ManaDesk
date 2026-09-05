@@ -13,7 +13,6 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
@@ -31,6 +30,7 @@ import com.reflexit.magiccards.core.model.nav.MagicDbContainter;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorContentProvider;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorLabelProvider;
+import com.reflexit.magiccards.ui.views.nav.DeckFamilyViewerComparator;
 import com.reflexit.magiccards.ui.widgets.CheckedTreeSelectionComposite;
 
 public class LocationFilterPreferencePage extends PreferencePage implements IWorkbenchPreferencePage {
@@ -83,7 +83,7 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 		}
 		this.treeViewer.setLabelProvider(new CardsNavigatorLabelProvider());
 		this.treeViewer.setContentProvider(new CardsNavigatorContentProvider());
-		this.treeViewer.setComparator(new ViewerComparator());
+		this.treeViewer.setComparator(new DeckFamilyViewerComparator(false));
 		this.treeViewer.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {

@@ -69,8 +69,11 @@ public class DeleteHandler extends AbstractHandler {
 		for (Iterator iterator = toBeRemoved.iterator(); iterator.hasNext();) {
 			CardElement el = (CardElement) iterator.next();
 			sum += getOwnCount(el);
-			if (!el.getLocation().isSideboard()) // if we delete deck we also deleting sideboard, not true the other way
-				sum += getOwnCount(el.getRelated());
+			// if we delete a deck we also delete its sideboard and accessories list
+			// (not true the other way round)
+			if (!el.getLocation().isSideboard() && !el.getLocation().isExtra())
+				for (CardElement rel : el.getRelatedElements())
+					sum += getOwnCount(rel);
 		}
 		if (toBeRemoved.size() == 1) {
 			CardElement el = toBeRemoved.get(0);
@@ -130,14 +133,16 @@ public class DeleteHandler extends AbstractHandler {
 			if (result == 0) { // disband
 				for (CardElement el : toBeRemoved) {
 					disbandle(el);
-					if (!el.getLocation().isSideboard())
-						disbandle(el.getRelated());
+					if (!el.getLocation().isSideboard() && !el.getLocation().isExtra())
+						for (CardElement rel : el.getRelatedElements())
+							disbandle(rel);
 				}
 			} else if (result == 1) { // remove
 				for (CardElement el : toBeRemoved) {
 					remove(el);
-					if (!el.getLocation().isSideboard())
-						remove(el.getRelated());
+					if (!el.getLocation().isSideboard() && !el.getLocation().isExtra())
+						for (CardElement rel : el.getRelatedElements())
+							remove(rel);
 				}
 			}
 		} finally {

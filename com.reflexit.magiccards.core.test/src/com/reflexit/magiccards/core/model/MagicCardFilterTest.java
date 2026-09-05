@@ -150,6 +150,27 @@ public class MagicCardFilterTest extends TestCase {
 		assertFalse(filter.isFiltered(mc));
 	}
 
+	public void testNameWildcard() {
+		setQuickFilter(FilterField.NAME_LINE, "Bo*");
+		mc.setName("Bo");
+		assertTrue("no character after 'Bo' - the wildcard needs exactly one", filter.isFiltered(mc));
+		mc.setName("Boo");
+		assertFalse("'o' satisfies the single-character wildcard", filter.isFiltered(mc));
+		mc.setName("Bob");
+		assertFalse("any single character satisfies the wildcard, not just 'o'", filter.isFiltered(mc));
+	}
+
+	public void testNameWildcardQuoted() {
+		// QuickFilterControl (the toolbar name filter) always wraps its stored
+		// value in a literal "\"...\"" pair - the wildcard branch must strip
+		// that itself, since it bypasses the tokenizer that normally would
+		setQuickFilter(FilterField.NAME_LINE, "\"Bo*\"");
+		mc.setName("Bo");
+		assertTrue("no character after 'Bo' - the wildcard needs exactly one", filter.isFiltered(mc));
+		mc.setName("Boo");
+		assertFalse("'o' satisfies the single-character wildcard", filter.isFiltered(mc));
+	}
+
 	public void testNameBooPhy() {
 		String boo = "Boo";
 		setQuickFilter(FilterField.NAME_LINE, boo);
