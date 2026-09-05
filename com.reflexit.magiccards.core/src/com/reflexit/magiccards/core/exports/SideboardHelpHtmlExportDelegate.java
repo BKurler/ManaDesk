@@ -1,13 +1,21 @@
-/*
+/*******************************************************************************
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
  * Contributors:
- *     Rémi Dutil (2026) - created for ManaDesk
- */
+ *     Rémi Dutil - created for ManaDesk
+ *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.Editions;
@@ -35,11 +43,27 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 		try {
 			Location deckLoc = resolveDeckLocation();
 			List<MagicCardPhysical> cards = collectSideboard(deckLoc);
-			boolean hasExtra = cards.stream().anyMatch(SideboardHelpHtmlExportDelegate::isExtra);
-			// sideboard cards first, then extra, name-sorted within each
-			cards.sort(Comparator.<MagicCardPhysical, Boolean>comparing(SideboardHelpHtmlExportDelegate::isExtra)
-					.thenComparing(c -> String.valueOf(c.getName()).toLowerCase()));
-			writeHtml(deckName(deckLoc), hasExtra ? "Sideboard and Extra" : "Sideboard", cards);
+			// group by deck so a combined multi-deck export gets one printable
+			// card per deck (each `.card` div is its own page-break)
+			Map<Location, List<MagicCardPhysical>> byDeck = new LinkedHashMap<>();
+			for (MagicCardPhysical c : cards) {
+				Location k = c.getLocation() != null ? c.getLocation().toMainDeck() : deckLoc;
+				byDeck.computeIfAbsent(k == null ? Location.NO_WHERE : k, x -> new ArrayList<>()).add(c);
+			}
+			writeDocStart();
+			if (byDeck.isEmpty()) {
+				writeCard(deckName(deckLoc), "Sideboard", new ArrayList<>());
+			} else {
+				for (Map.Entry<Location, List<MagicCardPhysical>> e : byDeck.entrySet()) {
+					List<MagicCardPhysical> group = e.getValue();
+					boolean hasExtra = group.stream().anyMatch(SideboardHelpHtmlExportDelegate::isExtra);
+					// sideboard cards first, then extra, name-sorted within each
+					group.sort(Comparator.<MagicCardPhysical, Boolean>comparing(SideboardHelpHtmlExportDelegate::isExtra)
+							.thenComparing(c -> String.valueOf(c.getName()).toLowerCase()));
+					writeCard(e.getKey().getName(), hasExtra ? "Sideboard and Extra" : "Sideboard", group);
+				}
+			}
+			writeDocEnd();
 		} finally {
 			monitor.done();
 		}
@@ -103,10 +127,10 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 		return getName();
 	}
 
-	private void writeHtml(String deckName, String sectionLabel, List<MagicCardPhysical> cards) {
+	private void writeDocStart() {
 		stream.println("<!DOCTYPE html>");
 		stream.println("<html><head><meta charset=\"UTF-8\">");
-		stream.println("<title>" + esc(deckName) + " - " + esc(sectionLabel) + "</title>");
+		stream.println("<title>Sideboard list</title>");
 		stream.println("<style>");
 		// a Magic card on its side: long edge horizontal
 		stream.println("  @page { size: 88mm 63mm; margin: 2.5mm; }");
@@ -133,7 +157,14 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 		stream.println("  .comment { width: 10mm; }");
 		stream.println("  .empty { color: #666; font-style: italic; padding: 2mm 0; }");
 		stream.println("</style></head><body>");
+	}
 
+	private void writeDocEnd() {
+		stream.println("</body></html>");
+	}
+
+	/** One printable card ({@code .card} = one page). */
+	private void writeCard(String deckName, String sectionLabel, List<MagicCardPhysical> cards) {
 		stream.println("<div class=\"card\">");
 		stream.println("  <div class=\"title\">" + esc(deckName) + " <small>&ndash; " + esc(sectionLabel)
 				+ "</small></div>");
@@ -158,7 +189,6 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 			stream.println("  </table>");
 		}
 		stream.println("</div>");
-		stream.println("</body></html>");
 	}
 
 	private static String setLabel(String setName) {
@@ -205,6 +235,11 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 
 	@Override
 	public boolean isSideboardOnly() {
+		return true;
+	}
+
+	@Override
+	public boolean isCombineByDefault() {
 		return true;
 	}
 

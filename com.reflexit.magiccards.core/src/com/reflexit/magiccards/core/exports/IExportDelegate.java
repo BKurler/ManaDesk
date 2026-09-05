@@ -8,6 +8,12 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.OutputStream;
@@ -56,5 +62,22 @@ public interface IExportDelegate<T> {
 	 */
 	default boolean isSideboardOnly() {
 		return false;
+	}
+
+	/**
+	 * True when this export type is most useful as ONE file spanning every
+	 * selected deck (a proxies sheet, a printable sideboard-list booklet).
+	 * Seeds the export wizard's "Combine in one file" checkbox.
+	 */
+	default boolean isCombineByDefault() {
+		return false;
+	}
+
+	/**
+	 * Set by the export wizard when several decks are combined into one file, so
+	 * the output carries a "Deck" column and rows stay identifiable. No-op for
+	 * delegates that render their own per-deck sections.
+	 */
+	default void setMultiDeck(boolean multiDeck) {
 	}
 }

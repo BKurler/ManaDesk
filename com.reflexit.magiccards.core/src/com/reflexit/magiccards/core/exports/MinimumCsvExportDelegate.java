@@ -29,8 +29,14 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 public class MinimumCsvExportDelegate extends CsvExportDelegate {
 
 	@Override
+	protected boolean addsLocationColumnWhenMultiDeck() {
+		return true;
+	}
+
+	@Override
 	public void printHeader() {
-		stream.println("NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP");
+		stream.println((multiDeck ? "LOCATION," : "")
+				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP");
 	}
 
 	protected ICardField[] doGetFields() {

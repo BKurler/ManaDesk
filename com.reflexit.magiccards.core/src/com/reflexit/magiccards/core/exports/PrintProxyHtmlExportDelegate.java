@@ -1,9 +1,19 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.util.ArrayList;
+import java.util.LinkedHashMap;
+import java.util.List;
+import java.util.Map;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
@@ -74,8 +84,27 @@ public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicC
 	}
 
 	public void body(MyXMLStreamWriter w) throws XMLStreamException {
-		// list
-		list(w, store);
+		Map<Location, List<IMagicCard>> byDeck = groupByDeck();
+		if (byDeck.size() <= 1) {
+			list(w, store);
+			return;
+		}
+		// several decks combined into one sheet - one titled section per deck
+		for (Map.Entry<Location, List<IMagicCard>> e : byDeck.entrySet()) {
+			w.el("h2", e.getKey().getName());
+			list(w, e.getValue());
+		}
+	}
+
+	private Map<Location, List<IMagicCard>> groupByDeck() {
+		Map<Location, List<IMagicCard>> byDeck = new LinkedHashMap<>();
+		for (IMagicCard card : store) {
+			Location k = Location.NO_WHERE;
+			if (card instanceof ILocatable && ((ILocatable) card).getLocation() != null)
+				k = ((ILocatable) card).getLocation().toMainDeck();
+			byDeck.computeIfAbsent(k, x -> new ArrayList<>()).add(card);
+		}
+		return byDeck;
 	}
 
 	private void list(MyXMLStreamWriter w, Iterable<IMagicCard> flat) throws XMLStreamException {
@@ -125,6 +154,11 @@ public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicC
 
 	@Override
 	public boolean isSideboardSupported() {
+		return true;
+	}
+
+	@Override
+	public boolean isCombineByDefault() {
 		return true;
 	}
 }

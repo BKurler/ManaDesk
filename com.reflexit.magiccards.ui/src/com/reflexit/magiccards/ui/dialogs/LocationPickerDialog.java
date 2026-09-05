@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.dialogs;
 
 import java.io.IOException;
@@ -45,6 +50,7 @@ public class LocationPickerDialog extends TitleAreaDialog {
 	private TreeViewer listViewer;
 	private Composite area;
 	private int mode;
+	private boolean hideSideboards;
 	private IStructuredSelection selection;
 	private IStructuredSelection initialResourceSelection;
 
@@ -59,12 +65,18 @@ public class LocationPickerDialog extends TitleAreaDialog {
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
+	/** Hide {@code -sideboard}/{@code -extra} collections from the tree. */
+	public void setHideSideboards(boolean hide) {
+		this.hideSideboards = hide;
+	}
+
 	@Override
 	protected Control createDialogArea(Composite parent) {
 		getShell().setText("Select a deck or collection");
 		setTitle("Select a deck or collection");
 		area = (Composite) super.createDialogArea(parent);
 		locPage = new LocationFilterPreferencePage(mode);
+		locPage.setHideSideboards(hideSideboards);
 		locPage.noDefaultAndApplyButton();
 		locPage.setPreferenceStore(new PreferenceStore());
 		locPage.createControl(area);
@@ -96,6 +108,10 @@ public class LocationPickerDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
+		// in checkbox/MULTI mode the result is the checked nodes, not the
+		// highlighted row the selection-changed listener tracks
+		if ((mode & SWT.MULTI) != 0)
+			selection = new StructuredSelection(locPage.getCheckedElements());
 		saveWidgetValues();
 		super.okPressed();
 	}

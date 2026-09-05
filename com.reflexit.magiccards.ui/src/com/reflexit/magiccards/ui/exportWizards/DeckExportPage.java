@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
+
 package com.reflexit.magiccards.ui.exportWizards;
 
 import java.io.ByteArrayOutputStream;
@@ -6,12 +11,18 @@ import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
 import java.lang.reflect.InvocationTargetException;
+import java.util.ArrayList;
 import java.util.Collection;
 import java.util.HashMap;
+import java.util.LinkedHashMap;
+import java.util.LinkedHashSet;
+import java.util.List;
+import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableContext;
@@ -44,14 +55,22 @@ import com.reflexit.magiccards.core.exports.CustomExportDelegate;
 import com.reflexit.magiccards.core.exports.IExportDelegate;
 import com.reflexit.magiccards.core.exports.ImportExportFactory;
 import com.reflexit.magiccards.core.exports.ReportType;
+import com.reflexit.magiccards.core.exports.SideboardHelpHtmlExportDelegate;
+import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.Locations;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardFilter;
+import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
+import com.reflexit.magiccards.core.model.nav.ModelRoot;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
+import com.reflexit.magiccards.core.model.storage.MemoryFilteredCardStore;
+import com.reflexit.magiccards.core.exports.PrintProxyHtmlExportDelegate;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.LocationPickerDialog;
 import com.reflexit.magiccards.ui.dialogs.MagicFieldSelectorDialog;
@@ -68,43 +87,140 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private static final String INCLUDE_HEADER_SETTING = "includeHeader"; //$NON-NLS-1$
 	private static final String INCLUDE_SIDEBOARD = "includeSideBoard"; //$NON-NLS-1$
 	private static final String INCLUDE_EXTRA = "includeExtra"; //$NON-NLS-1$
+	private static final String INCLUDE_COMBINE = "includeCombine"; //$NON-NLS-1$
+	private static final String OPEN_AFTER = "openAfterExport"; //$NON-NLS-1$
 	FileFieldEditor editor;
 	private String fileName = "";
 	private IStructuredSelection resourceSelection;
 	private Button includeHeader;
 	private static final String ID = DeckExportPage.class.getName();
 	private ReportType reportType;
-	// private LocationFilterPreferencePage locPage;
 	private Combo typeCombo;
 	private Button includeSideBoard;
 	private Button includeExtra;
+	private Button includeCombine;
+	private Button openAfter;
+	private boolean combineTouched;
 	private StringButtonFieldEditor collection;
 	private Text previewText;
 	private Job previewJob;
+	/** Bumped on every preview request; a job whose generation is stale drops its
+	 * result instead of overwriting the preview with an out-of-date export. */
+	private volatile int previewGen;
+	/** Serialises preview jobs - their nested export delegates are cached
+	 * singletons and must not run concurrently (shared output stream). */
+	private final ISchedulingRule previewRule = new ISchedulingRule() {
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return rule == this;
+		}
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return rule == this;
+		}
+	};
 	private StringButtonFieldEditor columnsChoice;
+
+	/** The selected main-deck elements (never sideboard/extra), or empty. */
+	List<CardElement> selectedDecks() {
+		List<CardElement> res = new ArrayList<>();
+		if (resourceSelection != null)
+			for (Object o : resourceSelection.toList())
+				if (o instanceof CardElement)
+					res.add((CardElement) o);
+		return res;
+	}
+
+	private boolean isCombineSelected() {
+		return includeCombine != null && includeCombine.getSelection();
+	}
+
+	/**
+	 * File-name stem for a deck / collection: the full location path (including
+	 * the "Decks" / "Collections" level) with each level joined by '-', so two
+	 * decks that share a name in different folders produce different files.
+	 * "Decks/EDH/Aggro/deck1" -&gt; "Decks-EDH-Aggro-deck1";
+	 * "Collections/deck1" -&gt; "Collections-deck1".
+	 */
+	static String deckFileStem(Location mainDeck) {
+		String path = mainDeck == null ? null : mainDeck.getPath();
+		if (path == null || path.isEmpty())
+			return "deck";
+		StringBuilder sb = new StringBuilder();
+		for (String seg : path.split("/")) {
+			String s = sanitizeSegment(seg);
+			if (s.isEmpty())
+				continue;
+			if (sb.length() > 0)
+				sb.append('-');
+			sb.append(s);
+		}
+		return sb.length() == 0 ? "deck" : sb.toString();
+	}
+
+	private static String sanitizeSegment(String s) {
+		return s.replaceAll("[^\\w.-]+", "_").replaceAll("^_+|_+$", "");
+	}
 
 	protected DeckExportPage(final String pageName, final IStructuredSelection selection) {
 		super(pageName);
 		resourceSelection = selection == null ? null : new StructuredSelection(selection.toList());
 	}
 
-	HashMap<String, String> storeToMap(boolean sideboard, boolean extra, boolean sideboardSupported) {
+	HashMap<String, String> storeToMap(Collection<CardElement> decks, boolean sideboard, boolean extra,
+			boolean sideboardSupported) {
 		HashMap<String, String> map = new HashMap<String, String>();
-		if (resourceSelection == null || resourceSelection.isEmpty())
-			return map;
 		Locations locs = Locations.getInstance();
-		CardElement myDeck = (CardElement) resourceSelection.getFirstElement();
-		if (!sideboardSupported) {
-			String deckId = locs.getPrefConstant(myDeck.getLocation());
-			map.put(deckId, "true");
-		} else {
-			map.put(locs.getPrefConstant(myDeck.getLocation().toMainDeck()), "true");
-			if (sideboard)
-				map.put(locs.getPrefConstant(myDeck.getLocation().toSideboard()), "true");
-			if (extra)
-				map.put(locs.getPrefConstant(myDeck.getLocation().toExtra()), "true");
+		for (CardElement d : decks) {
+			if (!sideboardSupported) {
+				map.put(locs.getPrefConstant(d.getLocation()), "true");
+			} else {
+				Location main = d.getLocation().toMainDeck();
+				map.put(locs.getPrefConstant(main), "true");
+				if (sideboard)
+					map.put(locs.getPrefConstant(main.toSideboard()), "true");
+				if (extra)
+					map.put(locs.getPrefConstant(main.toExtra()), "true");
+			}
 		}
 		return map;
+	}
+
+	/**
+	 * Hand-built, explicitly-ordered store for a "combine in one file" export:
+	 * every deck in selection order, and within each deck main -> sideboard ->
+	 * extra, name-sorted inside each block. No self-sort on the store so this
+	 * grouping survives. (Same technique as the deck view's Export tab.)
+	 */
+	private IFilteredCardStore<IMagicCard> buildCombinedStore(Collection<CardElement> decks, boolean sideboard,
+			boolean extra, boolean sideboardSupported) {
+		MemoryFilteredCardStore<IMagicCard> mem = new MemoryFilteredCardStore<>();
+		@SuppressWarnings("unchecked")
+		java.util.Comparator<IMagicCard> nameSort = new SortOrder();
+		Location firstMain = null;
+		for (CardElement d : decks) {
+			Location main = d.getLocation().toMainDeck();
+			if (firstMain == null)
+				firstMain = main;
+			Location[] blocks = sideboardSupported
+					? new Location[] { main, sideboard ? main.toSideboard() : null, extra ? main.toExtra() : null }
+					: new Location[] { d.getLocation() };
+			for (Location l : blocks) {
+				if (l == null)
+					continue;
+				ICardStore<IMagicCard> s = DataManager.getInstance().getCardStore(l);
+				if (s == null)
+					continue;
+				List<IMagicCard> g = new ArrayList<>(s.getCards());
+				g.sort(nameSort);
+				mem.getCardStore().addAll(g);
+			}
+		}
+		if (firstMain != null)
+			mem.setLocation(firstMain);
+		mem.update();
+		return mem;
 	}
 
 	protected IRunnableContext getRunnableContext() {
@@ -172,6 +288,10 @@ public class DeckExportPage extends WizardDataTransferPage {
 		createDestinationGroup(composite);
 		createOptionsGroup(composite);
 		createPreviewGroup(composite);
+		openAfter = new Button(composite, SWT.CHECK | SWT.LEFT);
+		openAfter.setText("Automatically open the generated file(s)");
+		openAfter.setSelection(true);
+		openAfter.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_BEGINNING));
 		restoreWidgetValues(); // ie.- subclass hook
 		setTextFromSelection();
 		updateWidgetEnablements();
@@ -234,6 +354,13 @@ public class DeckExportPage extends WizardDataTransferPage {
 		if (dialogSettings.get(INCLUDE_EXTRA) != null) {
 			includeExtra.setSelection(dialogSettings.getBoolean(INCLUDE_EXTRA));
 		}
+		if (dialogSettings.get(INCLUDE_COMBINE) != null) {
+			includeCombine.setSelection(dialogSettings.getBoolean(INCLUDE_COMBINE));
+			combineTouched = true;
+		}
+		if (dialogSettings.get(OPEN_AFTER) != null) {
+			openAfter.setSelection(dialogSettings.getBoolean(OPEN_AFTER));
+		}
 	}
 
 	private void loadFromMemento(String ids) {
@@ -258,6 +385,8 @@ public class DeckExportPage extends WizardDataTransferPage {
 			dialogSettings.put(INCLUDE_HEADER_SETTING, includeHeader.getSelection());
 			dialogSettings.put(INCLUDE_SIDEBOARD, includeSideBoard.getSelection());
 			dialogSettings.put(INCLUDE_EXTRA, includeExtra.getSelection());
+			dialogSettings.put(INCLUDE_COMBINE, includeCombine.getSelection());
+			dialogSettings.put(OPEN_AFTER, openAfter.getSelection());
 			// save into file
 			MagicUIActivator.getDefault().saveDialogSetting(dialogSettings);
 		} catch (IOException e) {
@@ -267,14 +396,31 @@ public class DeckExportPage extends WizardDataTransferPage {
 
 	public void setDeckSelection() {
 		try {
-			CardElement element = DataManager.getInstance().getModelRoot()
-					.findElement(collection.getStringValue());
-			if (element != null)
-				resourceSelection = new StructuredSelection(element);
-			else
-				resourceSelection = null;
+			ModelRoot root = DataManager.getInstance().getModelRoot();
+			LinkedHashSet<CardElement> picked = new LinkedHashSet<>();
+			for (String path : collection.getStringValue().split(",")) {
+				path = path.trim();
+				if (path.isEmpty())
+					continue;
+				CardElement el = root.findElement(path);
+				if (el == null)
+					continue;
+				if (el instanceof CardOrganizer)
+					picked.addAll(((CardOrganizer) el).getAllElements()); // recursive leaf collections
+				else
+					picked.add(el);
+			}
+			// getAllElements() also returns the hidden -sideboard / -extra leaves
+			picked.removeIf(e -> e.getLocation().isSideboard() || e.getLocation().isExtra());
+			// one entry per deck family, first pick wins
+			LinkedHashMap<String, CardElement> byMain = new LinkedHashMap<>();
+			for (CardElement e : picked)
+				byMain.putIfAbsent(e.getLocation().toMainDeck().getPath(), e);
+			resourceSelection = byMain.isEmpty() ? null
+					: new StructuredSelection(new ArrayList<>(byMain.values()));
 		} catch (Exception e) {
 			MagicUIActivator.log(e);
+			resourceSelection = null;
 		}
 	}
 
@@ -282,10 +428,11 @@ public class DeckExportPage extends WizardDataTransferPage {
 		Composite parent = new Composite(parent2, SWT.NONE);
 		parent.setLayout(new GridLayout());
 		parent.setLayoutData(new GridData(GridData.HORIZONTAL_ALIGN_FILL));
-		collection = new StringButtonFieldEditor("deckSelect", "From Collection:", parent) {
+		collection = new StringButtonFieldEditor("deckSelect", "Decks / collections:", parent) {
 			@Override
 			protected String changePressed() {
-				LocationPickerDialog dialog = new LocationPickerDialog(getShell(), SWT.SINGLE);
+				LocationPickerDialog dialog = new LocationPickerDialog(getShell(), SWT.MULTI | SWT.READ_ONLY);
+				dialog.setHideSideboards(true);
 				dialog.setSelection(resourceSelection);
 				if (dialog.open() == Window.OK) {
 					if (dialog.getSelection() != null) {
@@ -310,10 +457,15 @@ public class DeckExportPage extends WizardDataTransferPage {
 	 */
 	protected void setTextFromSelection() {
 		if (resourceSelection != null && !resourceSelection.isEmpty()) {
-			Object firstElement = resourceSelection.getFirstElement();
-			if (firstElement instanceof ILocatable) {
-				collection.setStringValue(((ILocatable) firstElement).getLocation().toString());
+			StringBuilder sb = new StringBuilder();
+			for (Object el : resourceSelection.toList()) {
+				if (!(el instanceof ILocatable))
+					continue;
+				if (sb.length() > 0)
+					sb.append(",");
+				sb.append(((ILocatable) el).getLocation().toString());
 			}
+			collection.setStringValue(sb.toString());
 		}
 	}
 
@@ -350,13 +502,30 @@ public class DeckExportPage extends WizardDataTransferPage {
 				}
 			}
 		});
-		// options to include header
-		includeHeader = new Button(buttonComposite, SWT.CHECK | SWT.LEFT);
+		// "Generate header row" + "Combine in one file", stacked in col 1
+		Composite genChecks = new Composite(buttonComposite, SWT.NONE);
+		GridLayout genLayout = new GridLayout(1, false);
+		genLayout.marginWidth = 0;
+		genLayout.marginHeight = 0;
+		genLayout.verticalSpacing = 2;
+		genChecks.setLayout(genLayout);
+		genChecks.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		includeHeader = new Button(genChecks, SWT.CHECK | SWT.LEFT);
 		includeHeader.setText("Generate header row");
 		includeHeader.setSelection(true);
 		includeHeader.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				updatePageCompletion();
+			}
+		});
+		includeCombine = new Button(genChecks, SWT.CHECK | SWT.LEFT);
+		includeCombine.setText("Combine in one file");
+		includeCombine.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				combineTouched = true;
+				updateWidgetEnablements();
 				updatePageCompletion();
 			}
 		});
@@ -521,12 +690,25 @@ public class DeckExportPage extends WizardDataTransferPage {
 		String ext = getFileExtension();
 		editor.setFileExtensions(new String[] { "*" + ext });
 		IExportDelegate delegate = reportType.getExportDelegate();
-		// propose a file name: <deck name>[-<export content>].<format>
-		String deckName = collection.getStringValue().length() > 0
-				? new File(collection.getStringValue()).getName() : "";
-		if (deckName.length() > 0) {
+		List<CardElement> decks = selectedDecks();
+
+		// "Combine in one file" - only relevant with >1 deck; seed its default
+		// from the export type until the user touches it
+		includeCombine.setEnabled(decks.size() > 1);
+		if (!combineTouched)
+			includeCombine.setSelection(delegate != null && delegate.isCombineByDefault());
+		boolean combine = isCombineSelected() && decks.size() > 1;
+
+		// propose a file name: <stem>[-<export content>].<format>
+		//   stem = deck name (1 deck) | "combined" (combine) | "*" (one file per deck)
+		String stem = null;
+		if (decks.size() == 1)
+			stem = deckFileStem(decks.get(0).getLocation().toMainDeck());
+		else if (decks.size() > 1)
+			stem = combine ? "combined" : "*";
+		if (stem != null) {
 			String slug = reportType != null ? reportType.getFileNameSlug() : "";
-			String base = (slug == null || slug.isEmpty()) ? deckName : deckName + "-" + slug;
+			String base = (slug == null || slug.isEmpty()) ? stem : stem + "-" + slug;
 			String dir = (fileName.length() > 0 && new File(fileName).getParent() != null)
 					? new File(fileName).getParent()
 					: System.getProperty("user.home");
@@ -546,7 +728,10 @@ public class DeckExportPage extends WizardDataTransferPage {
 				includeSideBoard.setEnabled(delegate.isMultipleLocationSupported());
 				includeExtra.setEnabled(delegate.isMultipleLocationSupported());
 			}
-			columnsChoice.setEnabled(delegate.isColumnChoiceSupported(), columnsChoiceParent);
+			// column editing is only meaningful for user-defined custom exporters -
+			// the built-in ("defaults") exporters have a fixed column set
+			columnsChoice.setEnabled(delegate.isColumnChoiceSupported() && reportType.isCustom(),
+					columnsChoiceParent);
 		} else {
 			includeSideBoard.setEnabled(false);
 			includeExtra.setEnabled(false);
@@ -574,16 +759,16 @@ public class DeckExportPage extends WizardDataTransferPage {
 		return includeExtra.getSelection();
 	}
 
+	public boolean getIncludeCombine() {
+		return includeCombine.getSelection();
+	}
+
 	public CardElement getFirstCardElement() {
-		CardElement ce = null;
 		for (Object object : resourceSelection.toList()) {
-			if (object instanceof CardOrganizer)
-				continue;
-			if (ce != null)
-				throw new IllegalArgumentException("Select only one element");
-			ce = (CardElement) object;
+			if (!(object instanceof CardOrganizer) && object instanceof CardElement)
+				return (CardElement) object;
 		}
-		return ce;
+		return null;
 	}
 
 	public void generatePreview() {
@@ -597,30 +782,46 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final boolean sideboard = getIncludeSideBoard();
 		final boolean extra = getIncludeExtra();
 		final ReportType type = getReportType();
+		final List<CardElement> decks = selectedDecks();
+		final boolean combine = isCombineSelected() && decks.size() > 1;
+		final int gen = ++previewGen;
 		if (previewJob != null) {
 			previewJob.cancel();
 		}
 		previewJob = new Job("Generating preview") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
+				if (monitor.isCanceled() || gen != previewGen)
+					return Status.CANCEL_STATUS;
 				try {
-					exportDeck(outStream, monitor, type, header, sideboard, extra);
-					if (!monitor.isCanceled())
-						updatePreview(outStream.toString());
+					if (combine || decks.size() <= 1) {
+						exportDeck(outStream, monitor, type, header, decks, sideboard, extra, combine);
+						if (!monitor.isCanceled() && gen == previewGen)
+							updatePreview(outStream.toString());
+					} else {
+						CardElement first = decks.get(0);
+						exportDeck(outStream, monitor, type, header, java.util.Collections.singletonList(first),
+								sideboard, extra, false);
+						if (!monitor.isCanceled() && gen == previewGen)
+							updatePreview("# Preview: \"" + first.getLocation().toMainDeck().getName()
+									+ "\" only — " + decks.size() + " files will be written.\n\n"
+									+ outStream.toString());
+					}
 				} catch (InvocationTargetException e) {
 					if (e.getTargetException() instanceof InterruptedException) {
 						//
-					} else if (!monitor.isCanceled())
+					} else if (!monitor.isCanceled() && gen == previewGen)
 						updatePreview(e.getCause().getMessage());
 				} catch (InterruptedException e) {
 					//
 				} catch (Exception e) {
-					if (!monitor.isCanceled())
+					if (!monitor.isCanceled() && gen == previewGen)
 						updatePreview(e.getMessage());
 				}
 				return Status.OK_STATUS;
 			}
 		};
+		previewJob.setRule(previewRule);
 		previewJob.schedule();
 	}
 
@@ -637,33 +838,90 @@ public class DeckExportPage extends WizardDataTransferPage {
 	}
 
 	public boolean saveFile() {
+		// don't let a still-running preview share the export delegate with us
+		previewGen++;
+		if (previewJob != null) {
+			previewJob.cancel();
+			try {
+				previewJob.join();
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+			}
+		}
 		final DeckExportPage mainPage = this;
-		final String fileName = mainPage.getFileName();
-		if (new File(fileName).exists()) {
-			String res = mainPage.queryOverwrite(fileName);
+		final boolean header = getIncludeHeader();
+		final boolean sideboard = getIncludeSideBoard();
+		final boolean extra = getIncludeExtra();
+		final List<CardElement> decks = selectedDecks();
+		final boolean combine = isCombineSelected() && decks.size() > 1;
+
+		// resolve the target file(s): "*" in the path is replaced by the deck's
+		// container path + name (so same-named decks in different folders differ)
+		final LinkedHashMap<String, List<CardElement>> targets = new LinkedHashMap<>();
+		if (combine || decks.size() <= 1) {
+			String stem = combine && decks.size() > 1 ? "combined"
+					: decks.isEmpty() ? "deck" : deckFileStem(decks.get(0).getLocation().toMainDeck());
+			targets.put(getFileName().replace("*", stem), decks);
+		} else {
+			for (CardElement d : decks) {
+				String f = getFileName().replace("*", deckFileStem(d.getLocation().toMainDeck()));
+				targets.put(f, java.util.Collections.singletonList(d));
+			}
+		}
+
+		// one overwrite prompt for the whole batch
+		final Set<String> skip = new LinkedHashSet<>();
+		java.util.List<String> existing = new ArrayList<>();
+		for (String f : targets.keySet())
+			if (new File(f).exists())
+				existing.add(f);
+		if (!existing.isEmpty()) {
+			String res = mainPage.queryOverwrite(existing.size() == 1 ? existing.get(0)
+					: existing.size() + " files already exist");
 			if (res == IOverwriteQuery.CANCEL)
 				return false;
 			if (res == IOverwriteQuery.NO)
-				return false;
+				skip.addAll(existing);
 		}
+
 		boolean res = false;
 		try {
-			final OutputStream outStream = new FileOutputStream(fileName);
-			final boolean header = getIncludeHeader();
-			final boolean sideboard = getIncludeSideBoard();
-			final boolean extra = getIncludeExtra();
 			IRunnableWithProgress work = new IRunnableWithProgress() {
 				@Override
 				public void run(IProgressMonitor monitor) throws InvocationTargetException {
+					monitor.beginTask("Exporting", targets.size());
 					try {
-						exportDeck(outStream, monitor, reportType, header, sideboard, extra);
-						outStream.close();
+						for (java.util.Map.Entry<String, List<CardElement>> t : targets.entrySet()) {
+							if (skip.contains(t.getKey())) {
+								monitor.worked(1);
+								continue;
+							}
+							try (OutputStream os = new FileOutputStream(t.getKey())) {
+								exportDeck(os, monitor, reportType, header, t.getValue(), sideboard, extra, combine);
+							}
+							monitor.worked(1);
+						}
+					} catch (InterruptedException e) {
+						throw new InvocationTargetException(e);
 					} catch (Exception e) {
 						throw new InvocationTargetException(e);
+					} finally {
+						monitor.done();
 					}
 				}
 			};
 			getRunnableContext().run(true, true, work);
+			if (openAfter.getSelection()) {
+				for (String f : targets.keySet()) {
+					if (skip.contains(f))
+						continue;
+					try {
+						java.awt.Desktop.getDesktop().open(new File(f));
+					} catch (Throwable ex) {
+						MagicUIActivator.log(ex);
+					}
+				}
+			}
 			return true;
 		} catch (InvocationTargetException e) {
 			if (e.getTargetException() instanceof InterruptedException) {
@@ -679,25 +937,38 @@ public class DeckExportPage extends WizardDataTransferPage {
 	}
 
 	public void exportDeck(final OutputStream outStream, IProgressMonitor monitor, ReportType reportType,
-			boolean header, boolean sideboard, boolean extra)
+			boolean header, Collection<CardElement> decks, boolean sideboard, boolean extra, boolean combine)
 			throws InvocationTargetException, InterruptedException {
-		// TODO: export selection only
-		IExportDelegate exportDelegate = reportType.getExportDelegate();
-		final HashMap<String, String> map = storeToMap(sideboard, extra, exportDelegate.isSideboardSupported());
-		IFilteredCardStore filteredLibrary = DataManager.getCardHandler()
-				.getLibraryFilteredStoreWorkingCopy();
-		MagicCardFilter locFilter = filteredLibrary.getFilter();
-		locFilter.update(map);
-		// group the output main deck -> sideboard -> extra. Order of these two
-		// calls matters: the last one added is the primary sort key, so EXTRA
-		// (false before true) splits extra off last, then SIDEBOARD splits the
-		// sideboard from the main deck, then NAME/ID inside each section.
-		if (sideboard || extra)
-			locFilter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, true);
-		if (extra)
-			locFilter.getSortOrder().setSortField(MagicCardField.EXTRA, true);
-		filteredLibrary.update();
-		new ExportDeckJob(outStream, reportType, header, filteredLibrary, columns).syncRun();
+		IExportDelegate<?> exportDelegate = reportType.getExportDelegate();
+		boolean sbSupported = exportDelegate.isSideboardSupported();
+		IFilteredCardStore filteredLibrary;
+		ICardField[] cols = columns;
+
+		if (combine && decks.size() > 1) {
+			filteredLibrary = buildCombinedStore(decks, sideboard, extra, sbSupported);
+		} else {
+			final HashMap<String, String> map = storeToMap(decks, sideboard, extra, sbSupported);
+			filteredLibrary = DataManager.getCardHandler().getLibraryFilteredStoreWorkingCopy();
+			MagicCardFilter locFilter = filteredLibrary.getFilter();
+			locFilter.update(map);
+			// group main deck -> sideboard -> extra. Last setSortField() = primary
+			// key, so EXTRA splits the extra off last, then SIDEBOARD splits the
+			// sideboard from the main deck, then NAME/ID inside each section.
+			if (sideboard || extra)
+				locFilter.getSortOrder().setSortField(MagicCardField.SIDEBOARD, true);
+			if (extra)
+				locFilter.getSortOrder().setSortField(MagicCardField.EXTRA, true);
+			filteredLibrary.update();
+		}
+		// when several decks land in one text/CSV file, every row gets a LOCATION
+		// column (added by the delegate itself, if not already present) so it is
+		// still clear which deck each card came from. The two per-deck-section
+		// HTML delegates render their own deck headings and opt out.
+		boolean multiDeck = combine && decks.size() > 1
+				&& !(exportDelegate instanceof PrintProxyHtmlExportDelegate)
+				&& !(exportDelegate instanceof SideboardHelpHtmlExportDelegate);
+		new ExportDeckJob(outStream, reportType, header, filteredLibrary, cols)
+				.setMultiDeck(multiDeck).syncRun();
 	}
 
 	private ICardField[] columns;
