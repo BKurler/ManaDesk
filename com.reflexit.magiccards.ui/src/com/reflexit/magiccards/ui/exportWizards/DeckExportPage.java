@@ -22,7 +22,6 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableContext;
@@ -104,22 +103,6 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private StringButtonFieldEditor collection;
 	private Text previewText;
 	private Job previewJob;
-	/** Bumped on every preview request; a job whose generation is stale drops its
-	 * result instead of overwriting the preview with an out-of-date export. */
-	private volatile int previewGen;
-	/** Serialises preview jobs - their nested export delegates are cached
-	 * singletons and must not run concurrently (shared output stream). */
-	private final ISchedulingRule previewRule = new ISchedulingRule() {
-		@Override
-		public boolean contains(ISchedulingRule rule) {
-			return rule == this;
-		}
-
-		@Override
-		public boolean isConflicting(ISchedulingRule rule) {
-			return rule == this;
-		}
-	};
 	private StringButtonFieldEditor columnsChoice;
 
 	/** The selected main-deck elements (never sideboard/extra), or empty. */
@@ -784,25 +767,22 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final ReportType type = getReportType();
 		final List<CardElement> decks = selectedDecks();
 		final boolean combine = isCombineSelected() && decks.size() > 1;
-		final int gen = ++previewGen;
 		if (previewJob != null) {
 			previewJob.cancel();
 		}
 		previewJob = new Job("Generating preview") {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
-				if (monitor.isCanceled() || gen != previewGen)
-					return Status.CANCEL_STATUS;
 				try {
 					if (combine || decks.size() <= 1) {
 						exportDeck(outStream, monitor, type, header, decks, sideboard, extra, combine);
-						if (!monitor.isCanceled() && gen == previewGen)
+						if (!monitor.isCanceled())
 							updatePreview(outStream.toString());
 					} else {
 						CardElement first = decks.get(0);
 						exportDeck(outStream, monitor, type, header, java.util.Collections.singletonList(first),
 								sideboard, extra, false);
-						if (!monitor.isCanceled() && gen == previewGen)
+						if (!monitor.isCanceled())
 							updatePreview("# Preview: \"" + first.getLocation().toMainDeck().getName()
 									+ "\" only — " + decks.size() + " files will be written.\n\n"
 									+ outStream.toString());
@@ -810,18 +790,17 @@ public class DeckExportPage extends WizardDataTransferPage {
 				} catch (InvocationTargetException e) {
 					if (e.getTargetException() instanceof InterruptedException) {
 						//
-					} else if (!monitor.isCanceled() && gen == previewGen)
+					} else if (!monitor.isCanceled())
 						updatePreview(e.getCause().getMessage());
 				} catch (InterruptedException e) {
 					//
 				} catch (Exception e) {
-					if (!monitor.isCanceled() && gen == previewGen)
+					if (!monitor.isCanceled())
 						updatePreview(e.getMessage());
 				}
 				return Status.OK_STATUS;
 			}
 		};
-		previewJob.setRule(previewRule);
 		previewJob.schedule();
 	}
 
@@ -839,7 +818,6 @@ public class DeckExportPage extends WizardDataTransferPage {
 
 	public boolean saveFile() {
 		// don't let a still-running preview share the export delegate with us
-		previewGen++;
 		if (previewJob != null) {
 			previewJob.cancel();
 			try {
