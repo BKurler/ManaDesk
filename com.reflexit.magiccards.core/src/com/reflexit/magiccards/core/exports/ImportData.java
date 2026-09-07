@@ -8,9 +8,15 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
 package com.reflexit.magiccards.core.exports;
 
 import java.util.ArrayList;
+import java.util.IdentityHashMap;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -30,6 +36,8 @@ public class ImportData {
 	private boolean virtual = false;
 	private ImportSource importSource;
 	private LinkedHashMap<String, Object> props = new LinkedHashMap<>();
+	/** what the file declared for each card (before resolution swaps the base): [name,set,collnum,id,gathererId,tcgId] */
+	private final IdentityHashMap<Object, String[]> declared = new IdentityHashMap<>();
 
 	public ImportData(boolean virtual2, Location location2, String line) {
 		virtual = virtual2;
@@ -119,7 +127,19 @@ public class ImportData {
 
 	public void clear() {
 		toImport.clear();
+		declared.clear();
 		error = null;
+	}
+
+	/** Snapshot what the file said about this card, before resolution rewrites its base. */
+	public void rememberDeclared(MagicCardPhysical c) {
+		declared.put(c, new String[] { c.getName(), c.getSet(), c.getCollectorId(), c.getCardId(),
+				c.getCard().getGathererCardId(), c.getCard().getTcgCardId() });
+	}
+
+	/** [name,set,collnum,id,gathererId,tcgId] as declared by the file, or null. */
+	public String[] getDeclared(Object card) {
+		return declared.get(card);
 	}
 
 	public String getText() {

@@ -33,6 +33,30 @@
             label="Deck Classic Text: 2 Name">
       </deckFormat>
       -->
+      <!-- strict ManaDesk CSV importer: the header must use ManaDesk's exact
+           field ids (SET/EDITION_ABBR for the set); database columns a "Full
+           CSV" also carries are recognised and ignored, anything else is
+           rejected so another importer can try. -->
+      <deckFormat
+            extension="csv"
+            id="mdCsvImport"
+            importDelegate="com.reflexit.magiccards.core.exports.ManaDeskCsvImportDelegate"
+            label="ManaDesk CSV">
+      </deckFormat>
+      <deckFormat
+            extension="csv"
+            id="mdScsvImport"
+            importDelegate="com.reflexit.magiccards.core.exports.ManaDeskCsvSemicolonImportDelegate"
+            label="ManaDesk CSV Semicolon">
+      </deckFormat>
+      <!-- forgiving text importer: '# name' comments, 'Sideboard' markers,
+           '3 Name', '3x Name (Set)', or any line carrying a Scryfall id -->
+      <deckFormat
+            extension="txt"
+            id="freeform"
+            importDelegate="com.reflexit.magiccards.core.exports.FreeformImportDelegate"
+            label="Freeform Text">
+      </deckFormat>
       <deckFormat
             exportDelegate="com.reflexit.magiccards.core.exports.CsvExportDelegate"
             extension="csv"
@@ -49,7 +73,6 @@
             exportDelegate="com.reflexit.magiccards.core.exports.MinimumCsvExportDelegate"
             extension="csv"
             id="csv"
-            importDelegate="com.reflexit.magiccards.core.exports.MinimumCsvImportDelegate"
             label="ManaDesk Minimum CSV">
       </deckFormat>
       <deckFormat

@@ -2079,6 +2079,12 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	public void mcpEventHandler(final CardEvent event) {
+		// card-store events can be fired from background threads (e.g. an import
+		// running in a ModalContext thread); all of handleCardEvent() touches SWT
+		if (Display.getCurrent() == null) {
+			Display.getDefault().asyncExec(() -> mcpEventHandler(event));
+			return;
+		}
 		handleCardEvent(event, false);
 	}
 
@@ -2229,6 +2235,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	public void mcEventHandler(final CardEvent event) {
+		if (Display.getCurrent() == null) {
+			Display.getDefault().asyncExec(() -> mcEventHandler(event));
+			return;
+		}
 		Object data = event.getFirstDataElement();
 		int type = event.getType();
 		trace("mcEventHandler " + eventTypeName(type) + " " + data);

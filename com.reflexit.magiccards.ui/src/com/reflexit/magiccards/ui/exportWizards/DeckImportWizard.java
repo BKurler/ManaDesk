@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
 package com.reflexit.magiccards.ui.exportWizards;
 
 import org.eclipse.jface.viewers.IStructuredSelection;
@@ -41,6 +45,7 @@ public class DeckImportWizard extends Wizard implements IImportWizard {
 	@Override
 	public boolean performFinish() {
 		mainPage.saveWidgetValues();
+		mainPage.setIgnoreErrors(previewPage.isIgnoreErrors());
 		mainPage.performImport(false);
 		if (mainPage.getImportData().isOk())
 			return true;

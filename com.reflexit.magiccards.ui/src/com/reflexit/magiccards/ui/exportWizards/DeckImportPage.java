@@ -115,6 +115,12 @@ public class DeckImportPage extends WizardDataTransferPage {
 	private Button intoExisting;
 	private Combo typeCombo;
 	private Button virtualCards;
+	private Button newVirtual;
+	private Button newUnsorted;
+	private boolean newVirtualChoice;
+	private boolean newUnsortedChoice;
+	/** set from the preview page: skip errored cards instead of blocking Finish */
+	private boolean ignoreErrors;
 	private Text deckText;
 	private boolean isDeck = true;
 	private MagicToolkit toolkit;
@@ -145,9 +151,17 @@ public class DeckImportPage extends WizardDataTransferPage {
 		importData = new ImportData();
 	}
 
+	public void setIgnoreErrors(boolean ignoreErrors) {
+		this.ignoreErrors = ignoreErrors;
+	}
+
 	public void performImport(final boolean preview) {
 		Display.getDefault().syncExec(() -> {
 			importData.setVirtual(virtualCards.getSelection());
+			// cache the checkbox state now, on the UI thread - importRunnable()
+			// runs on a background job and can't touch SWT widgets
+			newVirtualChoice = newVirtual != null && newVirtual.getSelection();
+			newUnsortedChoice = newUnsorted != null && newUnsorted.getSelection();
 			int choice = getIntoChoice();
 			final boolean dbImport = choice == 3;
 			try {
@@ -283,6 +297,13 @@ public class DeckImportPage extends WizardDataTransferPage {
 			}
 		}
 		if (cerrors.size() != 0) {
+			if (ignoreErrors) {
+				// the user opted in on the preview page: import the good cards,
+				// silently drop the rest (already removed from result above)
+				MagicUIActivator.log("Import: skipping " + cerrors.size() + " unresolved card(s) of " + size
+						+ " ('Ignore cards with errors' is on)");
+				return cerrors.size() < size;
+			}
 			String message = "After all this effort I cannot resolve " + cerrors.size() + " cards of " + size + ":\n";
 			int i = 0;
 			for (Iterator iterator = cerrors.iterator(); iterator.hasNext() && i < 10; i++) {
@@ -375,7 +396,8 @@ public class DeckImportPage extends WizardDataTransferPage {
 		return categorizedErrors;
 	}
 
-	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, CollectionsContainer resource) {
+	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted,
+			CollectionsContainer resource) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
 		while (resource.contains(newloc) && attempts-- > 0) {
@@ -383,7 +405,9 @@ public class DeckImportPage extends WizardDataTransferPage {
 		}
 		if (attempts <= 0)
 			throw new IllegalArgumentException("Cannot generate deck name");
-		this.element = resource.addDeck(newloc.getBaseFileName(), isDeck, virtual);
+		CardCollection created = new CardCollection(newloc.getBaseFileName(), resource, isDeck, virtual, unsorted);
+		created.persistInitialSettings(isDeck, virtual, unsorted);
+		this.element = created;
 	}
 
 	protected String getNewDeckName() {
@@ -461,12 +485,13 @@ public class DeckImportPage extends WizardDataTransferPage {
 
 	protected Group createDestinationGroup(final Composite parent) {
 		Group group = new Group(parent, SWT.NONE);
-		group.setLayoutData(GridDataFactory.fillDefaults().create());
+		group.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		group.setText("Import Destination");
 		group.setLayout(new GridLayout(2, false));
 		GridDataFactory spanAll = GridDataFactory.fillDefaults().grab(true, false).span(2, 1);
+		// all three radios share ONE parent so SWT keeps them mutually exclusive
 		Composite buttons = new Composite(group, SWT.NONE);
-		buttons.setLayout(GridLayoutFactory.fillDefaults().numColumns(2).create());
+		buttons.setLayout(GridLayoutFactory.fillDefaults().numColumns(3).create());
 		buttons.setLayoutData(spanAll.create());
 		intoDeck = new Button(buttons, SWT.RADIO);
 		intoDeck.setText("New Deck");
@@ -474,8 +499,10 @@ public class DeckImportPage extends WizardDataTransferPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (intoDeck.getSelection()) {
-					deckText.setText(getDeckContainer().getLocation().getPath() + "/" + AUTO_NAME);
 					isDeck = true;
+					element = getDeckContainer();
+					deckText.setText(getDeckContainer().getLocation().getPath() + "/" + AUTO_NAME);
+					applyNewDestinationDefaults();
 				}
 			}
 		});
@@ -485,12 +512,14 @@ public class DeckImportPage extends WizardDataTransferPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				if (intoCollection.getSelection()) {
-					deckText.setText(getCollectionContainer().getLocation().getPath() + "/" + AUTO_NAME);
 					isDeck = false;
+					element = getCollectionContainer();
+					deckText.setText(getCollectionContainer().getLocation().getPath() + "/" + AUTO_NAME);
+					applyNewDestinationDefaults();
 				}
 			}
 		});
-		intoExisting = new Button(group, SWT.RADIO);
+		intoExisting = new Button(buttons, SWT.RADIO);
 		intoExisting.setText("Existing Deck/Collection");
 		intoExisting.addSelectionListener(new SelectionAdapter() {
 			@Override
@@ -499,25 +528,23 @@ public class DeckImportPage extends WizardDataTransferPage {
 					openImportIntoElementSelectionDialog();
 			}
 		});
-		// toolkit.createLabel(group, "Add cards into");
 		deckText = new Text(group, SWT.BORDER);
 		deckText.setEditable(false);
-		deckText.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
+		deckText.setLayoutData(spanAll.create());
 		deckText.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(final MouseEvent e) {
 				openImportIntoElementSelectionDialog();
 			}
 		});
-		// Button browse = new Button(group, SWT.PUSH);
-		// browse.setText("Browse...");
-		// browse.addSelectionListener(new SelectionAdapter() {
-		// @Override
-		// public void widgetSelected(SelectionEvent e) {
-		// openImportIntoElementSelectionDialog();
-		// }
-		// });
-		// deck options
+		// new deck / collection options - mirror the New Deck / New Collection wizard
+		newVirtual = new Button(group, SWT.CHECK);
+		newVirtual.setText("New deck/collection is virtual (affects card ownership and move/copy/count operations)");
+		newVirtual.setLayoutData(spanAll.create());
+		newUnsorted = new Button(group, SWT.CHECK);
+		newUnsorted.setText("New deck/collection is unsorted (identical cards are kept as separate entries)");
+		newUnsorted.setLayoutData(spanAll.create());
+		// per-card option
 		virtualCards = new Button(group, SWT.CHECK);
 		virtualCards.setText("Imported cards will be virtual if Ownership not specified");
 		virtualCards.setSelection(false);
@@ -560,12 +587,37 @@ public class DeckImportPage extends WizardDataTransferPage {
 			CollectionsContainer deckCon = getDeckContainer();
 			if (deckCon == element || element.isAncestor(deckCon)) {
 				intoDeck.setSelection(true);
+				isDeck = true;
 			} else {
 				intoCollection.setSelection(true);
+				isDeck = false;
 			}
+			applyNewDestinationDefaults();
 		} else {
 			intoExisting.setSelection(true);
+			updateNewDestinationEnablement();
 		}
+	}
+
+	/** Seed the "new deck/collection" option defaults when one of the "New ..."
+	 * radios becomes active: a deck is virtual by default (its cards are tracked
+	 * separately from the owned collection), a collection is not. */
+	private void applyNewDestinationDefaults() {
+		if (newVirtual == null)
+			return;
+		newVirtual.setSelection(isDeck);
+		newUnsorted.setSelection(false);
+		if (virtualCards != null)
+			virtualCards.setSelection(isDeck);
+		updateNewDestinationEnablement();
+	}
+
+	private void updateNewDestinationEnablement() {
+		if (newVirtual == null)
+			return;
+		boolean newTarget = !intoExisting.getSelection();
+		newVirtual.setEnabled(newTarget);
+		newUnsorted.setEnabled(newTarget);
 	}
 
 	@Override
@@ -607,17 +659,8 @@ public class DeckImportPage extends WizardDataTransferPage {
 			int errcount = importData.getErrorCount();
 			mess += "Found " + importData.size() + " record(s) and " + errcount + " error(s).";
 		}
-		mess += " Press Next to preview.\n";
-		if (reportType == ImportExportFactory.XML)
-			setMessage(mess);
-		else if (reportType == ImportExportFactory.CSV)
-			setMessage(mess + "Columns: ID,NAME,COST,TYPE,P,T,TEXT,SET,RARITY,DBPRICE,LANG,COUNT,PRICE,COMMENT");
-		else if (reportType == ImportExportFactory.TEXT_DECK_CLASSIC)
-			setMessage(mess + "Lines like 'Quagmire Druid x 3' or 'Diabolic Tutor (Tenth Edition) x4'");
-		else if (reportType == ImportExportFactory.TABLE_PIPED)
-			setMessage(mess + "Columns: ID|NAME|COST|TYPE|P|T|TEXT|SET|RARITY|RESERVED|LANG|COUNT|PRICE|COMMENT");
-		else
-			setMessage(mess);
+		mess += " Press 'Example...' to see the expected layout, or Next to preview.";
+		setMessage(mess);
 	}
 
 	@Override
@@ -688,6 +731,21 @@ public class DeckImportPage extends WizardDataTransferPage {
 
 	public int getIntoChoice() {
 		return 2;
+	}
+
+	/** Human-readable description of where the import data came from, for error
+	 * messages and the log. */
+	public String getSourceDescription() {
+		switch (inputChoice) {
+		case FILE:
+			return (fileName == null || fileName.isEmpty()) ? "file (none selected)" : "file \"" + fileName + "\"";
+		case URL:
+			return (urlName == null || urlName.isEmpty()) ? "URL (none)" : "URL \"" + urlName + "\"";
+		case TEXT:
+			return "clipboard";
+		default:
+			return "input";
+		}
 	}
 
 	protected void createResourcesGroup(final Composite parent) {
@@ -781,10 +839,27 @@ public class DeckImportPage extends WizardDataTransferPage {
 	public void onInputChoice(SelectionEvent event, ImportSource choice) {
 		if (event == null || ((Button) event.widget).getSelection()) {
 			inputChoice = choice;
-			autoDetectFormat();
+			scheduleAutoDetect();
 			updateWidgetEnablements();
 			updatePageCompletion();
 		}
+	}
+
+	private Runnable detectPending;
+
+	/** Auto-detect after a short quiet period, so typing a path char by char (or
+	 * a burst of setText calls) triggers a single detection pass, not one per
+	 * keystroke - each pass reads the file and runs every importer. */
+	private void scheduleAutoDetect() {
+		if (fileText == null || fileText.isDisposed())
+			return;
+		if (detectPending == null)
+			detectPending = () -> {
+				if (fileText != null && !fileText.isDisposed())
+					autoDetectFormat();
+			};
+		fileText.getDisplay().timerExec(-1, detectPending);
+		fileText.getDisplay().timerExec(400, detectPending);
 	}
 
 	protected void autoDetectFormat() {
@@ -811,13 +886,15 @@ public class DeckImportPage extends WizardDataTransferPage {
 				default:
 					break;
 				}
-				if (type == null)
+				if (type == null || type == reportType)
 					return Status.OK_STATUS;
 				ReportType type2 = type;
 				Display.getDefault().syncExec(() -> {
 					selectReportType(type2);
+					updatePageCompletion();
 				});
-				// performImport(true);
+				// re-parse with the detected format so the preview matches
+				performImport(true);
 				return Status.OK_STATUS;
 			}
 		}.schedule();
@@ -848,8 +925,13 @@ public class DeckImportPage extends WizardDataTransferPage {
 		toolkit.createHyperlink(buttonComposite, "Example...", SWT.NONE).addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e) {
+				if (reportType == null)
+					return;
+				String example = reportType.getExample();
+				if (example == null || example.isEmpty())
+					example = "No example available for this format.";
 				InputDialog inputDialog = new InputDialog(getShell(), "Example", reportType.getLabel(),
-						reportType.getExample(), null) {
+						example, null) {
 					@Override
 					protected int getShellStyle() {
 						return super.getShellStyle() | SWT.RESIZE;
@@ -1000,7 +1082,7 @@ public class DeckImportPage extends WizardDataTransferPage {
 					if (resolve) {
 						ImportUtils.resolve(importData.getList());
 						if (element instanceof CollectionsContainer) {
-							createNewDeck(getNewDeckName(), isDeck, importData.isVirtual(),
+							createNewDeck(getNewDeckName(), isDeck, newVirtualChoice, newUnsortedChoice,
 									(CollectionsContainer) element);
 						}
 						if (!(element instanceof CardCollection)) {

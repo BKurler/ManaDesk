@@ -12,7 +12,9 @@ import org.junit.Test;
 import org.junit.runners.MethodSorters;
 
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.unittesting.CardGenerator;
 
 @FixMethodOrder(MethodSorters.JVM)
 public class CsvImportDelegateTest extends AbstarctImportTest {
@@ -26,6 +28,96 @@ public class CsvImportDelegateTest extends AbstarctImportTest {
 	private void previewAbove() {
 		addLine(getAboveComment());
 		preview(importd);
+	}
+
+	/**
+	 * A ManaDesk "Minimum CSV" export must import back through
+	 * {@link ManaDeskCsvImportDelegate} - name / set / count / comment kept, no
+	 * parse error.
+	 */
+	@Test
+	public void testRoundTripMinimumCsv() {
+		MagicCardPhysical a = CardGenerator.generatePhysicalCardWithValues();
+		MagicCardPhysical b = CardGenerator.generatePhysicalCardWithValues();
+		a.setCount(3);
+		a.set(com.reflexit.magiccards.core.model.MagicCardField.COMMENT, "keep me");
+		b.setCount(1);
+		b.set(com.reflexit.magiccards.core.model.MagicCardField.NAME, "Weird, \"Quoted\" Name");
+
+		MinimumCsvExportDelegate exp = new MinimumCsvExportDelegate();
+		exp.setReportType(ImportExportFactory.createReportType("roundtrip"));
+		line = exp.export(java.util.Arrays.asList((IMagicCard) a, (IMagicCard) b));
+
+		resolve = false;
+		ManaDeskCsvImportDelegate md = new ManaDeskCsvImportDelegate();
+		preview(md);
+		assertEquals(null, exception);
+		assertEquals(2, resSize);
+		assertEquals(a.getName(), card1.getName());
+		assertEquals(3, ((MagicCardPhysical) card1).getCount());
+		assertEquals("keep me", ((MagicCardPhysical) card1).getComment());
+		assertEquals("Weird, \"Quoted\" Name", card2.getName());
+		assertEquals(1, ((MagicCardPhysical) card2).getCount());
+	}
+
+	/**
+	 * A "Full CSV" export - deck columns plus card-database columns like COST /
+	 * TYPE / RARITY / COLOR_IDENTITY - is accepted: the database columns are
+	 * recognised and simply ignored.
+	 */
+	@Test
+	public void manaDeskImport_acceptsFullCsvIgnoringDbColumns() {
+		resolve = false;
+		addLine("NAME,COST,TYPE,RARITY,COLOR_IDENTITY,SET,COLLNUM,COUNT,COMMENT");
+		addLine("Llanowar Elves,{G},Creature - Elf Druid,Common,G,Dominaria,168,4,mine");
+		preview(new ManaDeskCsvImportDelegate());
+		assertEquals(null, exception);
+		assertEquals(1, resSize);
+		assertEquals("Llanowar Elves", card1.getName());
+		assertEquals("Dominaria", card1.getSet());
+		assertEquals(4, ((MagicCardPhysical) card1).getCount());
+		assertEquals("mine", ((MagicCardPhysical) card1).getComment());
+	}
+
+	/** An unknown header naming (not what ManaDesk writes) is rejected. */
+	@Test(expected = MagicException.class)
+	public void manaDeskImport_rejectsUnknownHeader() throws Exception {
+		resolve = true;
+		addLine("Card Name,Quantity");
+		addLine("Llanowar Elves,4");
+		parseonly(new ManaDeskCsvImportDelegate());
+	}
+
+	/** Headers are case-sensitive - ManaDesk writes upper-case. */
+	@Test(expected = MagicException.class)
+	public void manaDeskImport_rejectsLowerCaseHeader() throws Exception {
+		resolve = true;
+		addLine("name,set,count");
+		addLine("Llanowar Elves,Dominaria,4");
+		parseonly(new ManaDeskCsvImportDelegate());
+	}
+
+	/** The set column header may be SET / EDITION_ABBR / SET/EDITION_ABBR; the value is a name or an abbr. */
+	@Test
+	public void manaDeskImport_acceptsSetSlashEditionAbbrHeader() {
+		resolve = false;
+		addLine("NAME,SET/EDITION_ABBR,COUNT");
+		addLine("Accursed Spirit,Magic 2015,2");
+		preview(new ManaDeskCsvImportDelegate());
+		assertEquals(null, exception);
+		assertEquals(1, resSize);
+		assertEquals("Accursed Spirit", card1.getName());
+		assertEquals("Magic 2015", card1.getSet());
+		assertEquals(2, ((MagicCardPhysical) card1).getCount());
+	}
+
+	/** A header row with only database columns and no NAME / ID is rejected. */
+	@Test(expected = MagicException.class)
+	public void manaDeskImport_rejectsNoIdentityColumn() throws Exception {
+		resolve = true;
+		addLine("COST,TYPE,RARITY,COUNT");
+		addLine("{G},Creature,Common,4");
+		parseonly(new ManaDeskCsvImportDelegate());
 	}
 
 	//

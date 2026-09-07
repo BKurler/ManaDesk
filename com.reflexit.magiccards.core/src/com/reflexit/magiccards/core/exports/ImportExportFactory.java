@@ -53,7 +53,8 @@ public class ImportExportFactory {
 		loadCustom();
 		XML = getByLabel("ManaDesk XML");
 		CSV = getByLabel("ManaDesk Minimum CSV");
-		TEXT_DECK_CLASSIC = getByLabel("ManaDesk Minimum CSV");
+		// default / fallback import format
+		TEXT_DECK_CLASSIC = getByLabel("ManaDesk CSV");
 		TABLE_PIPED = getByLabel("ManaDesk Full Piped Table");
 	}
 
