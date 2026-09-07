@@ -40,7 +40,19 @@
              id="com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage"
              name="View: Deck/Cards">
        </page>
-       
+       <page
+             category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
+             class="com.reflexit.magiccards.ui.preferences.PrintingsViewPreferencePage"
+             id="com.reflexit.magiccards.ui.views.printings.PrintingsView"
+             name="View: Printings">
+       </page>
+       <page
+             category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
+             class="com.reflexit.magiccards.ui.preferences.InstancesViewPreferencePage"
+             id="com.reflexit.magiccards.ui.views.instances.InstancesView"
+             name="View: Instances">
+       </page>
+
        <page
             name="Card Export"
             class="com.reflexit.magiccards.ui.preferences.ExportersPreferencePage"

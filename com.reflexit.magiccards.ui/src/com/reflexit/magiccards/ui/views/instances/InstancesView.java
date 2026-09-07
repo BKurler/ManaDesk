@@ -10,14 +10,6 @@
  *******************************************************************************/
 package com.reflexit.magiccards.ui.views.instances;
 
-import java.io.IOException;
-import java.util.HashSet;
-
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
@@ -108,9 +100,6 @@ public class InstancesView extends AbstractSingleControlCardsView implements ISe
 
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager) {
-		// drillDownAdapter.addNavigationActions(manager);
-		// manager.add(this.groupMenuButton);
-		manager.add(((InstancesListControl) getMagicControl()).getGroupAction());
 		manager.add(refresh);
 		manager.add(showPrintings);
 	}
@@ -155,36 +144,6 @@ public class InstancesView extends AbstractSingleControlCardsView implements ISe
 				}
 			}
 		};
-	}
-
-	class LoadCardJob extends Job {
-		public LoadCardJob() {
-			super("Loading card sets");
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			monitor.beginTask("Loading printings", 100);
-			try {
-				HashSet<ICardField> fieldMap = new HashSet<>();
-				fieldMap.add(MagicCardField.SET);
-				if (monitor.isCanceled())
-					return Status.CANCEL_STATUS;
-				try {
-					ICardStore store = DataManager.getCardHandler().getMagicDBStore();
-					new UpdateCardsFromWeb().updateStore(card, fieldMap, null, store,
-							new CoreMonitorAdapter(new SubProgressMonitor(monitor, 90)));
-					if (monitor.isCanceled())
-						return Status.CANCEL_STATUS;
-					reloadData();
-				} catch (IOException e) {
-					return MagicUIActivator.getStatus(e);
-				}
-				return Status.OK_STATUS;
-			} finally {
-				monitor.done();
-			}
-		}
 	}
 
 	/**
@@ -257,7 +216,11 @@ public class InstancesView extends AbstractSingleControlCardsView implements ISe
 		return new InstancesListControl() {
 			@Override
 			public void activate() {
-				// ignore
+				// This view manages its store-change listener manually (added
+				// per selection in selectionChanged) and reloads on selection,
+				// so skip the base addListeners()/refresh() - but still let the
+				// control contribute Sort By / Unsort / Properties to the bars.
+				contributeToActionBars();
 			}
 		};
 	}

@@ -2,29 +2,31 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - card-database-only column set + "Properties..." header menu
  */
 
 package com.reflexit.magiccards.ui.views.printings;
 
-import java.util.List;
-
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.PluginTransfer;
 import org.eclipse.ui.services.IDisposable;
 
 import com.reflexit.magiccards.ui.dnd.MagicCardDragListener;
 import com.reflexit.magiccards.ui.dnd.MagicCardTransfer;
 import com.reflexit.magiccards.ui.views.ExtendedTreeViewer;
-import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
 import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
-import com.reflexit.magiccards.ui.views.columns.GroupColumn;
-import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
-import com.reflexit.magiccards.ui.views.columns.SellerPriceColumn;
-import com.reflexit.magiccards.ui.views.columns.SetColumn;
+import com.reflexit.magiccards.ui.views.columns.PrintingsColumnCollection;
 
 public class PrintingsViewer extends ExtendedTreeViewer implements IDisposable {
 	protected PrintingsViewer(String id, Composite parent) {
@@ -41,15 +43,30 @@ public class PrintingsViewer extends ExtendedTreeViewer implements IDisposable {
 
 	@Override
 	protected ColumnCollection doGetColumnCollection(String viewId) {
-		return new ColumnCollection() {
+		return new PrintingsColumnCollection(viewId);
+	}
+
+	@Override
+	protected Menu createColumnHeaderContextMenu(int index) {
+		if (index < 0)
+			return null;
+		Menu menu = new Menu(getControl());
+		MenuItem props = new MenuItem(menu, SWT.PUSH);
+		props.setText("Properties...");
+		props.addSelectionListener(new SelectionAdapter() {
 			@Override
-			protected void createColumns(List<AbstractColumn> columns) {
-				columns.add(new GroupColumn(false, false, false));
-				columns.add(new SetColumn(true));
-				columns.add(new LanguageColumn());
-				columns.add(new SellerPriceColumn());
+			public void widgetSelected(SelectionEvent e) {
+				openColumnDialog();
 			}
-		};
+		});
+		return menu;
+	}
+
+	private void openColumnDialog() {
+		String id = getColumnsCollection().getId();
+		PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(getControl().getShell(), id,
+				new String[] { id }, null);
+		dialog.open();
 	}
 
 	@Override
