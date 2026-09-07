@@ -2,41 +2,31 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - full deck/collection column set + "Properties..." header menu
  */
 
 package com.reflexit.magiccards.ui.views.instances;
 
-import java.util.List;
-
+import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.StructuredViewer;
+import org.eclipse.swt.SWT;
 import org.eclipse.swt.dnd.DND;
 import org.eclipse.swt.dnd.TextTransfer;
 import org.eclipse.swt.dnd.Transfer;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Menu;
+import org.eclipse.swt.widgets.MenuItem;
+import org.eclipse.ui.dialogs.PreferencesUtil;
 import org.eclipse.ui.part.PluginTransfer;
 import org.eclipse.ui.services.IDisposable;
 
-import com.reflexit.magiccards.core.model.MagicCardField;
-import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dnd.MagicCardDragListener;
 import com.reflexit.magiccards.ui.dnd.MagicCardTransfer;
 import com.reflexit.magiccards.ui.views.ExtendedTreeViewer;
-import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
-import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
-import com.reflexit.magiccards.ui.views.columns.CommentColumn;
-import com.reflexit.magiccards.ui.views.columns.CountColumn;
-import com.reflexit.magiccards.ui.views.columns.GenColumn;
-import com.reflexit.magiccards.ui.views.columns.GroupColumn;
-import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
-import com.reflexit.magiccards.ui.views.columns.LocationColumn;
-import com.reflexit.magiccards.ui.views.columns.OwnershipColumn;
-import com.reflexit.magiccards.ui.views.columns.PriceColumn;
-import com.reflexit.magiccards.ui.views.columns.SellerPriceColumn;
-import com.reflexit.magiccards.ui.views.columns.SetColumn;
-import com.reflexit.magiccards.ui.views.columns.StringEditorColumn;
 
 public class InstancesViewer extends ExtendedTreeViewer implements IDisposable {
-	private boolean groupped = false;
 
 	protected InstancesViewer(String id, Composite parent) {
 		super(parent, id);
@@ -57,36 +47,26 @@ public class InstancesViewer extends ExtendedTreeViewer implements IDisposable {
 	}
 
 	@Override
-	protected ColumnCollection doGetColumnCollection(String viewId) {
-		return new ColumnCollection() {
+	protected Menu createColumnHeaderContextMenu(int index) {
+		if (index < 0)
+			return null;
+		Menu menu = new Menu(getControl());
+		MenuItem props = new MenuItem(menu, SWT.PUSH);
+		props.setText("Properties...");
+		props.addSelectionListener(new SelectionAdapter() {
 			@Override
-			protected void createColumns(List<AbstractColumn> columns) {
-				columns.add(new GroupColumn(true, false, false));
-				columns.add(new SetColumn(true));
-				columns.add(new CountColumn());
-				columns.add(new OwnershipColumn());
-				columns.add(new LocationColumn());
-				columns.add(new LanguageColumn());
-				columns.add(new StringEditorColumn(MagicCardField.SPECIAL, "Special"));
-				columns.add(new CommentColumn());
-				columns.add(new PriceColumn());
-				columns.add(new SellerPriceColumn());
-				if (MagicUIActivator.TRACE_EXPORT) {
-					columns.add(new GenColumn(MagicCardField.HASHCODE, "HashCode"));
-				}
+			public void widgetSelected(SelectionEvent e) {
+				openColumnDialog();
 			}
-		};
+		});
+		return menu;
 	}
 
-	protected void updateTableHeader() {
-		showColumn(0, groupped);
-	}
-
-	public void setGrouppingEnabled(boolean hasGroups) {
-		groupped = hasGroups;
-		if (getViewer() == null)
-			return;
-		updateTableHeader();
+	private void openColumnDialog() {
+		String id = getColumnsCollection().getId();
+		PreferenceDialog dialog = PreferencesUtil.createPreferenceDialogOn(getControl().getShell(), id,
+				new String[] { id }, null);
+		dialog.open();
 	}
 
 	@Override

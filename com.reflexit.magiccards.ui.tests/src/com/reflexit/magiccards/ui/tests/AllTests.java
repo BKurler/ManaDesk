@@ -15,6 +15,7 @@ import com.reflexit.magiccards.ui.view.model.TreeViewerContentProviderTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ TreeViewerContentProviderTest.class, RootTreeViewerContentProviderTest.class,
-		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class })
+		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class,
+		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class })
 public class AllTests {
 }

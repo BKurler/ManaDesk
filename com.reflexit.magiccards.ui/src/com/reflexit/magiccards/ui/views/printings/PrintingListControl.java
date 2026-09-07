@@ -13,17 +13,13 @@ import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.viewers.StructuredViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
 import org.eclipse.swt.widgets.Composite;
 
 import com.reflexit.magiccards.core.DataManager;
-import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
-import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
@@ -117,8 +113,20 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 
 	@Override
 	public void fillLocalToolBar(IToolBarManager manager) {
-		// TODO Auto-generated method stub
-		// super.fillLocalToolBar(manager);
+		if (actionSortBy != null)
+			manager.add(actionSortBy);
+		if (actionUnsort != null)
+			manager.add(actionUnsort);
+		manager.add(actionShowPrefs);
+	}
+
+	@Override
+	public void fillLocalPullDown(IMenuManager manager) {
+		if (actionSortBy != null)
+			manager.add(actionSortBy.createMenuManager());
+		if (actionUnsort != null)
+			manager.add(actionUnsort);
+		manager.add(actionShowPrefs);
 	}
 
 	@Override
@@ -132,18 +140,9 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 	@Override
 	protected void makeActions() {
 		super.makeActions();
-
-		// Disable default sorting
-		getFilter().setSortOrder(new SortOrder()); // empty
-
-		// Now apply your comparator
-		applyPrintingSort();
-	}
-
-	@Override
-	protected void sort(int index, int dir) {
-		updateSortColumn(index);
-		refreshViewer();
+		// header right-click / "..." menu / gear all open the column dialog
+		if (actionShowPrefs != null)
+			actionShowPrefs.setText("Properties...");
 	}
 
 	public String getStatusMessage1() {
@@ -219,32 +218,6 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 	@Override
 	public IFilteredCardStore doGetFilteredStore() {
 		return new MemoryFilteredCardStore();
-	}
-
-	private void applyPrintingSort() {
-		if (viewer == null)
-			return;
-
-		Viewer jfaceViewer = viewer.getViewer();
-		if (!(jfaceViewer instanceof StructuredViewer))
-			return;
-
-		StructuredViewer sv = (StructuredViewer) jfaceViewer;
-
-		sv.setComparator(new ViewerComparator() {
-			@Override
-			public int compare(Viewer v, Object a, Object b) {
-				boolean aGroup = a instanceof CardGroup;
-				boolean bGroup = b instanceof CardGroup;
-				if (aGroup && bGroup)
-					return 0;
-				if (aGroup)
-					return -1;
-				if (bGroup)
-					return 1;
-				return BY_PRINT_ORDER.compare((IMagicCard) a, (IMagicCard) b);
-			}
-		});
 	}
 
 }

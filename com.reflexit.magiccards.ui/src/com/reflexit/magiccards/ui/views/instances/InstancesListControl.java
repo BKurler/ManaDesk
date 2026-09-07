@@ -6,24 +6,23 @@ package com.reflexit.magiccards.ui.views.instances;
 
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.Comparator;
 import java.util.Iterator;
 import java.util.LinkedHashSet;
 
 import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.jface.viewers.StructuredViewer;
-import org.eclipse.jface.viewers.Viewer;
-import org.eclipse.jface.viewers.ViewerComparator;
+import org.eclipse.jface.action.IMenuManager;
+import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.swt.widgets.Composite;
 
 import com.reflexit.magiccards.core.DataManager;
-import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.GroupOrder;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Languages.Language;
+import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
-import com.reflexit.magiccards.core.model.SortOrder;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -40,6 +39,41 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 	}
 
 	private IMagicCard card;
+
+	/**
+	 * Default order of the instance list: grouped by the collection / deck the
+	 * copy lives in. Null-safe - a copy with no location sorts last instead of
+	 * throwing and killing the whole sort. Applied at the model level (in
+	 * {@link #populateStore}) so it survives a plain refresh and a SWT.VIRTUAL
+	 * tree; the user can still re-sort any column and Unsort returns here.
+	 */
+	public static final Comparator<IMagicCard> BY_LOCATION = (a, b) -> compareLocation(locationName(a), locationName(b));
+
+	/**
+	 * Pure location comparison (extracted so it can be unit tested without a card
+	 * store): {@code null} location sorts last, otherwise alphabetical by
+	 * location path.
+	 */
+	public static int compareLocation(String a, String b) {
+		if (a == null && b == null)
+			return 0;
+		if (a == null)
+			return 1;
+		if (b == null)
+			return -1;
+		return a.compareTo(b);
+	}
+
+	private static String locationName(IMagicCard c) {
+		try {
+			if (!(c instanceof MagicCardPhysical))
+				return null;
+			Location l = ((MagicCardPhysical) c).getLocation();
+			return l == null ? null : l.toString();
+		} catch (RuntimeException e) {
+			return null;
+		}
+	}
 
 	@Override
 	public IMagicColumnViewer createViewer(Composite parent) {
@@ -108,18 +142,27 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 	@Override
 	protected void makeActions() {
 		super.makeActions();
-
-		// Disable default sorting (CRITICAL)
-		getFilter().setSortOrder(new SortOrder());
-
-		// Apply custom instance sorting
-		applyInstanceSort();
+		// header right-click / "..." menu / gear all open the column dialog
+		if (actionShowPrefs != null)
+			actionShowPrefs.setText("Properties...");
 	}
 
 	@Override
-	protected void sort(int index, int dir) {
-		updateSortColumn(index);
-		refreshViewer();
+	public void fillLocalToolBar(IToolBarManager manager) {
+		if (actionSortBy != null)
+			manager.add(actionSortBy);
+		if (actionUnsort != null)
+			manager.add(actionUnsort);
+		manager.add(actionShowPrefs);
+	}
+
+	@Override
+	public void fillLocalPullDown(IMenuManager manager) {
+		if (actionSortBy != null)
+			manager.add(actionSortBy.createMenuManager());
+		if (actionUnsort != null)
+			manager.add(actionUnsort);
+		manager.add(actionShowPrefs);
 	}
 
 	public String getStatusMessage1() {
@@ -152,7 +195,13 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 		}
 		MemoryFilteredCardStore mstore = (MemoryFilteredCardStore) fstore;
 		mstore.clear();
-		mstore.addAll(searchInStore(DataManager.getCardHandler().getLibraryCardStore()));
+		// sort here, at the model level, so the default order is by-location even
+		// for a SWT.VIRTUAL tree and survives a plain refresh; a column-header
+		// sort / Sort By still overrides it and Unsort falls back here
+		ArrayList<IMagicCard> instances = new ArrayList<>(
+				searchInStore(DataManager.getCardHandler().getLibraryCardStore()));
+		instances.sort(BY_LOCATION);
+		mstore.addAll(instances);
 		monitor.done();
 	}
 
@@ -218,46 +267,6 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 	@Override
 	public void saveColumnLayout() {
 		super.saveColumnLayout();
-	}
-
-	private void applyInstanceSort() {
-		if (viewer == null)
-			return;
-
-		Viewer jfaceViewer = viewer.getViewer();
-		if (!(jfaceViewer instanceof StructuredViewer))
-			return;
-
-		StructuredViewer sv = (StructuredViewer) jfaceViewer;
-
-		sv.setComparator(new ViewerComparator() {
-			@Override
-			public int compare(Viewer v, Object a, Object b) {
-
-				// 0. Handle CardGroup (when list >300)
-				boolean aGroup = a instanceof CardGroup;
-				boolean bGroup = b instanceof CardGroup;
-
-				if (aGroup && bGroup)
-					return 0;
-				if (aGroup)
-					return -1;
-				if (bGroup)
-					return 1;
-
-				// 1. Now both are MagicCardPhysical
-				MagicCardPhysical p1 = (MagicCardPhysical) a;
-				MagicCardPhysical p2 = (MagicCardPhysical) b;
-
-				// 2. Sort by location ONLY
-				int d = p1.getLocation().compareTo(p2.getLocation());
-				if (d != 0)
-					return d;
-
-				// 3. Same location -> preserve original order
-				return 0;
-			}
-		});
 	}
 
 }

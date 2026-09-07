@@ -18,6 +18,8 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.gallery.GalleryPreferencePage;
 import com.reflexit.magiccards.ui.views.Presentation;
+import com.reflexit.magiccards.ui.views.instances.InstancesView;
+import com.reflexit.magiccards.ui.views.printings.PrintingsView;
 
 /**
  * Class used to initialize default preference values.
@@ -102,6 +104,23 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// !!! RD gallerySettings.setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.SET));
 		gallerySettings.setDefault(PreferenceConstants.SORT_ORDER, MagicCardField.NAME.name());
+
+		// printings - card-database columns only; no SORT_ORDER default so the
+		// list stays in oldest-print-first order until the user sorts a column
+		IPersistentPreferenceStore printingsSettings = getLocalStore(PrintingsView.ID);
+		printingsSettings.setDefault(PreferenceConstants.LOCAL_COLUMNS,
+				"Name,Collector's Number,Set,Rarity,Multiverse ID,Artist,Language,Release Date,"
+						+ "-Card Id,-Online Price,-TCGplayer ID");
+		printingsSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
+
+		// instances - full deck/collection column set; default order is by
+		// location (handled at the model level in InstancesListControl)
+		IPersistentPreferenceStore instancesSettings = getLocalStore(InstancesView.ID);
+		instancesSettings.setDefault(PreferenceConstants.LOCAL_COLUMNS,
+				"Name,Count,Location,Ownership,Set,Language,Comment,"
+						+ "-Special,-Collector's Number,-Rarity,-Artist,-Card Id");
+		instancesSettings.setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
+		instancesSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 	}
 
 	public static IPreferenceStore getGlobalStore() {
