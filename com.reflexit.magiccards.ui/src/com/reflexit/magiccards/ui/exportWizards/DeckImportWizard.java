@@ -10,6 +10,10 @@ import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IImportWizard;
 import org.eclipse.ui.IWorkbench;
 
+import com.reflexit.magiccards.core.model.nav.CardCollection;
+import com.reflexit.magiccards.core.model.nav.CardElement;
+import com.reflexit.magiccards.ui.views.lib.DeckView;
+
 public class DeckImportWizard extends Wizard implements IImportWizard {
 	protected DeckImportPage mainPage;
 	protected DeckImportPreviewPage previewPage;
@@ -26,20 +30,13 @@ public class DeckImportWizard extends Wizard implements IImportWizard {
 
 	@Override
 	public boolean canFinish() {
-		IWizardPage[] pages = getPages();
-		int i = 0;
-		for (i = 0; i < pages.length; i++) {
-			IWizardPage page = pages[i];
-			if (page.getControl().isVisible())
-				break;
-		}
-		for (; i < pages.length; i++) {
-			IWizardPage page = pages[i];
-			if (!page.isPageComplete()) {
-				return false;
-			}
-		}
-		return true;
+		// Finish is only reachable from the Preview page: the user must press
+		// Next on the first page and look at the preview before importing.
+		if (getContainer() == null || previewPage == null)
+			return false;
+		if (getContainer().getCurrentPage() != previewPage)
+			return false;
+		return previewPage.isPageComplete();
 	}
 
 	@Override
@@ -47,8 +44,15 @@ public class DeckImportWizard extends Wizard implements IImportWizard {
 		mainPage.saveWidgetValues();
 		mainPage.setIgnoreErrors(previewPage.isIgnoreErrors());
 		mainPage.performImport(false);
-		if (mainPage.getImportData().isOk())
+		if (mainPage.getImportData().isOk()) {
+			// open the deck / collection the cards landed in - a brand new one is
+			// already opened by the navigator's ADD_CONTAINER handler, but an
+			// existing target needs this
+			CardElement target = mainPage.getElement();
+			if (target instanceof CardCollection)
+				DeckView.openCollection((CardCollection) target, null);
 			return true;
+		}
 		return false;
 	}
 

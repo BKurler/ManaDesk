@@ -85,6 +85,7 @@ import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.ParseGathererOracle;
 import com.reflexit.magiccards.core.sync.WebUtils;
@@ -93,6 +94,7 @@ import com.reflexit.magiccards.ui.dialogs.EditTextDialog;
 import com.reflexit.magiccards.ui.dialogs.LocationPickerDialog;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.widgets.MagicToolkit;
 
@@ -114,10 +116,11 @@ public class DeckImportPage extends WizardDataTransferPage {
 	private Button intoCollection;
 	private Button intoExisting;
 	private Combo typeCombo;
-	private Button virtualCards;
 	private Button newVirtual;
+	private Button newReadOnly;
 	private Button newUnsorted;
 	private boolean newVirtualChoice;
+	private boolean newReadOnlyChoice;
 	private boolean newUnsortedChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
@@ -157,10 +160,16 @@ public class DeckImportPage extends WizardDataTransferPage {
 
 	public void performImport(final boolean preview) {
 		Display.getDefault().syncExec(() -> {
-			importData.setVirtual(virtualCards.getSelection());
+			// a card's "virtual" nature follows its deck / collection: an existing
+			// target's current flag, or the flag chosen for the new one
+			boolean targetVirtual = (element instanceof CardCollection)
+					? ((CardCollection) element).isVirtual()
+					: (newVirtual != null && newVirtual.getSelection());
+			importData.setVirtual(targetVirtual);
 			// cache the checkbox state now, on the UI thread - importRunnable()
 			// runs on a background job and can't touch SWT widgets
 			newVirtualChoice = newVirtual != null && newVirtual.getSelection();
+			newReadOnlyChoice = newReadOnly != null && newReadOnly.getSelection();
 			newUnsortedChoice = newUnsorted != null && newUnsorted.getSelection();
 			int choice = getIntoChoice();
 			final boolean dbImport = choice == 3;
@@ -343,7 +352,7 @@ public class DeckImportPage extends WizardDataTransferPage {
 		// IDbCardStore<IMagicCard> db = DataManager.getInstance().getMagicDBStore();
 		for (String lang : categorizedErrors.keySet()) {
 			List list = categorizedErrors.get(lang);
-			System.err.println("Loading " + lang + " for " + list);
+			// System.err.println("Loading " + lang + " for " + list);
 			ImportUtils.loadLanguageForCard(lang, list, magicDb, new CoreMonitorAdapter(monitor.split(list.size())));
 		}
 	}
@@ -396,7 +405,7 @@ public class DeckImportPage extends WizardDataTransferPage {
 		return categorizedErrors;
 	}
 
-	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted,
+	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted, boolean readOnly,
 			CollectionsContainer resource) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
@@ -407,6 +416,15 @@ public class DeckImportPage extends WizardDataTransferPage {
 			throw new IllegalArgumentException("Cannot generate deck name");
 		CardCollection created = new CardCollection(newloc.getBaseFileName(), resource, isDeck, virtual, unsorted);
 		created.persistInitialSettings(isDeck, virtual, unsorted);
+		if (readOnly) {
+			try {
+				IStorageInfo si = created.getStorageInfo();
+				if (si != null)
+					si.setReadOnly(true);
+			} catch (RuntimeException ignore) {
+				// non-fatal - fixable via Edit Properties
+			}
+		}
 		this.element = created;
 	}
 
@@ -530,25 +548,31 @@ public class DeckImportPage extends WizardDataTransferPage {
 		});
 		deckText = new Text(group, SWT.BORDER);
 		deckText.setEditable(false);
-		deckText.setLayoutData(spanAll.create());
+		deckText.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		deckText.addMouseListener(new MouseAdapter() {
 			@Override
 			public void mouseDown(final MouseEvent e) {
 				openImportIntoElementSelectionDialog();
 			}
 		});
-		// new deck / collection options - mirror the New Deck / New Collection wizard
-		newVirtual = new Button(group, SWT.CHECK);
-		newVirtual.setText("New deck/collection is virtual (affects card ownership and move/copy/count operations)");
-		newVirtual.setLayoutData(spanAll.create());
-		newUnsorted = new Button(group, SWT.CHECK);
-		newUnsorted.setText("New deck/collection is unsorted (identical cards are kept as separate entries)");
-		newUnsorted.setLayoutData(spanAll.create());
-		// per-card option
-		virtualCards = new Button(group, SWT.CHECK);
-		virtualCards.setText("Imported cards will be virtual if Ownership not specified");
-		virtualCards.setSelection(false);
-		virtualCards.setLayoutData(spanAll.create());
+		Button changeTarget = new Button(group, SWT.PUSH);
+		changeTarget.setText("Change...");
+		changeTarget.setToolTipText("Pick the deck / collection (or the folder for an auto-named new one) to import into");
+		changeTarget.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				openImportIntoElementSelectionDialog();
+			}
+		});
+		// new deck / collection options - mirror the New Deck / New Collection wizard,
+		// including the colour dots. Applied to a new target only; for an existing
+		// one virtual / unsorted are already fixed, so those two are disabled.
+		newVirtual = StatusDots.check(group, StatusDots.VIRTUAL,
+				"Virtual - tracks cards you do not own (affects move / copy / count)");
+		newReadOnly = StatusDots.check(group, StatusDots.READ_ONLY, "Read only - lock the new deck / collection after the import");
+		newUnsorted = StatusDots.check(group, StatusDots.UNSORTED,
+				"Unsorted - keep the manual card order and do not merge identical cards");
+		StatusDots.exclusive(newVirtual, newUnsorted);
 		// db import
 		/*
 		 * !!! RD Not applicable anymore Hyperlink hyperlink =
@@ -606,18 +630,29 @@ public class DeckImportPage extends WizardDataTransferPage {
 		if (newVirtual == null)
 			return;
 		newVirtual.setSelection(isDeck);
+		newReadOnly.setSelection(false);
 		newUnsorted.setSelection(false);
-		if (virtualCards != null)
-			virtualCards.setSelection(isDeck);
 		updateNewDestinationEnablement();
 	}
 
 	private void updateNewDestinationEnablement() {
 		if (newVirtual == null)
 			return;
-		boolean newTarget = !intoExisting.getSelection();
-		newVirtual.setEnabled(newTarget);
-		newUnsorted.setEnabled(newTarget);
+		boolean existing = intoExisting.getSelection();
+		// for an existing target the three flags are the deck / collection's own
+		// (fixed) settings - show them, but don't let the import change them
+		if (existing && element instanceof CardCollection) {
+			CardCollection cc = (CardCollection) element;
+			newVirtual.setSelection(cc.isVirtual());
+			newReadOnly.setSelection(cc.isReadOnly());
+			newUnsorted.setSelection(cc.isUnsorted());
+		}
+		newVirtual.setEnabled(!existing);
+		newReadOnly.setEnabled(!existing);
+		// "unsorted" (manual card order) is a collection-only notion
+		if (!existing && isDeck)
+			newUnsorted.setSelection(false);
+		newUnsorted.setEnabled(!existing && !isDeck);
 	}
 
 	@Override
@@ -1083,7 +1118,7 @@ public class DeckImportPage extends WizardDataTransferPage {
 						ImportUtils.resolve(importData.getList());
 						if (element instanceof CollectionsContainer) {
 							createNewDeck(getNewDeckName(), isDeck, newVirtualChoice, newUnsortedChoice,
-									(CollectionsContainer) element);
+									newReadOnlyChoice, (CollectionsContainer) element);
 						}
 						if (!(element instanceof CardCollection)) {
 							throw new IllegalArgumentException("Cannot import into " + element);
@@ -1135,9 +1170,12 @@ public class DeckImportPage extends WizardDataTransferPage {
 		dialog.setSelection(new StructuredSelection(getElement()));
 		if (dialog.open() == Window.OK) {
 			if (dialog.getSelection() != null && !dialog.getSelection().isEmpty()) {
-				element = (CardElement) dialog.getSelection().getFirstElement();
-				if (element instanceof CardCollection) {
-					virtualCards.setSelection(((CardCollection) element).isVirtual());
+				CardElement picked = (CardElement) dialog.getSelection().getFirstElement();
+				if (picked instanceof CardCollection && ((CardCollection) picked).isReadOnly()) {
+					MessageDialog.openInformation(getShell(), "Read-only",
+							"\"" + picked.getName() + "\" is read-only - you cannot import into it.");
+				} else {
+					element = picked;
 				}
 			}
 		}

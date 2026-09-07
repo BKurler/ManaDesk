@@ -8,6 +8,11 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - fire UPDATE_CONTAINER after editing so open tabs / the navigator repaint
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -36,6 +41,9 @@ public class EditDeckPropertiesHandler extends AbstractHandler {
 		CardCollection f = getApplicableElement();
 		EditDeckPropertiesDialog dialog = new EditDeckPropertiesDialog(window.getShell(), f.getStorageInfo());
 		if (dialog.open() == Dialog.OK) {
+			// fire UPDATE_CONTAINER so an already-open DeckView tab repaints its
+			// icon / name for the new virtual / read-only / type flags
+			f.update();
 			DeckView.openCollection(f, null);
 		}
 		return null;

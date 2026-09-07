@@ -49,12 +49,14 @@ public class CardCollection extends CardElement {
 			IStorageInfo info = getStorageInfo();
 			if (info == null)
 				return;
+			// "unsorted" (a manual card order) is a collection-only notion
+			boolean unsortedEff = deck ? false : unsorted;
 			info.setType(deck ? IStorageInfo.DECK_TYPE : IStorageInfo.COLLECTION_TYPE);
 			info.setVirtual(virtual);
-			info.setUnsorted(unsorted);
+			info.setUnsorted(unsortedEff);
 			this.deck = deck;
 			this.virtual = virtual;
-			this.unsorted = unsorted;
+			this.unsorted = unsortedEff;
 		} catch (RuntimeException e) {
 			// non-fatal - the user can still fix it via Edit Properties
 		}
@@ -165,6 +167,11 @@ public class CardCollection extends CardElement {
 			return info.isUnsorted();
 		}
 		return unsorted != null ? unsorted : true;
+	}
+
+	public boolean isReadOnly() {
+		IStorageInfo info = getStorageInfo();
+		return info != null && info.isReadOnly();
 	}
 
 }

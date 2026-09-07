@@ -80,6 +80,7 @@ import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.MagicDbView;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
 import com.reflexit.magiccards.ui.views.lib.MyCardsView;
+import com.reflexit.magiccards.ui.wizards.NewCardCollectionWizard;
 import com.reflexit.magiccards.ui.wizards.NewDeckWizard;
 
 public class CardsNavigatorView extends ViewPart implements ICardEventListener, IPropertyChangeListener, IShowInTarget {
@@ -88,6 +89,7 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 	private CardsNavigatiorManager manager;
 	private Action export;
 	private Action importa;
+	private Action newCollectionWizard;
 	private Action newDeckWizard;
 	private Action openInDeckView;
 	private Action openInMyCardsView;
@@ -277,6 +279,7 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 	}
 
 	private void fillLocalToolBar(IToolBarManager manager) {
+		manager.add(newCollectionWizard);
 		manager.add(newDeckWizard);
 		manager.add(export);
 		manager.add(importa);
@@ -294,6 +297,21 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 		};
 		this.export = new ExportAction();
 		this.importa = new ImportAction();
+		this.newCollectionWizard = new Action("New Collection") {
+			{
+				setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/obj16/lib16.png"));
+			}
+
+			@Override
+			public void run() {
+				NewCardCollectionWizard wizard = new NewCardCollectionWizard();
+				wizard.init(getSite().getWorkbenchWindow().getWorkbench(),
+						(IStructuredSelection) getViewer().getSelection());
+				WizardDialog dialog = new WizardDialog(getShell(), wizard);
+				dialog.create();
+				dialog.open();
+			}
+		};
 		this.newDeckWizard = new Action("New Deck") {
 			{
 				setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/obj16/ideck16.png"));

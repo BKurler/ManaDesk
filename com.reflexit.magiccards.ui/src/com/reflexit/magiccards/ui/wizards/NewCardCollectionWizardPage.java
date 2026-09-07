@@ -8,9 +8,6 @@ package com.reflexit.magiccards.ui.wizards;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
-import org.eclipse.swt.SWT;
-import org.eclipse.swt.layout.GridData;
-import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 
@@ -18,6 +15,7 @@ import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 
 /**
  * The "New" wizard page allows setting the container for the new file as well
@@ -84,24 +82,17 @@ public class NewCardCollectionWizardPage extends NewCardElementWizardPage {
 
 	@Override
 	protected void createOptionsGroup(Composite container) {
-		virtual = new Button(container, SWT.CHECK);
-		virtual.setText(
-				"This " + getElementTypeName() + " is virtual (affect card ownership attribute and cards operations)");
-		virtual.setToolTipText(
-				"Virtual flag affect move/copy/inreaste/descrease operations on a collection. Also it automatically set flags to own for non-virtual collection.");
-
-		unsorted = new Button(container, SWT.CHECK);
-		unsorted.setText("This " + getElementTypeName() + " is unsorted (affect card addition operations)");
-		unsorted.setToolTipText(
-				"Unsorted flag affect move/copy operations on a collection. This prevent identical cards to be merge by default.");
-// !!! RD		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-// !!! RD		gd.horizontalSpan = ((GridLayout) container.getLayout()).numColumns;
-
-		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-		gd.horizontalSpan = ((GridLayout) container.getLayout()).numColumns;
-		virtual.setLayoutData(gd);
-		unsorted.setLayoutData(gd);
-
+		String t = getElementTypeName();
+		virtual = StatusDots.check(container, StatusDots.VIRTUAL,
+				"Virtual - this " + t + " tracks cards you do not own (affects move / copy / count operations)");
+		// a brand new (empty) deck / collection has nothing to protect - read-only
+		// is set later from Edit Properties or after an import
+		Button readOnly = StatusDots.check(container, StatusDots.READ_ONLY,
+				"Read only - set this later from Edit Properties");
+		readOnly.setEnabled(false);
+		unsorted = StatusDots.check(container, StatusDots.UNSORTED,
+				"Unsorted - keep the manual card order and do not merge identical cards");
+		StatusDots.exclusive(virtual, unsorted);
 	}
 
 	@Override

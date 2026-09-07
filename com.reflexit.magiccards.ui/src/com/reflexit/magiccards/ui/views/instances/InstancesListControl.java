@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - reload the instance list on any add/remove/update of the shown card
+ */
 package com.reflexit.magiccards.ui.views.instances;
 
 import java.util.ArrayList;
@@ -44,7 +48,37 @@ public class InstancesListControl extends AbstractMagicCardsListControl {
 
 	@Override
 	public void handleEvent(CardEvent event) {
+		// "Instances of card X" spans every collection. A pile of X added,
+		// removed or recounted anywhere - e.g. a Split & move that drops a new
+		// pile into another deck - changes this list even though the affected
+		// pile is not one of the rows shown here, so the generic
+		// "is this event for my store?" test in mcpEventHandler misses it.
+		if (touchesShownCard(event)) {
+			loadData(null);
+			return;
+		}
 		mcpEventHandler(event);
+	}
+
+	private boolean touchesShownCard(CardEvent event) {
+		if (card == null || card == MagicCard.DEFAULT || card == IMagicCard.DEFAULT)
+			return false;
+		int t = event.getType();
+		if (t != CardEvent.ADD && t != CardEvent.REMOVE && t != CardEvent.UPDATE)
+			return false;
+		String name = card.getName();
+		return name != null && dataHasName(event.getData(), name);
+	}
+
+	private static boolean dataHasName(Object data, String name) {
+		if (data instanceof MagicCardPhysical)
+			return name.equals(((MagicCardPhysical) data).getName());
+		if (data instanceof Iterable) {
+			for (Object o : (Iterable<?>) data)
+				if (dataHasName(o, name))
+					return true;
+		}
+		return false;
 	}
 
 	@Override

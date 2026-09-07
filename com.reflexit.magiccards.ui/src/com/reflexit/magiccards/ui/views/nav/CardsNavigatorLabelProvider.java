@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - status dots on the deck / collection tree icons
+ */
 package com.reflexit.magiccards.ui.views.nav;
 
 import org.eclipse.jface.viewers.IColorProvider;
@@ -12,6 +16,7 @@ import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.MagicDbContainter;
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 
 public class CardsNavigatorLabelProvider extends LabelProvider implements IColorProvider {
 	@Override
@@ -33,10 +38,9 @@ public class CardsNavigatorLabelProvider extends LabelProvider implements IColor
 	@Override
 	public Image getImage(Object element) {
 		if (element instanceof CardCollection) {
-			if (((CardCollection) element).isDeck())
-				return MagicUIActivator.getDefault().getImage("icons/obj16/ideck16.png");
-			else
-				return MagicUIActivator.getDefault().getImage("icons/obj16/lib16.png");
+			CardCollection cc = (CardCollection) element;
+			String base = cc.isDeck() ? "icons/obj16/ideck16.png" : "icons/obj16/lib16.png";
+			return StatusDots.decorate(base, cc.isVirtual(), cc.isReadOnly(), cc.isUnsorted());
 		}
 		if (element instanceof CollectionsContainer) {
 			return MagicUIActivator.getDefault().getImage("icons/obj16/folder-lib.png");

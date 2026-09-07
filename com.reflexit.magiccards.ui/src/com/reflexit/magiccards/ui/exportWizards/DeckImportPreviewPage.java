@@ -287,8 +287,13 @@ public class DeckImportPreviewPage extends WizardPage {
 		errorZone.setText(msg);
 	}
 
+	/** Flip to {@code true} for the {@code [import-preview]} resolution trace
+	 * (only visible with {@code -consoleLog}). Kept off by default. */
+	private static final boolean DEBUG = false;
+
 	private static void trace(String message) {
-		com.reflexit.magiccards.core.MagicLogger.info("[import-preview] " + message);
+		if (DEBUG)
+			com.reflexit.magiccards.core.MagicLogger.info("[import-preview] " + message);
 	}
 
 	private static Color red() {
@@ -1218,6 +1223,10 @@ public class DeckImportPreviewPage extends WizardPage {
 		cols.add(MagicCardField.SET);
 		cols.add(MagicCardField.COLLNUM);
 		cols.add(MagicCardField.COUNT);
+		// Ownership is always shown: it is set from the file's Ownership column
+		// when present, otherwise from the destination's virtual flag - either
+		// way the user should see what each card will end up as.
+		cols.add(MagicCardField.OWNERSHIP);
 		if (fields != null)
 			for (ICardField field : fields)
 				if (field != null)
