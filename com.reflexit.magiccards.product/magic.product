@@ -4,7 +4,7 @@
 <product name="ManaDesk" uid="com.reflexit.magiccards_rcp.product" id="com.reflexit.magiccards_rcp.product" application="com.reflexit.magiccards_rcp.application" version="0.9.7.qualifier" type="features" includeLaunchers="true" autoIncludeRequirements="true">
 
    <aboutInfo>
-      <image path="splash.png"/>
+      <image path="about.png"/>
       <text>
          %aboutText
       </text>
