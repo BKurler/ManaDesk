@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.HashSet;
 import java.util.Iterator;
+import java.util.List;
 import java.util.Properties;
 import java.util.Set;
 
@@ -49,10 +50,12 @@ import org.eclipse.ui.PlatformUI;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
+import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.model.xml.XmlCardHolder;
@@ -78,6 +81,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	private Action edit;
 	private ExportAction export;
 	private MenuManager moveToDeckMenu;
+	private MenuManager splitMoveToDeckMenu;
 	private MenuManager addToDeck;
 	private IDeckAction copyToDeck;
 	private LibraryEventListener eventListener = new LibraryEventListener();
@@ -124,7 +128,16 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		this.moveToDeckMenu.addMenuListener(new IMenuListener() {
 			@Override
 			public void menuAboutToShow(IMenuManager manager) {
-				fillDeckMenu(manager, moveToDeck);
+				if (!vetoIfSourceReadOnly(manager))
+					fillDeckMenu(manager, moveToDeck, DeckMenuKind.MOVE);
+			}
+		});
+		this.splitMoveToDeckMenu = new MenuManager("Split && move to");
+		this.splitMoveToDeckMenu.setRemoveAllWhenShown(true);
+		this.splitMoveToDeckMenu.addMenuListener(new IMenuListener() {
+			@Override
+			public void menuAboutToShow(IMenuManager manager) {
+				fillSplitMoveMenu(manager);
 			}
 		});
 		this.addToDeck = new MenuManager("Copy to");
@@ -132,7 +145,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		this.addToDeck.addMenuListener(new IMenuListener() {
 			@Override
 			public void menuAboutToShow(IMenuManager manager) {
-				fillDeckMenu(manager, copyToDeck);
+				fillDeckMenu(manager, copyToDeck, DeckMenuKind.COPY);
 			}
 		});
 		this.export = createExportAction();
@@ -222,6 +235,125 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		}
 	};
 
+	/**
+	 * Move only a subset of a single pile to another deck / collection. Uses the
+	 * same split logic ({@link DataManager#split}) and the same dialog as
+	 * "Split Pile...", but the dialog spells out how many cards move and how many
+	 * stay. Only offered when exactly one pile of 2+ cards is selected.
+	 */
+	protected IDeckAction splitMoveToDeck = new IDeckAction() {
+		@Override
+		public void run(String id) {
+			try {
+				MagicCardPhysical pile = singleSplittablePile();
+				if (pile == null)
+					return;
+				int count = pile.getCount();
+				int move = SplitDialog.askMoveCount(getShell(), count);
+				if (move <= 0 || move >= count)
+					return;
+				List<IMagicCard> toMove = DM.splitCards(Collections.singletonList((IMagicCard) pile), move);
+				if (toMove.isEmpty())
+					return;
+				ICardStore cardStore = DM.getCardHandler().getCardCollectionFilteredStore(id).getCardStore();
+				DM.moveCards(toMove, cardStore);
+			} catch (MagicException e) {
+				MessageDialog.openError(getShell(), "Error", e.getMessage());
+			}
+		}
+	};
+
+	/**
+	 * @return the selected pile when the selection is exactly one
+	 *         {@link MagicCardPhysical} holding more than one card, else
+	 *         {@code null}
+	 */
+	private MagicCardPhysical singleSplittablePile() {
+		ISelection selection = getSelectionProvider().getSelection();
+		if (!(selection instanceof IStructuredSelection))
+			return null;
+		IStructuredSelection sel = (IStructuredSelection) selection;
+		if (sel.size() != 1)
+			return null;
+		Object o = sel.getFirstElement();
+		if (!(o instanceof MagicCardPhysical))
+			return null;
+		MagicCardPhysical mcp = (MagicCardPhysical) o;
+		return mcp.getCount() > 1 ? mcp : null;
+	}
+
+	private void fillSplitMoveMenu(IMenuManager manager) {
+		if (vetoIfSourceReadOnly(manager))
+			return;
+		if (singleSplittablePile() == null) {
+			Action ac = new Action("Select a single pile of 2+ cards") {
+			};
+			ac.setEnabled(false);
+			manager.add(ac);
+			return;
+		}
+		fillDeckMenu(manager, splitMoveToDeck, DeckMenuKind.SPLIT_MOVE);
+	}
+
+	/**
+	 * @return the collection this view mutates ("moves out of" / "splits"), or
+	 *         {@code null} for a view that is not a single editable collection
+	 *         (the whole-library / collector views)
+	 */
+	protected CardCollection getSourceCollection() {
+		return null;
+	}
+
+	protected boolean isSourceReadOnly() {
+		CardCollection src = getSourceCollection();
+		return src != null && src.isReadOnly();
+	}
+
+	/** Adds a disabled "read-only" placeholder and returns true when the current list is read-only. */
+	private boolean vetoIfSourceReadOnly(IMenuManager manager) {
+		if (!isSourceReadOnly())
+			return false;
+		Action ac = new Action("the current list is read-only") {
+		};
+		ac.setEnabled(false);
+		manager.add(ac);
+		return true;
+	}
+
+	/** Shows an information dialog and returns true when the current list is read-only. */
+	private boolean warnIfSourceReadOnly() {
+		if (!isSourceReadOnly())
+			return false;
+		CardCollection src = getSourceCollection();
+		MessageDialog.openInformation(getShell(), "Read-only",
+				"\"" + (src != null ? src.getName() : "This list") + "\" is read-only.");
+		return true;
+	}
+
+	/** @return true when the current selection contains at least one physical card matching {@code owned} */
+	private boolean selectionHasOwnership(boolean owned) {
+		ISelection selection = getSelectionProvider().getSelection();
+		if (!(selection instanceof IStructuredSelection))
+			return false;
+		for (Object o : DM.expandGroups(((IStructuredSelection) selection).toList())) {
+			if (o instanceof MagicCardPhysical && ((MagicCardPhysical) o).isOwn() == owned)
+				return true;
+		}
+		return false;
+	}
+
+	@Override
+	protected String deckDestinationVeto(CardCollection dest, DeckMenuKind kind) {
+		// Ownership must match the destination kind for a move: a virtual
+		// collection only holds not-owned cards, a real one only holds owned
+		// cards. (Copy makes its own copies and enforces its own rules.)
+		if (dest == null || (kind != DeckMenuKind.MOVE && kind != DeckMenuKind.SPLIT_MOVE))
+			return null;
+		if (dest.isVirtual())
+			return selectionHasOwnership(true) ? "virtual" : null;
+		return selectionHasOwnership(false) ? "not owned" : null;
+	}
+
 	protected void fillOwnerShipMenu(IMenuManager manager) {
 		manager.add(new Action("Own", SWT.CHECK) {
 			@Override
@@ -258,6 +390,8 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	}
 
 	protected void removeSelected() {
+		if (warnIfSourceReadOnly())
+			return;
 		ICardStore cardStore = getFilteredStore().getCardStore();
 		ISelection selection = getSelectionProvider().getSelection();
 		if (!(selection instanceof IStructuredSelection))
@@ -280,6 +414,8 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	 *
 	 */
 	protected void splitSelected() {
+		if (warnIfSourceReadOnly())
+			return;
 		final int PICK = 0;
 		final int N_TO_1 = 1;
 		final int EVEN = -2;
@@ -352,8 +488,14 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
 		super.fillContextMenu(manager);
+		// A read-only list cannot be mutated: the destructive / editing entries
+		// (and moving OUT of it, handled in the submenu listeners) are greyed.
+		boolean srcRO = isSourceReadOnly();
+		this.split.setEnabled(!srcRO);
+		this.edit.setEnabled(!srcRO);
 		manager.add(this.actionCopy);
 		manager.add(this.moveToDeckMenu);
+		manager.add(this.splitMoveToDeckMenu);
 		manager.add(this.addToDeck);
 		manager.add(this.updateSet);
 		manager.add(this.split);
@@ -394,6 +536,8 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	}
 
 	protected void editSelected() {
+		if (warnIfSourceReadOnly())
+			return;
 		final IStructuredSelection selection = (IStructuredSelection) getSelectionProvider().getSelection();
 		if (selection.isEmpty())
 			return;
@@ -421,6 +565,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	 */
 	protected void preActivate(IViewPage activePage) {
 		this.moveToDeckMenu.dispose();
+		this.splitMoveToDeckMenu.dispose();
 		this.addToDeck.dispose();
 		super.preActivate(activePage);
 	}

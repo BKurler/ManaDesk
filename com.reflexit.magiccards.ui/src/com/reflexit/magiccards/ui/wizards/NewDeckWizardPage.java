@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - "unsorted" is a collection-only option
+ */
 package com.reflexit.magiccards.ui.wizards;
 
 import org.eclipse.jface.viewers.ISelection;
@@ -34,6 +38,9 @@ public class NewDeckWizardPage extends NewCardCollectionWizardPage {
 		// physical collection, so default to virtual rather than making the
 		// user remember to check it every time
 		virtual.setSelection(true);
+		// "unsorted" (keep a manual card order) is a collection-only notion
+		unsorted.setSelection(false);
+		unsorted.setEnabled(false);
 
 		this.createSideboard = new Button(container, SWT.CHECK);
 		this.createSideboard.setText("Also create a Sideboard for this deck");

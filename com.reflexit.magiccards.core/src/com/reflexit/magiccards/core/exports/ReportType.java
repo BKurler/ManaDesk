@@ -217,10 +217,10 @@ public class ReportType {
 				extCandidates.add(reportType);
 			}
 		}
-		MagicLogger.info("[detect] file=" + fileName + " ext=" + ext + " extCandidates=" + labels(extCandidates));
+		trace("[detect] file=" + fileName + " ext=" + ext + " extCandidates=" + labels(extCandidates));
 		// a single unambiguous extension match is almost always right
 		if (extCandidates.size() == 1) {
-			MagicLogger.info("[detect] single extension match -> " + extCandidates.iterator().next().getLabel());
+			trace("[detect] single extension match -> " + extCandidates.iterator().next().getLabel());
 			return extCandidates.iterator().next();
 		}
 		if (file.exists()) {
@@ -236,8 +236,17 @@ public class ReportType {
 			}
 		}
 		ReportType fallback = extCandidates.isEmpty() ? null : extCandidates.iterator().next();
-		MagicLogger.info("[detect] no content match -> fallback " + (fallback == null ? "(none)" : fallback.getLabel()));
+		trace("[detect] no content match -> fallback " + (fallback == null ? "(none)" : fallback.getLabel()));
 		return fallback;
+	}
+
+	/** Flip to {@code true} for the {@code [detect]} import auto-detection trace
+	 * (only visible with {@code -consoleLog}). Kept off by default. */
+	private static final boolean DEBUG_DETECT = false;
+
+	private static void trace(String msg) {
+		if (DEBUG_DETECT)
+			MagicLogger.info(msg);
 	}
 
 	private static String labels(Collection<ReportType> types) {
@@ -300,13 +309,13 @@ public class ReportType {
 				id.run(ICoreProgressMonitor.NONE);
 				ImportData result = id.getResult();
 				if (result.getError() != null) {
-					MagicLogger.info("[detect]   " + reportType.getLabel() + " -> error: "
+					trace("[detect]   " + reportType.getLabel() + " -> error: "
 							+ result.getError().getMessage());
 					continue;
 				}
 				int cards = result.getList() == null ? 0 : result.getList().size();
 				if (cards == 0) {
-					MagicLogger.info("[detect]   " + reportType.getLabel() + " -> 0 cards");
+					trace("[detect]   " + reportType.getLabel() + " -> 0 cards");
 					continue;
 				}
 				// resolve against the DB so a format that "parses" but produces
@@ -324,7 +333,7 @@ public class ReportType {
 				long score = 2L * (cards - errs) - 3L * errs;
 				if (extensionMatch != null && extensionMatch.contains(reportType))
 					score += 5;
-				MagicLogger.info("[detect]   " + reportType.getLabel() + " -> cards=" + cards + " errors=" + errs
+				trace("[detect]   " + reportType.getLabel() + " -> cards=" + cards + " errors=" + errs
 						+ " score=" + score + (extensionMatch != null && extensionMatch.contains(reportType)
 								? " (+ext)" : ""));
 				if (score > bestScore) {
@@ -332,10 +341,10 @@ public class ReportType {
 					selected = reportType;
 				}
 			} catch (InvocationTargetException | InterruptedException e) {
-				MagicLogger.info("[detect]   " + reportType.getLabel() + " -> threw " + e.getCause());
+				trace("[detect]   " + reportType.getLabel() + " -> threw " + e.getCause());
 			}
 		}
-		MagicLogger.info("[detect] winner: " + (selected == null ? "(none)" : selected.getLabel())
+		trace("[detect] winner: " + (selected == null ? "(none)" : selected.getLabel())
 				+ " score=" + bestScore);
 		return selected;
 	}

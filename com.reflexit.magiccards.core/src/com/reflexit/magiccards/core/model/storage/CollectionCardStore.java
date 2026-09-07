@@ -13,6 +13,7 @@
 package com.reflexit.magiccards.core.model.storage;
 
 import java.util.Collection;
+import java.util.List;
 import java.util.Set;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -20,6 +21,7 @@ import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.abs.ICardField;
+import com.reflexit.magiccards.core.model.events.CardEvent;
 
 
 public class CollectionCardStore extends AbstractCardStoreWithStorage<IMagicCard>
@@ -236,5 +238,42 @@ public class CollectionCardStore extends AbstractCardStoreWithStorage<IMagicCard
 
 	public void clear() {
 		this.hashpart = new HashCollectionPart();
+	}
+
+	/**
+	 * In-place split helper: insert a brand new sibling pile of {@code count}
+	 * cards <em>directly behind</em> {@code anchor} in this collection / deck.
+	 * <p>
+	 * The anchor keeps its exact list position and identity - its own count is
+	 * <b>not</b> touched here, the caller lowers it. Nothing is merged and
+	 * nothing is re-sorted, so the rest of the collection is left untouched and
+	 * the new pile shows up right next to the one it came from rather than at
+	 * the end of the list.
+	 *
+	 * @return the newly inserted pile
+	 */
+	public synchronized MagicCardPhysical addRightAfter(MagicCardPhysical anchor, int count) {
+		MagicCardPhysical newPile = new MagicCardPhysical(anchor, anchor.getLocation());
+		newPile.setCount(count);
+		this.hashpart.storeCard(newPile);
+		boolean placed = false;
+		if (this.storage instanceof MemoryCardStorage) {
+			List<IMagicCard> list = ((MemoryCardStorage<IMagicCard>) this.storage).getList();
+			synchronized (list) {
+				for (int i = 0; i < list.size(); i++) {
+					if (list.get(i) == anchor) {
+						list.add(i + 1, newPile);
+						placed = true;
+						break;
+					}
+				}
+			}
+		}
+		if (!placed)
+			this.storage.add(newPile);
+		this.storage.autoSave();
+		if (isListenerAttached())
+			fireEvent(new CardEvent(this, CardEvent.ADD, newPile));
+		return newPile;
 	}
 }

@@ -58,21 +58,28 @@ public class NewCardCollectionSettingsTest extends TestCase {
 		return c;
 	}
 
-	public void testDeckVirtualUnsortedPersisted() {
-		created = wizardCreate(dm.getModelRoot().getDeckContainer(), "wiz-deck", true, true, true);
+	public void testDeckVirtualPersisted() {
+		created = wizardCreate(dm.getModelRoot().getDeckContainer(), "wiz-deck", true, true, false);
 
 		// visible right away
 		assertTrue(created.isDeck());
 		assertTrue(created.isVirtual());
-		assertTrue(created.isUnsorted());
 
 		// and survives a close/reopen - i.e. it really went into the file, not
 		// just the transient fields
 		created.close();
 		assertTrue("type not persisted", created.isDeck());
 		assertTrue("virtual not persisted", created.isVirtual());
-		assertTrue("unsorted not persisted", created.isUnsorted());
 		assertEquals(IStorageInfo.DECK_TYPE, created.getStorageInfo().getType());
+	}
+
+	/** "unsorted" (a manual card order) is a collection-only notion - a deck must
+	 * never come out unsorted no matter what the caller asks for. */
+	public void testDeckCannotBeUnsorted() {
+		created = wizardCreate(dm.getModelRoot().getDeckContainer(), "wiz-deck-us", true, true, true);
+		assertFalse("a deck must not be unsorted", created.isUnsorted());
+		created.close();
+		assertFalse("a deck must not be unsorted after reopen", created.isUnsorted());
 	}
 
 	public void testCollectionSortedNonVirtual() {
@@ -83,5 +90,13 @@ public class NewCardCollectionSettingsTest extends TestCase {
 		assertFalse(created.isVirtual());
 		assertFalse(created.isUnsorted());
 		assertEquals(IStorageInfo.COLLECTION_TYPE, created.getStorageInfo().getType());
+	}
+
+	/** A collection, unlike a deck, keeps the "unsorted" flag. */
+	public void testCollectionCanBeUnsorted() {
+		created = wizardCreate(dm.getModelRoot().getCollectionsContainer(), "wiz-coll-us", false, false, true);
+		assertTrue(created.isUnsorted());
+		created.close();
+		assertTrue("unsorted not persisted for collection", created.isUnsorted());
 	}
 }

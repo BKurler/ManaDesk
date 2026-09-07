@@ -344,26 +344,60 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 		public void run(String id);
 	}
 
+	/** What a {@link #fillDeckMenu} submenu does, so invalid destinations can be greyed. */
+	public enum DeckMenuKind {
+		MOVE, SPLIT_MOVE, COPY
+	}
+
+	/**
+	 * @return {@code null} if {@code dest} is a valid destination for the current
+	 *         selection under {@code kind}, otherwise a short reason - the entry is
+	 *         then shown greyed with that reason appended.
+	 */
+	protected String deckDestinationVeto(CardCollection dest, DeckMenuKind kind) {
+		return null;
+	}
+
+	protected void fillDeckMenu(IMenuManager manager, final IDeckAction deckAction) {
+		fillDeckMenu(manager, deckAction, DeckMenuKind.COPY);
+	}
+
 	/**
 	 * @param manager
 	 */
-	protected void fillDeckMenu(IMenuManager manager, final IDeckAction deckAction) {
+	protected void fillDeckMenu(IMenuManager manager, final IDeckAction deckAction, DeckMenuKind kind) {
 		boolean any = false;
 		IViewReference[] views = getViewSite().getWorkbenchWindow().getActivePage().getViewReferences();
 		for (final IViewReference viewReference : views) {
 			if (viewReference.getId().equals(DeckView.ID)) {
 				final String deckId = viewReference.getSecondaryId();
-				DeckView deckView = (DeckView) viewReference.getPart(false);
+				// getPart(true): a tab that is in the list but was not activated
+				// yet still counts as "open" - restore it so it appears here and
+				// its store is live to refresh the Instances zone after the move.
+				DeckView deckView = (DeckView) viewReference.getPart(true);
 				if (deckView == null)
 					continue;
 				CardCollection cardCollection = deckView.getCardCollection();
+				if (cardCollection == null)
+					continue;
 				String active = "";
 				ICardStore activeHandler = DataManager.getInstance().getCardHandler().getActiveStore();
 				if (activeHandler != null && activeHandler == cardCollection.getStore()) {
 					active = " (Active)";
 				}
+				String tags = "";
+				if (cardCollection.isVirtual())
+					tags = "virtual";
+				if (cardCollection.isReadOnly())
+					tags = tags.isEmpty() ? "read-only" : tags + ", read-only";
 				String name = (cardCollection.isDeck() ? "Deck - " : "Collection - ") + cardCollection.getName()
-						+ active;
+						+ active + (tags.isEmpty() ? "" : " (" + tags + ")");
+				// A destination is greyed when it is the current list, is
+				// read-only, or the subclass vetoes it for this kind. The "(...)"
+				// tag already says why - no extra sentence on the label.
+				String veto = (deckView == this) ? "this is the current list"
+						: cardCollection.isReadOnly() ? "read-only"
+								: deckDestinationVeto(cardCollection, kind);
 				Action ac = new Action(name) {
 					@Override
 					public void run() {
@@ -374,8 +408,10 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 						}
 					}
 				};
-				if (deckView == this)
+				if (veto != null) {
 					ac.setEnabled(false);
+					ac.setToolTipText(veto);
+				}
 				manager.add(ac);
 				any = true;
 			}

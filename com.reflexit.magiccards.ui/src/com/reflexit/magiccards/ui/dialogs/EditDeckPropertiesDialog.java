@@ -20,6 +20,8 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -33,6 +35,7 @@ import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 
 /**
  * Dialog to edit properties of a deck/collection
@@ -78,29 +81,30 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			gd.horizontalSpan = ((GridLayout) comp.getLayout()).numColumns - 1;
 			type.setLayoutData(gd);
 		}
-		{
-			virtual = new Button(comp, SWT.CHECK);
-			virtual.setSelection(info.isVirtual());
-			virtual.setText("Virtual");
-			GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-			virtual.setLayoutData(gd);
-		}
-		{
-			unsorted = new Button(comp, SWT.CHECK);
-			unsorted.setSelection(info.isUnsorted());
-			unsorted.setText("Unsorted");
-			GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-			unsorted.setLayoutData(gd);
-		}
-		{
-			protection = new Button(comp, SWT.CHECK);
-			protection.setSelection(info.isReadOnly());
-			protection.setText("Read Only");
-			GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-			protection.setLayoutData(gd);
-		}
+		virtual = StatusDots.check(comp, StatusDots.VIRTUAL, "Virtual");
+		virtual.setSelection(info.isVirtual());
+		protection = StatusDots.check(comp, StatusDots.READ_ONLY, "Read Only");
+		protection.setSelection(info.isReadOnly());
+		unsorted = StatusDots.check(comp, StatusDots.UNSORTED, "Unsorted (collections only)");
+		unsorted.setSelection(info.isUnsorted());
+		StatusDots.exclusive(virtual, unsorted);
+		// Unsorted (manual card order) only makes sense for a collection
+		type.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				syncUnsortedForType();
+			}
+		});
+		syncUnsortedForType();
 		createTextArea(comp);
 		return comp;
+	}
+
+	private void syncUnsortedForType() {
+		boolean deck = IStorageInfo.DECK_TYPE.equals(type.getText());
+		if (deck)
+			unsorted.setSelection(false);
+		unsorted.setEnabled(!deck);
 	}
 
 	private void createTextArea(Composite area) {

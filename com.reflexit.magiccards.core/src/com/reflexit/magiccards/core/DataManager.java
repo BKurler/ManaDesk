@@ -40,6 +40,7 @@ import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.AbstractFilteredCardStore;
+import com.reflexit.magiccards.core.model.storage.CollectionCardStore;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
 import com.reflexit.magiccards.core.model.storage.IDbPriceStore;
@@ -360,14 +361,23 @@ public class DataManager {
 		if (cardStore == null)
 			throw new IllegalArgumentException("Cannot find store for " + cardStore);
 		int left = card.getCount() - right;
-		MagicCardPhysical card2 = new MagicCardPhysical(card, card.getLocation());
-		card.setCount(left);
-		card2.setCount(right);
 		Set<MagicCardField> fieldSet = Collections.singleton(MagicCardField.COUNT);
-		cardStore.update(card, fieldSet);
-		cardStore.setMergeOnAdd(false);
-		cardStore.add(card2);
-		cardStore.setMergeOnAdd(!cardStore.isUnsorted());
+		MagicCardPhysical card2;
+		if (cardStore instanceof CollectionCardStore) {
+			// Never move or re-sort the source pile: lower its count where it
+			// sits and drop the new pile directly behind it.
+			card.setCount(left);
+			cardStore.update(card, fieldSet);
+			card2 = ((CollectionCardStore) cardStore).addRightAfter(card, right);
+		} else {
+			card2 = new MagicCardPhysical(card, card.getLocation());
+			card.setCount(left);
+			card2.setCount(right);
+			cardStore.update(card, fieldSet);
+			cardStore.setMergeOnAdd(false);
+			cardStore.add(card2);
+			cardStore.setMergeOnAdd(!cardStore.isUnsorted());
+		}
 		updateList(cardStore.getCards(card.getCardId()), fieldSet);
 		return card2;
 	}

@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - status dots on the tab icon; refresh on properties change; disposed-widget guards
+ */
 package com.reflexit.magiccards.ui.views.lib;
 
 import java.io.File;
@@ -10,6 +14,7 @@ import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IViewSite;
@@ -35,6 +40,7 @@ import com.reflexit.magiccards.ui.actions.OpenSideboardAction;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.DeckFilterDialog;
 import com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.FolderPageGroup;
 import com.reflexit.magiccards.ui.views.ViewPageGroup;
@@ -170,10 +176,10 @@ public class DeckView extends AbstractMyCardsView {
 	}
 
 	/**
-	 * The sideboard/extra list of a deck looks like a plain deck tab; the
-	 * sideboard/extra list of a collection looks like a plain collection tab -
-	 * same icons the Cards Navigator tree uses for a deck vs. a collection,
-	 * just applied here too instead of a dedicated sideboard/extra icon.
+	 * The tab icon for {@code location}: a deck looks like a deck tab, a
+	 * collection like a collection tab; {@code big} picks the 32px icon (main
+	 * deck / collection, which carries the status dots) vs the 16px one
+	 * (sideboard / extra, told apart by the # / ~ name prefix).
 	 *
 	 * <p>
 	 * Reads the type straight off the file for {@code location} instead of going
@@ -183,11 +189,11 @@ public class DeckView extends AbstractMyCardsView {
 	 * may still be mid-load, or may never resolve until the tab is clicked. A
 	 * location string + direct file read has no such dependency.
 	 */
-	private static String familyIcon(Location location) {
-		File file = location.getFile();
-		boolean isDeck = isDeckFile(file);
-		String icon = isDeck ? "icons/obj16/ideck16.png" : "icons/obj16/lib16.png";
-		return icon;
+	private static String familyIcon(Location location, boolean big) {
+		boolean deckFile = isDeckFile(location.getFile());
+		if (big)
+			return deckFile ? "icons/hand32.png" : "icons/lib32.png";
+		return deckFile ? "icons/obj16/ideck16.png" : "icons/obj16/lib16.png";
 	}
 
 	/** Whether {@code location}'s file already exists on disk - used to gate the
@@ -229,13 +235,26 @@ public class DeckView extends AbstractMyCardsView {
 	}
 
 	private void setTitleImageIfChanged(String iconPath) {
-		org.eclipse.swt.graphics.Image img = MagicUIActivator.getDefault().getImage(iconPath);
-		boolean changed = getTitleImage() != img;
-		if (changed)
+		setTitleImageIfChanged(iconPath, false, false, false);
+	}
+
+	/**
+	 * Sets the tab icon for {@code iconPath}, decorated with the status dots
+	 * (bottom-left blue = virtual, centre red = read-only, right green =
+	 * unsorted). The disk icon is never touched; the composed image is cached
+	 * and the call is a no-op when the tab already shows it.
+	 */
+	private void setTitleImageIfChanged(String iconPath, boolean virtual, boolean readOnly, boolean unsorted) {
+		Image img = StatusDots.decorate(iconPath, virtual, readOnly, unsorted);
+		if (img != null && getTitleImage() != img)
 			setTitleImage(img);
 	}
 
 	protected void updatePartName() {
+		// this runs from asyncExec / event callbacks - the tab may have been
+		// closed since it was scheduled
+		if (getPartControl() == null || getPartControl().isDisposed())
+			return;
 		String deckId = getDeckId();
 		Location location = Location.createLocation(deckId);
 		String name = location.getName();
@@ -256,15 +275,18 @@ public class DeckView extends AbstractMyCardsView {
 		// activate()), and redundant tab-bar geometry changes right around a
 		// selection click are a plausible contributor to the tab-strip redraw
 		// glitch reported separately.
-		if (location.isSideboard()) {
+		// Sideboard / extra get the small 16px icon (told apart by the # / ~
+		// prefix), the main deck / collection the big 32px one - but all of them
+		// carry the virtual / read-only / unsorted status dots. The flags need
+		// the resolved model - harmless (no dots) until it loads, updatePartName()
+		// runs again once `deck` is ready.
+		boolean member = location.isSideboard() || location.isExtra();
+		if (location.isSideboard())
 			setPartNameIfChanged("#" + name);
-			setTitleImageIfChanged(familyIcon(location));
-		} else if (location.isExtra()) {
+		else if (location.isExtra())
 			setPartNameIfChanged("~" + name);
-			setTitleImageIfChanged(familyIcon(location));
-		} else if (!isDeckFile(location.getFile())) {
-			setTitleImageIfChanged("icons/lib32.png");
-		}
+		setTitleImageIfChanged(familyIcon(location, !member), deck != null && deck.isVirtual(),
+				deck != null && deck.isReadOnly(), deck != null && deck.isUnsorted());
 
 		if (deck == null) {
 			// IMagicControl c = getMagicControl();
@@ -337,7 +359,7 @@ public class DeckView extends AbstractMyCardsView {
 		getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				if (deck == null)
+				if (deck == null || getControl() == null || getControl().isDisposed())
 					return;
 				Location dataLocation = null;
 				if (event.getData() instanceof CardElement) {
@@ -365,6 +387,14 @@ public class DeckView extends AbstractMyCardsView {
 					// re-enable its button the same way removal disables it
 					if (isFamilySibling(dataLocation))
 						updatePartName();
+				} else if (event.getType() == CardEvent.UPDATE_CONTAINER) {
+					// deck / collection properties changed (virtual, read-only,
+					// type, comment) - repaint the tab icon / name and reload so
+					// the ownership columns reflect the new virtual flag
+					if (deck.getLocation().equals(dataLocation) || deck == event.getSource()) {
+						updatePartName();
+						reloadData();
+					}
 				} else if (event.getType() == CardEvent.RENAME_CONTAINER) {
 					String secondaryId = getViewSite().getSecondaryId();
 					Location srcLocation = (Location) event.getData();
@@ -392,6 +422,11 @@ public class DeckView extends AbstractMyCardsView {
 	}
 
 	public CardCollection getCardCollection() {
+		return deck;
+	}
+
+	@Override
+	protected CardCollection getSourceCollection() {
 		return deck;
 	}
 
