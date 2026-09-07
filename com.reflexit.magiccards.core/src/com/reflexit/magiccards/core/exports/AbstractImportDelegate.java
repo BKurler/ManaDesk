@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ */
 package com.reflexit.magiccards.core.exports;
 
 import java.io.ByteArrayInputStream;
@@ -87,10 +91,13 @@ public abstract class AbstractImportDelegate implements ICoreRunnableWithProgres
 			return;
 		if (!card.isMigrated()) {
 			MagicCardPhysical ncard = card.tradeSplit(card.getCount(), card.getForTrade());
-			if (ncard != null)
+			if (ncard != null) {
 				importData.add(ncard);
+				importData.rememberDeclared(ncard);
+			}
 		}
 		importData.add(card);
+		importData.rememberDeclared(card);
 	}
 
 	@Override

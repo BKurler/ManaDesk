@@ -199,11 +199,14 @@ public class ReportType {
 		importWorker = delegate;
 	}
 
+	/** How many leading lines of the source we sniff when guessing the format. */
+	private static final int SNIFF_LINES = 50;
+
 	public static ReportType autoDetectType(File file, Collection<ReportType> types) {
 		String fileName = file.getPath();
 		if (fileName == null || fileName.trim().length() == 0)
 			return null;
-		Collection<ReportType> candidates = new ArrayList<ReportType>();
+		Collection<ReportType> extCandidates = new ArrayList<ReportType>();
 		int k = fileName.lastIndexOf('.');
 		String ext = "";
 		if (k > 0 && k < fileName.length() - 1) {
@@ -211,28 +214,50 @@ public class ReportType {
 		}
 		for (ReportType reportType : types) {
 			if (ext.equalsIgnoreCase(reportType.getExtension())) {
-				candidates.add(reportType);
+				extCandidates.add(reportType);
 			}
 		}
-		if (candidates.size() == 1)
-			return candidates.iterator().next();
+		MagicLogger.info("[detect] file=" + fileName + " ext=" + ext + " extCandidates=" + labels(extCandidates));
+		// a single unambiguous extension match is almost always right
+		if (extCandidates.size() == 1) {
+			MagicLogger.info("[detect] single extension match -> " + extCandidates.iterator().next().getLabel());
+			return extCandidates.iterator().next();
+		}
 		if (file.exists()) {
 			try {
-				String contents = FileUtils.readFileAsString(file);
-				String[] split = contents.split("\n");
-				if (split.length>20) {
-					String[] ar = new String[20];
-					System.arraycopy(split, 0, ar, 0, 20);
-					contents = String.join("\n", ar);
-				}
-				return autoDetectType(contents, candidates);
+				String contents = sniff(FileUtils.readFileAsString(file));
+				// score every importer against the real content; a type whose
+				// extension matches the file gets a small edge on a tie
+				ReportType byContent = autoDetectType(contents, types, extCandidates);
+				if (byContent != null)
+					return byContent;
 			} catch (IOException e) {
 				// fall through
 			}
 		}
-		if (candidates.size() > 0)
-			return candidates.iterator().next();
-		return null;
+		ReportType fallback = extCandidates.isEmpty() ? null : extCandidates.iterator().next();
+		MagicLogger.info("[detect] no content match -> fallback " + (fallback == null ? "(none)" : fallback.getLabel()));
+		return fallback;
+	}
+
+	private static String labels(Collection<ReportType> types) {
+		StringBuilder sb = new StringBuilder("[");
+		for (ReportType t : types) {
+			if (sb.length() > 1)
+				sb.append(", ");
+			sb.append(t.getLabel());
+		}
+		return sb.append(']').toString();
+	}
+
+	private static String sniff(String contents) {
+		String[] split = contents.split("\n");
+		if (split.length > SNIFF_LINES) {
+			String[] ar = new String[SNIFF_LINES];
+			System.arraycopy(split, 0, ar, 0, SNIFF_LINES);
+			contents = String.join("\n", ar);
+		}
+		return contents;
 	}
 
 	public static ReportType autoDetectType(URL url, Collection<ReportType> types) {
@@ -254,31 +279,64 @@ public class ReportType {
 	}
 
 	public static ReportType autoDetectType(String contents, Collection<ReportType> candidates) {
+		return autoDetectType(contents, candidates, null);
+	}
+
+	private static ReportType autoDetectType(String contents, Collection<ReportType> candidates,
+			Collection<ReportType> extensionMatch) {
+		if (contents == null || contents.trim().isEmpty() || candidates == null)
+			return null;
+		contents = sniff(contents);
 		ReportType selected = null;
-		int errors = Integer.MAX_VALUE;
+		long bestScore = Long.MIN_VALUE;
 		for (ReportType reportType : candidates) {
 			IImportDelegate id = reportType.getImportDelegate();
+			if (id == null)
+				continue;
 			ImportData importData = new ImportData();
 			importData.setText(contents);
 			id.init(importData);
 			try {
 				id.run(ICoreProgressMonitor.NONE);
 				ImportData result = id.getResult();
-				if (result.getError() == null && result.getList().size() > 0) {
-					int err = result.getErrorCount();
-					if (err < errors) {
-						selected = reportType;
-						if (err == 0)
-							break;
-						errors = err;
-					}
+				if (result.getError() != null) {
+					MagicLogger.info("[detect]   " + reportType.getLabel() + " -> error: "
+							+ result.getError().getMessage());
+					continue;
 				}
-			} catch (InvocationTargetException e) {
-				// continue
-			} catch (InterruptedException e) {
-				// continue
+				int cards = result.getList() == null ? 0 : result.getList().size();
+				if (cards == 0) {
+					MagicLogger.info("[detect]   " + reportType.getLabel() + " -> 0 cards");
+					continue;
+				}
+				// resolve against the DB so a format that "parses" but produces
+				// garbage names (an id glued into the name, a whole line as a
+				// name, ...) scores below one that yields cards the DB recognises
+				try {
+					ImportUtils.resolve(result.getList());
+				} catch (RuntimeException ignore) {
+					// resolution is only a quality signal here
+				}
+				int errs = result.getErrorCount();
+				// favour "many cards, few errors": every clean card is +2, every
+				// error is -3, so a format that mangles the input scores below one
+				// that recognises fewer cards cleanly
+				long score = 2L * (cards - errs) - 3L * errs;
+				if (extensionMatch != null && extensionMatch.contains(reportType))
+					score += 5;
+				MagicLogger.info("[detect]   " + reportType.getLabel() + " -> cards=" + cards + " errors=" + errs
+						+ " score=" + score + (extensionMatch != null && extensionMatch.contains(reportType)
+								? " (+ext)" : ""));
+				if (score > bestScore) {
+					bestScore = score;
+					selected = reportType;
+				}
+			} catch (InvocationTargetException | InterruptedException e) {
+				MagicLogger.info("[detect]   " + reportType.getLabel() + " -> threw " + e.getCause());
 			}
 		}
+		MagicLogger.info("[detect] winner: " + (selected == null ? "(none)" : selected.getLabel())
+				+ " score=" + bestScore);
 		return selected;
 	}
 

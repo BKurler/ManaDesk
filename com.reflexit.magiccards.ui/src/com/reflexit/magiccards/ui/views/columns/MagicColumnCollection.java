@@ -33,7 +33,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		columns.add(groupColumn);
 		idColumn = createIdColumn();
 		columns.add(idColumn);
-		columns.add(new GenColumn(MagicCardField.GATHERERID, "Multiverse ID"));
+		columns.add(createGathererIdColumn());
 		columns.add(new CostColumn());
 		columns.add(new TypeColumn());
 		columns.add(new PowerColumn(MagicCardField.POWER, "P", "Power"));
@@ -58,7 +58,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		columns.add(new SellerPriceColumn());
 		columns.add(new CommunityRatingColumn());
 		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
-		columns.add(new CollectorsNumberColumn());
+		columns.add(createCollectorsNumberColumn());
 		if (myCards) {
 
 			specialColumn = createSpecialColumn();
@@ -74,7 +74,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		if (myCards) {
 			columns.add(new GenColumn(MagicCardField.SIDEBOARD, "Sideboard"));
 			columns.add(new GenColumn(MagicCardField.EXTRA, "Extra"));
-			columns.add(new GenColumn(MagicCardField.ERROR, "Error"));
+			columns.add(createErrorColumn());
 			columns.add(new CreationDateColumn());
 		}
 		columns.add(new ReleaseDateColumn());
@@ -86,6 +86,18 @@ public class MagicColumnCollection extends ColumnCollection {
 
 	protected SetColumn createSetColumn() {
 		return new SetColumn();
+	}
+
+	protected GenColumn createCollectorsNumberColumn() {
+		return new CollectorsNumberColumn();
+	}
+
+	protected GenColumn createGathererIdColumn() {
+		return new GenColumn(MagicCardField.GATHERERID, "Multiverse ID");
+	}
+
+	protected GenColumn createErrorColumn() {
+		return new GenColumn(MagicCardField.ERROR, "Error");
 	}
 
 	protected CountColumn createCountColumn() {
