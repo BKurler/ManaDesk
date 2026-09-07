@@ -20,7 +20,7 @@ import com.reflexit.magiccards.core.model.abs.ICardField;
  * <ul>
  * <li>The deck / collection columns are imported:
  * {@code NAME, ID, GATHERERID, SET, EDITION_ABBR, COLLNUM, LANG, COUNT,
- * OWNERSHIP, SPECIAL, COMMENT, PRICE}.</li>
+ * OWNERSHIP, SPECIAL, CONDITION, COMMENT, PRICE}.</li>
  * <li>Card-database columns a "Full CSV" also carries ({@code COST, TYPE, POWER,
  * TOUGHNESS, ORACLE, TEXT, RARITY, COLOR, COLOR_IDENTITY, CTYPE, ARTIST,
  * DBPRICE, ...} - any real {@link MagicCardField}) are recognised and their
@@ -51,6 +51,7 @@ public class ManaDeskCsvImportDelegate extends CsvImportDelegate {
 		headers.put("COUNT", MagicCardField.COUNT);
 		headers.put("OWNERSHIP", MagicCardField.OWNERSHIP);
 		headers.put("SPECIAL", MagicCardField.SPECIAL);
+		headers.put("CONDITION", MagicCardField.CONDITION);
 		headers.put("COMMENT", MagicCardField.COMMENT);
 		headers.put("PRICE", MagicCardField.PRICE);
 	}

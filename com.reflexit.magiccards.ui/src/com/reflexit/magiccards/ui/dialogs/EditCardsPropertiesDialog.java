@@ -19,6 +19,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.reflexit.magiccards.core.model.CardCondition;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.SpecialTags;
@@ -31,7 +32,9 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 	private static final String OWN_VALUE = "Own";
 	public static final String COMMENT_FIELD = MagicCardField.COMMENT.name();
 	public static final String SPECIAL_FIELD = MagicCardField.SPECIAL.name();
+	public static final String CONDITION_FIELD = MagicCardField.CONDITION.name();
 	public static final String OWNERSHIP_FIELD = MagicCardField.OWNERSHIP.name();
+	private static final String NOT_GRADED = "Not graded";
 	public static final String COUNT_FIELD = MagicCardField.COUNT.name();
 	public static final String NAME_FIELD = MagicCardField.NAME.name();
 	public static final String PRICE_FIELD = MagicCardField.PRICE.name();
@@ -64,6 +67,8 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		createTextFieldEditor(area, "User Price", PRICE_FIELD);
 		// ownership
 		createOwnershipFieldEditor(area);
+		// condition
+		createConditionFieldEditor(area);
 		// comment
 		createTextFieldEditor(area, "Comment", COMMENT_FIELD, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		// special
@@ -115,6 +120,39 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 
 		browser.setText("<html><body style='margin:0;padding:0;background:#000;'>" + "<img src='" + url
 				+ "' style='width:100%;height:100%;object-fit:contain;'/>" + "</body></html>");
+	}
+
+	public void createConditionFieldEditor(Composite area) {
+		createTextLabel(area, "Condition");
+		final Combo condition = new Combo(area, SWT.READ_ONLY);
+		condition.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		String stored = store.getDefaultString(CONDITION_FIELD);
+		String shown;
+		if (UNCHANGED.equals(stored)) {
+			shown = UNCHANGED;
+		} else {
+			CardCondition c = CardCondition.resolve(stored);
+			shown = c == null ? NOT_GRADED : c.getLabel();
+		}
+		CardCondition[] all = CardCondition.values();
+		String[] choices = new String[all.length + 2];
+		choices[0] = NOT_GRADED;
+		for (int i = 0; i < all.length; i++)
+			choices[i + 1] = all[i].getLabel();
+		choices[choices.length - 1] = UNCHANGED;
+		setComboChoices(condition, choices, shown);
+		condition.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String t = condition.getText();
+				if (UNCHANGED.equals(t))
+					store.setValue(CONDITION_FIELD, UNCHANGED);
+				else if (NOT_GRADED.equals(t))
+					store.setValue(CONDITION_FIELD, "");
+				else
+					store.setValue(CONDITION_FIELD, t);
+			}
+		});
 	}
 
 	public void createOwnershipFieldEditor(Composite area) {

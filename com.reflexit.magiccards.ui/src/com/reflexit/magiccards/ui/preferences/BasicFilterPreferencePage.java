@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - added the Condition filter group
+ */
 package com.reflexit.magiccards.ui.preferences;
 
 import org.eclipse.swt.SWT;
@@ -7,6 +11,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
+import com.reflexit.magiccards.ui.preferences.feditors.CardConditionPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.ColorsPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.NumbericalPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.RarityPreferenceGroup;
@@ -31,11 +36,12 @@ public class BasicFilterPreferencePage extends AbstractFilterPreferencePage {
 		this.panel.setLayout(layout);
 		this.panel.setFont(parent.getFont());
 		Composite firstRow = createColumnComposite(this.panel, 2);
-		Composite secondRow = createColumnComposite(this.panel, 2);
+		Composite secondRow = createColumnComposite(this.panel, 3);
 		Composite thirdRow = createColumnComposite(this.panel, 1);
 		createAndAdd(new TypesPreferenceGroup(), firstRow);
 		createAndAdd(new ColorsPreferenceGroup(), firstRow);
 		createAndAdd(new RarityPreferenceGroup(), secondRow);
+		createAndAdd(new CardConditionPreferenceGroup(), secondRow);
 		createAndAdd(new NumbericalPreferenceGroup(), secondRow);
 		createAndAdd(new TextSearchPreferenceGroup(), thirdRow);
 		return this.panel;

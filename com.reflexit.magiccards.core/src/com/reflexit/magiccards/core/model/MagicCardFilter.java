@@ -86,6 +86,7 @@ public class MagicCardFilter implements Cloneable {
 		expr = expr.and(createColorGroup(map));
 		expr = expr.and(createOrGroup(map, CardTypes.getInstance())).and(createOrGroup(map, Editions.getInstance()))
 				.and(createOrGroup(map, Locations.getInstance())).and(createOrGroup(map, Rarity.getInstance()))
+			.and(createOrGroup(map, CardConditions.getInstance()))
 				.and(FilterField.LANG.valueExpr(map)).and(FilterField.TYPE_LINE.valueExpr(map))
 				.and(FilterField.NAME_LINE.valueExpr(map)).and(FilterField.POWER.valueExpr(map))
 				.and(FilterField.TOUGHNESS.valueExpr(map)).and(FilterField.CCC.valueExpr(map))

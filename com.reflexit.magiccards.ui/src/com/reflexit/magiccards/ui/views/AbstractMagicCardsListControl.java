@@ -1199,6 +1199,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		res.add(new GroupOrder(MagicCardField.SET));
 		res.add(new GroupOrder(MagicCardField.SET, MagicCardField.RARITY));
 		res.add(new GroupOrder(MagicCardField.RARITY));
+		res.add(new GroupOrder(MagicCardField.CONDITION));
 		res.add(new GroupOrder(MagicCardField.NAME));
 		res.add(new GroupOrder(MagicCardField.OWNERSHIP, MagicCardField.NAME));
 		res.addAll(new CustomGroupsPreferencePage().getCurrentValue());

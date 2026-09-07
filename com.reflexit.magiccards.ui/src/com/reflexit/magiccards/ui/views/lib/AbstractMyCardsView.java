@@ -53,6 +53,7 @@ import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -85,7 +86,8 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	private MenuManager addToDeck;
 	private IDeckAction copyToDeck;
 	private LibraryEventListener eventListener = new LibraryEventListener();
-	private Action updateSet;
+	/** "Update cards of selected set(s)" - also used by the Collector view's slimmed-down menu. */
+	protected Action updateSet;
 
 	/** Flip to {@code true} for a console trace of move / remove / next-selection. */
 	private static final boolean DEBUG = false;
@@ -167,25 +169,19 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 			@Override
 			public void run() {
 				ISelection selection = getSelectionProvider().getSelection();
-				if (!(selection instanceof IStructuredSelection))
-					return;
 
-				IStructuredSelection ss = (IStructuredSelection) selection;
-
-				// Collect unique sets
+				// Collect the unique sets from the selection - card rows AND, in
+				// the Collector view, whole set / group nodes (walked recursively).
 				Set<String> sets = new HashSet<>();
-				for (Object o : ss.toList()) {
-					if (o instanceof MagicCardPhysical) {
-						MagicCardPhysical card = (MagicCardPhysical) o;
-						String set = card.getSet();
-						if (set != null && !set.isEmpty()) {
-							sets.add(set);
-						}
-					}
-				}
+				if (selection instanceof IStructuredSelection)
+					for (Object o : ((IStructuredSelection) selection).toList())
+						collectSets(o, sets);
 
-				if (sets.isEmpty())
+				if (sets.isEmpty()) {
+					MessageDialog.openInformation(getShell(), "Update sets",
+							"Select one or more cards, or one or more set groups, then run this again.");
 					return;
+				}
 
 				UpdateMultipleSetsJob job = new UpdateMultipleSetsJob(sets);
 				job.setUser(true);
@@ -488,6 +484,16 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	@Override
 	protected void fillContextMenu(IMenuManager manager) {
 		super.fillContextMenu(manager);
+		fillEditingContextActions(manager);
+	}
+
+	/**
+	 * The entries that mutate a collection (copy / move / split / edit) plus
+	 * "Update cards of selected set(s)". The Collector view overrides this - it is
+	 * a read-only view over the whole database, so only the set-update entry
+	 * applies there.
+	 */
+	protected void fillEditingContextActions(IMenuManager manager) {
 		// A read-only list cannot be mutated: the destructive / editing entries
 		// (and moving OUT of it, handled in the submenu listeners) are greyed.
 		boolean srcRO = isSourceReadOnly();
@@ -501,6 +507,27 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		manager.add(this.split);
 		manager.add(this.edit);
 		// !!! RD		manager.add(this.buyCards);
+	}
+
+	/** Gather set names from a selection element: a card row, a "by Set" group node, or any other
+	 *  group (walked recursively down to its cards). Used by "Update cards of selected set(s)". */
+	private static void collectSets(Object o, Set<String> sets) {
+		if (o instanceof ICardGroup) {
+			ICardGroup g = (ICardGroup) o;
+			if (g.getFieldIndex() == MagicCardField.SET) {
+				addSet(g.getName(), sets); // a whole-set node - its name IS the set name
+				return;
+			}
+			for (Object child : g.getChildrenList())
+				collectSets(child, sets);
+		} else if (o instanceof IMagicCard) {
+			addSet(((IMagicCard) o).getSet(), sets);
+		}
+	}
+
+	private static void addSet(String set, Set<String> sets) {
+		if (set != null && !set.isEmpty())
+			sets.add(set);
 	}
 
 	@Override

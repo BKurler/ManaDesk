@@ -39,6 +39,7 @@ public enum FilterField {
 	TEXT_NOT_2(MagicCardField.ORACLE, TEXT_LINE + "_exclude_2", Postfix.TEXT_POSTFIX),
 	TEXT_NOT_3(MagicCardField.ORACLE, TEXT_LINE + "_exclude_3", Postfix.TEXT_POSTFIX),
 	COLLNUM(MagicCardField.COLLNUM, Postfix.NUMERIC_POSTFIX), SPECIAL(MagicCardField.SPECIAL, Postfix.TEXT_POSTFIX),
+	CONDITION(MagicCardField.CONDITION, Postfix.ENUM_POSTFIX),
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
 	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
@@ -96,6 +97,7 @@ public enum FilterField {
 		ids.addAll(CardTypes.getInstance().getIds());
 		ids.addAll(Editions.getInstance().getIds());
 		ids.addAll(Rarity.getInstance().getIds());
+		ids.addAll(CardConditions.getInstance().getIds());
 		ids.addAll(Locations.getInstance().getIds());
 		ids.add(TEXT_LINE.getPrefConstant());
 		ids.add(TYPE_LINE.getPrefConstant());
@@ -148,6 +150,14 @@ public enum FilterField {
 			case LOCATION:
 			case EDITION:
 				return BinaryExpr.fieldEquals(ff.getField(), value);
+			case CONDITION: {
+				if (CardConditions.NOT_GRADED.equals(value))
+					return BinaryExpr.fieldEquals(MagicCardField.CONDITION, null);
+				// the checkbox label ("Near Mint") or an abbr both work - match on
+				// the canonical serialized form the field actually holds
+				CardCondition cc = CardCondition.resolve(value);
+				return BinaryExpr.fieldEquals(MagicCardField.CONDITION, cc == null ? value : cc.toString());
+			}
 			case NAME_LINE:
 				if (value.indexOf('*') >= 0) {
 					// '*' never appears in a card name, so it's free to use as an

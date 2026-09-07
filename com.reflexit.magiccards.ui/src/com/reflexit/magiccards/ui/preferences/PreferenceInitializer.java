@@ -69,7 +69,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getMdbStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// library store
 		getLibStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,Condition,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getLibStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getLibStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.LOCATION));
@@ -78,7 +78,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getLibStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// deck store
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		// !!! RD getDeckStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.CMC));
@@ -86,11 +86,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// Presentation.GALLERY.key());
 		getDeckStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 
-		// collector store
+		// collector store - rows are whole-database printings; the default focuses
+		// on the collection side (progress + all the quantities + your valuation).
+		// Only card facts + progress + own-counts + User Price exist here at all
+		// (see CollectorColumnCollection - no per-copy columns).
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,Progress,-Progress4,-Card Id,-Cost,-Type,-Power,-Toughness,-Oracle Text,-Text,-Set,-Rarity,-Color Type,-Count,"
-						+ "Collector's Number,Artist,Location,-Color,Ownership,User Price,Online Price,-Rating,-For Trade,"
-						+ "Comment,Special,-Language");
+				"Name,Progress,Progress4,Own Count,Own Unique,Own Total,User Price,Set,Rarity,Collector's Number,"
+						+ "-Artist,-Language,-Online Price,-Rating,-Release Date");
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getCollectorStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(CollectorListControl.DEF_GROUP));
@@ -117,7 +119,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// location (handled at the model level in InstancesListControl)
 		IPersistentPreferenceStore instancesSettings = getLocalStore(InstancesView.ID);
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,Count,Location,Ownership,Set,Language,Comment,"
+				"Name,Count,Location,Ownership,Condition,Set,Language,Comment,"
 						+ "-Special,-Collector's Number,-Rarity,-Artist,-Card Id");
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		instancesSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());

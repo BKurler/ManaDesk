@@ -61,6 +61,32 @@ public class CsvImportDelegateTest extends AbstarctImportTest {
 	}
 
 	/**
+	 * The card CONDITION survives a Minimum-CSV export/import round trip through
+	 * {@link ManaDeskCsvImportDelegate}, and a blank condition stays blank.
+	 */
+	@Test
+	public void testRoundTripCondition() {
+		MagicCardPhysical a = CardGenerator.generatePhysicalCardWithValues();
+		MagicCardPhysical b = CardGenerator.generatePhysicalCardWithValues();
+		a.setCondition(com.reflexit.magiccards.core.model.CardCondition.HEAVILY_PLAYED);
+		// b: no condition set
+
+		MinimumCsvExportDelegate exp = new MinimumCsvExportDelegate();
+		exp.setReportType(ImportExportFactory.createReportType("roundtrip-cond"));
+		line = exp.export(java.util.Arrays.asList((IMagicCard) a, (IMagicCard) b));
+		assertTrue("exported header carries CONDITION: " + line, line.split("\n")[0].contains("CONDITION"));
+
+		resolve = false;
+		preview(new ManaDeskCsvImportDelegate());
+		assertEquals(null, exception);
+		assertEquals(2, resSize);
+		assertEquals(com.reflexit.magiccards.core.model.CardCondition.HEAVILY_PLAYED,
+				((MagicCardPhysical) card1).getCondition());
+		// a blank condition must not become a grade
+		assertEquals(null, ((MagicCardPhysical) card2).getCondition());
+	}
+
+	/**
 	 * A "Full CSV" export - deck columns plus card-database columns like COST /
 	 * TYPE / RARITY / COLOR_IDENTITY - is accepted: the database columns are
 	 * recognised and simply ignored.

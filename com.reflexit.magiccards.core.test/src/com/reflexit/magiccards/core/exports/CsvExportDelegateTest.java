@@ -75,9 +75,9 @@ public class CsvExportDelegateTest extends AbstarctExportTest {
 		}
 		splitLines();
 		assertTrue("Minimum CSV header should lead with LOCATION: " + lines[0],
-				lines[0].equals("LOCATION,NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP"));
+				lines[0].equals("LOCATION,NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION"));
 		String[] cells = lines[1].split(",", -1);
-		assertTrue("data row should have 11 cells, got " + cells.length + ": " + lines[1], cells.length == 11);
+		assertTrue("data row should have 12 cells, got " + cells.length + ": " + lines[1], cells.length == 12);
 	}
 
 	@Test
@@ -94,7 +94,7 @@ public class CsvExportDelegateTest extends AbstarctExportTest {
 		}
 		splitLines();
 		assertTrue("single-deck Minimum CSV header unchanged: " + lines[0],
-				lines[0].equals("NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP"));
+				lines[0].equals("NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION"));
 	}
 
 	@Test

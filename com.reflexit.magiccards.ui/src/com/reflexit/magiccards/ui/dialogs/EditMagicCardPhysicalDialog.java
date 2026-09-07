@@ -28,6 +28,7 @@ import org.eclipse.swt.widgets.Link;
 import org.eclipse.swt.widgets.Shell;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.CardCondition;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
@@ -125,6 +126,15 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 			card.setSpecialTag(especial);
 			fieldSet.add(MagicCardField.SPECIAL);
 			modified = true;
+		}
+		String econd = store.getString(EditCardsPropertiesDialog.CONDITION_FIELD);
+		if (!UNCHANGED.equals(econd)) {
+			CardCondition next = CardCondition.resolve(econd); // "" -> null (not graded)
+			if (card.getCondition() != next) {
+				card.setCondition(next);
+				fieldSet.add(MagicCardField.CONDITION);
+				modified = true;
+			}
 		}
 		if (modified && update) {
 			DataManager.getInstance().update(card, fieldSet);

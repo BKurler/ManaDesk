@@ -166,6 +166,14 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 			setProperty(MagicCardField.CUSTOM, custom);
 	}
 
+	public CardCondition getCondition() {
+		return (CardCondition) getProperty(MagicCardField.CONDITION);
+	}
+
+	public void setCondition(CardCondition condition) {
+		setProperty(MagicCardField.CONDITION, condition); // null clears the entry
+	}
+
 	@Override
 	public String getCardId() {
 		return this.card.getCardId();
@@ -272,6 +280,8 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		if (!eqNull(phi1.getComment(), phi2.getComment()))
 			return false;
 		if (!eqNull(phi1.getSpecial(), phi2.getSpecial()))
+			return false;
+		if (!eqNull(phi1.getCondition(), phi2.getCondition()))
 			return false;
 		if (!eqNull(phi1.getPrice(), phi2.getPrice()))
 			return false;

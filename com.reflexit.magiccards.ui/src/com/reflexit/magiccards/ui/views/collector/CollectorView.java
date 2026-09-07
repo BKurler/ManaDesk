@@ -68,8 +68,11 @@ public class CollectorView extends AbstractMyCardsView {
 	}
 
 	@Override
-	protected void fillContextMenu(IMenuManager manager) {
-		super.fillContextMenu(manager);
+	protected void fillEditingContextActions(IMenuManager manager) {
+		// The Collector view is a read-only window over the whole database: copy /
+		// move / split / edit have nothing to act on here. Only "Update cards of
+		// selected set(s)" is meaningful.
+		manager.add(this.updateSet);
 	}
 
 	@Override

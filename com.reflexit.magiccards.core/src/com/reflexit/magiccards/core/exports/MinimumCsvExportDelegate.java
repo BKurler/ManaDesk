@@ -36,13 +36,13 @@ public class MinimumCsvExportDelegate extends CsvExportDelegate {
 	@Override
 	public void printHeader() {
 		stream.println((multiDeck ? "LOCATION," : "")
-				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP");
+				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION");
 	}
 
 	protected ICardField[] doGetFields() {
 		ICardField fields[] = new ICardField[] { MagicCardField.NAME, MagicCardField.SET, MagicCardField.COUNT,
 				MagicCardField.SPECIAL, MagicCardField.COMMENT, MagicCardField.LANG, MagicCardField.COLLNUM,
-				MagicCardField.GATHERERID, MagicCardField.ID, MagicCardField.OWNERSHIP
+				MagicCardField.GATHERERID, MagicCardField.ID, MagicCardField.OWNERSHIP, MagicCardField.CONDITION
 
 		};
 		return fields;
