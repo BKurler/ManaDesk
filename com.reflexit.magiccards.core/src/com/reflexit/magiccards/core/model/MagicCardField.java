@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - CONDITION field (per-copy card grade)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -1290,6 +1291,26 @@ public enum MagicCardField implements ICardField {
 		public Object getM(MagicCard card) {
 			return card.getAccessories();
 		};
+	},
+
+	CONDITION(true) { // physical grade (Near Mint .. Damaged); null == not graded
+		@Override
+		public ICardVisitor getAggregator() {
+			return new CollisionAggregator(this, null);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.getCondition();
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			if (value == null || value instanceof CardCondition)
+				card.setCondition((CardCondition) value);
+			else
+				card.setCondition(CardCondition.resolve(value.toString()));
+		}
 	},
 
 	// end of fields

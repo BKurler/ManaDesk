@@ -140,4 +140,15 @@ public class ColorsTest {
 		assertEquals("White-Blue-Black-Colorless", cs.getColorName("{W/B}{U}{1}"));
 		assertEquals("White-Blue-Black-Red-Green-Colorless", cs.getColorName("{1}{G}{R}{B}{U}{W}"));
 	}
+
+	@Test
+	public void testMonoColorListedBeforeMultiColor() {
+		java.util.List<String> names = new java.util.ArrayList<>();
+		for (String id : ColorTypes.getInstance().getIds())
+			names.add(ColorTypes.getInstance().getNameById(id));
+		int mono = names.indexOf("Mono-Color");
+		int multi = names.indexOf("Multi-Color");
+		assertTrue("both present: " + names, mono >= 0 && multi >= 0);
+		assertTrue("Mono-Color must come before Multi-Color in the filter dialog: " + names, mono < multi);
+	}
 }

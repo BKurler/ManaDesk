@@ -49,6 +49,7 @@ public class MagicColumnCollection extends ColumnCollection {
 			columns.add(new LocationColumn());
 			ownershipColumn = createOwnershipColumn();
 			columns.add(ownershipColumn);
+			columns.add(createConditionColumn());
 			commentColumn = createCommentColumn();
 			columns.add(commentColumn);
 			columns.add(new PriceColumn());
@@ -118,6 +119,10 @@ public class MagicColumnCollection extends ColumnCollection {
 
 	protected OwnershipColumn createOwnershipColumn() {
 		return new OwnershipColumn();
+	}
+
+	protected AbstractColumn createConditionColumn() {
+		return new ConditionColumn();
 	}
 
 	protected GroupColumn createGroupColumn() {

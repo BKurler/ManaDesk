@@ -104,6 +104,9 @@ public class GroupColumn extends AbstractImageColumn implements Listener {
 				} else {
 					name = "Virtual";
 				}
+			} else if (fieldIndex == MagicCardField.CONDITION) {
+				if (name == null || name.isEmpty() || name.equals("null"))
+					name = "Not graded";
 			}
 			if (!showCount) {
 				return name;

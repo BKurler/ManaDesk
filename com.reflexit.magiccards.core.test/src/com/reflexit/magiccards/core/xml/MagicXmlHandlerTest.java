@@ -16,6 +16,7 @@ import java.util.HashMap;
 import java.util.Map;
 
 import com.reflexit.magiccards.core.legality.Format;
+import com.reflexit.magiccards.core.model.CardCondition;
 import com.reflexit.magiccards.core.model.Legality;
 import com.reflexit.magiccards.core.model.LegalityMap;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -151,6 +152,23 @@ public class MagicXmlHandlerTest extends TestCase {
 		Object o = object.list.get(0);
 		assertEquals(phi, o);
 		MagicCardPhysical p = (MagicCardPhysical) o;
+	}
+
+	public void testXStreamAroundCondition() {
+		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
+		phi.setCondition(CardCondition.HEAVILY_PLAYED);
+		String xml = handler.toXML(phi);
+		assertTrue("condition is written by its abbreviation: " + xml, xml.contains("<condition>HP</condition>"));
+		CardCollectionStoreObject object = handler.fromXML(xml);
+		MagicCardPhysical p = (MagicCardPhysical) object.list.get(0);
+		assertEquals(phi, p);
+		assertEquals(CardCondition.HEAVILY_PLAYED, p.getCondition());
+	}
+
+	public void testXStreamNoConditionElementWhenBlank() {
+		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
+		// no condition set - blank must not be persisted
+		assertFalse(handler.toXML(phi).contains("<condition>"));
 	}
 
 	public void testXStreamAroundForTrade() {

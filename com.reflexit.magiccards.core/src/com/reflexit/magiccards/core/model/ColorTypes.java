@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - list Mono-Color above Multi-Color in the filter dialog
+ */
 package com.reflexit.magiccards.core.model;
 
 import java.util.ArrayList;
@@ -13,8 +17,8 @@ public class ColorTypes implements ISearchableProperty {
 
 	private ColorTypes() {
 		this.names = new LinkedHashMap<String, String>();
-		add("Multi-Color");
 		add("Mono-Color");
+		add("Multi-Color");
 		add("Hybrid");
 		add("And");
 		add("Only");

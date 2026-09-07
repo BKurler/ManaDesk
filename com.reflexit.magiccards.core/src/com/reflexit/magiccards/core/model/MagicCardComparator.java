@@ -189,6 +189,11 @@ public class MagicCardComparator implements Comparator {
 						d = Rarity.compare((String) a1, (String) a2);
 					}
 					break;
+				case CONDITION:
+					if (a1 != a2) {
+						d = CardCondition.compare((CardCondition) a1, (CardCondition) a2);
+					}
+					break;
 				case COLLNUM:
 					if (a1 != a2) {
 						d = ((IMagicCard) c1).getCollectorNumberId() - ((IMagicCard) c2).getCollectorNumberId();
