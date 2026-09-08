@@ -1102,7 +1102,14 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		handler.onEnd();
 	}
 
-	/** {@link #writeSetFlat} to a gzip file, written atomically (temp + rename). */
+	/**
+	 * {@link #writeSetFlat} to a gzip file, written atomically (temp + rename).
+	 * <p>
+	 * If the target already holds byte-identical decompressed content, the file is
+	 * left untouched (same {@code lastModified()}) - so a set's split file only
+	 * gets a fresh timestamp when the set actually changed. Startup and the
+	 * background refresh key off that timestamp to decide which sets to re-apply.
+	 */
 	public void writeSetFlatGz(List<MagicCard> cards, File gzFile) throws IOException {
 		File parent = gzFile.getParentFile();
 		if (parent != null)
@@ -1115,9 +1122,35 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 					false, FileUtils.UTF8)) {
 				writeSetFlat(cards, out);
 			}
+			if (gzFile.isFile() && gzDecompressedEquals(tmp, gzFile))
+				return; // unchanged - keep the old file and its timestamp
 			Files.move(tmp.toPath(), gzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
 		} finally {
 			tmp.delete();
+		}
+	}
+
+	/** True if the two gzip files decompress to identical bytes. */
+	private static boolean gzDecompressedEquals(File a, File b) {
+		try (java.io.InputStream ia = new java.util.zip.GZIPInputStream(
+				new BufferedInputStream(new FileInputStream(a)));
+				java.io.InputStream ib = new java.util.zip.GZIPInputStream(
+						new BufferedInputStream(new FileInputStream(b)))) {
+			byte[] ba = new byte[8192];
+			byte[] bb = new byte[8192];
+			while (true) {
+				int na = ia.readNBytes(ba, 0, ba.length);
+				int nb = ib.readNBytes(bb, 0, bb.length);
+				if (na != nb)
+					return false;
+				if (na == 0)
+					return true;
+				for (int i = 0; i < na; i++)
+					if (ba[i] != bb[i])
+						return false;
+			}
+		} catch (IOException e) {
+			return false;
 		}
 	}
 

@@ -125,6 +125,28 @@ public class ScryfallBulkSplitTest extends AbstractMagicTest {
 	}
 
 	@Test
+	public void testWriteSetFlatGzKeepsTimestampWhenUnchanged() throws IOException, InterruptedException {
+		File dir = Files.createTempDirectory("bulk-split-nop").toFile();
+		File gz = new File(dir, "tst.txt.gz");
+		List<MagicCard> cards = new ArrayList<>(Arrays.asList(card("tst", "Alpha", "10"), card("tst", "Beta", "20")));
+
+		new ParseScryFallChecklist().writeSetFlatGz(cards, gz);
+		long firstWrite = gz.lastModified();
+		Thread.sleep(1100); // filesystem mtime granularity
+
+		// same cards -> file must be left untouched (same timestamp)
+		new ParseScryFallChecklist().writeSetFlatGz(cards, gz);
+		Assert.assertEquals("unchanged set keeps its timestamp", firstWrite, gz.lastModified());
+		Assert.assertEquals("no .tmp left behind", 0, tmpLeftovers(dir));
+
+		// a real change -> file rewritten (newer timestamp)
+		cards.add(card("tst", "Gamma", "30"));
+		new ParseScryFallChecklist().writeSetFlatGz(cards, gz);
+		Assert.assertTrue("changed set is rewritten", gz.lastModified() > firstWrite);
+		Assert.assertEquals("header + 3 cards", 4, gzLines(gz).size());
+	}
+
+	@Test
 	public void testGroupSetsFromBulkFiltersToRequestedSet() throws IOException {
 		File bulk = gzWithLines(cardJson("tst", "Card One", "1"), cardJson("tst", "Card Two", "2"),
 				cardJson("oth", "Other Card", "1"));

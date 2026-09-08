@@ -332,8 +332,11 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 			setInitialized(true);
 			try {
 				Collection<String> editions = Editions.getInstance().getNames();
+				int seedTotal = editions.size();
+				int seedDone = 0;
 				for (String set : editions) {
 					String abbr = (Editions.getInstance().getEditionByName(set).getBaseFileName());
+					DataManager.reportDbSeed(++seedDone, seedTotal, set);
 					try {
 						// long time = System.currentTimeMillis();
 						File setFile = new File(XmlCardHolder.getDbFolder(), Location.createLocationFromSet(
@@ -389,12 +392,15 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 			Set<Location> hiddenSets = getHiddenSets();
 			setInitialized(false);
 			try {
+				int total = files.size();
+				int done = 0;
 				for (File file : files) {
 					Location setLocation = Location.createLocation(file, Location.NO_WHERE);
 					if (!hiddenSets.contains(setLocation))
 						addFile(file, setLocation, true);
 					else
 						MagicLogger.log("Not loading set - hidden - " + setLocation);
+					DataManager.reportDbLoad(++done, total, setLocation.getName());
 				}
 			} finally {
 				setInitialized(true);

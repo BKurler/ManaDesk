@@ -59,6 +59,88 @@ public class DataManager {
 	private Thread initThread;
 	private Object initThreadLock = new Object();
 
+	/**
+	 * Lightweight startup-progress channel for the database load. The core plugin
+	 * is kept Eclipse-free, so this exposes plain values rather than an
+	 * {@code IProgressMonitor}; the RCP splash handler polls them while it holds
+	 * the splash screen open during {@link #syncInitDb()}.
+	 */
+	private static volatile int initWorked;
+	private static volatile int initTotal;
+	private static volatile String initTask = "";
+	private static volatile boolean dbFullyLoaded;
+
+	/** Called by the database loaders to publish progress during {@link #syncInitDb()}. */
+	public static void reportInit(int worked, int total, String task) {
+		initWorked = worked;
+		initTotal = total;
+		if (task != null)
+			initTask = task;
+	}
+
+	public static int getInitWorked() {
+		return initWorked;
+	}
+
+	public static int getInitTotal() {
+		return initTotal;
+	}
+
+	public static String getInitTask() {
+		return initTask;
+	}
+
+	/** {@code true} once {@link #syncInitDb()} has finished (or failed). */
+	public static boolean isDbFullyLoaded() {
+		return dbFullyLoaded;
+	}
+
+	// Overall startup progress is reported on a fixed 0..INIT_SCALE scale so the
+	// splash bar advances smoothly across the phases of syncInitDb() instead of
+	// jumping 0->100 per phase.
+	public static final int INIT_SCALE = 1000;
+	private static final int BAND_SEED_START = 20;
+	private static final int BAND_SEED_END = 90;
+	private static final int BAND_DB_START = 90;
+	private static final int BAND_DB_END = 700;
+	private static final int BAND_PRICE_START = 700;
+	private static final int BAND_PRICE_END = 800;
+	private static final int BAND_RECONCILE_START = 850;
+	private static final int BAND_RECONCILE_END = INIT_SCALE;
+
+	private static int band(int start, int end, long done, long total) {
+		return total > 0 ? start + (int) ((long) (end - start) * Math.min(done, total) / total) : start;
+	}
+
+	/** {@code "(3/500)  "} count prefix, or {@code ""} when the total is unknown. */
+	private static String count(int done, int total) {
+		return total > 0 ? "(" + done + "/" + total + ")  " : "";
+	}
+
+	/** Per-edition progress while seeding set files (before the main load). */
+	public static void reportDbSeed(int done, int total, String setName) {
+		reportInit(band(BAND_SEED_START, BAND_SEED_END, done, total), INIT_SCALE,
+				count(done, total) + (setName == null ? "Preparing sets…" : "Preparing " + setName));
+	}
+
+	/** Per-set progress from the card-database loader, mapped into the card-DB band. */
+	public static void reportDbLoad(int setsDone, int setsTotal, String setName) {
+		reportInit(band(BAND_DB_START, BAND_DB_END, setsDone, setsTotal), INIT_SCALE,
+				count(setsDone, setsTotal) + (setName == null ? "Loading card database…" : "Loading " + setName));
+	}
+
+	/** Per-file progress while loading cached prices. */
+	public static void reportPriceLoad(int done, int total) {
+		reportInit(band(BAND_PRICE_START, BAND_PRICE_END, done, total), INIT_SCALE,
+				count(done, total) + "Loading prices…");
+	}
+
+	/** Per-card progress from reconcile(), mapped into the reconcile band. */
+	private static void reportReconcile(int done, int total) {
+		reportInit(band(BAND_RECONCILE_START, BAND_RECONCILE_END, done, total), INIT_SCALE,
+				"Linking collections to cards…");
+	}
+
 	private DataManager() {
 		MagicLogger.debug("Data Manager instance " + this.hashCode());
 		handler = new XmlCardHolder();
@@ -525,6 +607,8 @@ public class DataManager {
 		ICardStore db = getMagicDBStore();
 		ICardStore library = getLibraryCardStore();
 		List<IMagicCard> list = new MagicCardList(cards).getList();
+		int total = list.size();
+		int done = 0;
 		for (Object card : list) {
 			// Need to repair references to MagicCard instances
 			if (card instanceof MagicCardPhysical) {
@@ -533,6 +617,8 @@ public class DataManager {
 					reconcile(mcp, db, library, false);
 				}
 			}
+			if ((++done & 0x3ff) == 0)
+				reportReconcile(done, total);
 		}
 		Collection<IMagicCard> list2 = new MagicCardList(list).getMagicBaseList();
 		getMagicDBStore().updateList(list2, Collections.singleton(MagicCardField.OWN_COUNT));
@@ -604,13 +690,25 @@ public class DataManager {
 
 	public void syncInitDb() {
 		MagicLogger.traceStart("syncDb");
-		getModelRoot();
-		getMagicDBStore().initialize();
-		getDBPriceStore().initialize();
-		getDBPriceStore().reloadPrices(); // XXX
-		getCardHandler().getLibraryCardStore().initialize();
-		reconcile();
-		MagicLogger.traceEnd("syncDb");
+		try {
+			reportInit(0, INIT_SCALE, "Scanning card folders…");
+			getModelRoot();
+			reportInit(BAND_SEED_START, INIT_SCALE, "Preparing sets…");
+			// getMagicDBStore().initialize() runs loadFromSoftware() (per-edition
+			// seed - reportDbSeed) then the per-set load loop (reportDbLoad).
+			getMagicDBStore().initialize();
+			reportInit(BAND_PRICE_START, INIT_SCALE, "Loading prices…");
+			getDBPriceStore().initialize();
+			getDBPriceStore().reloadPrices(); // XXX
+			reportInit(BAND_PRICE_END, INIT_SCALE, "Loading your collections…");
+			getCardHandler().getLibraryCardStore().initialize();
+			reportInit(BAND_RECONCILE_START, INIT_SCALE, "Linking collections to cards…");
+			reconcile();
+		} finally {
+			reportInit(INIT_SCALE, INIT_SCALE, "Ready");
+			dbFullyLoaded = true;
+			MagicLogger.traceEnd("syncDb");
+		}
 	}
 
 	public void asyncInitDb() {

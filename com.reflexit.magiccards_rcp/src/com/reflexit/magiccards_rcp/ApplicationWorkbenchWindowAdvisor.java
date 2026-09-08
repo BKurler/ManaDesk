@@ -68,9 +68,10 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		try {
 			installSoftwareUpdate();
 			checkForCardUpdates();
-			// Independent of the "check for card updates" flow: bring the local
-			// Scryfall bulk split up to date in the background so set updates are
-			// fast.
+			// Independent of the "check for card updates" flow: keep the local
+			// Scryfall bulk file / split current in the background so a later
+			// "Update cards of selected set(s)" is just a file read. Does not
+			// touch the loaded DB.
 			CheckForUpdateDbHandler.primeCardDatabaseSplit();
 		} catch (Throwable e) {
 			Activator.log(e);
@@ -90,7 +91,63 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			}
 		}
 
+		MASplashHandler.reportStartupTail("Restoring views…", 0.10);
 		restoreDeckFamilyIcons();
+		MASplashHandler.reportStartupTail("Loading card lists…", 0.35);
+		drainInitialCardLoads();
+		MASplashHandler.reportStartupTail("Finishing…", 0.95);
+	}
+
+	/**
+	 * Each restored card view finishes its first data load on a background job and
+	 * then rebuilds its (large) viewer on the UI thread. Left alone, that burst of
+	 * refreshes lands the instant the splash closes and briefly freezes the fresh
+	 * window. Pump it here - we are still under the splash screen (see
+	 * {@code MASplashHandler}) - so the window is settled when it appears. Bounded
+	 * so a stuck load can never hold startup.
+	 */
+	private void drainInitialCardLoads() {
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		Shell shell = window == null ? null : window.getShell();
+		Display display = (shell == null || shell.isDisposed()) ? null : shell.getDisplay();
+		if (display == null) {
+			return;
+		}
+		long start = System.currentTimeMillis();
+		long deadline = start + 6000L;
+		int idle = 0;
+		while (System.currentTimeMillis() < deadline) {
+			// keep the splash bar drifting through the tail slice while we pump
+			double frac = 0.35 + 0.55 * (System.currentTimeMillis() - start) / 6000.0;
+			MASplashHandler.reportStartupTail(null, frac);
+			if (display.readAndDispatch()) {
+				idle = 0;
+				continue;
+			}
+			if (!cardLoadJobsActive() && ++idle >= 3) {
+				break;
+			}
+			try {
+				Thread.sleep(40L);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				break;
+			}
+		}
+	}
+
+	private static boolean cardLoadJobsActive() {
+		for (Job j : Job.getJobManager().find(null)) {
+			int state = j.getState();
+			if (state != Job.RUNNING && state != Job.WAITING) {
+				continue;
+			}
+			String name = j.getName();
+			if (name != null && name.startsWith("Loading cards for")) {
+				return true;
+			}
+		}
+		return false;
 	}
 
 	/**
@@ -101,6 +158,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	 * session's workbench layout until the user clicks into it. Force all of
 	 * them to materialize once, right after the window opens, so every tab's
 	 * icon is correct without requiring a click.
+	 * <p>
+	 * This runs while the splash screen is still up (see {@code MASplashHandler}).
+	 * Each {@code getView(true)} synchronously builds a deck view and kicks its
+	 * data-load job; pump the event queue between them so the splash keeps
+	 * painting and the burst of restored views does not land on the UI thread all
+	 * at once.
 	 */
 	private void restoreDeckFamilyIcons() {
 		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
@@ -111,9 +174,21 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		if (page == null) {
 			return;
 		}
-		for (IViewReference ref : page.getViewReferences()) {
-			if (com.reflexit.magiccards.ui.views.lib.DeckView.ID.equals(ref.getId())) {
-				ref.getView(true);
+		Display display = window.getShell() != null ? window.getShell().getDisplay() : Display.getCurrent();
+		java.util.List<IViewReference> decks = new ArrayList<>();
+		for (IViewReference ref : page.getViewReferences())
+			if (com.reflexit.magiccards.ui.views.lib.DeckView.ID.equals(ref.getId()))
+				decks.add(ref);
+		int done = 0;
+		for (IViewReference ref : decks) {
+			ref.getView(true);
+			done++;
+			MASplashHandler.reportStartupTail("(" + done + "/" + decks.size() + ")  Restoring decks",
+					0.10 + 0.20 * done / Math.max(1, decks.size()));
+			if (display != null) {
+				for (int i = 0; i < 10 && display.readAndDispatch(); i++) {
+					// flush pending paints / async work before the next view
+				}
 			}
 		}
 	}
