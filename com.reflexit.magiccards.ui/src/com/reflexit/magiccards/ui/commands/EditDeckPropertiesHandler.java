@@ -12,6 +12,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - fire UPDATE_CONTAINER after editing so open tabs / the navigator repaint
+ *     Rémi Dutil (2026) - pass the CardCollection so the dialog can create its sideboard/extra
  */
 package com.reflexit.magiccards.ui.commands;
 
@@ -39,7 +40,7 @@ public class EditDeckPropertiesHandler extends AbstractHandler {
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		IWorkbenchWindow window = HandlerUtil.getActiveWorkbenchWindowChecked(event);
 		CardCollection f = getApplicableElement();
-		EditDeckPropertiesDialog dialog = new EditDeckPropertiesDialog(window.getShell(), f.getStorageInfo());
+		EditDeckPropertiesDialog dialog = new EditDeckPropertiesDialog(window.getShell(), f);
 		if (dialog.open() == Dialog.OK) {
 			// fire UPDATE_CONTAINER so an already-open DeckView tab repaints its
 			// icon / name for the new virtual / read-only / type flags
