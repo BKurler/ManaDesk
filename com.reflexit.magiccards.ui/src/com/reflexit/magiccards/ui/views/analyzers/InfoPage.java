@@ -1,6 +1,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - open the deck-aware Edit Properties dialog (sideboard/
+ *                         extra creation); use getArea().getShell() (editButton is
+ *                         never built)
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -25,6 +28,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Link;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.DataManager;
@@ -33,6 +37,7 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICard;
+import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
@@ -299,7 +304,17 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 
 	private void openEdit() {
 		try {
-			if (new EditDeckPropertiesDialog(editButton.getShell(), getStorageInfo()).open() == Window.OK) {
+			Shell shell = getArea().getShell();
+			CardCollection cc = null;
+			try {
+				if (getDeckView() != null)
+					cc = getDeckView().getCardCollection();
+			} catch (RuntimeException notADeckView) {
+				// InfoPage shown outside a DeckView - fall back to the info-only dialog
+			}
+			EditDeckPropertiesDialog dialog = cc != null ? new EditDeckPropertiesDialog(shell, cc)
+					: new EditDeckPropertiesDialog(shell, getStorageInfo());
+			if (dialog.open() == Window.OK) {
 				activate();
 			}
 		} catch (Exception x) {
