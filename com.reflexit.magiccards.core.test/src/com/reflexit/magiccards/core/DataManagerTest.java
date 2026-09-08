@@ -331,6 +331,22 @@ public class DataManagerTest extends TestCase {
 	// fail("Not yet implemented");
 	// }
 	@Test
+	public void testInitProgressChannel() {
+		DataManager.reportInit(30, 120, "phase x");
+		assertEquals(30, DataManager.getInitWorked());
+		assertEquals(120, DataManager.getInitTotal());
+		assertEquals("phase x", DataManager.getInitTask());
+	}
+
+	@Test
+	public void testSyncInitDbCompletesProgress() {
+		dm.syncInitDb();
+		assertTrue(DataManager.isDbFullyLoaded());
+		assertEquals(DataManager.INIT_SCALE, DataManager.getInitTotal());
+		assertEquals(DataManager.getInitTotal(), DataManager.getInitWorked());
+	}
+
+	@Test
 	public void testMaterialize() {
 		MagicCardPhysical card2 = new MagicCardPhysical(card, deck2.getLocation());
 		card2.setOwn(false);

@@ -57,17 +57,19 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 	}
 
 	/**
-	 * Independent startup task: bring the local Scryfall bulk split up to date -
-	 * download the "Default Cards" bulk file if Scryfall published a newer one,
-	 * then split it into one file per set - so later set updates are just a file
-	 * read. Runs in its own background job; no-op when working offline.
+	 * Independent startup task: keep the local Scryfall <em>Default Cards</em> bulk
+	 * file / per-set split current in the <b>background</b> - download a newer bulk
+	 * if Scryfall published one and re-split it - so that when the user runs
+	 * "Update cards of selected set(s)" it is just a local file read. Does NOT
+	 * touch the loaded card DB; the user decides when to apply a set update. No-op
+	 * when offline or already current.
 	 */
 	public static void primeCardDatabaseSplit() {
 		new Job("Preparing card database") {
 			@Override
 			protected IStatus run(IProgressMonitor imonitor) {
-				if (WebUtils.isWorkOffline()) {
-					System.err.println("[ScryfallBulk] startup: offline, card-data split not checked");
+				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning()) {
+					System.err.println("[ScryfallBulk] startup: card-data split not checked (offline/testing)");
 					return Status.OK_STATUS;
 				}
 				System.err.println("[ScryfallBulk] startup: checking card-data split...");
@@ -75,6 +77,7 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 					ScryfallBulkCache.ensureSplitAll(new CoreMonitorAdapter(imonitor));
 					System.err.println("[ScryfallBulk] startup: card-data split ready");
 				} catch (Exception e) {
+					System.err.println("[ScryfallBulk] startup: split check failed (" + e.getMessage() + ")");
 					MagicUIActivator.log(e);
 				}
 				return Status.OK_STATUS;

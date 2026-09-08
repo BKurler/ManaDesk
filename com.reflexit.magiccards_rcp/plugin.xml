@@ -18,6 +18,17 @@
       </application>
    </extension>
    <extension
+         point="org.eclipse.ui.splashHandlers">
+      <splashHandler
+            id="com.reflexit.magiccards_rcp.splash"
+            class="com.reflexit.magiccards_rcp.MASplashHandler">
+      </splashHandler>
+      <splashHandlerProductBinding
+            productId="com.reflexit.magiccards_rcp.product"
+            splashId="com.reflexit.magiccards_rcp.splash">
+      </splashHandlerProductBinding>
+   </extension>
+   <extension
          id="product"
          point="org.eclipse.core.runtime.products">
       <product

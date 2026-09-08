@@ -102,6 +102,8 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 		File[] listFiles = pricesDir.listFiles();
 		if (listFiles == null)
 			return;
+		int total = listFiles.length;
+		int done = 0;
 		for (File file : listFiles) {
 			try {
 				if (file.getName().endsWith(".xml"))
@@ -109,6 +111,7 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 			} catch (Exception e) {
 				MagicLogger.log(e);
 			}
+			DataManager.reportPriceLoad(++done, total);
 		}
 	}
 

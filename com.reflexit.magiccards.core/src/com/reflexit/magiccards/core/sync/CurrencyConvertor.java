@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - avoid re-fetching exchange rates several times per session
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.BufferedReader;
@@ -43,7 +47,7 @@ public class CurrencyConvertor {
 		return calculateRate(from, to);
 	}
 
-	private static Double calculateRate(String from, String to) {
+	private static synchronized Double calculateRate(String from, String to) {
 		if (from.equals(to))
 			return 1.0;
 		Double rate = rates.get(convertCu(from, to));
@@ -85,9 +89,22 @@ public class CurrencyConvertor {
 		return url;
 	}
 
+	/** When {@link #loadEuroBankRates()} last succeeded, to avoid re-fetching the
+	 *  ECB rates several times per session (the split, the price store and the
+	 *  "check for updates" job all trigger currency loading). */
+	private static volatile long lastRatesFetch = 0L;
+	private static final long RATES_TTL_MS = 6L * 60L * 60L * 1000L; // 6 hours
+
 	public static synchronized void update() {
+		update(false);
+	}
+
+	public static synchronized void update(boolean force) {
 		if (WebUtils.isWorkOffline())
 			return;
+		if (!force && System.currentTimeMillis() - lastRatesFetch < RATES_TTL_MS
+				&& rates.get(convertCu(EUR, "USD")) != null)
+			return; // already have fresh rates this session
 		loadEuroBankRates();
 	}
 
@@ -110,6 +127,7 @@ public class CurrencyConvertor {
 					}
 				}
 			}
+			lastRatesFetch = System.currentTimeMillis();
 		} catch (Exception e) {
 			MagicLogger.log(e);
 		}
