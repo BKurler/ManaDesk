@@ -1,25 +1,20 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - downloadUpdates() rewritten as one full update from the
+ *                         Scryfall Default Cards bulk file (no per-set path);
+ *                         cancellable, reports progress per phase
  */
 
 package com.reflexit.magiccards.core.model.xml;
 
 import java.io.BufferedReader;
 import java.io.File;
-import java.io.FileInputStream;
-import java.io.FileNotFoundException;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
-import java.net.MalformedURLException;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashSet;
 import java.util.Properties;
-import java.util.Set;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
@@ -39,10 +34,10 @@ import com.reflexit.magiccards.core.model.storage.IDbPriceStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.monitor.SubCoreProgressMonitor;
+import com.reflexit.magiccards.core.sync.ParseScryFallChecklist;
 import com.reflexit.magiccards.core.sync.ParseScryFallSets;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.TextPrinter;
-import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
 
 public class XmlCardHolder implements ICardHandler {
 	private String activeDeck;
@@ -187,241 +182,73 @@ public class XmlCardHolder implements ICardHandler {
 		return res;
 	}
 
-	/**
-	 * Serializes card-database updates. Two update jobs (e.g. two "Update cards of
-	 * selected set(s)" invocations) used to run fully in parallel -
-	 * {@code updateOperation} does not lock - racing on the DB, editions.txt and
-	 * the temp flat files.
-	 */
+	/** Serializes card-database updates so two "Update" runs don't race on the DB / editions.txt. */
 	private static final Object UPDATE_LOCK = new Object();
 
-	private static volatile long lastSetListRefresh = 0L;
-	private static final long SET_LIST_TTL_MS = 10L * 60L * 1000L;
-
 	/**
-	 * Pull the Scryfall set list into {@link Editions}, at most once per
-	 * {@link #SET_LIST_TTL_MS}. Does not save - the caller saves editions.txt once
-	 * at the end of the update.
+	 * Full card-database update from the Scryfall <em>Default Cards</em> bulk file:
+	 * download a fresher bulk if Scryfall published one, parse it once, write every
+	 * {@code <DB>/<set>.xml}, then refresh {@code editions.txt} (and prices, done
+	 * inside the parse). {@code set} is ignored - there is no per-set update any
+	 * more. Honours {@code pm.isCanceled()} during the download and between sets.
+	 *
+	 * @return the number of card records loaded
 	 */
-	private void refreshSetListOnce() {
-		if (System.currentTimeMillis() - lastSetListRefresh < SET_LIST_TTL_MS)
-			return;
-		try {
-			ParseScryFallSets allSets = new ParseScryFallSets();
-			allSets.loadSets(false);
-			for (Edition edition : allSets.getAll())
-				Editions.getInstance().addEdition(edition);
-			lastSetListRefresh = System.currentTimeMillis();
-		} catch (Exception e) {
-			MagicLogger.log(e); // move on if set loading fails
-		}
-	}
-
 	@Override
 	public int downloadUpdates(final String set, final Properties options, ICoreProgressMonitor pm)
 			throws MagicException, InterruptedException {
-		final int rec[] = new int[1];
+		final int[] rec = { 0 };
 		synchronized (UPDATE_LOCK) {
-			DataManager.getInstance().getMagicDBStore().updateOperation(pm1 -> {
+			final DbMultiFileCardStore db = (DbMultiFileCardStore) DataManager.getInstance().getMagicDBStore();
+			db.updateOperation(pm1 -> {
 				try {
-					String lang = (String) options.get(UpdateCardsFromWeb.UPDATE_LANGUAGE);
-					if (lang != null && lang.length() == 0) {
-						lang = null;
-					}
-					pm1.beginTask("Downloading", 110 + (lang == null ? 0 : 100));
-					pm1.subTask("Initializing");
+					pm1.beginTask("Updating card database", 1000);
+					pm1.subTask("Checking Scryfall for a newer card file…");
 					if (pm1.isCanceled())
 						throw new InterruptedException();
-					pm1.subTask("Updating set list...");
-					refreshSetListOnce();
-					ArrayList<IMagicCard> list = new ArrayList<IMagicCard>();
-					pm1.subTask("Downloading cards...");
-					rec[0] = downloadAndStore(set, options, list, pm1);
-					pm1.subTask("Updating editions...");
+					File bulk = ScryfallBulkCache.getDefaultCardsFile(new SubCoreProgressMonitor(pm1, 100));
+
+					pm1.subTask("Reading card data…");
+					java.util.Map<String, java.util.List<MagicCard>> all = new ParseScryFallChecklist()
+							.parseBulkGrouped(bulk, null, new SubCoreProgressMonitor(pm1, 350));
+
+					// 1. merge every parsed card into the in-memory DB (per set)
+					SubCoreProgressMonitor mm = new SubCoreProgressMonitor(pm1, 250);
+					mm.beginTask("Merging cards", Math.max(1, all.size()));
+					int done = 0;
+					for (java.util.Map.Entry<String, java.util.List<MagicCard>> e : all.entrySet()) {
+						if (pm1.isCanceled())
+							throw new InterruptedException();
+						if (!e.getValue().isEmpty()) {
+							db.addAll(e.getValue());
+							rec[0] += e.getValue().size();
+						}
+						mm.setTaskName("(" + (++done) + "/" + all.size() + ")  Reading " + e.getKey());
+						mm.worked(1);
+					}
+					mm.done();
+
+					// 2. write the changed <DB>/<set>.xml files (per set, reported)
+					pm1.subTask("Writing sets…");
+					db.saveDirtySets(new SubCoreProgressMonitor(pm1, 250));
+
+					pm1.subTask("Updating set list…");
+					try {
+						ParseScryFallSets sets = new ParseScryFallSets();
+						sets.loadSets(false);
+						for (Edition ed : sets.getAll())
+							Editions.getInstance().addEdition(ed);
+					} catch (Exception e) {
+						MagicLogger.log(e); // set-list refresh is best effort
+					}
 					Editions.getInstance().save();
-					pm1.worked(10);
-					if (lang != null && lang.length() > 0) {
-						pm1.subTask("Updating languages...");
-						Set<ICardField> fieldMaps = new HashSet<ICardField>();
-						fieldMaps.add(MagicCardField.LANG);
-						new UpdateCardsFromWeb().updateStore(list.iterator(), list.size(), fieldMaps, lang,
-								getMagicDBStore(), new SubCoreProgressMonitor(pm1, 100));
-					}
+					pm1.worked(50);
 				} catch (IOException e) {
 					throw new MagicException(e);
 				}
 			}, pm);
 		}
 		return rec[0];
-	}
-
-	/**
-	 * Update a batch of named sets in a single operation: the Scryfall set list is
-	 * refreshed once, the bulk card file is fetched and parsed once, and
-	 * editions.txt is saved once - instead of repeating all of that per set as a
-	 * per-set {@link #downloadUpdates(String, Properties, ICoreProgressMonitor)}
-	 * loop would.
-	 */
-	public int downloadUpdates(final Collection<String> sets, final Properties options, ICoreProgressMonitor pm)
-			throws MagicException, InterruptedException {
-		final int rec[] = new int[1];
-		synchronized (UPDATE_LOCK) {
-			DataManager.getInstance().getMagicDBStore().updateOperation(pm1 -> {
-				try {
-					pm1.beginTask("Updating " + sets.size() + " sets", 120);
-					pm1.subTask("Updating set list...");
-					refreshSetListOnce();
-					pm1.worked(10);
-					if (pm1.isCanceled())
-						throw new InterruptedException();
-
-					Editions editions = Editions.getInstance();
-					ArrayList<Edition> toUpdate = new ArrayList<>();
-					for (String name : sets) {
-						Edition ed = editions.getEditionByName(name);
-						if (ed != null)
-							toUpdate.add(ed);
-						else
-							MagicLogger.log("Update sets: unknown set '" + name + "'");
-					}
-
-					ArrayList<IMagicCard> list = new ArrayList<>();
-					pm1.subTask("Downloading cards...");
-					rec[0] = downloadAndStoreSets(toUpdate, options, list, new SubCoreProgressMonitor(pm1, 100));
-					pm1.worked(10);
-				} catch (IOException e) {
-					throw new MagicException(e);
-				}
-			}, pm);
-		}
-		return rec[0];
-	}
-
-	// Scryfall download version
-	public int downloadAndStore(String set, Properties options, ArrayList<IMagicCard> list, ICoreProgressMonitor pm)
-			throws FileNotFoundException, MalformedURLException, IOException, InterruptedException {
-		int rec = 0;
-		if (set.equalsIgnoreCase("All")) {
-
-			// Refresh sets list
-			ParseScryFallSets allSets = new ParseScryFallSets();
-			allSets.loadSets(false);
-
-			rec = downloadAndStoreSets(allSets.getAll(), options, list, pm);
-			return rec;
-		} else if (set.equalsIgnoreCase("Recents")) {
-
-			// Refresh recent sets (last 2 years)
-			ParseScryFallSets allSets = new ParseScryFallSets();
-			allSets.loadSets(false);
-
-			LocalDate threshold = LocalDate.now().minusYears(2);
-			ArrayList<Edition> recents = new ArrayList<>();
-			for (Edition edition : allSets.getAll()) {
-				LocalDate setDate = edition.getReleaseDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-				if (setDate.compareTo(threshold) > 0)
-					recents.add(edition);
-			}
-
-			rec = downloadAndStoreSets(recents, options, list, pm);
-			return rec;
-		} else {
-
-			Editions editions = Editions.getInstance();
-
-			Edition ed = editions.getEditionByName(set);
-
-			rec += downloadAndStoreSet(ed, options, list, new SubCoreProgressMonitor(pm, 1000));
-			return rec;
-		}
-	}
-
-	// Scryfall version
-	public int downloadAndStoreSet(Edition edition, Properties options, ArrayList<IMagicCard> list,
-			ICoreProgressMonitor pm)
-			throws FileNotFoundException, MalformedURLException, IOException, InterruptedException {
-		pm.beginTask("Downloading set", 100);
-		long t0 = System.currentTimeMillis();
-		Set<String> codes = setCodesOf(edition);
-		try {
-			// Add/refresh the set in the official list before loading its cards.
-			Editions.getInstance().addEdition(edition);
-
-			int rec = 0;
-			boolean any = false;
-			for (String code : codes) {
-				File flat = ScryfallBulkCache.flatFileForSet(code, pm);
-				pm.worked(60 / Math.max(1, codes.size()));
-				if (flat == null)
-					continue;
-				any = true;
-				if (pm.isCanceled())
-					throw new InterruptedException();
-				ArrayList<IMagicCard> one = new ArrayList<>();
-				try (BufferedReader st = new BufferedReader(new InputStreamReader(
-						new java.util.zip.GZIPInputStream(new FileInputStream(flat)), FileUtils.CHARSET_UTF_8))) {
-					rec += loadtFromFlatIntoDB(st, one);
-				}
-				list.addAll(one);
-			}
-			pm.worked(30);
-			System.err.println("[SetUpdate] done set '" + edition.getName() + "' " + codes + ": "
-					+ (any ? rec + " cards" : "no Scryfall data") + " in " + (System.currentTimeMillis() - t0) + " ms");
-			return rec;
-		} finally {
-			pm.done();
-		}
-	}
-
-	/**
-	 * Update several sets in one shot. Makes sure the local Scryfall split is
-	 * current first (one download + split at most), then each set is a plain file
-	 * read; editions.txt is saved once, not once per set.
-	 */
-	public int downloadAndStoreSets(Collection<Edition> editions, Properties options, ArrayList<IMagicCard> list,
-			ICoreProgressMonitor pm) throws IOException, InterruptedException {
-		int n = editions.size();
-		pm.beginTask("Downloading " + n + " sets", Math.max(1, n) * 100 + 100);
-		int rec = 0;
-		try {
-			try {
-				ScryfallBulkCache.ensureSplitAll(pm);
-			} catch (IOException e) {
-				MagicLogger.log(e); // fall through: flatFileForSet does per-set fallback
-			}
-			pm.worked(100);
-
-			int i = 0;
-			for (Edition edition : editions) {
-				if (pm.isCanceled())
-					throw new InterruptedException();
-				i++;
-				pm.setTaskName("Updating " + edition.getName() + " (" + i + " of " + n + ")");
-				try {
-					rec += downloadAndStoreSet(edition, options, list, new SubCoreProgressMonitor(pm, 100));
-				} catch (InterruptedException e) {
-					throw e;
-				} catch (Exception e) {
-					MagicLogger.log(e);
-				}
-			}
-			Editions.getInstance().save();
-			return rec;
-		} finally {
-			pm.done();
-		}
-	}
-
-	/**
-	 * The Scryfall set codes for an edition. Only the real abbreviations - NOT
-	 * {@code getIconAbbr()}, which is the set-symbol SVG token (e.g. "star" for
-	 * sets that use the generic star icon) and is not a set code.
-	 */
-	private static Set<String> setCodesOf(Edition edition) {
-		Set<String> codes = new HashSet<>();
-		for (String a : edition.getAbbreviations())
-			codes.add(a.toLowerCase());
-		return codes;
 	}
 
 	@Override

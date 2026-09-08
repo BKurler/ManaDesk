@@ -2,6 +2,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - parseBulkGrouped() is the single card-DB update pass:
+ *                         public, cancellable, progress-reporting; the per-set
+ *                         gzip split/merge round-trip is gone
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -19,9 +22,7 @@ import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.util.zip.GZIPInputStream;
-import java.util.zip.GZIPOutputStream;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Collections;
@@ -958,9 +959,19 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	 * @param onlyLower
 	 *            if non-null, keep only these (lower-cased) set codes; if null,
 	 *            keep every set found in the file
+	 * @param pm
+	 *            cancellation + progress; may be {@link ICoreProgressMonitor#NONE}
 	 * @return a map from lower-cased set code to that set's cards
+	 * @throws InterruptedException
+	 *             when {@code pm} is cancelled mid-parse
 	 */
-	private Map<String, List<MagicCard>> parseBulkGrouped(File bulkFile, Set<String> onlyLower) throws IOException {
+	public Map<String, List<MagicCard>> parseBulkGrouped(File bulkFile, Set<String> onlyLower, ICoreProgressMonitor pm)
+			throws IOException, InterruptedException {
+		if (pm == null)
+			pm = ICoreProgressMonitor.NONE;
+		// Rough estimate so the bar moves; the true count is only known at the end.
+		final int estTotal = 130_000;
+		pm.beginTask("Reading Scryfall card data", estTotal);
 		loadTcgMediumPrices();
 		Map<String, List<MagicCard>> result = new HashMap<>();
 		if (onlyLower != null)
@@ -1025,6 +1036,11 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				if (line.endsWith(","))
 					line = line.substring(0, line.length() - 1);
 				records++;
+				if ((records & 0xfff) == 0) {
+					if (pm.isCanceled())
+						throw new InterruptedException();
+					pm.worked(0x1000);
+				}
 				try {
 					JSONObject elem = (JSONObject) parser.parse(line);
 					Object set = elem.get("set");
@@ -1060,98 +1076,9 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		}
 		System.err.println("[ScryfallBulk] parsed " + records + " records in " + (System.currentTimeMillis() - t0)
 				+ " ms, matched " + matched + " printing(s) for "
-				+ (onlyLower == null ? result.size() + " set(s) (full split)" : "abbreviations " + onlyLower));
+				+ (onlyLower == null ? result.size() + " set(s)" : "abbreviations " + onlyLower));
+		pm.done();
 		return result;
-	}
-
-	/**
-	 * Cards for the given (lower-cased) set codes, from one filtered pass over the
-	 * bulk file. A key is present for every requested code (possibly empty).
-	 */
-	public Map<String, List<MagicCard>> groupSetsFromBulk(File bulkFile, Set<String> setCodesLower) throws IOException {
-		return parseBulkGrouped(bulkFile, setCodesLower);
-	}
-
-	/**
-	 * One pass over the bulk file, writing {@code <outDir>/<code>.txt.gz} for
-	 * every set that has at least one paper printing.
-	 *
-	 * @return the set codes written
-	 */
-	public Set<String> splitAllFromBulk(File bulkFile, File outDir) throws IOException {
-		Map<String, List<MagicCard>> all = parseBulkGrouped(bulkFile, null);
-		outDir.mkdirs();
-		Set<String> written = new java.util.HashSet<>();
-		for (Map.Entry<String, List<MagicCard>> e : all.entrySet()) {
-			if (e.getValue().isEmpty())
-				continue;
-			writeSetFlatGz(e.getValue(), new File(outDir, e.getKey() + ".txt.gz"));
-			written.add(e.getKey());
-		}
-		return written;
-	}
-
-	/**
-	 * Write the flat text (header + collector-number-sorted lines) for one set's
-	 * cards, using the same {@link SortedOutputHanlder} the REST path uses.
-	 */
-	public void writeSetFlat(List<MagicCard> cards, PrintStream out) {
-		SortedOutputHanlder handler = new SortedOutputHanlder(out, true, true);
-		for (MagicCard card : cards)
-			handler.handleCard(card);
-		handler.onEnd();
-	}
-
-	/**
-	 * {@link #writeSetFlat} to a gzip file, written atomically (temp + rename).
-	 * <p>
-	 * If the target already holds byte-identical decompressed content, the file is
-	 * left untouched (same {@code lastModified()}) - so a set's split file only
-	 * gets a fresh timestamp when the set actually changed. Startup and the
-	 * background refresh key off that timestamp to decide which sets to re-apply.
-	 */
-	public void writeSetFlatGz(List<MagicCard> cards, File gzFile) throws IOException {
-		File parent = gzFile.getParentFile();
-		if (parent != null)
-			parent.mkdirs();
-		File tmp = File.createTempFile(gzFile.getName() + "-", ".tmp", parent);
-		try {
-			try (PrintStream out = new PrintStream(
-					new BufferedOutputStream(new GZIPOutputStream(new FileOutputStream(tmp)),
-							FileUtils.DEFAULT_BUFFER_SIZE),
-					false, FileUtils.UTF8)) {
-				writeSetFlat(cards, out);
-			}
-			if (gzFile.isFile() && gzDecompressedEquals(tmp, gzFile))
-				return; // unchanged - keep the old file and its timestamp
-			Files.move(tmp.toPath(), gzFile.toPath(), StandardCopyOption.REPLACE_EXISTING);
-		} finally {
-			tmp.delete();
-		}
-	}
-
-	/** True if the two gzip files decompress to identical bytes. */
-	private static boolean gzDecompressedEquals(File a, File b) {
-		try (java.io.InputStream ia = new java.util.zip.GZIPInputStream(
-				new BufferedInputStream(new FileInputStream(a)));
-				java.io.InputStream ib = new java.util.zip.GZIPInputStream(
-						new BufferedInputStream(new FileInputStream(b)))) {
-			byte[] ba = new byte[8192];
-			byte[] bb = new byte[8192];
-			while (true) {
-				int na = ia.readNBytes(ba, 0, ba.length);
-				int nb = ib.readNBytes(bb, 0, bb.length);
-				if (na != nb)
-					return false;
-				if (na == 0)
-					return true;
-				for (int i = 0; i < na; i++)
-					if (ba[i] != bb[i])
-						return false;
-			}
-		} catch (IOException e) {
-			return false;
-		}
 	}
 
 	public void printCollectedSymbols() {

@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setText() no longer downloads the card image (the
+ *                         caller does that on a background thread)
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -194,7 +196,11 @@ class CardDescComposite extends Composite {
 		}
 	}
 
-	private void ensureCardImageCached(IMagicCard card) {
+	/**
+	 * Download the card image to the local cache if it is not there yet. This does
+	 * blocking network I/O - call it from a background thread, never the UI thread.
+	 */
+	void ensureCardImageCached(IMagicCard card) {
 		try {
 			String path = ImageCreator.getInstance().createCardPath(card, false, false);
 			if (path == null || path.isEmpty()) {
@@ -221,9 +227,9 @@ class CardDescComposite extends Composite {
 		}
 		this.card = card; // keep current, e.g. for the rulings "back" link
 
-		// --- NEW: ensure the image is cached on disk ---
-		ensureCardImageCached(card);
-		// ------------------------------------------------
+		// Note: the image is cached on disk by CardDescView.LoadCardJob (a
+		// background thread) before this runs. Do NOT download it here - setText()
+		// is called on the UI thread.
 
 		try {
 			if (textBrowser != null) {

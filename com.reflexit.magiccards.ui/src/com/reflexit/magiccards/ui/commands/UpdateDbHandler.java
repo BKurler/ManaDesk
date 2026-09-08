@@ -11,7 +11,7 @@
 
 /*
  * Contributors:
- *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - single "Update Card Database" (Scryfall bulk), background job + cancel
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -24,126 +24,111 @@ import org.eclipse.core.commands.ExecutionException;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
-import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
+import org.eclipse.ui.IWorkbenchPage;
+import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.ICardHandler;
 import com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore;
-import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
+import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
-import com.reflexit.magiccards.ui.preferences.MagicGathererPreferencePage;
-import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.MagicDbView;
 
-
+/**
+ * "Update Card Database": one background job that downloads the current Scryfall
+ * <em>Default Cards</em> bulk file (only if a newer one was published) and rebuilds
+ * the whole local card database + prices from it. Cancellable from the progress area.
+ */
 public class UpdateDbHandler extends AbstractHandler {
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.
-	 * ExecutionEvent)
-	 */
+
+	private static final Object LOCK = new Object();
+	private static volatile boolean running;
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		performUpdate(event);
+		performUpdate();
 		return null;
 	}
 
-	public void performUpdate(final ExecutionEvent event) {
-		final Shell shell = MagicUIActivator.getShell();
-		String u1 = event.getParameter(PreferenceConstants.GATHERER_UPDATE_SET);
-		if (u1 == null) {
-			u1 = MagicGathererPreferencePage.RECENTS;
-		}
-		final String updateLand = event.getParameter(PreferenceConstants.GATHERER_UPDATE_LAND);
-		final String updatePrintings = event.getParameter(PreferenceConstants.GATHERER_UPDATE_PRINT);
-		final String set = u1;
-		if (u1.equalsIgnoreCase(MagicGathererPreferencePage.ALL)) {
-			boolean confirm = MessageDialog.openConfirm(shell, "Warning", "You selected to update All sets. " //
-					+ "This operation will take about 25 minutes. "
-					+ "This will go faster if the visible windows contains no/few cards."
-					+ "\nIf you want to update a specific set simply type it in the input field. "
-					+ "\nIf you want to update to latest sets just use 'Recents (last 2 years)'. "
-					+ "\n\nAre you sure you want to update ALL?");
-			if (!confirm)
+	/** Schedule the update job (no-op if one is already running). */
+	public static void performUpdate() {
+		synchronized (LOCK) {
+			if (running)
 				return;
+			running = true;
 		}
-		Job job = new Job("Updating database...") {
+		Job job = new Job("Updating card database") {
 			@Override
 			public IStatus run(IProgressMonitor pm) {
 				try {
-					ICardHandler ch = DataManager.getCardHandler();
-					Properties options = new Properties();
-					options.put(UpdateCardsFromWeb.UPDATE_BASIC_LAND_PRINTINGS, updateLand);
-					options.put(UpdateCardsFromWeb.UPDATE_OTHER_PRINTINGS, updatePrintings);
-					options.put(UpdateCardsFromWeb.UPDATE_SPECIAL,
-							event.getParameter(PreferenceConstants.GATHERER_UPDATE_SPECIAL));
-					if (set.equalsIgnoreCase(MagicGathererPreferencePage.ALL)) {
-						options.put(UpdateCardsFromWeb.UPDATE_OTHER_PRINTINGS, "true");
+					if (WebUtils.isWorkOffline()) {
+						asyncInfo("You are working offline. Turn off 'Work Offline' to update.");
+						return Status.OK_STATUS;
 					}
-					options.put(UpdateCardsFromWeb.UPDATE_LANGUAGE,
-							event.getParameter(PreferenceConstants.GATHERER_UPDATE_LANGUAGE));
-					final int rec = ch.downloadUpdates(set, options, new CoreMonitorAdapter(pm));
-					shell.getDisplay().syncExec(new Runnable() {
-						@Override
-						public void run() {
-							try {
-								IViewPart view = PlatformUI.getWorkbench().getActiveWorkbenchWindow().getActivePage()
-										.findView(MagicDbView.ID);
-								if (view != null) {
-									((MagicDbView) view).reloadData();
-								}
+					pm.beginTask("Updating card database", 100);
+					ICardHandler ch = DataManager.getCardHandler();
+					final int rec = ch.downloadUpdates(null, new Properties(),
+							new CoreMonitorAdapter(new SubProgressMonitor(pm, 85)));
+					if (pm.isCanceled())
+						return Status.CANCEL_STATUS;
 
-								DbPricesMultiFileStore store = (DbPricesMultiFileStore) DbPricesMultiFileStore
-										.getInstance();
-								store.reloadPrices();
-
-							} catch (Exception e) {
-								e.printStackTrace();
-							}
-							if (rec > 0)
-								MessageDialog.openInformation(shell, "Magic Db Update",
-										"Data updated: " + rec + " new records");
-							else if (rec == 0)
-								MessageDialog.openInformation(shell, "Magic Db Update",
-										"No new cards found for selected set but all the current cards has been updated");
-							else
-								MessageDialog.openError(shell, "Magic Db Update", "Query returned empty page");
-
-						}
+					pm.subTask("Refreshing prices…");
+					DbPricesMultiFileStore.getInstance().reloadPrices();
+					pm.worked(10);
+					pm.subTask("Relinking your collections…");
+					DataManager.getInstance().reconcile();
+					pm.worked(5);
+					asyncExec(() -> {
+						reloadMagicDbView();
+						MessageDialog.openInformation(MagicUIActivator.getShell(), "Update Card Database",
+								"Card database updated (" + rec + " card records).");
 					});
 					return Status.OK_STATUS;
-				} catch (final InterruptedException e) {
-					shell.getDisplay().syncExec(new Runnable() {
-						@Override
-						public void run() {
-							MessageDialog.openInformation(shell, "Info", "Operation Cancelled");
-						}
-					});
+				} catch (InterruptedException e) {
 					return Status.CANCEL_STATUS;
-				} catch (final Exception e) {
+				} catch (Exception e) {
 					MagicUIActivator.log(e);
-					shell.getDisplay().syncExec(new Runnable() {
-						@Override
-						public void run() {
-							MessageDialog.openError(shell, "Error", e.getMessage());
-						}
-					});
-					return Status.OK_STATUS; // we display error ourselves
+					asyncInfo("Could not update the card database:\n" + e.getMessage());
+					return Status.OK_STATUS; // error already shown
 				} finally {
-					pm.done();
+					synchronized (LOCK) {
+						running = false;
+					}
 				}
 			}
 		};
 		job.setPriority(Job.LONG);
-		job.setSystem(false);
-		job.setUser(true);
+		// Not setUser(true): that pops a modal progress dialog. We want it in the
+		// progress area (status bar + Progress view) with a cancel button, and -
+		// now that the bulk merge no longer fires a per-set reload storm - the
+		// update's own progress is what stays shown there.
+		job.setUser(false);
 		job.schedule();
+	}
+
+	private static void reloadMagicDbView() {
+		IWorkbenchWindow win = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		IWorkbenchPage page = win == null ? null : win.getActivePage();
+		IViewPart view = page == null ? null : page.findView(MagicDbView.ID);
+		if (view instanceof MagicDbView)
+			((MagicDbView) view).reloadData();
+	}
+
+	private static void asyncExec(Runnable r) {
+		Display d = PlatformUI.isWorkbenchRunning() ? PlatformUI.getWorkbench().getDisplay() : Display.getDefault();
+		if (d != null && !d.isDisposed())
+			d.asyncExec(r);
+	}
+
+	private static void asyncInfo(String msg) {
+		asyncExec(() -> MessageDialog.openInformation(MagicUIActivator.getShell(), "Update Card Database", msg));
 	}
 
 	@Override

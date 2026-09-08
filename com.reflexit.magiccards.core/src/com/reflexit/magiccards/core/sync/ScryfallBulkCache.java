@@ -19,11 +19,6 @@ import java.io.OutputStream;
 import java.net.URL;
 import java.nio.file.Files;
 import java.nio.file.StandardCopyOption;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.concurrent.ConcurrentHashMap;
-import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.json.simple.JSONArray;
 import org.json.simple.JSONObject;
@@ -31,42 +26,23 @@ import org.json.simple.parser.JSONParser;
 
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
-import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 
 /**
  * Local cache of the Scryfall <em>Default Cards</em> bulk file
- * (<a href="https://scryfall.com/docs/api/bulk-data">bulk data</a>), pre-split
- * into one small gzip flat file per set.
+ * (<a href="https://scryfall.com/docs/api/bulk-data">bulk data</a>).
  * <p>
- * <b>Model.</b> Scryfall publishes the bulk file a few times a day. On startup a
- * background job calls {@link #ensureSplitAll} which, when the local split is out
- * of date, downloads the new bulk file and splits every set into
- * {@code <state>/scryfall/sets/<code>.txt.gz}. From then on a set update is just
- * a file read.
- * <p>
- * When an update is requested and the split is stale, {@link #flatFileForSet}
- * downloads the new bulk file, extracts <em>only the requested set</em> so the
- * update finishes quickly, then kicks a daemon thread to split the rest.
- * <p>
- * The big {@code default-cards.jsonl.gz} is deleted after a full split; only the
- * ~30&nbsp;MB of per-set files stay on disk.
+ * Scryfall re-publishes the bulk file a few times a day. {@link #getDefaultCardsFile}
+ * returns a local copy, downloading a fresh one only when Scryfall's
+ * {@code updated_at} moved. The file is kept on disk between runs so a repeated
+ * "Update Card Database" with nothing new remote is instant. The whole card
+ * database update parses that one file - there is no per-set split any more.
  */
 public final class ScryfallBulkCache {
 
 	private static final String BULK_INDEX_URL = "https://api.scryfall.com/bulk-data";
 	private static final String BULK_TYPE = "default_cards";
 	private static final long CHECK_TTL_MS = 60L * 60L * 1000L; // 1 hour
-
-	/** Guards the freshness marker and the "full split running" flag. */
-	private static final Object SPLIT_LOCK = new Object();
-	/** Serializes single-set targeted extractions (not held during a full split). */
-	private static final Object TARGETED_LOCK = new Object();
-	private static final AtomicBoolean bgSplitRunning = new AtomicBoolean(false);
-	private static boolean fullSplitInProgress = false;
-
-	/** Set code -> updated_at it was individually (re)written at, before the marker caught up. */
-	private static final Map<String, String> freshlySplit = new ConcurrentHashMap<>();
 
 	// cached Scryfall bulk-data index
 	private static volatile long lastIndexCheck = 0L;
@@ -93,146 +69,30 @@ public final class ScryfallBulkCache {
 		return new File(dir(), "default-cards.updated_at");
 	}
 
-	private static File splitDir() {
-		File d = new File(dir(), "sets");
-		d.mkdirs();
-		return d;
-	}
-
-	private static File splitMarkerFile() {
-		return new File(splitDir(), ".updated_at");
-	}
-
-	private static File setFile(String codeLower) {
-		return new File(splitDir(), codeLower + ".txt.gz");
-	}
-
 	// -------------------------------------------------------------- public API
 
 	/**
-	 * Ensure {@code <state>/scryfall/sets/} holds a complete split of the current
-	 * Scryfall bulk file. No-op when already up to date or offline with an
-	 * existing split. Safe to call from several threads; only one full split runs
-	 * at a time.
+	 * @return {@code true} when Scryfall has published a bulk file newer than the
+	 *         local copy (or there is no local copy) and we can reach it. Cheap -
+	 *         only the small bulk-data index is fetched, and that at most once per
+	 *         {@link #CHECK_TTL_MS}.
 	 */
-	public static void ensureSplitAll(ICoreProgressMonitor pm) throws IOException {
-		String remote;
-		synchronized (SPLIT_LOCK) {
-			// If another thread is already doing the full split, wait for it
-			// rather than proceeding on a half-written split.
-			while (fullSplitInProgress) {
-				try {
-					SPLIT_LOCK.wait();
-				} catch (InterruptedException e) {
-					Thread.currentThread().interrupt();
-					return;
-				}
-			}
-			remote = currentRemoteUpdatedAt();
-			String have = readMarker(splitMarkerFile());
-			boolean populated = hasSplitFiles();
-			if (populated && (remote == null || remote.equals(have))) {
-				// up to date: nothing to do
-				sweepLeftovers();
-				return;
-			}
-			if (remote == null) {
-				throw new IOException("Cannot reach Scryfall bulk data and there is no local split to fall back on");
-			}
-			fullSplitInProgress = true;
-		}
-		try {
-			trace("full split starting (updated_at " + readMarker(splitMarkerFile()) + " -> " + remote + ")");
-			long t0 = System.currentTimeMillis();
-			File bulk = getDefaultCardsFile(pm);
-			java.util.Set<String> written = new ParseScryFallChecklist().splitAllFromBulk(bulk, splitDir());
-			synchronized (SPLIT_LOCK) {
-				pruneOrphans(written);
-				writeMarker(splitMarkerFile(), remote);
-				freshlySplit.clear();
-			}
-			bulk.delete();
-			bulkMetaFile().delete();
-			trace("full split done: " + written.size() + " set(s) in " + (System.currentTimeMillis() - t0) / 1000
-					+ "s");
-		} finally {
-			synchronized (SPLIT_LOCK) {
-				fullSplitInProgress = false;
-				SPLIT_LOCK.notifyAll();
-			}
-		}
+	public static boolean isRemoteBulkNewer() {
+		refreshIndex();
+		if (cachedRemoteUpdatedAt == null)
+			return false; // offline / unreachable
+		File f = bulkFile();
+		if (!f.isFile() || f.length() == 0)
+			return true;
+		return !cachedRemoteUpdatedAt.equals(readMarker(bulkMetaFile()));
 	}
 
 	/**
-	 * A readable {@code <code>.txt.gz} flat file for one set, refreshing just that
-	 * set from a newly published bulk file if necessary. Returns {@code null} when
-	 * the set has no paper cards, or when offline and nothing is cached.
-	 */
-	public static File flatFileForSet(String codeLower, ICoreProgressMonitor pm) throws IOException {
-		File f = setFile(codeLower);
-		String have = readMarker(splitMarkerFile());
-		String remote = currentRemoteUpdatedAt();
-		boolean splitFresh = have != null && (remote == null || remote.equals(have));
-
-		if (f.isFile()) {
-			if (splitFresh || (remote != null && remote.equals(freshlySplit.get(codeLower)))) {
-				return f;
-			}
-		} else if (splitFresh) {
-			// a complete split exists and this set is not in it -> no paper cards
-			return null;
-		}
-
-		if (remote == null) {
-			// offline: best effort
-			return f.isFile() ? f : null;
-		}
-
-		synchronized (TARGETED_LOCK) {
-			// re-check now that we hold the lock
-			if (f.isFile() && remote.equals(freshlySplit.get(codeLower)))
-				return f;
-			trace("set '" + codeLower + "' stale/missing - targeted extract from bulk file");
-			File bulk = getDefaultCardsFile(pm);
-			Map<String, List<MagicCard>> g = new ParseScryFallChecklist().groupSetsFromBulk(bulk,
-					Collections.singleton(codeLower));
-			List<MagicCard> cards = g.get(codeLower);
-			if (cards == null || cards.isEmpty()) {
-				freshlySplit.put(codeLower, remote);
-				kickBackgroundSplit();
-				return null;
-			}
-			new ParseScryFallChecklist().writeSetFlatGz(cards, f);
-			freshlySplit.put(codeLower, remote);
-		}
-		kickBackgroundSplit();
-		return f;
-	}
-
-	/** Start (once) a low-priority daemon thread that completes the full split. */
-	public static void kickBackgroundSplit() {
-		if (!bgSplitRunning.compareAndSet(false, true))
-			return;
-		Thread t = new Thread(() -> {
-			try {
-				ensureSplitAll(ICoreProgressMonitor.NONE);
-			} catch (Exception e) {
-				MagicLogger.log(e);
-			} finally {
-				bgSplitRunning.set(false);
-			}
-		}, "scryfall-bulk-split");
-		t.setDaemon(true);
-		t.setPriority(Thread.MIN_PRIORITY);
-		t.start();
-	}
-
-	// ----------------------------------------------------------- bulk download
-
-	/**
-	 * @return a local copy of the Scryfall Default Cards bulk file, downloading it
-	 *         only when the local copy is missing or older than what Scryfall
-	 *         publishes.
+	 * A local copy of the Scryfall Default Cards bulk file, downloading a fresh one
+	 * only when the local copy is missing or older than what Scryfall publishes.
+	 * Honours {@code pm.isCanceled()} during the download.
+	 *
+	 * @throws IOException when there is no local copy and Scryfall is unreachable
 	 */
 	public static synchronized File getDefaultCardsFile(ICoreProgressMonitor pm) throws IOException {
 		File file = bulkFile();
@@ -259,6 +119,8 @@ public final class ScryfallBulkCache {
 		return file;
 	}
 
+	// ----------------------------------------------------------- bulk download
+
 	private static void refreshIndex() {
 		if (cachedRemoteUpdatedAt != null && System.currentTimeMillis() - lastIndexCheck < CHECK_TTL_MS)
 			return;
@@ -284,13 +146,9 @@ public final class ScryfallBulkCache {
 		}
 	}
 
-	private static String currentRemoteUpdatedAt() {
-		refreshIndex();
-		return cachedRemoteUpdatedAt;
-	}
-
 	private static void download(URL uri, File target, ICoreProgressMonitor pm) throws IOException {
 		pm.subTask("Downloading Scryfall card data (Default Cards)");
+		sweepPartials();
 		File part = File.createTempFile("default-cards-", ".part", target.getParentFile());
 		try {
 			try (InputStream in = WebUtils.openUrl(uri);
@@ -312,26 +170,9 @@ public final class ScryfallBulkCache {
 
 	// --------------------------------------------------------------- helpers
 
-	private static boolean hasSplitFiles() {
-		String[] names = splitDir().list((d, name) -> name.endsWith(".txt.gz"));
-		return names != null && names.length > 0;
-	}
-
-	private static void pruneOrphans(java.util.Set<String> keep) {
-		File[] files = splitDir().listFiles((d, name) -> name.endsWith(".txt.gz"));
-		if (files == null)
-			return;
-		for (File f : files) {
-			String code = f.getName().substring(0, f.getName().length() - ".txt.gz".length());
-			if (!keep.contains(code))
-				f.delete();
-		}
-	}
-
-	/** Remove a leftover bulk file / partial downloads when a complete split exists. */
-	private static void sweepLeftovers() {
-		File[] files = dir().listFiles((d, name) -> name.endsWith(".part")
-				|| name.equals("default-cards.jsonl.gz") || name.equals("default-cards.updated_at"));
+	/** Remove leftover partial downloads from a cancelled / crashed run. */
+	private static void sweepPartials() {
+		File[] files = dir().listFiles((d, name) -> name.endsWith(".part"));
 		if (files == null)
 			return;
 		for (File f : files)

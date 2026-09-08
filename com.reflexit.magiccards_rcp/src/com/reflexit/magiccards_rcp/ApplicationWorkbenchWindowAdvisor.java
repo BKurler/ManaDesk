@@ -2,6 +2,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - startup: pre-download the Scryfall bulk file; splash tail
+ *                         "Restoring decks and collections" progress
  */
 
 package com.reflexit.magiccards_rcp;
@@ -68,11 +70,9 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		try {
 			installSoftwareUpdate();
 			checkForCardUpdates();
-			// Independent of the "check for card updates" flow: keep the local
-			// Scryfall bulk file / split current in the background so a later
-			// "Update cards of selected set(s)" is just a file read. Does not
-			// touch the loaded DB.
-			CheckForUpdateDbHandler.primeCardDatabaseSplit();
+			// Freshness-check + pre-download the Scryfall bulk file in the
+			// background so a later "Update Card Database" skips the download.
+			CheckForUpdateDbHandler.predownloadBulk();
 		} catch (Throwable e) {
 			Activator.log(e);
 		}
@@ -181,10 +181,18 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				decks.add(ref);
 		int done = 0;
 		for (IViewReference ref : decks) {
-			ref.getView(true);
 			done++;
-			MASplashHandler.reportStartupTail("(" + done + "/" + decks.size() + ")  Restoring decks",
+			// Label the deck we are about to materialize, not the last one we
+			// finished: getView(true) below can block for a moment on that
+			// deck's first data load, and a counter that already reads "(5/12)"
+			// looks like work in progress instead of a freeze at "(4/12)".
+			MASplashHandler.reportStartupTail(
+					"(" + done + "/" + decks.size() + ")  Restoring decks and collections",
 					0.10 + 0.20 * done / Math.max(1, decks.size()));
+			if (display != null) {
+				display.readAndDispatch();
+			}
+			ref.getView(true);
 			if (display != null) {
 				for (int i = 0; i < 10 && display.readAndDispatch(); i++) {
 					// flush pending paints / async work before the next view

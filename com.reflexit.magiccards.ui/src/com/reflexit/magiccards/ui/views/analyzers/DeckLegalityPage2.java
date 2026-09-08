@@ -11,20 +11,16 @@
  *******************************************************************************/
 /*
  * Contributors:
- *     Rémi Dutil 2026 - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration;
+ *                         dropped the "Check Legality Online" toolbar action
+ *                         (legality now comes from the Scryfall bulk data)
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
 import java.util.List;
 import java.util.Map;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.IToolBarManager;
-import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.fieldassist.ControlDecoration;
 import org.eclipse.jface.fieldassist.FieldDecorationRegistry;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -61,13 +57,10 @@ import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.core.model.storage.MemoryFilteredCardStore;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils.CardStats;
-import com.reflexit.magiccards.core.sync.ParseGathererLegality;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.ImageAction;
 import com.reflexit.magiccards.ui.actions.RefreshAction;
-import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.utils.SymbolRenderer;
-import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.IMagicColumnViewer;
 import com.reflexit.magiccards.ui.views.analyzers.GroupListControl.GroupTreeViewer;
 import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
@@ -80,7 +73,6 @@ import com.reflexit.magiccards.ui.views.columns.LegalityColumn;
 public class DeckLegalityPage2 extends AbstractDeckListPage {
 	private static final Format DEFAULT_FORMAT = Format.STANDARD;
 	private Format format = DEFAULT_FORMAT;
-	private ImageAction load;
 	private LegalityMap deckLegalities = LegalityMap.EMPTY; // format->legality
 	private Combo comboLegality;
 	protected TreeViewer tree;
@@ -133,18 +125,6 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		info = new Composite(parent, SWT.BORDER);
 		info.setLayout(new GridLayout(2, false));
 
-		/* !!! RD Not supported		
-				Button update = new Button(info, SWT.PUSH);
-				update.setText("Check Deck Legality Online...");
-				update.addSelectionListener(new SelectionAdapter() {
-					@Override
-					public void widgetSelected(SelectionEvent e) {
-						performUpdate();
-					}
-				});
-				update.setLayoutData(GridDataFactory.fillDefaults().span(2, 1).create());
-				*/
-		// createBlueLabel("Format");
 		comboLegality = createLegalityCombo(info);
 		comboLegality.setLayoutData(GridDataFactory.fillDefaults().span(2, 1).create());
 		total = createTextLabel("Cards: ");
@@ -215,7 +195,6 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 
 	@Override
 	public void fillLocalToolBar(IToolBarManager manager) {
-		manager.add(this.load);
 		manager.add(this.refresh);
 		// super.fillLocalToolBar(manager);
 	}
@@ -223,7 +202,6 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 	@Override
 	protected void makeActions() {
 		super.makeActions();
-		this.load = new ImageAction("Check Legality Online", "icons/clcl16/software_update.png", () -> performUpdate());
 		refresh = new RefreshAction(this::refresh);
 	}
 
@@ -392,38 +370,6 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 				return super.getToolTipText(element);
 			}
 		});
-	}
-
-	protected void performUpdate() {
-		if (getCardStore() != null) {
-			Job job = new Job("Calculating Legality") {
-				@Override
-				protected IStatus run(IProgressMonitor monitor) {
-					monitor.beginTask("Calculating Legality", 100);
-					calculateCardLegalities(new SubProgressMonitor(monitor, 90));
-					getControl().getDisplay().asyncExec(new Runnable() {
-						@Override
-						public void run() {
-							refresh();
-						}
-					});
-					monitor.done();
-					return Status.OK_STATUS;
-				}
-			};
-			job.setUser(true);
-			job.schedule();
-		}
-	}
-
-	private Map<Integer, LegalityMap> calculateCardLegalities(IProgressMonitor monitor) {
-		try {
-			return ParseGathererLegality.cardSetLegality((ICardStore) fstore.getCardStore(),
-					new CoreMonitorAdapter(monitor));
-		} catch (Exception e) {
-			WaitUtils.syncExec(() -> MessageDialog.openError(getControl().getShell(), "Error", e.getMessage()));
-			return null;
-		}
 	}
 
 	protected void reloadLegalityCombo(Combo comboLegality) {
