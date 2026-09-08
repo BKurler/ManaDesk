@@ -1,8 +1,10 @@
-package com.reflexit.magiccards.ui.exportWizards;
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - restored the "Clipboard" import source (radio + preview +
+ *                         Edit...); empty-clipboard guard; clamp a stale "URL" choice
  */
+package com.reflexit.magiccards.ui.exportWizards;
 
 import java.io.File;
 import java.io.IOException;
@@ -719,6 +721,9 @@ public class DeckImportPage extends WizardDataTransferPage {
 				// ignore
 			}
 		}
+		// only File and Clipboard have UI - an old "URL" setting would NPE later
+		if (inputChoice != ImportSource.FILE && inputChoice != ImportSource.TEXT)
+			inputChoice = ImportSource.TEXT;
 		setInputChoice(inputChoice);
 		// restore options
 		String stype = dialogSettings.get(REPORT_TYPE_SETTING);
@@ -734,10 +739,10 @@ public class DeckImportPage extends WizardDataTransferPage {
 
 	public void setInputChoice(ImportSource inputChoice) {
 		this.inputChoice = inputChoice;
-		fileRadio.setSelection(inputChoice == ImportSource.FILE);
-		// !!! RD		clipboardRadio.setSelection(inputChoice == ImportSource.TEXT);
-		// inputRadio.setSelection(inputChoice == ImportSource.INPUT);
-		// !!! RD 		urlRadio.setSelection(inputChoice == ImportSource.URL);
+		if (fileRadio != null)
+			fileRadio.setSelection(inputChoice == ImportSource.FILE);
+		if (clipboardRadio != null)
+			clipboardRadio.setSelection(inputChoice == ImportSource.TEXT);
 	}
 
 	private void selectReportType(final ReportType type) {
@@ -787,30 +792,31 @@ public class DeckImportPage extends WizardDataTransferPage {
 		Composite fileSelectionArea = toolkit.createGroup(parent, "Import Source");
 		fileSelectionArea.setLayoutData(GridDataFactory.fillDefaults().create());
 		fileSelectionArea.setLayout(GridLayoutFactory.swtDefaults().numColumns(3).create());
-		// clipboard control
-		/*
-		 * !!! RD clipboardRadio = toolkit.createButton(fileSelectionArea, "Clipboard",
-		 * SWT.RADIO, (e) -> onInputChoice(e, ImportSource.TEXT));
-		 * clipboardRadio.setLayoutData(GridDataFactory.fillDefaults().create());
-		 * clipboardPreviewText = toolkit.createText(fileSelectionArea, "", SWT.BORDER);
-		 * clipboardPreviewText.setEditable(false);
-		 * clipboardPreviewText.setText(getClipboardClipped());
-		 * clipboardPreviewText.addMouseListener(new MouseAdapter() {
-		 * 
-		 * @Override public void mouseUp(MouseEvent e) { openEditDialog(); } });
-		 */
 		GridDataFactory textBoxFc = GridDataFactory.fillDefaults().hint(200, SWT.DEFAULT).grab(true, false);
 		GridDataFactory buttFc = GridDataFactory.swtDefaults().hint(100, SWT.DEFAULT).grab(true, false);
 
-		/* !!! RD clipboardPreviewText.setLayoutData(textBoxFc.create()); */
-		/*
-		 * !!! RD Button edit = toolkit.createButton(fileSelectionArea, "Edit...",
-		 * SWT.PUSH, (e) -> { openEditDialog(); }); edit.setLayoutData(buttFc.create());
-		 */
+		// clipboard control: radio + read-only preview of the current clipboard +
+		// an Edit... button (opens the text in a dialog and copies it back)
+		clipboardRadio = toolkit.createButton(fileSelectionArea, "Clipboard", SWT.RADIO,
+				(e) -> onInputChoice(e, ImportSource.TEXT));
+		clipboardRadio.setLayoutData(GridDataFactory.fillDefaults().create());
+		clipboardPreviewText = toolkit.createText(fileSelectionArea, "", SWT.BORDER);
+		clipboardPreviewText.setEditable(false);
+		clipboardPreviewText.setToolTipText("The text currently on the clipboard - click or press Edit... to change it");
+		clipboardPreviewText.setText(getClipboardClipped());
+		clipboardPreviewText.setLayoutData(textBoxFc.create());
+		clipboardPreviewText.addMouseListener(new MouseAdapter() {
+			@Override
+			public void mouseUp(MouseEvent e) {
+				openEditDialog();
+			}
+		});
+		Button edit = toolkit.createButton(fileSelectionArea, "Edit...", SWT.PUSH, (e) -> openEditDialog());
+		edit.setLayoutData(buttFc.create());
+
 		// file selector
 		fileRadio = toolkit.createButton(fileSelectionArea, "File", SWT.RADIO,
 				(e) -> onInputChoice(e, ImportSource.FILE));
-		fileRadio.setSelection(true);
 		fileText = toolkit.createText(fileSelectionArea, "", SWT.BORDER);
 		fileText.addModifyListener((e) -> {
 			fileName = fileText.getText();
@@ -1041,6 +1047,13 @@ public class DeckImportPage extends WizardDataTransferPage {
 			}
 			return true;
 		}
+		if (inputChoice == ImportSource.TEXT) {
+			if (getClipboardText().trim().isEmpty()) {
+				setErrorMessage("The clipboard is empty - copy the deck list first, or use Edit...");
+				return false;
+			}
+			return true;
+		}
 		if (inputChoice == ImportSource.URL) {
 			if (urlText.getText().isEmpty()) {
 				//				setErrorMessage("URL is selected but empty");
@@ -1067,7 +1080,8 @@ public class DeckImportPage extends WizardDataTransferPage {
 	@Override
 	protected void updateWidgetEnablements() {
 		fileText.setEnabled(inputChoice == ImportSource.FILE);
-		// !!! RD urlText.setEnabled(inputChoice == ImportSource.URL);
+		if (clipboardPreviewText != null && !clipboardPreviewText.isDisposed())
+			clipboardPreviewText.setEnabled(inputChoice == ImportSource.TEXT);
 	}
 
 	public ReportType getReportType() {
@@ -1152,9 +1166,18 @@ public class DeckImportPage extends WizardDataTransferPage {
 
 	@Override
 	public void setVisible(boolean visible) {
-		if (visible)
+		if (visible) {
+			refreshClipboardPreview();
+			if (inputChoice == ImportSource.TEXT)
+				scheduleAutoDetect();
 			updatePageCompletion();
+		}
 		super.setVisible(visible);
+	}
+
+	private void refreshClipboardPreview() {
+		if (clipboardPreviewText != null && !clipboardPreviewText.isDisposed())
+			clipboardPreviewText.setText(getClipboardClipped());
 	}
 
 	protected void openImportIntoElementSelectionDialog() {
