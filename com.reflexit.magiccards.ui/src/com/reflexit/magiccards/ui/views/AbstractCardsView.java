@@ -1,14 +1,13 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - removed the dead "Load Extra Fields…" web action
  */
 package com.reflexit.magiccards.ui.views;
 
 import java.net.URL;
 import java.util.HashMap;
 
-import org.eclipse.core.runtime.jobs.IJobChangeEvent;
-import org.eclipse.core.runtime.jobs.JobChangeAdapter;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuListener;
@@ -44,7 +43,6 @@ import org.eclipse.ui.part.ViewPart;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
-import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardFilter;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -56,15 +54,11 @@ import com.reflexit.magiccards.ui.actions.RefreshAction;
 import com.reflexit.magiccards.ui.dialogs.BrowserOpenAcknoledgementDialog;
 import com.reflexit.magiccards.ui.dialogs.BuyCardsConfirmationDialog;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
-import com.reflexit.magiccards.ui.dialogs.LoadExtrasDialog;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
-import com.reflexit.magiccards.ui.jobs.LoadingExtraJob;
-import com.reflexit.magiccards.ui.jobs.LoadingPricesJob;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
 
 public abstract class AbstractCardsView extends ViewPart implements IShowInTarget, IShowInSource {
 	private Composite partControl;
-	protected Action loadExtras;
 	protected Action actionRefresh;
 	protected Action actionCopy;
 // !!! RD	protected Action buyCards;
@@ -182,14 +176,12 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 	}
 
 	protected void fillLocalPullDown(IMenuManager manager) {
-		// !!! RD Deprecated manager.add(this.loadExtras);
 		manager.add(this.actionRefresh);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 	}
 
 	protected void fillContextMenu(IMenuManager manager) {
-		// !!! RD Deprecated manager.add(this.loadExtras);
 		fillShowInMenu(manager);
 		// Other plug-ins can contribute there actions here
 		manager.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
@@ -215,12 +207,6 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 	protected void makeActions() {
 		// this.groupMenu.setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/clcl16/group_by.png"));
 		this.actionCopy = new MagicCopyAction(getSelectionProvider());
-		this.loadExtras = new Action("Load Extra Fields...") {
-			@Override
-			public void run() {
-				runLoadExtras();
-			}
-		};
 		/*
 		 * !!! RD this.buyCards = new Action("Buy cards...") {
 		 * 
@@ -270,49 +256,6 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 
 	public void refreshView() {
 		// override if needed
-	}
-
-	protected void runLoadExtras() {
-		final IStructuredSelection selection = getSelection();
-		IFilteredCardStore filteredStore = getFilteredStore();
-		final LoadExtrasDialog dialog = new LoadExtrasDialog(getShell(), selection.size(), filteredStore.getFlatSize(),
-				filteredStore.getCardStore().size());
-		if (dialog.open() != Window.OK || dialog.getFields().isEmpty()) {
-			return;
-		}
-		Iterable list = null;
-		switch (dialog.getListChoice()) {
-		case LoadExtrasDialog.USE_SELECTION:
-			list = selection.toList();
-			break;
-		case LoadExtrasDialog.USE_FILTER:
-			list = filteredStore;
-			break;
-		case LoadExtrasDialog.USE_ALL:
-			list = filteredStore.getCardStore();
-			break;
-		}
-		if (dialog.getFields().contains(MagicCardField.DBPRICE)) {
-			dialog.getFields().remove(MagicCardField.DBPRICE);
-			LoadingPricesJob loadingPrices = new LoadingPricesJob(list);
-			loadingPrices.addJobChangeListener(new JobChangeAdapter() {
-				@Override
-				public void done(IJobChangeEvent event) {
-					refreshView();
-				}
-			});
-			loadingPrices.schedule();
-		}
-		if (dialog.getFields().size() > 0) {
-			LoadingExtraJob loadingExtras = new LoadingExtraJob(this);
-			loadingExtras.setFields(dialog.getFields());
-			loadingExtras.setSelection(selection);
-			loadingExtras.setListChoice(dialog.getListChoice());
-			if (dialog.getFields().contains(MagicCardField.LANG)) {
-				loadingExtras.setLanguage(dialog.getLanguage());
-			}
-			loadingExtras.schedule();
-		}
 	}
 
 	public IStructuredSelection getSelection() {

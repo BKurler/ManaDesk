@@ -17,11 +17,6 @@
             class="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
             id="com.reflexit.magiccards.ui.preferences.MagicPreferencePage">
       </page>
-      	<page id="com.reflexit.magiccards.ui.preferences.MagicGathererPreferencePage"
-  	      	name="Update Magic Database"
-	      	class="com.reflexit.magiccards.ui.preferences.MagicGathererPreferencePage"
-		category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage">
-   	</page>
        <page
              category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
              class="com.reflexit.magiccards.ui.preferences.MagicDbViewPreferencePage"
@@ -251,10 +246,6 @@
             commandId="org.eclipse.ui.edit.rename">
       </handler>
       <handler
-            class="com.reflexit.magiccards.ui.commands.UpdateDbDialogHandler"
-            commandId="com.reflexit.magiccards.ui.commands.updateMagicDbDialog">
-      </handler>
-      <handler
             class="com.reflexit.magiccards.ui.commands.CheckForUpdateDbHandler"
             commandId="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb">
       </handler>
@@ -416,14 +407,9 @@
       <command
             categoryId="com.reflexit.magiccards.ui.commands.category"
             id="com.reflexit.magiccards.ui.commands.updateMagicDb"
-            name="Update Magic Cards Database to Standard">
+            name="Update Card Database">
       </command>
-      <command
-            categoryId="com.reflexit.magiccards.ui.commands.category"
-            id="com.reflexit.magiccards.ui.commands.updateMagicDbDialog"
-            name="Update Magic Cards Database...">
-      </command>
-      
+
       <command
             categoryId="com.reflexit.magiccards.ui.commands.category"
             id="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb"
@@ -556,17 +542,14 @@
       <menuContribution
             locationURI="menu:file?after=additions">
             <command
-                  commandId="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb"
-                  mnemonic="M"
-                  id="com.reflexit.magiccards.ui.menus.checkForUpdateMagicDb">
-            </command>
-      </menuContribution>
-      <menuContribution
-            locationURI="menu:file?after=additions">
-            <command
-                  commandId="com.reflexit.magiccards.ui.commands.updateMagicDbDialog"
+                  commandId="com.reflexit.magiccards.ui.commands.updateMagicDb"
                   mnemonic="U"
-                  id="com.reflexit.magiccards.ui.menus.updateMagicDbDialog">
+                  id="com.reflexit.magiccards.ui.menus.updateMagicDb">
+            </command>
+            <command
+                  commandId="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb"
+                  mnemonic="C"
+                  id="com.reflexit.magiccards.ui.menus.checkForUpdateMagicDb">
             </command>
       </menuContribution>
       <!--
@@ -609,9 +592,9 @@
      <menuContribution
             locationURI="menu:com.reflexit.magiccards.ui.views.MagicDbView">
             <command
-                  commandId="com.reflexit.magiccards.ui.commands.updateMagicDbDialog"
+                  commandId="com.reflexit.magiccards.ui.commands.updateMagicDb"
                   mnemonic="U"
-                  id="com.reflexit.magiccards.ui.menus.updateMagicDbDialog">
+                  id="com.reflexit.magiccards.ui.menus.updateMagicDb.dbview">
             </command>
       </menuContribution>
      <menuContribution

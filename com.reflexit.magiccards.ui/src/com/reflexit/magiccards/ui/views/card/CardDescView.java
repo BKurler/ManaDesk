@@ -1,18 +1,16 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - LoadCardJob caches the card image on its background
+ *                         thread so the UI-thread render never blocks on the network
  */
 
 package com.reflexit.magiccards.ui.views.card;
 
-import java.io.IOException;
-import java.util.HashSet;
-import java.util.Set;
 
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.IJobChangeEvent;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.core.runtime.jobs.JobChangeAdapter;
@@ -62,20 +60,14 @@ import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
-import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
-import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
-import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.sync.ParseGathererOracle;
-import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
-import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardDialog;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardPhysicalDialog;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
-import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;
 import com.reflexit.magiccards.ui.views.MagicDbView;
@@ -85,7 +77,6 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 	private CardDescComposite panel;
 	private Label message;
 	private LoadCardJob loadCardJob;
-	private Action sync;
 	// !!! RD private Action actionAsScanned;
 	// !!! RD private boolean asScanned;
 	private Action open;
@@ -97,17 +88,10 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	public class LoadCardJob extends Job {
 		private IMagicCard jCard;
-		private boolean forceUpdate;
 
 		public LoadCardJob(IMagicCard card) {
 			super("Loading card");
 			this.jCard = card;
-		}
-
-		public LoadCardJob() {
-			super("Sync with web");
-			this.jCard = panel.getCard();
-			this.forceUpdate = true;
 		}
 
 		@Override
@@ -118,6 +102,10 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 			monitor.beginTask("Loading info for " + jCard.getName(), 100);
 			panel.setCard(jCard);
 			final boolean nocard = (jCard == IMagicCard.DEFAULT);
+			// Pull the card image into the on-disk cache here, on this background
+			// thread, so the UI-thread setText() below never blocks on the network.
+			if (!nocard && !monitor.isCanceled())
+				panel.ensureCardImageCached(jCard);
 			new UIJob("Set temp image") {
 				@Override
 				public IStatus runInUIThread(IProgressMonitor uimonitor) {
@@ -140,86 +128,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 					return Status.OK_STATUS;
 				}
 			}.schedule();
-			if (!nocard) {
-				monitor.worked(10);
-				if (monitor.isCanceled() || !isStillNeeded(jCard))
-					return Status.CANCEL_STATUS;
-				loadCardExtraInfo(new SubProgressMonitor(monitor, 45), jCard);
-			}
 			monitor.done();
-			return Status.OK_STATUS;
-		}
-
-		protected IStatus loadCardExtraInfo(IProgressMonitor monitor, final IMagicCard card) {
-			try {
-				if (WebUtils.isWorkOffline())
-					return Status.CANCEL_STATUS;
-				boolean updateRulings = MagicUIActivator.getDefault().getPreferenceStore()
-						.getBoolean(PreferenceConstants.LOAD_RULINGS);
-				boolean updateExtras = MagicUIActivator.getDefault().getPreferenceStore()
-						.getBoolean(PreferenceConstants.LOAD_EXTRAS);
-				boolean updateSets = MagicUIActivator.getDefault().getPreferenceStore()
-						.getBoolean(PreferenceConstants.LOAD_PRINTINGS);
-				if (forceUpdate) {
-					updateRulings = true;
-					updateExtras = true;
-				}
-				if (updateExtras == false && updateRulings == false && updateSets == false)
-					return Status.OK_STATUS;
-				HashSet<ICardField> fieldMap = new HashSet<>();
-				if (updateRulings)
-					fieldMap.add(MagicCardField.RULINGS);
-				if (updateSets)
-					fieldMap.add(MagicCardField.SET);
-				if (updateExtras)
-					fieldMap.addAll(getAllExtraFields());
-				return loadCardExtraInfo(monitor, card, fieldMap);
-			} catch (IOException e) {
-				return MagicUIActivator.getStatus(e);
-			} finally {
-				monitor.done();
-			}
-		}
-
-		public Set<ICardField> getAllExtraFields() {
-			HashSet<ICardField> res = new HashSet<>();
-			res.add(MagicCardField.RATING);
-			res.add(MagicCardField.ARTIST);
-			res.add(MagicCardField.COLLNUM);
-			res.add(MagicCardField.ORACLE);
-			res.add(MagicCardField.TEXT);
-			res.add(MagicCardField.TYPE);
-			res.add(MagicCardField.NAME);
-			res.add(MagicCardField.FLIPID);
-			res.add(MagicCardField.PART);
-			res.add(MagicCardField.COLOR_INDICATOR);
-			return res;
-		}
-
-		IStatus loadCardExtraInfo(IProgressMonitor monitor, final IMagicCard card, HashSet<ICardField> fieldMap)
-				throws IOException {
-			monitor.beginTask("Loading info for " + card.getName(), 100);
-			try {
-				if (!isStillNeeded(card))
-					return Status.CANCEL_STATUS;
-				if (fieldMap.size() == 0)
-					return Status.OK_STATUS;
-				if (card.getCardId() == null)
-					return Status.OK_STATUS;
-				ICardStore store = DataManager.getCardHandler().getMagicDBStore();
-				new UpdateCardsFromWeb().updateStore(card, fieldMap, null, store,
-						new CoreMonitorAdapter(new SubProgressMonitor(monitor, 99)));
-				getViewSite().getShell().getDisplay().syncExec(new Runnable() {
-					@Override
-					public void run() {
-						if (!isStillNeeded(card))
-							return;
-						CardDescView.this.panel.setText(card);
-					}
-				});
-			} finally {
-				monitor.done();
-			}
 			return Status.OK_STATUS;
 		}
 	}

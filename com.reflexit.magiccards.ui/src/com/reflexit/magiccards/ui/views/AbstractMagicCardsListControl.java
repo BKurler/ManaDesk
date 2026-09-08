@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - updateStatus() runs inline instead of spawning a
+ *                         background Job on every selection change
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -1466,18 +1468,16 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	protected void updateStatus() {
-		new Job("Status update") {
-			@Override
-			protected IStatus run(IProgressMonitor monitor) {
-				statusMessage = getStatusMessage();
-				isFiltered = (getFiltered() != 0);
-				WaitUtils.asyncExec(() -> {
-					setStatus(statusMessage);
-					setWarning(isFiltered);
-				});
-				return Status.OK_STATUS;
-			}
-		}.schedule();
+		// This just recomputes a short status-bar string from in-memory counters.
+		// It used to run as a background Job, which meant every card selection
+		// spawned a throw-away entry in the Progress view. Compute inline and only
+		// bounce the label update to the UI thread.
+		statusMessage = getStatusMessage();
+		isFiltered = (getFiltered() != 0);
+		WaitUtils.asyncExec(() -> {
+			setStatus(statusMessage);
+			setWarning(isFiltered);
+		});
 	}
 
 	protected int getFiltered() {

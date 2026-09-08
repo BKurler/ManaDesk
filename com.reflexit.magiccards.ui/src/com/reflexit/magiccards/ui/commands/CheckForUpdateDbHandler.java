@@ -1,13 +1,11 @@
 /*
  * Contributors:
- *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - startup bulk pre-download + "new sets available" prompt (runs the full update)
  */
 
 package com.reflexit.magiccards.ui.commands;
 
 import java.util.Collection;
-import java.util.Iterator;
-import java.util.Properties;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
@@ -19,65 +17,53 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.swt.widgets.Display;
 
-import com.reflexit.magiccards.core.DataManager;
-import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
-import com.reflexit.magiccards.core.model.ICardHandler;
-import com.reflexit.magiccards.core.monitor.SubCoreProgressMonitor;
+import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.core.sync.ParseScryFallSets;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
-import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 
+/**
+ * "Check for Card Updates": ask Scryfall for the set list, and if it lists sets
+ * we don't have, offer to run the full {@link UpdateDbHandler} update. Also
+ * refreshes the currency rates. Runs automatically ~15 s after startup.
+ */
 public class CheckForUpdateDbHandler extends AbstractHandler {
-	/*
-	 * (non-Javadoc)
-	 * 
-	 * @see org.eclipse.core.commands.IHandler#execute(org.eclipse.core.commands.
-	 * ExecutionEvent)
-	 */
+
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
 		if (WebUtils.isWorkOffline()) {
-			Display.getCurrent().asyncExec(new Runnable() {
-				@Override
-				public void run() {
-					// TODO Auto-generated method stub
-					MessageDialog.openInformation(MagicUIActivator.getShell(), "Disabled",
-							"Online updates are disabled");
-				}
-			});
+			Display.getDefault().asyncExec(() -> MessageDialog.openInformation(MagicUIActivator.getShell(),
+					"Work Offline", "Online updates are disabled. Turn off 'Work Offline' first."));
 			return null;
 		}
-		doCheckForCardUpdates();
+		doCheckForCardUpdates(true);
 		return null;
 	}
 
 	/**
-	 * Independent startup task: keep the local Scryfall <em>Default Cards</em> bulk
-	 * file / per-set split current in the <b>background</b> - download a newer bulk
-	 * if Scryfall published one and re-split it - so that when the user runs
-	 * "Update cards of selected set(s)" it is just a local file read. Does NOT
-	 * touch the loaded card DB; the user decides when to apply a set update. No-op
-	 * when offline or already current.
+	 * Startup task: freshness-check Scryfall and download the Default Cards bulk
+	 * file (no parse) so a later "Update Card Database" skips the download.
 	 */
-	public static void primeCardDatabaseSplit() {
+	public static void predownloadBulk() {
 		new Job("Preparing card database") {
 			@Override
 			protected IStatus run(IProgressMonitor imonitor) {
-				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning()) {
-					System.err.println("[ScryfallBulk] startup: card-data split not checked (offline/testing)");
+				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
 					return Status.OK_STATUS;
-				}
-				System.err.println("[ScryfallBulk] startup: checking card-data split...");
 				try {
-					ScryfallBulkCache.ensureSplitAll(new CoreMonitorAdapter(imonitor));
-					System.err.println("[ScryfallBulk] startup: card-data split ready");
+					if (ScryfallBulkCache.isRemoteBulkNewer()) {
+						System.err.println("[ScryfallBulk] startup: pre-downloading updated card file...");
+						ScryfallBulkCache.getDefaultCardsFile(ICoreProgressMonitor.NONE);
+						System.err.println("[ScryfallBulk] startup: card file ready");
+					} else {
+						System.err.println("[ScryfallBulk] startup: card file already current");
+					}
 				} catch (Exception e) {
-					System.err.println("[ScryfallBulk] startup: split check failed (" + e.getMessage() + ")");
+					System.err.println("[ScryfallBulk] startup: pre-download failed (" + e.getMessage() + ")");
 					MagicUIActivator.log(e);
 				}
 				return Status.OK_STATUS;
@@ -85,83 +71,43 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 		}.schedule(5000);
 	}
 
+	/** Auto-check ~15 s after startup (silent when there is nothing new). */
 	public static void doCheckForCardUpdates() {
-		new Job("Checking for cards updates...") {
+		doCheckForCardUpdates(false);
+	}
+
+	private static void doCheckForCardUpdates(final boolean verbose) {
+		new Job("Checking for card updates...") {
 			@Override
 			public IStatus run(IProgressMonitor imonitor) {
-				final CoreMonitorAdapter monitor = new CoreMonitorAdapter(imonitor);
-				monitor.beginTask("Checking for cards updates...", 110);
+				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
+					return Status.OK_STATUS;
 				try {
-					final ICardHandler handler = DataManager.getCardHandler();
-
 					ParseScryFallSets sets = new ParseScryFallSets();
 					sets.loadSets(false);
 
-					final Collection<Edition> newSets = sets.getNew();
-
-					if (newSets.size() > 0) {
-						Editions.getInstance().save();
-						final boolean result[] = new boolean[1];
-						Display.getDefault().syncExec(new Runnable() {
-							@Override
-							public void run() {
-								if (MessageDialog.openQuestion(null, "New Cards", "New sets are available: " + newSets
-										+ ". Would you like to download them now?")) {
-									result[0] = true;
-								}
-							}
-						});
-						if (result[0]) {
-							int k = newSets.size();
-							for (Iterator iterator = newSets.iterator(); iterator.hasNext();) {
-								Edition edition = (Edition) iterator.next();
-
-								// Add / update the edition in the official list
-								Editions.getInstance().addEdition(edition);
-								try {
-									// Download the cards
-									handler.downloadUpdates(edition.getName(), new Properties(),
-											new SubCoreProgressMonitor(monitor, 60 / k));
-								} catch (MagicException e) {
-									MagicUIActivator.log(e);
-								} catch (InterruptedException e) {
-									monitor.setCanceled(true);
-								}
-								if (monitor.isCanceled())
-									break;
-							}
-						}
-					} else {
-						Display.getDefault().syncExec(new Runnable() {
-							@Override
-							public void run() {
-								MessageDialog.openInformation(null, "New Cards", "No New sets found");
-							}
-						});
-
-					}
-					if (monitor.isCanceled())
-						return Status.CANCEL_STATUS;
-
-					// Force and full update of the edition list 
-					final Collection<Edition> allSets = sets.getAll();
-					for (Iterator iterator = allSets.iterator(); iterator.hasNext();) {
-						Edition edition = (Edition) iterator.next();
-
-						// Update the edition in the official list
+					// keep the official edition list current
+					for (Edition edition : sets.getAll())
 						Editions.getInstance().addEdition(edition);
-					}
-
 					Editions.getInstance().save();
-
 					CurrencyConvertor.update();
+
+					final Collection<Edition> newSets = sets.getNew();
+					if (newSets.isEmpty()) {
+						if (verbose)
+							Display.getDefault().asyncExec(() -> MessageDialog.openInformation(
+									MagicUIActivator.getShell(), "Card Updates", "Your set list is up to date."));
+						return Status.OK_STATUS;
+					}
+					final boolean[] yes = new boolean[1];
+					Display.getDefault().syncExec(() -> yes[0] = MessageDialog.openQuestion(MagicUIActivator.getShell(),
+							"New Cards", "New sets are available:\n\n" + newSets
+									+ "\n\nUpdate the card database now?"));
+					if (yes[0])
+						UpdateDbHandler.performUpdate();
 				} catch (Exception e) {
-					MagicUIActivator.log(e); // move on if exception via set
-												// loading
+					MagicUIActivator.log(e); // move on if set-list loading fails
 				}
-				if (monitor.isCanceled())
-					return Status.CANCEL_STATUS;
-				monitor.done();
 				return Status.OK_STATUS;
 			}
 		}.schedule();

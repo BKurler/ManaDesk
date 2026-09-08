@@ -12,6 +12,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - saveDirtySets() writes the changed set files in parallel
+ *                         with per-set progress; updateOperation() withholds card
+ *                         events during a bulk update and replays one at the end
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -39,6 +42,7 @@ import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardField;
+import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.nav.MagicDbContainter;
 import com.reflexit.magiccards.core.model.storage.AbstractCardStoreWithStorage;
 import com.reflexit.magiccards.core.model.storage.AbstractMultiStore;
@@ -440,11 +444,34 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 		return super.isInitialized();
 	}
 
+	/**
+	 * While true (only during a bulk {@link #updateOperation}), the per-set
+	 * {@code ADD} events that {@code addAll} fires are withheld and one coalesced
+	 * event is sent when the flag clears. Without this a full update fires ~1000
+	 * events, each making every card list reschedule its "Loading cards for ..."
+	 * job - which buries the update's own progress in the status bar and pulls
+	 * card images from the web for lists nobody is looking at yet.
+	 */
+	private volatile boolean deferEvents;
+	private volatile CardEvent deferredEvent;
+
+	@Override
+	protected void fireEvent(CardEvent event) {
+		if (deferEvents) {
+			if (event != null && event.getFirstDataElement() instanceof IMagicCard)
+				deferredEvent = event; // keep a representative one to replay
+			return;
+		}
+		super.fireEvent(event);
+	}
+
 	@Override
 	public void updateOperation(ICoreRunnableWithProgress run, ICoreProgressMonitor monitor)
 			throws InterruptedException {
 		boolean ac = isAutoCommit();
 		setAutoCommit(false);
+		deferEvents = true;
+		deferredEvent = null;
 		try {
 			run.run(monitor);
 		} catch (InvocationTargetException e) {
@@ -454,6 +481,63 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 			throw new MagicException(cause);
 		} finally {
 			setAutoCommit(ac);
+			deferEvents = false;
+			CardEvent replay = deferredEvent;
+			deferredEvent = null;
+			if (replay != null)
+				fireEvent(replay); // single reload instead of one per set
 		}
+	}
+
+	/**
+	 * Write the per-set {@code <DB>/*.xml} files that have unsaved changes,
+	 * reporting one work unit per set. Used by "Update Card Database" so the write
+	 * phase shows real progress instead of stalling inside the auto-commit flush.
+	 * <p>
+	 * The files are independent, so the writes run on a small thread pool. Each
+	 * {@code storage.save()} is synchronized on its own storage and builds a fresh
+	 * XML writer (see {@code MagicXmlStreamHandler}); the shared progress monitor
+	 * is the only cross-thread contact and every call to it is synchronized here.
+	 */
+	public void saveDirtySets(ICoreProgressMonitor pm) {
+		ArrayList<AbstractCardStoreWithStorage<IMagicCard>> dirty = new ArrayList<>();
+		for (AbstractCardStoreWithStorage<IMagicCard> t : map.values())
+			if (t.getStorage().isNeedToBeSaved())
+				dirty.add(t);
+		final int total = dirty.size();
+		pm.beginTask("Writing sets", Math.max(1, total));
+		int threads = Math.max(1, Math.min(6, Runtime.getRuntime().availableProcessors()));
+		java.util.concurrent.ExecutorService pool = java.util.concurrent.Executors.newFixedThreadPool(threads,
+				r -> {
+					Thread th = new Thread(r, "db-save");
+					th.setDaemon(true);
+					return th;
+				});
+		java.util.concurrent.atomic.AtomicInteger done = new java.util.concurrent.atomic.AtomicInteger();
+		java.util.List<java.util.concurrent.Future<?>> futures = new ArrayList<>(total);
+		for (AbstractCardStoreWithStorage<IMagicCard> t : dirty) {
+			futures.add(pool.submit(() -> {
+				try {
+					t.getStorage().save();
+				} catch (RuntimeException e) {
+					MagicLogger.log(e);
+				}
+				synchronized (pm) {
+					pm.setTaskName("(" + done.incrementAndGet() + "/" + total + ")  Writing " + t.getLocation());
+					pm.worked(1);
+				}
+			}));
+		}
+		pool.shutdown();
+		try {
+			for (java.util.concurrent.Future<?> f : futures)
+				f.get();
+		} catch (InterruptedException e) {
+			Thread.currentThread().interrupt();
+			pool.shutdownNow();
+		} catch (java.util.concurrent.ExecutionException e) {
+			MagicLogger.log(e);
+		}
+		pm.done();
 	}
 }

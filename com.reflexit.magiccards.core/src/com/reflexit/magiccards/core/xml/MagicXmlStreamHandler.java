@@ -1,3 +1,10 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk; build a fresh MagicXmlStreamWriter
+ *                         per call so "Update Card Database" can write the per-set
+ *                         files on several threads (the old shared static writer
+ *                         was not reentrant)
+ */
 package com.reflexit.magiccards.core.xml;
 
 import java.io.ByteArrayInputStream;
@@ -13,7 +20,6 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 
 public class MagicXmlStreamHandler implements IStoreHandler {
 	private static final MagicXmlStreamReader reader = new MagicXmlStreamReader();
-	private static final MagicXmlStreamWriter writer = new MagicXmlStreamWriter();
 
 	@Override
 	public CardCollectionStoreObject load(File file) throws IOException {
@@ -26,11 +32,14 @@ public class MagicXmlStreamHandler implements IStoreHandler {
 
 	@Override
 	public void save(CardCollectionStoreObject object) throws IOException {
-		writer.write(object);
+		// A fresh writer per call: MagicXmlStreamWriter keeps a mutable stream
+		// field, so a shared instance is not reentrant. Per-call instances let
+		// "Update Card Database" write the ~1000 set files on several threads.
+		new MagicXmlStreamWriter().write(object);
 	}
 
 	public void save(CardCollectionStoreObject object, OutputStream st) throws IOException {
-		writer.write(object, st);
+		new MagicXmlStreamWriter().write(object, st);
 	}
 
 	public String toXML(IMagicCard card) {

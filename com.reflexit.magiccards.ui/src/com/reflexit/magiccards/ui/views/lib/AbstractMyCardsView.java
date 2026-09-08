@@ -12,24 +12,18 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the per-set "Update cards of selected set(s)"
+ *                         action and its UpdateMultipleSetsJob
  */
 
 package com.reflexit.magiccards.ui.views.lib;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Properties;
 import java.util.Set;
 
-import org.eclipse.core.runtime.IProgressMonitor;
-import org.eclipse.core.runtime.IStatus;
-import org.eclipse.core.runtime.Status;
-import org.eclipse.core.runtime.SubProgressMonitor;
-import org.eclipse.core.runtime.jobs.ISchedulingRule;
-import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuListener;
 import org.eclipse.jface.action.IMenuManager;
@@ -49,11 +43,9 @@ import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
-import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
-import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -69,7 +61,6 @@ import com.reflexit.magiccards.ui.dialogs.EditMagicCardPhysicalDialog;
 import com.reflexit.magiccards.ui.dialogs.MyCardsFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.SplitDialog;
 import com.reflexit.magiccards.ui.exportWizards.ExportAction;
-import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.AbstractGroupPageCardsView;
 import com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl;
 import com.reflexit.magiccards.ui.views.IViewPage;
@@ -87,7 +78,6 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	private IDeckAction copyToDeck;
 	private LibraryEventListener eventListener = new LibraryEventListener();
 	/** "Update cards of selected set(s)" - also used by the Collector view's slimmed-down menu. */
-	protected Action updateSet;
 
 	/** Flip to {@code true} for a console trace of move / remove / next-selection. */
 	private static final boolean DEBUG = false;
@@ -162,30 +152,6 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 						DM.copyCards(DM.expandGroups(sel.toList()), fstore.getCardStore());
 					}
 				}
-			}
-		};
-
-		this.updateSet = new Action("Update cards of selected set(s)") {
-			@Override
-			public void run() {
-				ISelection selection = getSelectionProvider().getSelection();
-
-				// Collect the unique sets from the selection - card rows AND, in
-				// the Collector view, whole set / group nodes (walked recursively).
-				Set<String> sets = new HashSet<>();
-				if (selection instanceof IStructuredSelection)
-					for (Object o : ((IStructuredSelection) selection).toList())
-						collectSets(o, sets);
-
-				if (sets.isEmpty()) {
-					MessageDialog.openInformation(getShell(), "Update sets",
-							"Select one or more cards, or one or more set groups, then run this again.");
-					return;
-				}
-
-				UpdateMultipleSetsJob job = new UpdateMultipleSetsJob(sets);
-				job.setUser(true);
-				job.schedule();
 			}
 		};
 
@@ -488,10 +454,9 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	}
 
 	/**
-	 * The entries that mutate a collection (copy / move / split / edit) plus
-	 * "Update cards of selected set(s)". The Collector view overrides this - it is
-	 * a read-only view over the whole database, so only the set-update entry
-	 * applies there.
+	 * The entries that mutate a collection (copy / move / split / edit). The
+	 * Collector view overrides this to add nothing - it is a read-only view over
+	 * the whole database.
 	 */
 	protected void fillEditingContextActions(IMenuManager manager) {
 		// A read-only list cannot be mutated: the destructive / editing entries
@@ -503,31 +468,9 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		manager.add(this.moveToDeckMenu);
 		manager.add(this.splitMoveToDeckMenu);
 		manager.add(this.addToDeck);
-		manager.add(this.updateSet);
 		manager.add(this.split);
 		manager.add(this.edit);
 		// !!! RD		manager.add(this.buyCards);
-	}
-
-	/** Gather set names from a selection element: a card row, a "by Set" group node, or any other
-	 *  group (walked recursively down to its cards). Used by "Update cards of selected set(s)". */
-	private static void collectSets(Object o, Set<String> sets) {
-		if (o instanceof ICardGroup) {
-			ICardGroup g = (ICardGroup) o;
-			if (g.getFieldIndex() == MagicCardField.SET) {
-				addSet(g.getName(), sets); // a whole-set node - its name IS the set name
-				return;
-			}
-			for (Object child : g.getChildrenList())
-				collectSets(child, sets);
-		} else if (o instanceof IMagicCard) {
-			addSet(((IMagicCard) o).getSet(), sets);
-		}
-	}
-
-	private static void addSet(String set, Set<String> sets) {
-		if (set != null && !set.isEmpty())
-			sets.add(set);
 	}
 
 	@Override
@@ -595,55 +538,6 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		this.splitMoveToDeckMenu.dispose();
 		this.addToDeck.dispose();
 		super.preActivate(activePage);
-	}
-
-	/**
-	 * Shared mutex so two set-update jobs cannot run at the same time (they race
-	 * on the card DB and editions.txt).
-	 */
-	private static final ISchedulingRule UPDATE_SETS_RULE = new ISchedulingRule() {
-		@Override
-		public boolean contains(ISchedulingRule rule) {
-			return rule == this;
-		}
-
-		@Override
-		public boolean isConflicting(ISchedulingRule rule) {
-			return rule == this;
-		}
-	};
-
-	public class UpdateMultipleSetsJob extends Job {
-		private final Set<String> sets;
-
-		public UpdateMultipleSetsJob(Set<String> sets) {
-			super("Updating " + sets.size() + " sets");
-			this.sets = sets;
-			setRule(UPDATE_SETS_RULE);
-		}
-
-		@Override
-		protected IStatus run(IProgressMonitor monitor) {
-			try {
-				monitor.beginTask("Updating sets", 100);
-
-				XmlCardHolder holder = new XmlCardHolder();
-				Properties options = new Properties();
-
-				// One batch operation: the set list is refreshed once, the
-				// Scryfall bulk card file is fetched and parsed once, and
-				// editions.txt is saved once - not once per selected set.
-				ICoreProgressMonitor core = new CoreMonitorAdapter(new SubProgressMonitor(monitor, 100));
-				holder.downloadUpdates(sets, options, core);
-
-				monitor.done();
-				return Status.OK_STATUS;
-
-			} catch (Exception e) {
-				MagicLogger.log(e);
-				return new Status(IStatus.ERROR, MagicUIActivator.PLUGIN_ID, "Failed to update sets", e);
-			}
-		}
 	}
 
 }

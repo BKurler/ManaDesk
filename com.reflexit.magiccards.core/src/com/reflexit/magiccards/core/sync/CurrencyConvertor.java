@@ -75,7 +75,7 @@ public class CurrencyConvertor {
 			double rate = Double.parseDouble(parts[1].replace("}", ""));
 			rates.put(cu, rate);
 			Date date = Calendar.getInstance().getTime();
-			MagicLogger.log("Convertion rate " + cu + "=" + rate);
+			MagicLogger.trace("Convertion rate " + cu + "=" + rate);
 			dates.put(cu, date);
 			return rate;
 		} catch (Exception e) {
@@ -145,7 +145,7 @@ public class CurrencyConvertor {
 			date = Calendar.getInstance().getTime();
 		rates.put(cu, rate);
 		dates.put(cu, date);
-		MagicLogger.log("Convertion rate " + cu + "=" + rate);
+		MagicLogger.trace("Convertion rate " + cu + "=" + rate);
 	}
 
 	public static void main(String[] args) {
@@ -190,13 +190,12 @@ public class CurrencyConvertor {
 			initialize();
 			save();
 		} else {
-			try {
-				initialize();
-			} catch (Exception e) {
-				// ignore
+			// initialize()'s hard-coded fallbacks were persisted the first run, so
+			// the file already carries them - re-seeding here just re-put every
+			// rate a second time.
+			try (InputStream st = new FileInputStream(file)) {
+				load(st);
 			}
-			InputStream st = new FileInputStream(file);
-			load(st);
 		}
 	}
 
