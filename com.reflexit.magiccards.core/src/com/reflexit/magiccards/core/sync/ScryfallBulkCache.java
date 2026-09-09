@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - installLocalBulk() (offline import) + remoteBulkSizeMB()
+ *                         / hasLocalBulk() for the first-run download prompt
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -48,6 +50,7 @@ public final class ScryfallBulkCache {
 	private static volatile long lastIndexCheck = 0L;
 	private static volatile String cachedRemoteUpdatedAt = null;
 	private static volatile String cachedDownloadUri = null;
+	private static volatile long cachedRemoteSize = -1L;
 
 	private ScryfallBulkCache() {
 	}
@@ -87,6 +90,45 @@ public final class ScryfallBulkCache {
 		return !cachedRemoteUpdatedAt.equals(readMarker(bulkMetaFile()));
 	}
 
+	/** {@code true} once a Default Cards bulk file has been downloaded (or imported). */
+	public static boolean hasLocalBulk() {
+		File f = bulkFile();
+		return f.isFile() && f.length() > 0;
+	}
+
+	/**
+	 * Approximate size (MB) of the current remote Default Cards bulk file, from the
+	 * Scryfall bulk-data index; {@code -1} when the index could not be reached.
+	 */
+	public static long remoteBulkSizeMB() {
+		refreshIndex();
+		return cachedRemoteSize > 0 ? cachedRemoteSize / (1024 * 1024) : -1L;
+	}
+
+	/**
+	 * The next {@link #getDefaultCardsFile} call must use the on-disk file exactly
+	 * as it is (a user import), not check freshness and re-download over it.
+	 */
+	private static volatile boolean useLocalOnce = false;
+
+	/**
+	 * Use {@code src} (a Scryfall bulk JSON-Lines file the user downloaded
+	 * elsewhere - Default Cards, All Cards, …) as the local bulk file. The very
+	 * next update parses <em>this</em> file; after that, normal freshness checks
+	 * against Scryfall's Default Cards resume.
+	 */
+	public static synchronized void installLocalBulk(File src) throws IOException {
+		if (src == null || !src.isFile() || src.length() == 0)
+			throw new IOException("Not a usable card-data file: " + src);
+		Files.copy(src.toPath(), bulkFile().toPath(), StandardCopyOption.REPLACE_EXISTING);
+		// stamp it with the current remote marker (best effort) so it is treated as
+		// current; blank if Scryfall is unreachable.
+		refreshIndex();
+		writeMarker(bulkMetaFile(), cachedRemoteUpdatedAt == null ? "" : cachedRemoteUpdatedAt);
+		useLocalOnce = true;
+		trace("bulk file: IMPORTED from " + src + " (" + mb(bulkFile().length()) + ")");
+	}
+
 	/**
 	 * A local copy of the Scryfall Default Cards bulk file, downloading a fresh one
 	 * only when the local copy is missing or older than what Scryfall publishes.
@@ -98,6 +140,12 @@ public final class ScryfallBulkCache {
 		File file = bulkFile();
 		boolean haveLocal = file.isFile() && file.length() > 0;
 		String localUpdatedAt = haveLocal ? readMarker(bulkMetaFile()) : null;
+
+		if (haveLocal && useLocalOnce) {
+			useLocalOnce = false;
+			trace("bulk file: using the imported file as-is");
+			return file;
+		}
 
 		refreshIndex();
 		String remoteUpdatedAt = cachedRemoteUpdatedAt;
@@ -135,8 +183,10 @@ public final class ScryfallBulkCache {
 					Object uri = entry.get("jsonl_download_uri");
 					if (uri == null)
 						uri = entry.get("download_uri");
+					Object size = entry.get("size");
 					cachedRemoteUpdatedAt = upd == null ? null : upd.toString();
 					cachedDownloadUri = uri == null ? null : uri.toString();
+					cachedRemoteSize = size instanceof Number ? ((Number) size).longValue() : -1L;
 					lastIndexCheck = System.currentTimeMillis();
 					return;
 				}

@@ -238,6 +238,10 @@
             commandId="com.reflexit.magiccards.ui.commands.updateMagicDb">
       </handler>
       <handler
+            class="com.reflexit.magiccards.ui.commands.ImportCardDbHandler"
+            commandId="com.reflexit.magiccards.ui.commands.importCardDb">
+      </handler>
+      <handler
             class="com.reflexit.magiccards.ui.commands.EditDeckPropertiesHandler"
             commandId="com.reflexit.magiccards.ui.commands.EditDeckProperties">
       </handler>
@@ -412,6 +416,12 @@
 
       <command
             categoryId="com.reflexit.magiccards.ui.commands.category"
+            id="com.reflexit.magiccards.ui.commands.importCardDb"
+            name="Import Card Database from File...">
+      </command>
+
+      <command
+            categoryId="com.reflexit.magiccards.ui.commands.category"
             id="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb"
             name="Check for Card Updates...">
       </command>
@@ -550,6 +560,11 @@
                   commandId="com.reflexit.magiccards.ui.commands.checkForUpdateMagicDb"
                   mnemonic="C"
                   id="com.reflexit.magiccards.ui.menus.checkForUpdateMagicDb">
+            </command>
+            <command
+                  commandId="com.reflexit.magiccards.ui.commands.importCardDb"
+                  mnemonic="I"
+                  id="com.reflexit.magiccards.ui.menus.importCardDb">
             </command>
       </menuContribution>
       <!--

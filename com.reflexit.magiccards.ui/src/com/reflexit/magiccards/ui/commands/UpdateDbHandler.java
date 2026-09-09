@@ -12,6 +12,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - single "Update Card Database" (Scryfall bulk), background job + cancel
+ *     Rémi Dutil (2026) - offline is OK when a bulk file was already downloaded /
+ *                         imported; record the set-file count for the startup
+ *                         integrity check
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -35,7 +38,9 @@ import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.ICardHandler;
+import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore;
+import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
@@ -50,6 +55,20 @@ public class UpdateDbHandler extends AbstractHandler {
 
 	private static final Object LOCK = new Object();
 	private static volatile boolean running;
+
+	/** How many {@code <DB>/*.xml} files a healthy update produced, so a later
+	 *  startup can tell "database never downloaded" / "half the sets vanished"
+	 *  from a normal load. 0 = unknown. */
+	public static final String LAST_GOOD_SET_COUNT = "cardDb.lastGoodSetCount";
+
+	public static int lastGoodSetCount() {
+		return MagicUIActivator.getDefault().getPreferenceStore().getInt(LAST_GOOD_SET_COUNT);
+	}
+
+	/** True while an update job is scheduled or running. */
+	public static boolean isRunning() {
+		return running;
+	}
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
@@ -68,8 +87,11 @@ public class UpdateDbHandler extends AbstractHandler {
 			@Override
 			public IStatus run(IProgressMonitor pm) {
 				try {
-					if (WebUtils.isWorkOffline()) {
-						asyncInfo("You are working offline. Turn off 'Work Offline' to update.");
+					// offline is fine only if a bulk file was already downloaded /
+					// imported - then we can still rebuild the DB from it.
+					if (WebUtils.isWorkOffline() && !ScryfallBulkCache.hasLocalBulk()) {
+						asyncInfo("You are working offline and no card file has been downloaded yet.\n"
+								+ "Turn off 'Work Offline', or use File ▸ Import Card Database from File…");
 						return Status.OK_STATUS;
 					}
 					pm.beginTask("Updating card database", 100);
@@ -85,6 +107,9 @@ public class UpdateDbHandler extends AbstractHandler {
 					pm.subTask("Relinking your collections…");
 					DataManager.getInstance().reconcile();
 					pm.worked(5);
+					int sets = ((DbMultiFileCardStore) DataManager.getInstance().getMagicDBStore()).loadedSetCount();
+					if (sets > 0)
+						MagicUIActivator.getDefault().getPreferenceStore().setValue(LAST_GOOD_SET_COUNT, sets);
 					asyncExec(() -> {
 						reloadMagicDbView();
 						MessageDialog.openInformation(MagicUIActivator.getShell(), "Update Card Database",

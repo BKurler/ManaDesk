@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - empty-database hint ("run Update Card Database")
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -70,11 +71,27 @@ public class MagicDbView extends AbstractSingleControlCardsView {
 		public IFilteredCardStore doGetFilteredStore() {
 			return DataManager.getCardHandler().getMagicDBFilteredStore();
 		}
+
+		@Override
+		public String getStatusMessage() {
+			if (((com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore) DataManager.getCardHandler()
+					.getMagicDBStore()).isEmpty())
+				return "No card database yet - run File ▸ Update Card Database (needs an internet connection).";
+			return super.getStatusMessage();
+		}
 	}
 
 	@Override
 	protected AbstractMagicCardsListControl createViewControl() {
 		return new MagicDbListControl();
+	}
+
+	@Override
+	public void setFocus() {
+		super.setFocus();
+		// the card database lives here - if it hasn't been downloaded yet, put the
+		// download prompt in front of the user (deduped by a cooldown in the handler)
+		com.reflexit.magiccards.ui.commands.CheckForUpdateDbHandler.promptDownloadIfEmpty();
 	}
 
 	@Override

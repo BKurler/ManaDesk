@@ -1,2 +1,0 @@
-ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|LANG|ARTIST|COLLNUM|TEXT|GATHERERID|TCGID|PROPERTIES
-58be6a05-8021-4fca-8e9f-0ebb4769c635|Spirit||Token Creature - Spirit|1|1|Flying<BR><a href="https://api.scryfall.com/cards/58be6a05-8021-4fca-8e9f-0ebb4769c635/rulings">Rulings</a>|Duel Decks: Sorin vs. Tibalt Tokens|Common||Ryan Yee|1|Finishes: nonfoil:<br>Promos: setpromo:<br><br><a href="https://scryfall.com/card/tddk/1/spirit?utm_source=api">Scryfall</a>|0|0|{IMAGE_URL=https://cards.scryfall.io/normal/front/5/8/58be6a05-8021-4fca-8e9f-0ebb4769c635.jpg?1561756369}

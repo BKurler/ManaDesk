@@ -18,6 +18,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - resetDb() seeds a small card fixture (testdb/*.txt); the
+ *                         shipped app no longer bundles a card database
  */
 
 /*
@@ -47,12 +49,24 @@ import java.nio.file.Files;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
+import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.MagicCard;
+import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.abs.ICardField;
 
 /**
  * static utils
  */
 public class TestFileUtils {
 	public static boolean deleteOnExit = true;
+
+	/**
+	 * The app no longer ships a bundled card database, so tests that look real
+	 * cards up in the DB (DataManagerTest, ImportUtilsTest, …) must seed one. These
+	 * are the sets they need, as pipe-separated fixtures under {@code src/testdb/}.
+	 */
+	private static final String[] TESTDB_SETS = { "ARN", "LEA", "LEB", "2ED", "3ED", "10E", "HML", "UNH", "LRW", "M10",
+			"M11", "M14", "ISD", "THS", "PTHS", "DDG", "DDH", "CMR", "STX", "ONS" };
 
 	public static void resetDb() {
 		String user = System.getProperty("user.name");
@@ -63,6 +77,49 @@ public class TestFileUtils {
 
 		DataManager.getInstance().reset(temp);
 		DataManager.getInstance().syncInitDb();
+		seedTestCardDb();
+		DataManager.getInstance().reconcile();
+	}
+
+	/** Load the {@code testdb/*.txt} card fixtures into the (freshly reset) card DB. */
+	private static void seedTestCardDb() {
+		@SuppressWarnings("unchecked")
+		com.reflexit.magiccards.core.model.storage.IDbCardStore<IMagicCard> db = DataManager.getInstance()
+				.getMagicDBStore();
+		for (String set : TESTDB_SETS) {
+			try (InputStream in = TestFileUtils.class.getClassLoader().getResourceAsStream("testdb/" + set + ".txt")) {
+				if (in == null) {
+					System.err.println("test card fixture missing: testdb/" + set + ".txt");
+					continue;
+				}
+				List<IMagicCard> cards = parseFlatCards(in);
+				if (!cards.isEmpty())
+					db.addAll(cards);
+			} catch (Exception e) {
+				e.printStackTrace();
+			}
+		}
+	}
+
+	private static List<IMagicCard> parseFlatCards(InputStream in) throws IOException {
+		BufferedReader r = new BufferedReader(new InputStreamReader(in, "UTF-8"));
+		String header = r.readLine();
+		if (header == null)
+			return new ArrayList<>();
+		ICardField[] fields = MagicCardField.toFields(header, "\\Q|");
+		List<IMagicCard> list = new ArrayList<>();
+		String line;
+		while ((line = r.readLine()) != null) {
+			if (line.isEmpty())
+				continue;
+			String[] v = line.split("\\|", -1);
+			MagicCard card = new MagicCard();
+			for (int i = 0; i < fields.length && i < v.length; i++)
+				card.set(fields[i], v[i]);
+			if (card.getCardId() != null)
+				list.add(card);
+		}
+		return list;
 	}
 
 	public static void readWriteStream(InputStream readStream, OutputStream writeStream) throws IOException {

@@ -1,6 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - dropped loadFromFlatResource (no bundled card-DB seed)
+ */
 package com.reflexit.magiccards.core.model;
 
-import java.io.IOException;
 import java.util.Properties;
 
 import com.reflexit.magiccards.core.MagicException;
@@ -37,8 +40,6 @@ public interface ICardHandler {
 			throws MagicException, InterruptedException;
 
 	public ICardStore getCardStore(Location to);
-
-	public void loadFromFlatResource(String string) throws IOException;
 
 	public IDbPriceStore getDBPriceStore();
 }
