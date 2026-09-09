@@ -5,26 +5,23 @@
  *     Rémi Dutil (2026) - parseBulkGrouped() is the single card-DB update pass:
  *                         public, cancellable, progress-reporting; the per-set
  *                         gzip split/merge round-trip is gone
+ *     Rémi Dutil (2026) - deleted the flat-file builder (saveAllFlat / generateFlat):
+ *                         no bundled card database any more
  */
 
 package com.reflexit.magiccards.core.sync;
 
 import java.io.BufferedInputStream;
-import java.io.BufferedOutputStream;
 import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileInputStream;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.InputStreamReader;
 import java.io.PrintStream;
 import java.net.MalformedURLException;
 import java.net.URL;
-import java.nio.file.Files;
 import java.util.zip.GZIPInputStream;
 import java.util.ArrayList;
-import java.util.Collection;
 import java.util.Collections;
 import java.util.Currency;
 import java.util.HashMap;
@@ -60,10 +57,6 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	DbPricesMultiFileStore priceStore = (DbPricesMultiFileStore) DbPricesMultiFileStore.getInstance();
 	public static final String BASE_SEARCH_URL = "https://api.scryfall.com/cards/search?";
 	public static final String TEXT_EXPORT_DIR = "/tmp/madatabase";
-	public boolean includeImagesUrl = true;
-
-	// Set to try when generating flat files. This is required to remove some fields
-	public boolean generateFlat = false;
 	public ICardStore store = DataManager.getInstance().getMagicDBStore();
 
 	private final Set<String> costSymbols = new TreeSet<>();
@@ -470,7 +463,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		JSONObject purchaseUri = (JSONObject) elem.get("purchase_uris");
 		String tcgUriString = "";
 
-		if (!generateFlat) {
+		{
 			if (purchaseUri != null && purchaseUri.size() > 0) {
 				Object tcg = purchaseUri.get("tcgplayer");
 				if (tcg != null) {
@@ -553,7 +546,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			}
 		}
 
-		if (!generateFlat) {
+		{
 			priceString = BuildPrice((JSONObject) elem.get("prices"));
 
 			legalitiesText = "<br>" + legalitiesString.replace(";", "<br>");
@@ -643,20 +636,15 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			frontCard.setText(cardText);
 			frontCard.setLanguage(languageString);
 
-			// Add legality if we're doing a live update
-			if (!generateFlat) {
-				frontCard.set(MagicCardField.LEGALITY, legalitiesString);
-			}
+			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
 			if (gids != null && gids.size() > 0) {
 				frontCard.setGathererCardId(gids.get(0).toString());
 			}
 
-			if (!generateFlat) {
-				if (tcgId != null) {
-					frontCard.setTcgCardId(tcgId.toString());
-				} else if (tcgEtchedId != null) {
-					frontCard.setTcgCardId(tcgEtchedId.toString());
-				}
+			if (tcgId != null) {
+				frontCard.setTcgCardId(tcgId.toString());
+			} else if (tcgEtchedId != null) {
+				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
 			handler.handleCard(frontCard);
@@ -771,10 +759,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			frontCard.setText(priceString + frontMultiverseString + cardText);
 			backCard.setText(backMultiverseString + cardText);
 
-			if (!generateFlat) {
-				frontCard.set(MagicCardField.LEGALITY, legalitiesString);
-				backCard.set(MagicCardField.LEGALITY, frontCard.get(MagicCardField.LEGALITY));
-			}
+			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
+			backCard.set(MagicCardField.LEGALITY, frontCard.get(MagicCardField.LEGALITY));
 
 			frontCard.set(MagicCardField.FLIPID, backCard.getCardId());
 			backCard.set(MagicCardField.FLIPID, frontCard.getCardId());
@@ -783,12 +769,10 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				frontCard.setGathererCardId(gids.get(0).toString());
 			}
 
-			if (!generateFlat) {
-				if (tcgId != null) {
-					frontCard.setTcgCardId(tcgId.toString());
-				} else if (tcgEtchedId != null) {
-					frontCard.setTcgCardId(tcgEtchedId.toString());
-				}
+			if (tcgId != null) {
+				frontCard.setTcgCardId(tcgId.toString());
+			} else if (tcgEtchedId != null) {
+				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
 			handler.handleCard(frontCard);
@@ -850,82 +834,6 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		public List<MagicCard> getPrimary() {
 			return primary;
-		}
-	}
-
-	// Used to create the flat resource files
-	public void saveAllFlat(File dir) throws IOException {
-
-		generateFlat = true;
-
-		this.includeImagesUrl = false;
-
-		Editions editions = Editions.getInstance(true);
-
-		ParseScryFallSets setsLoader = new ParseScryFallSets();
-
-		setsLoader.loadSets(true);
-
-		Collection<Edition> sets = setsLoader.getAll();
-
-		dir.mkdirs();
-
-		try {
-
-			File file = new File(dir, "/editions.txt");
-
-			editions.save(file);
-		} catch (FileNotFoundException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
-
-		int size = editions.getEditions().size();
-		int i = 0;
-
-		for (Edition x : editions.getEditions()) {
-			i++;
-
-			int prog = Math.round(i / (float) size * 100);
-			System.out.println("Set \"" + x.getName() + "\" written in " + dir.getAbsolutePath() + "\\"
-					+ x.getMainAbbreviation() + ".txt (" + prog + "%)");
-			saveEditionText(dir, x);
-		}
-	}
-
-	// Use to create a set flat file
-	public void saveEditionText(File dir, Edition x) {
-		String base = x.getBaseFileName() + ".txt";
-		for (String abbr : x.getAbbreviations()) {
-			File file = new File(dir, base);
-			try (PrintStream out = new PrintStream(file)) {
-				SortedOutputHanlder handler = new SortedOutputHanlder(out, true, true);
-				this.loadSet(abbr, handler, ICoreProgressMonitor.NONE);
-				if (handler.getRealCount() > 0)
-					break;
-			} catch (Exception e) {
-				System.err.println(e);
-			}
-			file.delete();
-		}
-	}
-
-	public void downloadAndSaveEdition(File dir, String set) {
-		System.out.println("Downloading " + set + " from Scryfall");
-
-		loadTcgMediumPrices();
-
-		try (PrintStream out = new PrintStream(dir)) {
-			SortedOutputHanlder handler = new SortedOutputHanlder(out, true, true);
-			this.loadSet(set, handler, ICoreProgressMonitor.NONE);
-		} catch (Exception e) {
-			System.err.println(e);
-		}
-		try {
-			priceProvider.save();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
 		}
 	}
 
@@ -1081,24 +989,4 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		return result;
 	}
 
-	public void printCollectedSymbols() {
-		System.out.println("=== Mana Cost Symbols ===");
-		costSymbols.forEach(System.out::println);
-
-		System.out.println("\n=== Text Symbols ===");
-		textSymbols.forEach(System.out::println);
-	}
-
-	public static void main(String[] args) throws MalformedURLException, IOException {
-		// Important! Run this to create the flat files required to update the Db
-		// resource
-		// Files will be located under TEXT_EXPORT_DIR
-		// Build the database from Scryfall and export flat files
-		ParseScryFallChecklist db = new ParseScryFallChecklist();
-
-		db.saveAllFlat(new File(TEXT_EXPORT_DIR));
-
-		// Print all collected mana/text symbols
-		db.printCollectedSymbols();
-	}
 }

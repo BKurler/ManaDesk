@@ -15,12 +15,14 @@
  *     Rémi Dutil (2026) - saveDirtySets() writes the changed set files in parallel
  *                         with per-set progress; updateOperation() withholds card
  *                         events during a bulk update and replays one at the end
+ *     Rémi Dutil (2026) - no bundled flat-file seed: doInitialize() just loads
+ *                         <DB>/*.xml; isEmpty()/loadedSetCount() count set files
+ *                         on disk (not the map, which reconcile() inflates)
  */
 
 package com.reflexit.magiccards.core.model.xml;
 
 import java.io.File;
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -58,7 +60,6 @@ import com.reflexit.magiccards.core.monitor.ICoreRunnableWithProgress;
 public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> implements
 		ICardCollection<IMagicCard>, IDbCardStore<IMagicCard> {
 	private static DbMultiFileCardStore instance;
-	private boolean flatDbLoaded;
 	private boolean loadDefault;
 	private GlobalDbHandler handler;
 
@@ -69,7 +70,6 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 	}
 
 	private void init() {
-		flatDbLoaded = false;
 		loadDefault = true;
 		handler = new GlobalDbHandler();
 	}
@@ -321,46 +321,43 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 		throw new MagicException("Unknown card type " + card);
 	}
 
-	public void loadFromSoftware() throws MagicException {
-		if (flatDbLoaded)
-			return;
-		flatDbLoaded = true;
-		if (System.getProperty("set10e") != null) {
-			try {
-				DataManager.getCardHandler().loadFromFlatResource("10E.txt");
-			} catch (IOException e) {
-				// ignore
-				MagicLogger.log("Cannot loadDefault 10E");
-			}
-		} else {
-			setInitialized(true);
-			try {
-				Collection<String> editions = Editions.getInstance().getNames();
-				int seedTotal = editions.size();
-				int seedDone = 0;
-				for (String set : editions) {
-					String abbr = (Editions.getInstance().getEditionByName(set).getBaseFileName());
-					DataManager.reportDbSeed(++seedDone, seedTotal, set);
-					try {
-						// long time = System.currentTimeMillis();
-						File setFile = new File(XmlCardHolder.getDbFolder(), Location.createLocationFromSet(
-								set).getBaseFileName());
-						if (!setFile.exists() || setFile.length() == 0)
-							DataManager.getCardHandler().loadFromFlatResource(abbr + ".txt");
-						// long nowtime = System.currentTimeMillis() - time;
-						// System.err.println("Loading " + abbr + " took " +
-						// nowtime / 1000 + " s "
-						// +
-						// nowtime % 1000 + " ms");
-					} catch (IOException e) {
-						// ignore
-						MagicLogger.log("Cannot loadDefault " + abbr);
-					}
-				}
-			} finally {
-				setInitialized(false);
-			}
+	/** How many {@code <DB>/*.xml} set files are on disk. This is the real "has the
+	 *  card database been downloaded" signal - {@code map} is unreliable because
+	 *  {@code reconcile()} creates empty per-set stores for the user's own
+	 *  deck/collection cards before any set file exists. */
+	private static int setFileCount() {
+		File dir = XmlCardHolder.getDbFolder();
+		String[] xml = dir == null ? null : dir.list((d, n) -> n.endsWith(".xml"));
+		return xml == null ? 0 : xml.length;
+	}
+
+	/**
+	 * {@code true} when the card database has never been downloaded (no
+	 * {@code <DB>/*.xml} on disk). The workbench prompts for a first-run download
+	 * (see {@code CheckForUpdateDbHandler.promptDownloadIfEmpty}).
+	 */
+	public boolean isEmpty() {
+		return setFileCount() == 0;
+	}
+
+	/** Number of {@code <DB>/*.xml} set files on disk (0 = never downloaded). */
+	public int loadedSetCount() {
+		return setFileCount();
+	}
+
+	/** Non-hidden editions that have no non-empty {@code <DB>/<abbr>.xml} on disk. */
+	public java.util.List<String> missingSetFiles() {
+		java.util.List<String> missing = new ArrayList<>();
+		Set<Location> hidden = getHiddenSets();
+		for (String set : Editions.getInstance().getNames()) {
+			Location loc = Location.createLocationFromSet(set);
+			if (hidden.contains(loc))
+				continue;
+			File f = new File(XmlCardHolder.getDbFolder(), loc.getBaseFileName());
+			if (!f.exists() || f.length() == 0)
+				missing.add(set);
 		}
+		return missing;
 	}
 
 	@Override
@@ -374,10 +371,9 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 				return;
 			}
 			this.loadDefault = false;
-			// create initial database from flat file if not there
-			loadFromSoftware();
-			// loadDefault card from xml in memory
-			// System.err.println("Initializing DB");
+			// load the per-set <DB>/*.xml files. There is no bundled seed any more -
+			// an empty <DB> dir means the database has never been downloaded; the
+			// workbench detects that and offers a first-run Scryfall update.
 			ArrayList<File> files = new ArrayList<>();
 
 			try {

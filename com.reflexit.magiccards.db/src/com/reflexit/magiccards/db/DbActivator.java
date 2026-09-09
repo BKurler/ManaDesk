@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - bundle now holds only editions.txt (no per-set card
+ *                         files); removed the unused DB_LOADED constant
+ */
 package com.reflexit.magiccards.db;
 
 import java.io.IOException;
@@ -18,8 +23,6 @@ public class DbActivator extends Plugin {
 	public static final String PLUGIN_ID = "com.reflexit.magiccards.db";
 	// The shared instance
 	private static DbActivator plugin;
-	// global preferences keys
-	public static final String DB_LOADED = "db_loaded";
 
 	/**
 	 * The constructor

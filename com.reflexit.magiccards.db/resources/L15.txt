@@ -1,2 +1,0 @@
-ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|LANG|ARTIST|COLLNUM|TEXT|GATHERERID|TCGID|PROPERTIES
-1e498e42-f55c-4afa-b2e2-02345f91cdb5|Monk||Token Creature - Monk|1|1|Prowess<BR><a href="https://api.scryfall.com/cards/1e498e42-f55c-4afa-b2e2-02345f91cdb5/rulings">Rulings</a>|League Tokens 2015|Common||Magali Villeneuve|1|Finishes: nonfoil:<br>Promos: league:instore:<br><br><a href="https://scryfall.com/card/l15/1/monk?utm_source=api">Scryfall</a>|0|0|{IMAGE_URL=https://cards.scryfall.io/normal/front/1/e/1e498e42-f55c-4afa-b2e2-02345f91cdb5.jpg?1561756357}

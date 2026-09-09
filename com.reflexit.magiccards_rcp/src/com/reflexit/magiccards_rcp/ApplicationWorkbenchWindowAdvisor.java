@@ -4,6 +4,7 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - startup: pre-download the Scryfall bulk file; splash tail
  *                         "Restoring decks and collections" progress
+ *     Rémi Dutil (2026) - startup: checkInitialDatabase() (first-run download prompt)
  */
 
 package com.reflexit.magiccards_rcp;
@@ -73,6 +74,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			// Freshness-check + pre-download the Scryfall bulk file in the
 			// background so a later "Update Card Database" skips the download.
 			CheckForUpdateDbHandler.predownloadBulk();
+			// The first-run "download the card database" prompt is fired from
+			// ApplicationWorkbenchAdvisor.postStartup() - after the splash closes.
 		} catch (Throwable e) {
 			Activator.log(e);
 		}

@@ -694,8 +694,8 @@ public class DataManager {
 			reportInit(0, INIT_SCALE, "Scanning card folders…");
 			getModelRoot();
 			reportInit(BAND_SEED_START, INIT_SCALE, "Preparing sets…");
-			// getMagicDBStore().initialize() runs loadFromSoftware() (per-edition
-			// seed - reportDbSeed) then the per-set load loop (reportDbLoad).
+			// getMagicDBStore().initialize() loads every <DB>/*.xml (reportDbLoad).
+			// An empty <DB> dir just means the database has not been downloaded yet.
 			getMagicDBStore().initialize();
 			reportInit(BAND_PRICE_START, INIT_SCALE, "Loading prices…");
 			getDBPriceStore().initialize();
