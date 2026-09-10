@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - proxy flag (per-copy); a proxy is never for trade
  */
 
 package com.reflexit.magiccards.core.model;
@@ -175,6 +176,15 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 	}
 
 	@Override
+	public boolean isProxy() {
+		return Boolean.TRUE.equals(getProperty(MagicCardField.PROXY));
+	}
+
+	public void setProxy(boolean proxy) {
+		setProperty(MagicCardField.PROXY, proxy ? Boolean.TRUE : null); // only store when true
+	}
+
+	@Override
 	public String getCardId() {
 		return this.card.getCardId();
 	}
@@ -282,6 +292,8 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		if (!eqNull(phi1.getSpecial(), phi2.getSpecial()))
 			return false;
 		if (!eqNull(phi1.getCondition(), phi2.getCondition()))
+			return false;
+		if (phi1.isProxy() != phi2.isProxy())
 			return false;
 		if (!eqNull(phi1.getPrice(), phi2.getPrice()))
 			return false;
@@ -557,6 +569,8 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 
 	@Override
 	public int getForTrade() {
+		if (isProxy())
+			return 0; // a proxy is never offered for trade
 		Integer f = (Integer) getProperty(MagicCardField.FORTRADECOUNT);
 		if (f == null) {
 			boolean forTrade = isSpecialTag(MagicCardField.FORTRADECOUNT);

@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - proxy copies rendered greyed with a "Proxy" stamp
  *******************************************************************************/
 
 package com.reflexit.magiccards.ui.gallery;
@@ -72,13 +73,18 @@ public final class GalleryHtmlBuilder {
 
 		// Resolve count
 		int count = (card instanceof IMagicCardPhysical) ? ((IMagicCardPhysical) card).getCount() : 0;
+		boolean proxy = card instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
+				&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) card).isProxy();
 
 		// Build HTML
-		sb.append("<div class='card' data-id='").append(id).append("'>");
+		sb.append("<div class='card").append(proxy ? " proxy" : "").append("' data-id='").append(id).append("'>");
 		sb.append("<div class='card-inner'>");
 
 		sb.append("<img src='").append(url).append("' loading='lazy'/>");
 
+		if (proxy) {
+			sb.append("<div class='proxy-mark'>Proxy</div>");
+		}
 		if (count > 1) {
 			sb.append("<div class='count-badge'>x").append(count).append("</div>");
 		}
@@ -155,7 +161,7 @@ public final class GalleryHtmlBuilder {
 
 		// <div class='card' data-id='...'>
 		sb.append("  var card=document.createElement('div');");
-		sb.append("  card.className='card';");
+		sb.append("  card.className = c.proxy ? 'card proxy' : 'card';");
 		sb.append("  card.setAttribute('data-id', c.id);");
 
 		// <div class='card-inner'>
@@ -167,6 +173,14 @@ public final class GalleryHtmlBuilder {
 		sb.append("  img.src=c.image;");
 		sb.append("  img.loading='lazy';");
 		sb.append("  inner.appendChild(img);");
+
+		// Proxy stamp
+		sb.append("  if(c.proxy){");
+		sb.append("    var pm=document.createElement('div');");
+		sb.append("    pm.className='proxy-mark';");
+		sb.append("    pm.textContent='Proxy';");
+		sb.append("    inner.appendChild(pm);");
+		sb.append("  }");
 
 		// Count badge (only if count > 1)
 		sb.append("  if(c.count && c.count > 1){");
@@ -303,7 +317,14 @@ public final class GalleryHtmlBuilder {
 			+ "  font-size: 14px;" + "  font-weight: bold;" + "}"
 			// selection indicator drawn INSIDE the image (outline-offset) so it
 			// never changes layout / triggers a scrollbar
-			+ ".card.sel img {" + "  outline: 4px solid #1E90FF;" + "  outline-offset: -4px;" + "}";
+			+ ".card.sel img {" + "  outline: 4px solid #1E90FF;" + "  outline-offset: -4px;" + "}"
+			// proxy copy: fade the art + diagonal "Proxy" stamp
+			+ ".card.proxy img {" + "  filter: grayscale(100%);" + "  opacity: 0.55;" + "}"
+			+ ".proxy-mark {" + "  position: absolute;" + "  top: 50%;" + "  left: 50%;"
+			+ "  transform: translate(-50%, -50%) rotate(-32deg);" + "  font-size: 22px;" + "  font-weight: bold;"
+			+ "  letter-spacing: 4px;" + "  text-transform: uppercase;" + "  color: rgba(110,110,110,0.75);"
+			+ "  border: 3px solid rgba(110,110,110,0.62);" + "  border-radius: 5px;" + "  padding: 2px 12px;"
+			+ "  white-space: nowrap;" + "  pointer-events: none;" + "}";
 
 	// ============================================================
 	// JS

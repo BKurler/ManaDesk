@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Proxy (Genuine / Proxy) field editor
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -33,8 +34,11 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 	public static final String COMMENT_FIELD = MagicCardField.COMMENT.name();
 	public static final String SPECIAL_FIELD = MagicCardField.SPECIAL.name();
 	public static final String CONDITION_FIELD = MagicCardField.CONDITION.name();
+	public static final String PROXY_FIELD = MagicCardField.PROXY.name();
 	public static final String OWNERSHIP_FIELD = MagicCardField.OWNERSHIP.name();
 	private static final String NOT_GRADED = "Not graded";
+	private static final String GENUINE_VALUE = "Genuine";
+	private static final String PROXY_VALUE = "Proxy";
 	public static final String COUNT_FIELD = MagicCardField.COUNT.name();
 	public static final String NAME_FIELD = MagicCardField.NAME.name();
 	public static final String PRICE_FIELD = MagicCardField.PRICE.name();
@@ -69,6 +73,8 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		createOwnershipFieldEditor(area);
 		// condition
 		createConditionFieldEditor(area);
+		// proxy
+		createProxyFieldEditor(area);
 		// comment
 		createTextFieldEditor(area, "Comment", COMMENT_FIELD, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		// special
@@ -151,6 +157,27 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 					store.setValue(CONDITION_FIELD, "");
 				else
 					store.setValue(CONDITION_FIELD, t);
+			}
+		});
+	}
+
+	public void createProxyFieldEditor(Composite area) {
+		createTextLabel(area, "Proxy");
+		final Combo proxy = new Combo(area, SWT.READ_ONLY);
+		proxy.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		String stored = store.getDefaultString(PROXY_FIELD);
+		String shown = stored;
+		if (!UNCHANGED.equals(stored))
+			shown = Boolean.valueOf(stored) ? PROXY_VALUE : GENUINE_VALUE;
+		setComboChoices(proxy, new String[] { GENUINE_VALUE, PROXY_VALUE, UNCHANGED }, shown);
+		proxy.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				String t = proxy.getText();
+				if (UNCHANGED.equals(t))
+					store.setValue(PROXY_FIELD, UNCHANGED);
+				else
+					store.setValue(PROXY_FIELD, String.valueOf(PROXY_VALUE.equals(t)));
 			}
 		});
 	}

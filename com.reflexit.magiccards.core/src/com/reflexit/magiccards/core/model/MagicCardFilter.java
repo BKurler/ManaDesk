@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Proxies filter group
  */
 
 package com.reflexit.magiccards.core.model;
@@ -87,6 +88,7 @@ public class MagicCardFilter implements Cloneable {
 		expr = expr.and(createOrGroup(map, CardTypes.getInstance())).and(createOrGroup(map, Editions.getInstance()))
 				.and(createOrGroup(map, Locations.getInstance())).and(createOrGroup(map, Rarity.getInstance()))
 			.and(createOrGroup(map, CardConditions.getInstance()))
+				.and(createOrGroup(map, Proxies.getInstance()))
 				.and(FilterField.LANG.valueExpr(map)).and(FilterField.TYPE_LINE.valueExpr(map))
 				.and(FilterField.NAME_LINE.valueExpr(map)).and(FilterField.POWER.valueExpr(map))
 				.and(FilterField.TOUGHNESS.valueExpr(map)).and(FilterField.CCC.valueExpr(map))

@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - apply the Proxy field on OK
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -133,6 +134,15 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 			if (card.getCondition() != next) {
 				card.setCondition(next);
 				fieldSet.add(MagicCardField.CONDITION);
+				modified = true;
+			}
+		}
+		String eproxy = store.getString(EditCardsPropertiesDialog.PROXY_FIELD);
+		if (!UNCHANGED.equals(eproxy)) {
+			boolean next = Boolean.parseBoolean(eproxy);
+			if (card.isProxy() != next) {
+				card.setProxy(next);
+				fieldSet.add(MagicCardField.PROXY);
 				modified = true;
 			}
 		}

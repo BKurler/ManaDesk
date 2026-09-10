@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - hasGenuineOwnedCopy() (any physical copy that is a real card)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -581,6 +582,14 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 		if (rc == null)
 			return Collections.emptySet();
 		return (Collection<MagicCardPhysical>) rc.getChildrenList();
+	}
+
+	@Override
+	public boolean hasGenuineOwnedCopy() {
+		for (MagicCardPhysical p : getPhysicalCards())
+			if (p.isOwn() && !p.isProxy())
+				return true;
+		return false;
 	}
 
 	@Override

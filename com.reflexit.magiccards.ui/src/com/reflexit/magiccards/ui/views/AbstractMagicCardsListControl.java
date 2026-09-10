@@ -3,6 +3,8 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - updateStatus() runs inline instead of spawning a
  *                         background Job on every selection change
+ *     Rémi Dutil (2026) - recache group aggregates on a DB-card UPDATE so grouped
+ *                         totals refresh when a per-copy value changes
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -1202,6 +1204,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		res.add(new GroupOrder(MagicCardField.SET, MagicCardField.RARITY));
 		res.add(new GroupOrder(MagicCardField.RARITY));
 		res.add(new GroupOrder(MagicCardField.CONDITION));
+		res.add(new GroupOrder(MagicCardField.PROXY));
 		res.add(new GroupOrder(MagicCardField.NAME));
 		res.add(new GroupOrder(MagicCardField.OWNERSHIP, MagicCardField.NAME));
 		res.addAll(new CustomGroupsPreferencePage().getCurrentValue());
@@ -2098,10 +2101,14 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 		boolean isMagicCardData = first instanceof MagicCard;
 		if (isMagicCardData) {
-			// DB card label changes (price, owned count...). Refresh via setInput
-			// so ExpandContentProvider rebuilds its element list; do NOT re-group.
-			if (type == CardEvent.UPDATE)
+			// DB card label changes (price, owned count, proxy flag...). Clear the
+			// group aggregate caches so grouped totals (completion %, own counts,
+			// price) recompute, then refresh via setInput so ExpandContentProvider
+			// rebuilds its element list; do NOT re-group (keeps order / expansion).
+			if (type == CardEvent.UPDATE) {
+				recacheGroupAggregates();
 				coalesceRefreshViewer();
+			}
 			return;
 		}
 
@@ -2235,6 +2242,27 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		}
 	}
 
+	/**
+	 * Drop every group's cached column aggregates (own counts, completion %,
+	 * price totals, ...) throughout the displayed tree, so a DB-card UPDATE that
+	 * changed an underlying per-copy value is reflected in the grouped rows. The
+	 * tree structure and ordering are left untouched.
+	 */
+	private void recacheGroupAggregates() {
+		IFilteredCardStore fs = getFilteredStore();
+		if (fs == null)
+			return;
+		Object root = fs.getCardGroupRoot();
+		if (root instanceof CardGroup)
+			recacheGroupTree((CardGroup) root);
+	}
+
+	private void recacheGroupTree(CardGroup group) {
+		group.recache();
+		for (CardGroup sub : group.getSubGroups())
+			recacheGroupTree(sub);
+	}
+
 	public void mcEventHandler(final CardEvent event) {
 		if (Display.getCurrent() == null) {
 			Display.getDefault().asyncExec(() -> mcEventHandler(event));
@@ -2246,6 +2274,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		if (data instanceof MagicCard) {
 			switch (type) {
 			case CardEvent.UPDATE:
+				recacheGroupAggregates();
 				coalesceRefreshViewer();
 				break;
 			case CardEvent.ADD:

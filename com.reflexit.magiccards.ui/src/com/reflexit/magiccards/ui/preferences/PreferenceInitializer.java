@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Proxy column defaults + collector "count proxies" default
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -57,6 +58,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.PRICE_PROVIDER,
 				PriceProviderManager.getInstance().getDefaultProvider().getName());
 		store.setDefault(PreferenceConstants.LAST_SELECTION, 205961);
+		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_PROXIES, false);
 		// magic store
 		getMdbStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
 				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,Set,-Rarity,-Color Type,-Color,-Online Price,-Artist,-Rating,-Collector's Number,-Language,-Text");
@@ -69,7 +71,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getMdbStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// library store
 		getLibStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,Condition,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getLibStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getLibStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.LOCATION));
@@ -78,7 +80,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getLibStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// deck store
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		// !!! RD getDeckStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.CMC));
@@ -119,7 +121,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// location (handled at the model level in InstancesListControl)
 		IPersistentPreferenceStore instancesSettings = getLocalStore(InstancesView.ID);
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,Count,Location,Ownership,Condition,Set,Language,Comment,"
+				"Name,Count,Location,Ownership,Condition,-Proxy,Set,Language,Comment,"
 						+ "-Special,-Collector's Number,-Rarity,-Artist,-Card Id");
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		instancesSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());

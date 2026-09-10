@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - COLLECTOR_COUNT_PROXIES constant
+ */
 package com.reflexit.magiccards.ui.preferences;
 
 import com.reflexit.magiccards.core.CorePreferenceConstants;
@@ -37,4 +41,6 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String GROUP_FIELD = FilterField.GROUP_FIELD.toString();
 	public static final String SORT_ORDER = PREFIX + ".sortorder";
 	public static final String PRESENTATION_VIEW = PREFIX + ".viewas";
+	/** Collector view: include proxy copies in completion % and value totals. */
+	public static final String COLLECTOR_COUNT_PROXIES = PREFIX + ".collectorCountProxies";
 }

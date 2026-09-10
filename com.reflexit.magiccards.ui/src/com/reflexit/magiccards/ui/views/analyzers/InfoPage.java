@@ -4,6 +4,9 @@
  *     Rémi Dutil (2026) - open the deck-aware Edit Properties dialog (sideboard/
  *                         extra creation); use getArea().getShell() (editButton is
  *                         never built)
+ *     Rémi Dutil (2026) - proxy count (tournament-readiness) + cost to replace them
+ *     Rémi Dutil (2026) - proxies split into "covered by cards you own (any print)"
+ *                         vs "must acquire"; only the latter feeds the cost
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -36,11 +39,13 @@ import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
+import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.ui.dialogs.EditDeckPropertiesDialog;
 import com.reflexit.magiccards.ui.utils.SymbolRenderer;
 import com.reflexit.magiccards.ui.views.columns.PriceColumn;
@@ -65,6 +70,9 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 	private Label loclabel;
 	private Label colorsSideboard;
 	private Label rarity;
+	private Label proxies;
+	private Label proxiesOwned;
+	private Label proxyCost;
 	private DynamicCombo protection;
 	private IStorageInfo storageInfo;
 	private static final DecimalFormat INFO_DECIMAL = new DecimalFormat("#0.00");
@@ -133,6 +141,14 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		// tree.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_BLUE));
 		dbprice = createTextLabel("Price: ",
 				"Cost of a deck using Online Price column," + " in brackets cost of a deck using User Price column");
+		proxies = createTextLabel("Proxies: ",
+				"How many cards in this deck are proxies - not paper-legal for sanctioned play until replaced");
+		proxiesOwned = createTextLabel("  ...you own for real: ",
+				"Proxy cards you already own a genuine copy of somewhere in your collection (any printing) -\n"
+						+ "swap those in and no purchase is needed. The rest still have to be acquired.");
+		proxyCost = createTextLabel("Cost to acquire the rest: ",
+				"Market value (Online Price) of the real copies you would still have to buy - only the proxies\n"
+						+ "you do NOT already own a genuine copy of");
 		return stats;
 	}
 
@@ -262,6 +278,7 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		});
 
 		dbprice.setText(sp + " (" + up + ")");
+		updateProxyStats(mainStore, sideboardStore);
 		colors.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(mainStore)));
 		colorsSideboard.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(sideboardStore)));
 		ownership.setText(store.isVirtual() ? "Virtual" : "Own");
@@ -320,6 +337,66 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		} catch (Exception x) {
 			x.printStackTrace();
 		}
+	}
+
+	private void updateProxyStats(ICardStore<IMagicCard> mainStore, ICardStore<IMagicCard> sideboardStore) {
+		// proxy quantity per card NAME, a representative copy for pricing, and the
+		// real (non-proxy, owned) copies of that name already sitting in this deck
+		java.util.Map<String, Integer> proxyQty = new java.util.LinkedHashMap<>();
+		java.util.Map<String, MagicCardPhysical> rep = new java.util.HashMap<>();
+		java.util.Map<String, Integer> realInDeck = new java.util.HashMap<>();
+		int proxyCount = 0;
+		for (ICardStore<IMagicCard> s : new ICardStore[] { mainStore, sideboardStore }) {
+			if (s == null)
+				continue;
+			for (IMagicCard card : s) {
+				if (!(card instanceof MagicCardPhysical))
+					continue;
+				MagicCardPhysical mcp = (MagicCardPhysical) card;
+				String name = mcp.getName();
+				if (mcp.isProxy()) {
+					proxyCount += mcp.getCount();
+					proxyQty.merge(name, mcp.getCount(), Integer::sum);
+					rep.putIfAbsent(name, mcp);
+				} else if (mcp.isOwn()) {
+					realInDeck.merge(name, mcp.getCount(), Integer::sum);
+				}
+			}
+		}
+		int total = getCount(mainStore) + getCount(sideboardStore);
+		if (proxyCount == 0) {
+			proxies.setText("none");
+			proxies.setForeground(null);
+			proxiesOwned.setText("-");
+			proxyCost.setText("-");
+			return;
+		}
+
+		int covered = 0;
+		double cost = 0;
+		for (java.util.Map.Entry<String, Integer> e : proxyQty.entrySet()) {
+			int need = e.getValue();
+			MagicCardPhysical mcp = rep.get(e.getKey());
+			// real copies of this card owned anywhere (any printing), minus the
+			// ones already committed to this same deck as real cards
+			int spareReal = Math.max(0,
+					mcp.getBase().getGenuineOwnTotalAll() - realInDeck.getOrDefault(e.getKey(), 0));
+			int cov = Math.min(need, spareReal);
+			covered += cov;
+			int toBuy = need - cov;
+			float unit = mcp.getDbPrice();
+			if (toBuy > 0 && unit > 0)
+				cost += unit * toBuy;
+		}
+		int toAcquire = proxyCount - covered;
+
+		proxies.setText(proxyCount + " / " + total + (toAcquire > 0 ? "  (not paper-legal until replaced)"
+				: "  (swap in your real copies - nothing to buy)"));
+		proxies.setForeground(Display.getDefault().getSystemColor(toAcquire > 0 ? SWT.COLOR_RED : SWT.COLOR_DARK_GREEN));
+		proxiesOwned.setText(covered + " of " + proxyCount);
+		String sym = CurrencyConvertor.getCurrency().getSymbol();
+		proxyCost.setText(sym + " " + INFO_DECIMAL.format(toAcquire == 0 ? 0.0 : cost) + "  (" + toAcquire + " card"
+				+ (toAcquire == 1 ? "" : "s") + " to buy)");
 	}
 
 	private String computeFormattedPrice(CardGroup group, ColumnFormatter fmt) {

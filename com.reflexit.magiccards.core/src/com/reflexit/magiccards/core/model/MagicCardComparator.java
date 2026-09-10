@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - sort by the PROXY flag
  */
 package com.reflexit.magiccards.core.model;
 
@@ -192,6 +193,13 @@ public class MagicCardComparator implements Comparator {
 				case CONDITION:
 					if (a1 != a2) {
 						d = CardCondition.compare((CardCondition) a1, (CardCondition) a2);
+					}
+					break;
+				case PROXY:
+					if (a1 != a2) {
+						boolean p1 = Boolean.TRUE.equals(a1) || "true".equals(a1);
+						boolean p2 = Boolean.TRUE.equals(a2) || "true".equals(a2);
+						d = Boolean.compare(p1, p2); // genuine copies first
 					}
 					break;
 				case COLLNUM:

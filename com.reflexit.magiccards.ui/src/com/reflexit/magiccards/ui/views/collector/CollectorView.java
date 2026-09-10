@@ -14,6 +14,7 @@
  *     Rémi Dutil (2026) - updated for ManaDesk; dropped the per-set "Update cards
  *                         of selected set(s)" action (one full "Update Card
  *                         Database" now covers it)
+ *     Rémi Dutil (2026) - "Count proxies" toggle (completion % / value totals)
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -31,6 +32,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.FilterField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.preferences.CollectorViewPreferencePage;
+import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.views.IViewPage;
 import com.reflexit.magiccards.ui.views.ViewPageContribution;
 import com.reflexit.magiccards.ui.views.lib.AbstractMyCardsView;
@@ -43,8 +45,19 @@ public class CollectorView extends AbstractMyCardsView {
 	public static final String ID = CollectorView.class.getName();
 	private Action refresh;
 	private Action onlyOwn;
+	private Action countProxies;
 	private boolean onlyOwnFiltred;
 	private CollectorListControl page;
+
+	/**
+	 * Whether the Collector view's completion % and value totals should include
+	 * proxy copies. Off by default - proxies are cards you physically have but not
+	 * the real thing.
+	 */
+	public static boolean isCountProxies() {
+		return MagicUIActivator.getDefault().getPreferenceStore()
+				.getBoolean(PreferenceConstants.COLLECTOR_COUNT_PROXIES);
+	}
 
 	@Override
 	protected void createPages() {
@@ -65,12 +78,15 @@ public class CollectorView extends AbstractMyCardsView {
 	@Override
 	protected void fillLocalPullDown(IMenuManager manager) {
 		manager.add(refresh);
+		manager.add(countProxies);
 	}
 
 	@Override
 	protected void fillLocalToolBar(IToolBarManager manager) {
 		// manager.add(onlyOwn);
 		// onlyOwn.setChecked(isOnlyOwn());
+		countProxies.setChecked(isCountProxies());
+		manager.add(countProxies);
 		super.fillLocalToolBar(manager);
 	}
 
@@ -91,6 +107,19 @@ public class CollectorView extends AbstractMyCardsView {
 			@Override
 			public void run() {
 				DataManager.getInstance().reconcile();
+				reloadData();
+			}
+		};
+		this.countProxies = new Action("Count Proxies", IAction.AS_CHECK_BOX) {
+			{
+				setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/obj16/check16.png"));
+				setToolTipText("Include proxy copies in the completion % and value totals");
+			}
+
+			@Override
+			public void run() {
+				MagicUIActivator.getDefault().getPreferenceStore()
+						.setValue(PreferenceConstants.COLLECTOR_COUNT_PROXIES, isChecked());
 				reloadData();
 			}
 		};

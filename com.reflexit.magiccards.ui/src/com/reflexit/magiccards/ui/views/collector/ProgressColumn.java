@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - completion % counts genuine copies only unless
+ *                         "Count Proxies" is on in the Collector view
+ */
 package com.reflexit.magiccards.ui.views.collector;
 
 import org.eclipse.swt.SWT;
@@ -21,7 +26,8 @@ import com.reflexit.magiccards.ui.views.columns.AbstractImageColumn;
 
 public class ProgressColumn extends AbstractImageColumn {
 	protected MagicCardField getPercentKey() {
-		return MagicCardField.PERCENT_COMPLETE;
+		return CollectorView.isCountProxies() ? MagicCardField.PERCENT_COMPLETE
+				: MagicCardField.PERCENT_COMPLETE_GENUINE;
 	}
 
 	final Color barColor = PlatformUI.getWorkbench().getDisplay().getSystemColor(SWT.COLOR_GREEN);
@@ -67,8 +73,7 @@ public class ProgressColumn extends AbstractImageColumn {
 	public int getProgressSize(ICard element) {
 		if (element instanceof ICardGroup) {
 			CardGroup cardGroup = (CardGroup) element;
-			int count = cardGroup.getOwnUnique();
-			return count;
+			return CollectorView.isCountProxies() ? cardGroup.getOwnUnique() : cardGroup.getGenuineOwnUnique();
 		}
 		return 0;
 	}

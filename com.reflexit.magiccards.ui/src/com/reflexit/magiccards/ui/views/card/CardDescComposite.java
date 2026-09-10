@@ -3,6 +3,7 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - setText() no longer downloads the card image (the
  *                         caller does that on a background thread)
+ *     Rémi Dutil (2026) - proxy copies: greyed image + diagonal "Proxy" watermark
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -334,7 +335,15 @@ class CardDescComposite extends Composite {
 		try {
 			URL imgUrl = CardCache.getImageURL(card);
 			if (imgUrl != null) {
-				sb.append("<img src=\"").append(imgUrl.toExternalForm()).append("\" class=\"cardimage\"/>");
+				String img = "<img src=\"" + imgUrl.toExternalForm() + "\" class=\"cardimage\"/>";
+				if (card instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
+						&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) card).isProxy()) {
+					// a proxy copy: fade the art and stamp it diagonally
+					sb.append("<div class=\"proxywrap\">").append(img)
+							.append("<span class=\"proxymark\">Proxy</span></div>");
+				} else {
+					sb.append(img);
+				}
 			}
 		} catch (Exception e) {
 			// ignore, no image available

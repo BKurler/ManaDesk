@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - proxy support: isProxy() + genuine-only own counts
  */
 
 package com.reflexit.magiccards.core.model;
@@ -137,6 +138,31 @@ public abstract class AbstractMagicCard implements ICard, ICardModifiable, IMagi
 		return getInt(MagicCardField.OWN_UNIQUE);
 	}
 
+	/** Copies you own that are the real card (proxies excluded). */
+	public int getGenuineOwnCount() {
+		return getInt(MagicCardField.GENUINE_OWN_COUNT);
+	}
+
+	/** Unique cards you own a genuine (non-proxy) copy of. */
+	public int getGenuineOwnUnique() {
+		return getInt(MagicCardField.GENUINE_OWN_UNIQUE);
+	}
+
+	/**
+	 * Whether at least one owned copy of this card is the real thing (not a
+	 * proxy). Count-independent, so it parallels {@link #isOwn()} - a count-0
+	 * owned pile still says "yes". Base cards ask their physical copies;
+	 * {@link MagicCardPhysical} overrides.
+	 */
+	public boolean hasGenuineOwnedCopy() {
+		return isOwn() && !isProxy();
+	}
+
+	/** A proxy is a copy you physically have that is not the real card. */
+	public boolean isProxy() {
+		return false;
+	}
+
 	public boolean isForTrade() {
 		return isSpecialTag(MagicCardField.FORTRADECOUNT.specialTag());
 	}
@@ -153,6 +179,21 @@ public abstract class AbstractMagicCard implements ICard, ICardModifiable, IMagi
 		for (IMagicCard card : cards) {
 			if (card instanceof MagicCard)
 				sum += ((MagicCard) card).getOwnCount();
+		}
+		return sum;
+	}
+
+	/**
+	 * Genuine (non-proxy) copies of this card owned across <b>all</b> collections,
+	 * counting every printing (print-flexible) - i.e. how many real copies you
+	 * could swap in for a proxy of this card.
+	 */
+	public int getGenuineOwnTotalAll() {
+		Collection<IMagicCard> cards = db().getCandidates(getName());
+		int sum = 0;
+		for (IMagicCard card : cards) {
+			if (card instanceof MagicCard)
+				sum += ((MagicCard) card).getGenuineOwnCount();
 		}
 		return sum;
 	}

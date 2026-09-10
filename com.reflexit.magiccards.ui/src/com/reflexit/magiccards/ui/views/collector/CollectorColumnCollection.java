@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - curated to the columns that make sense for whole-database
  *     collection tracking (drop the per-copy deck/collection columns)
+ *     Rémi Dutil (2026) - proxy-aware User / Online Price columns
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -25,7 +26,6 @@ import com.reflexit.magiccards.ui.views.columns.OwnCountColumn;
 import com.reflexit.magiccards.ui.views.columns.OwnTotalCountColumn;
 import com.reflexit.magiccards.ui.views.columns.OwnUniqueColumn;
 import com.reflexit.magiccards.ui.views.columns.PowerColumn;
-import com.reflexit.magiccards.ui.views.columns.PriceColumn;
 import com.reflexit.magiccards.ui.views.columns.ReleaseDateColumn;
 import com.reflexit.magiccards.ui.views.columns.TextColumn;
 import com.reflexit.magiccards.ui.views.columns.TypeColumn;
@@ -62,7 +62,7 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(createGathererIdColumn());         // "Multiverse ID"
 		columns.add(createIdColumn());                 // "Card Id"
 		columns.add(new GenColumn(MagicCardField.TCGID, "TCGplayer ID"));
-		columns.add(new PriceColumn());                // "User Price" - your valuation, summed over your copies
+		columns.add(new CollectorUserPriceColumn());   // "User Price" - your valuation of the copies you own
 		columns.add(new CollectorOnlinePriceColumn()); // "Online Price" - market value of the copies you own
 		columns.add(new CommunityRatingColumn());      // "Rating"
 		columns.add(new CostColumn());

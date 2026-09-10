@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Proxy column in the deck / collection lists
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -50,6 +51,7 @@ public class MagicColumnCollection extends ColumnCollection {
 			ownershipColumn = createOwnershipColumn();
 			columns.add(ownershipColumn);
 			columns.add(createConditionColumn());
+			columns.add(createProxyColumn());
 			commentColumn = createCommentColumn();
 			columns.add(commentColumn);
 			columns.add(new PriceColumn());
@@ -123,6 +125,10 @@ public class MagicColumnCollection extends ColumnCollection {
 
 	protected AbstractColumn createConditionColumn() {
 		return new ConditionColumn();
+	}
+
+	protected AbstractColumn createProxyColumn() {
+		return new ProxyColumn();
 	}
 
 	protected GroupColumn createGroupColumn() {

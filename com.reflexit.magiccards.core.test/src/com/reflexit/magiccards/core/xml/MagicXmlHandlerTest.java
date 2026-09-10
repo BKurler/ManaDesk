@@ -8,6 +8,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - proxy flag round-trip
  */
 
 package com.reflexit.magiccards.core.xml;
@@ -169,6 +170,35 @@ public class MagicXmlHandlerTest extends TestCase {
 		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
 		// no condition set - blank must not be persisted
 		assertFalse(handler.toXML(phi).contains("<condition>"));
+	}
+
+	public void testXStreamAroundProxy() {
+		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
+		phi.setProxy(true);
+		String xml = handler.toXML(phi);
+		assertTrue("proxy flag is written: " + xml, xml.contains("<proxy>true</proxy>"));
+		CardCollectionStoreObject object = handler.fromXML(xml);
+		MagicCardPhysical p = (MagicCardPhysical) object.list.get(0);
+		assertEquals(phi, p);
+		assertTrue(p.isProxy());
+	}
+
+	public void testXStreamNoProxyElementWhenGenuine() {
+		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
+		// genuine copy (the default) - the flag must not be persisted
+		assertFalse(handler.toXML(phi).contains("<proxy>"));
+		phi.setProxy(true);
+		phi.setProxy(false);
+		assertFalse("setting then clearing leaves no element", handler.toXML(phi).contains("<proxy>"));
+	}
+
+	public void testProxyCopyIsNeverForTrade() {
+		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
+		phi.setCount(5);
+		phi.set(MagicCardField.FORTRADECOUNT, 3);
+		assertEquals(3, phi.getForTrade());
+		phi.setProxy(true);
+		assertEquals("a proxy is never offered for trade", 0, phi.getForTrade());
 	}
 
 	public void testXStreamAroundForTrade() {

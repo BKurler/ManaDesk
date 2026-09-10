@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - .proxywrap / .proxymark styles for proxy card art (grey stamp)
  *******************************************************************************/
 package com.reflexit.magiccards.ui.utils;
 
@@ -226,6 +227,18 @@ public final class SymbolRenderer {
 
 				// Text block below image, stable layout
 				+ ".cardtext {" + "    margin-top: 8px;" + "}"
+
+				// Proxy copy: faded / greyed art with a diagonal "Proxy" stamp
+				+ ".proxywrap {" + "    position: relative;" + "    display: block;" + "    margin: 0 auto 8px auto;"
+				+ "    width: 100%;" + "    max-width: 600px;" + "}"
+				+ ".proxywrap .cardimage {" + "    margin: 0;" + "    filter: grayscale(100%);"
+				+ "    opacity: 0.55;" + "}"
+				+ ".proxymark {" + "    position: absolute;" + "    top: 50%;" + "    left: 50%;"
+				+ "    transform: translate(-50%, -50%) rotate(-32deg);" + "    font-size: 44px;"
+				+ "    font-weight: bold;" + "    letter-spacing: 10px;" + "    text-transform: uppercase;"
+				+ "    color: rgba(110, 110, 110, 0.72);" + "    border: 5px solid rgba(110, 110, 110, 0.6);"
+				+ "    border-radius: 8px;" + "    padding: 6px 30px;" + "    white-space: nowrap;"
+				+ "    pointer-events: none;" + "}"
 
 				+ "</style>" + "</head>" + "<body style='overflow:auto;" + style + "'>" + html + "<script>"
 				+ "window.onload = function() {" + "  var imgs = document.images;"

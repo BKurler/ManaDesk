@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - piped-table header/row now carry the PROXY column
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -62,10 +63,10 @@ public class PipedTableExportText extends AbstarctExportTest {
 		System.err.println(lines[0]);
 		System.err.println(lines[1]);
 		assertEquals(
-				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|RATING|ARTIST|COLLNUM|RULINGS|TEXT|ENID|GATHERERID|TCGID|PROPERTIES|COUNT|PRICE|COMMENT|LOCATION|CUSTOM|OWNERSHIP|SPECIAL|DATE|CONDITION",
+				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|RATING|ARTIST|COLLNUM|RULINGS|TEXT|ENID|GATHERERID|TCGID|PROPERTIES|COUNT|PRICE|COMMENT|LOCATION|CUSTOM|OWNERSHIP|SPECIAL|DATE|CONDITION|PROXY",
 				lines[0]);
 		assertEquals(
-				"-39|name 39|{4}|type 39|4|*|bla 39|set19|Common|1.2256411|Russian|2.39|Elena 39|39a||bla <br> bla 39||0|0||5|2.1|comment 40|mem||true|foil,c=mint|Sun Jan 11 22:37:54 EST 2015|",
+				"-39|name 39|{4}|type 39|4|*|bla 39|set19|Common|1.2256411|Russian|2.39|Elena 39|39a||bla <br> bla 39||0|0||5|2.1|comment 40|mem||true|foil,c=mint|Sun Jan 11 22:37:54 EST 2015||",
 				lines[1]);
 	}
 }
