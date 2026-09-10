@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - proxy flag in the gallery card JSON
  *******************************************************************************/
 package com.reflexit.magiccards.ui.gallery;
 
@@ -561,12 +562,15 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			if (c instanceof com.reflexit.magiccards.core.model.IMagicCardPhysical) {
 				count = ((com.reflexit.magiccards.core.model.IMagicCardPhysical) c).getCount();
 			}
+			boolean proxy = c instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
+					&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) c).isProxy();
 
 			sb.append('{');
 			sb.append("\"id\":\"").append(escapeJson(String.valueOf(c.getCardId()))).append("\",");
 			sb.append("\"name\":\"").append(escapeJson(c.getName())).append("\",");
 			sb.append("\"set\":\"").append(escapeJson(c.getSet())).append("\",");
 			sb.append("\"image\":\"").append(escapeJson(img)).append("\",");
+			sb.append("\"proxy\":").append(proxy).append(",");
 			sb.append("\"count\":").append(count);
 			sb.append('}');
 		}

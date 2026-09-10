@@ -2,6 +2,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - PROXY filter field (Genuine / Proxy)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -40,6 +41,7 @@ public enum FilterField {
 	TEXT_NOT_3(MagicCardField.ORACLE, TEXT_LINE + "_exclude_3", Postfix.TEXT_POSTFIX),
 	COLLNUM(MagicCardField.COLLNUM, Postfix.NUMERIC_POSTFIX), SPECIAL(MagicCardField.SPECIAL, Postfix.TEXT_POSTFIX),
 	CONDITION(MagicCardField.CONDITION, Postfix.ENUM_POSTFIX),
+	PROXY(MagicCardField.PROXY, Postfix.TEXT_POSTFIX),
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
 	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
@@ -98,6 +100,7 @@ public enum FilterField {
 		ids.addAll(Editions.getInstance().getIds());
 		ids.addAll(Rarity.getInstance().getIds());
 		ids.addAll(CardConditions.getInstance().getIds());
+		ids.addAll(Proxies.getInstance().getIds());
 		ids.addAll(Locations.getInstance().getIds());
 		ids.add(TEXT_LINE.getPrefConstant());
 		ids.add(TYPE_LINE.getPrefConstant());
@@ -157,6 +160,13 @@ public enum FilterField {
 				// the canonical serialized form the field actually holds
 				CardCondition cc = CardCondition.resolve(value);
 				return BinaryExpr.fieldEquals(MagicCardField.CONDITION, cc == null ? value : cc.toString());
+			}
+			case PROXY: {
+				if (Proxies.PROXY.equalsIgnoreCase(value) || "true".equalsIgnoreCase(value))
+					return BinaryExpr.fieldEquals(MagicCardField.PROXY, "true");
+				// "Genuine" / anything else: the copy is not flagged as a proxy
+				return BinaryExpr.fieldEquals(MagicCardField.PROXY, null)
+						.or(BinaryExpr.fieldEquals(MagicCardField.PROXY, "false"));
 			}
 			case NAME_LINE:
 				if (value.indexOf('*') >= 0) {

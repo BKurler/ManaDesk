@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - CONDITION field (per-copy card grade)
+ *     Rémi Dutil (2026) - PROXY field + genuine-only own-count / progress fields
  */
 package com.reflexit.magiccards.core.model;
 
@@ -22,6 +23,9 @@ import com.reflexit.magiccards.core.model.aggr.CollisionAggregator;
 import com.reflexit.magiccards.core.model.aggr.DateAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldCount4Aggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldCreatureCountAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineOwnCountAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineOwnUniqueAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineProggressAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldLegalityMapAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldOwnCountAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldOwnTotalCountAggregator;
@@ -1310,6 +1314,78 @@ public enum MagicCardField implements ICardField {
 				card.setCondition((CardCondition) value);
 			else
 				card.setCondition(CardCondition.resolve(value.toString()));
+		}
+	},
+
+	PROXY(true) { // per-copy: this is a home-printed stand-in, not the real card
+		@Override
+		public ICardVisitor getAggregator() {
+			return new CollisionAggregator(this, Boolean.FALSE);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			// null (not Boolean.FALSE) when genuine, so exports leave the cell blank
+			return card.isProxy() ? Boolean.TRUE : null;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			if (value instanceof Boolean)
+				card.setProxy((Boolean) value);
+			else
+				card.setProxy(value != null && Boolean.parseBoolean(value.toString()));
+		}
+	},
+
+	GENUINE_OWN_COUNT(null, true) { // OWN_COUNT excluding proxy copies
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineOwnCountAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isProxy() ? 0 : card.getOwnCount();
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	GENUINE_OWN_UNIQUE(null, true) { // OWN_UNIQUE excluding proxy copies
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineOwnUniqueAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? 1 : 0;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT_COMPLETE_GENUINE(null, true) { // completion % counting genuine copies only
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineProggressAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? 100f : 0f;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
 		}
 	},
 

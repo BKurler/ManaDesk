@@ -12,6 +12,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - export the PROXY column
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -36,13 +37,14 @@ public class MinimumCsvExportDelegate extends CsvExportDelegate {
 	@Override
 	public void printHeader() {
 		stream.println((multiDeck ? "LOCATION," : "")
-				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION");
+				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,PROXY");
 	}
 
 	protected ICardField[] doGetFields() {
 		ICardField fields[] = new ICardField[] { MagicCardField.NAME, MagicCardField.SET, MagicCardField.COUNT,
 				MagicCardField.SPECIAL, MagicCardField.COMMENT, MagicCardField.LANG, MagicCardField.COLLNUM,
-				MagicCardField.GATHERERID, MagicCardField.ID, MagicCardField.OWNERSHIP, MagicCardField.CONDITION
+				MagicCardField.GATHERERID, MagicCardField.ID, MagicCardField.OWNERSHIP, MagicCardField.CONDITION,
+				MagicCardField.PROXY
 
 		};
 		return fields;

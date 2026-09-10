@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - PROXY flag round-trips through ManaDesk CSV
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -84,6 +85,30 @@ public class CsvImportDelegateTest extends AbstarctImportTest {
 				((MagicCardPhysical) card1).getCondition());
 		// a blank condition must not become a grade
 		assertEquals(null, ((MagicCardPhysical) card2).getCondition());
+	}
+
+	/**
+	 * The PROXY flag survives a Minimum-CSV export/import round trip; a genuine
+	 * copy stays genuine.
+	 */
+	@Test
+	public void testRoundTripProxy() {
+		MagicCardPhysical a = CardGenerator.generatePhysicalCardWithValues();
+		MagicCardPhysical b = CardGenerator.generatePhysicalCardWithValues();
+		a.setProxy(true);
+		// b: genuine
+
+		MinimumCsvExportDelegate exp = new MinimumCsvExportDelegate();
+		exp.setReportType(ImportExportFactory.createReportType("roundtrip-proxy"));
+		line = exp.export(java.util.Arrays.asList((IMagicCard) a, (IMagicCard) b));
+		assertTrue("exported header carries PROXY: " + line, line.split("\n")[0].contains("PROXY"));
+
+		resolve = false;
+		preview(new ManaDeskCsvImportDelegate());
+		assertEquals(null, exception);
+		assertEquals(2, resSize);
+		assertTrue(((MagicCardPhysical) card1).isProxy());
+		assertTrue(!((MagicCardPhysical) card2).isProxy());
 	}
 
 	/**

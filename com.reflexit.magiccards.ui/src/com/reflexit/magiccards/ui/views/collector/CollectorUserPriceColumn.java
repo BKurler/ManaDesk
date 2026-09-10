@@ -1,7 +1,7 @@
 /*
  * Contributors:
- *     Rémi Dutil (2026) - Collector view "Online Price" = market value of the copies you own
- *     Rémi Dutil (2026) - proxy copies are excluded unless "Count Proxies" is on
+ *     Rémi Dutil (2026) - Collector view "User Price" = your valuation of the copies you own,
+ *                         proxy copies excluded unless "Count Proxies" is on
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -13,20 +13,19 @@ import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
-import com.reflexit.magiccards.ui.views.columns.SellerPriceColumn;
+import com.reflexit.magiccards.ui.views.columns.PriceColumn;
 
 /**
- * "Online Price" in the Collector view: the market value of the copies you
- * actually <b>own</b> (virtual copies excluded), summed - i.e. what your holdings
- * of that printing / set are worth. Contrast the plain {@link SellerPriceColumn},
- * whose Collector group total is a catalog sum ("buy one of everything") because
- * Collector rows are base cards with a hard-coded count of 1.
+ * "User Price" in the Collector view: your own valuation summed over the copies
+ * you <b>own</b> (virtual excluded), and - unless "Count Proxies" is on - over
+ * genuine copies only. A base {@link MagicCard} has no User Price of its own, so
+ * this walks its physical copies.
  */
-public class CollectorOnlinePriceColumn extends SellerPriceColumn {
+public class CollectorUserPriceColumn extends PriceColumn {
 
 	@Override
 	public String getColumnFullName() {
-		return "Online Price";
+		return "User Price";
 	}
 
 	@Override
@@ -50,18 +49,18 @@ public class CollectorOnlinePriceColumn extends SellerPriceColumn {
 			MagicCardPhysical p = (MagicCardPhysical) element;
 			if (!p.isOwn() || (p.isProxy() && !countProxies))
 				return 0;
-			return unit(p.getDbPrice()) * p.getCount();
+			return unit(p.getPrice()) * p.getCount();
 		}
 		if (element instanceof MagicCard) {
-			MagicCard mc = (MagicCard) element;
-			// getOwnCount excludes virtual copies; getGenuineOwnCount also excludes proxies
-			int n = countProxies ? mc.getOwnCount() : mc.getGenuineOwnCount();
-			return unit(mc.getDbPrice()) * n;
+			double sum = 0;
+			for (MagicCardPhysical p : ((MagicCard) element).getPhysicalCards())
+				sum += ownedValue(p);
+			return sum;
 		}
 		return 0;
 	}
 
 	private static double unit(float price) {
-		return price > 0 ? price : 0; // drop the -1 / -0.0001 "no data" sentinels
+		return price > 0 ? price : 0;
 	}
 }

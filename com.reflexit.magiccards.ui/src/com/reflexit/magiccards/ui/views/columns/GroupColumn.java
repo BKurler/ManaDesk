@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil 2026 - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Proxy / Genuine group labels
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -107,6 +108,8 @@ public class GroupColumn extends AbstractImageColumn implements Listener {
 			} else if (fieldIndex == MagicCardField.CONDITION) {
 				if (name == null || name.isEmpty() || name.equals("null"))
 					name = "Not graded";
+			} else if (fieldIndex == MagicCardField.PROXY) {
+				name = Boolean.valueOf(name) ? "Proxy" : "Genuine";
 			}
 			if (!showCount) {
 				return name;

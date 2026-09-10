@@ -2,6 +2,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - genuine (proxy-excluded) own-count coverage
  */
 
 package com.reflexit.magiccards.core;
@@ -268,6 +269,94 @@ public class DataManagerTest extends TestCase {
 		MagicCardPhysical card1 = getFirst();
 		assertTrue(cardA + " vs " + card1, card.matching(card1));
 		assertEquals(x + 2, base.getOwnCount());
+	}
+
+	@Test
+	public void testGenuineOwnCountExcludesProxies() {
+		MagicCard base = card.getBase(); // setUp: 1 genuine copy of MYSTICDECREE in deck1
+		int startOwn = base.getOwnCount();
+		assertEquals("no proxies yet", startOwn, base.getGenuineOwnCount());
+		assertEquals(1, base.getGenuineOwnUnique());
+
+		assertTrue(base.hasGenuineOwnedCopy());
+
+		MagicCardPhysical proxy = phyCard(CARD_ID_MYSTICDECREE, deck2.getLocation());
+		proxy.setCount(3);
+		proxy.setProxy(true);
+		dm.add(proxy);
+
+		assertEquals("a proxy still counts as a card you physically have", startOwn + 3, base.getOwnCount());
+		assertEquals("the genuine count ignores proxy copies", startOwn, base.getGenuineOwnCount());
+		assertEquals("still own a genuine copy", 1, base.getGenuineOwnUnique());
+		assertTrue("owned as both genuine and proxy", base.hasGenuineOwnedCopy());
+
+		dm.remove(card); // drop the only genuine copy
+		assertEquals(3, base.getOwnCount());
+		assertEquals("no genuine copy left", 0, base.getGenuineOwnCount());
+		assertEquals(0, base.getGenuineOwnUnique());
+		assertFalse("only a proxy copy remains", base.hasGenuineOwnedCopy());
+	}
+
+	@Test
+	public void testCountZeroOwnedPileDoesNotSkewGenuineUnique() {
+		// a count-0 owned (non-proxy) pile must count the same for own-unique and
+		// genuine-own-unique - toggling "Count Proxies" should not move it
+		MagicCardPhysical zero = phyCard(CARD_ID_MYSTICDECREE, deck2.getLocation());
+		zero.setCount(0);
+		dm.add(zero);
+		MagicCard base = zero.getBase();
+		assertTrue(base.hasGenuineOwnedCopy());
+		assertEquals(base.getOwnUnique(), base.getGenuineOwnUnique());
+	}
+
+	@Test
+	public void testGenuineOwnTotalAllIgnoresProxies() {
+		MagicCard base = card.getBase(); // setUp: 1 genuine MYSTICDECREE in deck1
+		int start = base.getGenuineOwnTotalAll();
+		assertEquals("no proxies yet", base.getOwnTotalAll(), start);
+
+		MagicCardPhysical proxy = phyCard(CARD_ID_MYSTICDECREE, deck2.getLocation());
+		proxy.setCount(4);
+		proxy.setProxy(true);
+		dm.add(proxy);
+
+		assertEquals("proxies bump the plain cross-collection total", start + 4, base.getOwnTotalAll());
+		assertEquals("genuine cross-collection total ignores them", start, base.getGenuineOwnTotalAll());
+	}
+
+	@Test
+	public void testEveryProxyOnlyCardDropsFromGroupGenuineUnique() {
+		// mirrors the Collector: own a proxy-only copy of several distinct cards
+		// and confirm the grouped genuine-unique total is lower by exactly that
+		// many (the "Count Proxies" toggle delta)
+		java.util.List<MagicCard> picks = new ArrayList<>();
+		for (IMagicCard c : dm.getMagicDBStore()) {
+			if (c instanceof MagicCard && !c.getCardId().equals(CARD_ID_MYSTICDECREE)) {
+				picks.add((MagicCard) c);
+				if (picks.size() == 5)
+					break;
+			}
+		}
+		assertEquals(5, picks.size());
+		for (MagicCard mc : picks) {
+			MagicCardPhysical p = new MagicCardPhysical(mc, deck2.getLocation());
+			p.setOwn(true);
+			p.setCount(1);
+			p.setProxy(true);
+			dm.add(p);
+		}
+		for (MagicCard mc : picks) {
+			assertTrue("owned: " + mc.getName(), mc.getOwnCount() > 0);
+			assertFalse("proxy-only is not genuine: " + mc.getName(), mc.hasGenuineOwnedCopy());
+		}
+		com.reflexit.magiccards.core.model.storage.IFilteredCardStore fs = dm.getCardHandler()
+				.getMagicDBFilteredStoreWorkingCopy();
+		fs.update();
+		com.reflexit.magiccards.core.model.CardGroup root = (com.reflexit.magiccards.core.model.CardGroup) fs
+				.getCardGroupRoot();
+		int own = root.getOwnUnique();
+		int genuine = root.getGenuineOwnUnique();
+		assertEquals("all 5 proxy-only cards drop from the genuine count", own - 5, genuine);
 	}
 
 	@Test
