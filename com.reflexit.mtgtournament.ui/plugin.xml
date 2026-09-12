@@ -2,6 +2,12 @@
 <!--
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped <defaultEnablement> - this whole feature is
+ *                         unsupported; its activity (and so its views/
+ *                         perspective) is no longer enabled by default. The
+ *                         activityPatternBinding below already scopes it to
+ *                         just this plugin, so this alone hides Tournament
+ *                         Navigator/Tournament/Players/Timer from Show View
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -94,9 +100,5 @@
             activityId="com.reflexit.magiccards.activity.tournament"
             categoryId="com.reflexit.magiccards.activity.category">
       </categoryActivityBinding>
-      
-      <defaultEnablement
-            id="com.reflexit.magiccards.activity.tournament">
-      </defaultEnablement>
    </extension>
 </plugin>

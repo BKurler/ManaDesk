@@ -3,32 +3,61 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - dropped the generic File ▸ Import action; deck/collection
  *                         import is navigator-only now
+ *     Rémi Dutil (2026) - Show View is now a custom, explicitly-filtered menu
+ *                         (not the stock VIEWS_SHORTLIST) so DeckView (only ever
+ *                         meaningful opened with a specific deck/collection, never
+ *                         bare) and the unsupported MTG Tournament views can be
+ *                         hidden - DeckView is not reachable through Activities
+ *                         filtering alone: it also matches the broad, always-on
+ *                         "cardorganizer" activity pattern
+ *                         (com\.reflexit\.magiccards\..*\/.*), which covers this
+ *                         whole plugin, so a narrower disabled activity just for
+ *                         it would never win (Activities are additive/OR - an
+ *                         item bound to several activities is visible if ANY one
+ *                         of them is enabled)
+ *     Rémi Dutil (2026) - also hides the stock "Internal Web Browser"
+ *                         (org.eclipse.ui.browser.view) and "Welcome"
+ *                         (org.eclipse.ui.internal.introview) platform views
+ *     Rémi Dutil (2026) - dropped the Window ▸ "Cards Organizer" perspective-
+ *                         switch action (and the now-unused OpenPerspectiveAction
+ *                         class) - this app has exactly one perspective, so
+ *                         switching to it was a no-op
  */
 package com.reflexit.magiccards_rcp;
 
-import org.eclipse.core.resources.ResourcesPlugin;
+import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Comparator;
+import java.util.HashSet;
+import java.util.List;
+import java.util.Set;
+
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+
 import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.GroupMarker;
 import org.eclipse.jface.action.IAction;
-import org.eclipse.jface.action.IContributionItem;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
 import org.eclipse.jface.dialogs.ErrorDialog;
 import org.eclipse.swt.widgets.Shell;
-import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.PlatformUI;
-import org.eclipse.ui.WorkbenchException;
+import org.eclipse.ui.activities.WorkbenchActivityHelper;
 import org.eclipse.ui.actions.ActionFactory;
 import org.eclipse.ui.actions.ActionFactory.IWorkbenchAction;
-import org.eclipse.ui.actions.ContributionItemFactory;
 import org.eclipse.ui.application.ActionBarAdvisor;
 import org.eclipse.ui.application.IActionBarConfigurer;
-import org.eclipse.ui.internal.WorkbenchMessages;
+import org.eclipse.ui.views.IViewDescriptor;
+import org.eclipse.ui.views.IViewRegistry;
 
+import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.PerspectiveFactoryMagic;
+import com.reflexit.magiccards.ui.views.lib.DeckView;
 
 /**
  * An action bar advisor is responsible for creating, adding, and disposing of
@@ -51,7 +80,18 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private IWorkbenchAction dynamicHelpAction;
 	private IAction exportAction;
 	private MenuManager showViewMenuMgr;
-	private IContributionItem showViewItem;
+
+	/** Views that must never appear in "Show View": DeckView only makes sense
+	 *  opened with a specific deck/collection secondary id (never meaningfully
+	 *  "just open a Deck"); the MTG Tournament views/perspective are dead,
+	 *  unsupported code still present in com.reflexit.mtgtournament.ui; and the
+	 *  stock Eclipse "Internal Web Browser" / "Welcome" views are platform
+	 *  boilerplate this app has no use for. */
+	private static final Set<String> HIDDEN_SHOW_VIEW_IDS = new HashSet<>(Arrays.asList(DeckView.ID,
+			"com.reflexit.mtgtournament.ui.tour.views.TNavigatorView",
+			"com.reflexit.mtgtournament.ui.tour.views.TournamentView",
+			"com.reflexit.mtgtournament.ui.tour.views.PlayersView", "com.reflexit.mtgtournament.ui.views.TimerView",
+			"org.eclipse.ui.browser.view", "org.eclipse.ui.internal.introview"));
 
 	public ApplicationActionBarAdvisor(IActionBarConfigurer configurer) {
 		super(configurer);
@@ -92,25 +132,46 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		this.exportAction = ActionFactory.EXPORT.create(window);
 		register(this.exportAction);
 		showViewMenuMgr = new MenuManager("Show View", "showView");
-		showViewItem = ContributionItemFactory.VIEWS_SHORTLIST.create(window);
+		showViewMenuMgr.setRemoveAllWhenShown(true);
+		showViewMenuMgr.addMenuListener(this::fillShowViewMenu);
 	}
 
-	class OpenPerspectiveAction extends Action {
-		private String perspectiveId;
+	/** Rebuilt every time the menu opens (mirrors the stock VIEWS_SHORTLIST's
+	 *  own dynamic behavior), listing every registered view except
+	 *  {@link #HIDDEN_SHOW_VIEW_IDS} and anything Activities already filters
+	 *  out. Flat and alphabetical rather than grouped by category - simpler,
+	 *  and with the tournament views gone there is only the one real category
+	 *  ("ManaDesk") left worth grouping. */
+	private void fillShowViewMenu(IMenuManager manager) {
+		IViewRegistry registry = PlatformUI.getWorkbench().getViewRegistry();
+		List<IViewDescriptor> visible = new ArrayList<>();
+		for (IViewDescriptor d : registry.getViews()) {
+			if (HIDDEN_SHOW_VIEW_IDS.contains(d.getId()))
+				continue;
+			if (!WorkbenchActivityHelper.filterItem(d))
+				visible.add(d);
+		}
+		visible.sort(Comparator.comparing(IViewDescriptor::getLabel, String.CASE_INSENSITIVE_ORDER));
+		for (IViewDescriptor d : visible)
+			manager.add(new ShowViewAction(d));
+	}
 
-		OpenPerspectiveAction(String id, String name) {
-			super(name);
-			this.perspectiveId = id;
+	private class ShowViewAction extends Action {
+		private final String viewId;
+
+		ShowViewAction(IViewDescriptor d) {
+			super(d.getLabel(), d.getImageDescriptor());
+			this.viewId = d.getId();
 		}
 
 		@Override
 		public void run() {
-			final IWorkbench workbench = PlatformUI.getWorkbench();
 			try {
-				workbench.showPerspective(perspectiveId, window, ResourcesPlugin.getWorkspace());
-			} catch (WorkbenchException e) {
-				ErrorDialog.openError(new Shell(), WorkbenchMessages.ChangeToPerspectiveMenu_errorTitle, e.getMessage(),
-						e.getStatus());
+				window.getActivePage().showView(viewId);
+			} catch (PartInitException e) {
+				MagicUIActivator.log(e);
+				ErrorDialog.openError(new Shell(), "Error", e.getMessage(),
+						new Status(IStatus.ERROR, Activator.PLUGIN_ID, e.getMessage(), e));
 			}
 		}
 	}
@@ -125,14 +186,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		// Add a group marker indicating where action set menus will appear.
 		menuBar.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		menuBar.add(helpMenu);
-		// windows
-		winMenu.add(new OpenPerspectiveAction(PerspectiveFactoryMagic.PERSPECTIVE_ID, "Cards Organizer"));
-		// !!! RD winMenu.add(new
-		// OpenPerspectiveAction(PerspectiveFactoryTournament.PERSPECTIVE_ID,
-		// "Tournament Organizer"));
-		winMenu.add(new Separator());
-
-		showViewMenuMgr.add(showViewItem);
 		winMenu.add(showViewMenuMgr);
 		winMenu.add(this.resetAction);
 		winMenu.add(new Separator());
