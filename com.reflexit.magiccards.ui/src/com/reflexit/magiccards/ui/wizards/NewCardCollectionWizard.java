@@ -1,46 +1,29 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - now "New Collection" only (create empty / from a card
+ *                         list); importing into an existing collection is
+ *                         ImportIntoCollectionWizard
  */
 package com.reflexit.magiccards.ui.wizards;
 
+import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.INewWizard;
 
-import com.reflexit.magiccards.core.model.nav.CardCollection;
-import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
+import com.reflexit.magiccards.ui.exportWizards.AbstractCardListImportPage;
+import com.reflexit.magiccards.ui.exportWizards.AbstractCardListImportWizard;
+import com.reflexit.magiccards.ui.exportWizards.NewCollectionPage;
 
-/**
- * This is a sample new wizard. Its role is to create a new file resource in the
- * provided container. If the container resource (a folder or a project) is
- * selected in the workspace when the wizard is opened, it will accept it as the
- * target container. The wizard creates one file with the extension "deck". If a
- * sample multi-page editor (also available as a template) is registered for the
- * same extension, it will be able to open it.
- */
-public class NewCardCollectionWizard extends NewCardElementWizard implements INewWizard {
+public class NewCardCollectionWizard extends AbstractCardListImportWizard implements INewWizard {
 	public static final String ID = "com.reflexit.magiccards.ui.wizards.NewCardCollectionWizard";
 
-	/**
-	 * Constructor for NewDeckWizard.
-	 */
-	public NewCardCollectionWizard() {
-		super();
-	}
-
-	/**
-	 * Adding the page to the wizard.
-	 */
 	@Override
-	public void addPages() {
-		this.page = new NewCardCollectionWizardPage(this.selection);
-		addPage(this.page);
+	protected AbstractCardListImportPage createMainPage(IStructuredSelection selection) {
+		return new NewCollectionPage("Main", selection);
 	}
 
 	@Override
-	protected CardCollection doCreateCardElement(CollectionsContainer parent, final String name, final boolean virtual,
-			final boolean unsorted) {
-		final CardCollection col = new CardCollection(name + ".xml", parent, false, virtual, unsorted);
-		col.persistInitialSettings(false, virtual, unsorted);
-		return col;
+	protected String windowTitle() {
+		return "New Collection";
 	}
 }

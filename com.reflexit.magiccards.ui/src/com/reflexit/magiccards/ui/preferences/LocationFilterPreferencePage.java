@@ -1,6 +1,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setContainersOnly()/setSideFilter(): folder-only and
+ *                         one-side-only filters, for a "pick a destination
+ *                         folder" picker (LocationPickerDialog)
  */
 
 package com.reflexit.magiccards.ui.preferences;
@@ -43,11 +46,26 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 	private TreeViewer treeViewer;
 	private int mode;
 	private boolean hideSideboards;
+	private boolean containersOnly;
+	private ModelRoot.Side sideFilter;
 	private CardOrganizer top;
 
 	/** Hide {@code -sideboard}/{@code -extra} collections from the tree (export picker). */
 	public void setHideSideboards(boolean hide) {
 		this.hideSideboards = hide;
+	}
+
+	/** Show only folders (Decks / Collections / user sub-folders), no decks or
+	 *  collections themselves - for a "pick a destination folder" picker. */
+	public void setContainersOnly(boolean containersOnly) {
+		this.containersOnly = containersOnly;
+	}
+
+	/** Show only the given side's subtree (Decks or Collections) - "My Cards"
+	 *  itself stays visible as the structural ancestor, but is not offered as a
+	 *  pick since it belongs to neither side. */
+	public void setSideFilter(ModelRoot.Side side) {
+		this.sideFilter = side;
 	}
 
 	/**
@@ -106,6 +124,22 @@ public class LocationFilterPreferencePage extends PreferencePage implements IWor
 		if (hideSideboards)
 			this.treeViewer.addFilter(CardsNavigatorContentProvider
 					.getFilter(CardsNavigatorContentProvider.FILTER_SIDEBOARDS));
+		if (containersOnly)
+			this.treeViewer.addFilter(CardsNavigatorContentProvider.getContainerFilter());
+		if (sideFilter != null) {
+			ModelRoot mroot = DataManager.getInstance().getModelRoot();
+			this.treeViewer.addFilter(new ViewerFilter() {
+				@Override
+				public boolean select(Viewer viewer, Object parentElement, Object element) {
+					if (!(element instanceof CardElement))
+						return false;
+					ModelRoot.Side s = mroot.sideOf((CardElement) element);
+					// null (My Cards / root) is a pass-through ancestor - keep it so
+					// the matching side's subtree stays reachable
+					return s == null || s == sideFilter;
+				}
+			});
+		}
 		GridData gd = new GridData(SWT.FILL, SWT.FILL, true, true);
 		gd.horizontalSpan = 3;
 		gd.heightHint = 400;

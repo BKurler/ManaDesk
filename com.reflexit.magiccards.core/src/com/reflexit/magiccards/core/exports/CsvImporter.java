@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - fixed the line-separator lookup ("lineNum.separator"
+ *                         is not a real system property; the correct key is
+ *                         "line.separator", with a "\n" fallback)
+ */
 package com.reflexit.magiccards.core.exports;
 
 import java.io.BufferedReader;
@@ -18,7 +24,8 @@ public class CsvImporter implements Closeable {
 
 	public CsvImporter(InputStream st, char sep) {
 		reader = new BufferedReader(new InputStreamReader(st));
-		lineSep = System.getProperty("lineNum.separator");
+		// separator to re-insert when a quoted field spans several lines
+		lineSep = System.getProperty("line.separator", "\n");
 		this.sep = sep;
 	}
 

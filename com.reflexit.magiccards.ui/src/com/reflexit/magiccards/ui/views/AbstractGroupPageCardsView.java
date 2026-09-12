@@ -1,3 +1,13 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - dispose(): capture the active page's CACHED
+ *                         selection (this view's own SelectionProviderIntermediate)
+ *                         and hand it to that page via
+ *                         persistSelectionBeforeShutdown() before pageGroup.dispose()
+ *                         runs - the page's own LIVE widget selection is already
+ *                         unreliable (reset with no SelectionChangedEvent) by the
+ *                         time its own dispose() runs
+ */
 package com.reflexit.magiccards.ui.views;
 
 import java.util.ArrayList;
@@ -49,6 +59,20 @@ public abstract class AbstractGroupPageCardsView extends AbstractCardsView {
 
 	@Override
 	public void dispose() {
+		// A debug trace proved the active page's OWN live widget selection is
+		// already unreliable (empty, with no SelectionChangedEvent ever
+		// announcing it) by the time that page's own dispose() runs - whatever
+		// disposes the underlying SWT Table races ahead of the Java
+		// IWorkbenchPart.dispose() cascade. This view's CACHED
+		// SelectionProviderIntermediate bridge (getSelectionProvider(), NOT the
+		// active page's own live one) is one frame earlier in that same
+		// cascade and still reliably holds the real selection - hand it to the
+		// active page explicitly, before pageGroup.dispose() gets a chance to
+		// ask that page to read its own (by-then-stale) live selection.
+		IViewPage activePage = pageGroup == null ? null : pageGroup.getActivePage();
+		if (activePage instanceof AbstractMagicCardsListControl) {
+			((AbstractMagicCardsListControl) activePage).persistSelectionBeforeShutdown(getSelectionProvider().getSelection());
+		}
 		pageGroup.dispose();
 		super.dispose();
 	}

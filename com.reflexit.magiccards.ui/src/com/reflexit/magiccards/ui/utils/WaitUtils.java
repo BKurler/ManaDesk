@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - scheduleJob(String, int, Runnable): a priority-aware
+ *                         overload, for jobs that must not race their own
+ *                         setPriority() call
+ */
 package com.reflexit.magiccards.ui.utils;
 
 import java.lang.reflect.InvocationTargetException;
@@ -79,6 +85,15 @@ public class WaitUtils {
 	}
 
 	public static Job scheduleJob(String name, IRunnableWithProgress runable) {
+		return scheduleJob(name, Job.LONG, runable);
+	}
+
+	/** Same as {@link #scheduleJob(String, IRunnableWithProgress)}, but the job's
+	 *  priority is set BEFORE it is submitted - {@code job.setPriority(...)}
+	 *  after {@code schedule()} has already returned races the job's own start.
+	 *  Pass {@link Job#DECORATE} for background/not-urgent-right-now work (see
+	 *  {@code AbstractMagicCardsListControl#backgroundLoadHint}). */
+	public static Job scheduleJob(String name, int priority, IRunnableWithProgress runable) {
 		Job j = new Job(name) {
 			@Override
 			protected IStatus run(IProgressMonitor monitor) {
@@ -98,6 +113,7 @@ public class WaitUtils {
 				return Status.OK_STATUS;
 			};
 		};
+		j.setPriority(priority);
 		j.schedule();
 		return j;
 	}

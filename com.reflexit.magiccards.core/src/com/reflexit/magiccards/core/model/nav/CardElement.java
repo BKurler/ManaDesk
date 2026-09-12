@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - renameWithRelated(): rename + carry the sideboard / extra siblings
+ */
 package com.reflexit.magiccards.core.model.nav;
 
 import java.io.File;
@@ -161,6 +165,24 @@ public abstract class CardElement extends EventManager implements ILocatable {
 		oldFile.renameTo(newFile);
 		fireRecursiveRename(this, oldName);
 		return this;
+	}
+
+	/**
+	 * Rename this element and carry its {@code -sideboard} / {@code -extra}
+	 * siblings along (a deck's companion lists). {@code newName} is the bare name,
+	 * no extension. Shared by the navigator Rename command and Edit Properties.
+	 */
+	public void renameWithRelated(String newName) {
+		Location loc = getLocation();
+		rename(newName);
+		if (getParent() == null)
+			return;
+		CardElement sb = getParent().findChieldByName(loc.toSideboard().getBaseFileName());
+		if (sb != null)
+			sb.rename(Location.valueOf(newName).toSideboard().toString());
+		CardElement ex = getParent().findChieldByName(loc.toExtra().getBaseFileName());
+		if (ex != null)
+			ex.rename(Location.valueOf(newName).toExtra().toString());
 	}
 
 	public void update() {

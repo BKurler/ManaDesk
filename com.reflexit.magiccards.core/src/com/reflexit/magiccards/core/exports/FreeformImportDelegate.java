@@ -38,8 +38,12 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
  */
 public class FreeformImportDelegate extends AbstractImportDelegate {
 
+	// a Scryfall id as its own token: start-of-line or whitespace before, and
+	// whitespace or end-of-line after - so an id glued into a URL
+	// (".../cards/<id>/rulings") or a CSV field (",<id>,") is NOT mistaken for a
+	// decklist entry (that keeps a ManaDesk Full CSV export from scoring here)
 	private static final Pattern SCRYFALL_ID = Pattern.compile(
-			"[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}");
+			"(?<=^|\\s)[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}(?=\\s|$)");
 	private static final Pattern LEADING_COUNT = Pattern.compile("^\\s*(\\d{1,4})\\s*[xX]?\\s+(.*\\S)\\s*$");
 	private static final Pattern TRAILING_COUNT = Pattern.compile("^(.*\\S)\\s+[xX]\\s*(\\d{1,4})\\s*$");
 	private static final Pattern NAME_SET = Pattern.compile("^(.*?)\\s*\\(([^)]+)\\)\\s*$");

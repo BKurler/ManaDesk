@@ -36,6 +36,7 @@ import com.reflexit.magiccards.core.model.Rarity;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
+import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.LocationPath;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -43,7 +44,7 @@ import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.ui.views.editions.EditionsComposite;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
 
-public class BoosterGeneratorWizard extends NewCardCollectionWizard implements INewWizard {
+public class BoosterGeneratorWizard extends NewCardElementWizard implements INewWizard {
 	public static final String ID = "com.reflexit.magiccards.ui.wizards.BoosterGeneratorWizard";
 
 	static class BoosterGeneratorWizardPage extends WizardPage {
@@ -243,5 +244,10 @@ public class BoosterGeneratorWizard extends NewCardCollectionWizard implements I
 			MagicCardPhysical pcard = new MagicCardPhysical(card, col.getLocation());
 			store.add(pcard);
 		}
+	}
+
+	@Override
+	protected CardElement doCreateCardElement(CollectionsContainer parent, String name, boolean virtual, boolean unsorted) {
+		return new CardCollection(name + ".xml", parent, false, virtual, unsorted);
 	}
 }

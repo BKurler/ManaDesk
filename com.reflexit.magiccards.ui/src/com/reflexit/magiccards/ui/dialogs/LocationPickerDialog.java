@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setShowCreateButtons(): lets a caller hide the
+ *                         "Create new deck.../collection..." buttons - needed
+ *                         when this picker is itself launched from inside a
+ *                         New Deck/Collection wizard to choose a destination
+ *                         folder
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -40,7 +45,7 @@ import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.preferences.LocationFilterPreferencePage;
 import com.reflexit.magiccards.ui.wizards.NewCardCollectionWizard;
-import com.reflexit.magiccards.ui.wizards.NewCardElementWizard;
+import com.reflexit.magiccards.ui.exportWizards.AbstractCardListImportWizard;
 import com.reflexit.magiccards.ui.wizards.NewDeckWizard;
 
 public class LocationPickerDialog extends TitleAreaDialog {
@@ -51,8 +56,11 @@ public class LocationPickerDialog extends TitleAreaDialog {
 	private Composite area;
 	private int mode;
 	private boolean hideSideboards;
+	private boolean containersOnly;
+	private com.reflexit.magiccards.core.model.nav.ModelRoot.Side sideFilter;
 	private IStructuredSelection selection;
 	private IStructuredSelection initialResourceSelection;
+	private boolean showCreateButtons = true;
 
 	/**
 	 * 
@@ -70,13 +78,36 @@ public class LocationPickerDialog extends TitleAreaDialog {
 		this.hideSideboards = hide;
 	}
 
+	/** Show only folders (Decks / Collections / user sub-folders) - for a "pick a
+	 *  destination folder" picker such as Move to…. */
+	public void setContainersOnly(boolean containersOnly) {
+		this.containersOnly = containersOnly;
+	}
+
+	/** Show only the given side's subtree (Decks or Collections). */
+	public void setSideFilter(com.reflexit.magiccards.core.model.nav.ModelRoot.Side side) {
+		this.sideFilter = side;
+	}
+
+	/** Hide the "Create new deck.../Create new collection..." buttons -
+	 *  appropriate when this picker is itself being used from inside a "New
+	 *  deck/collection" wizard (picking a destination FOLDER for the thing
+	 *  being created), where offering to launch another such wizard from
+	 *  inside it is redundant and confusing. On by default, matching every
+	 *  other existing use of this dialog. */
+	public void setShowCreateButtons(boolean show) {
+		this.showCreateButtons = show;
+	}
+
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		getShell().setText("Select a deck or collection");
-		setTitle("Select a deck or collection");
+		getShell().setText(containersOnly ? "Select a folder" : "Select a deck or collection");
+		setTitle(containersOnly ? "Select a folder" : "Select a deck or collection");
 		area = (Composite) super.createDialogArea(parent);
 		locPage = new LocationFilterPreferencePage(mode);
 		locPage.setHideSideboards(hideSideboards);
+		locPage.setContainersOnly(containersOnly);
+		locPage.setSideFilter(sideFilter);
 		locPage.noDefaultAndApplyButton();
 		locPage.setPreferenceStore(new PreferenceStore());
 		locPage.createControl(area);
@@ -97,7 +128,7 @@ public class LocationPickerDialog extends TitleAreaDialog {
 				okPressed();
 			}
 		});
-		if ((mode & SWT.READ_ONLY) == 0)
+		if (showCreateButtons && (mode & SWT.READ_ONLY) == 0)
 			createButtonsGroup(area);
 		restoreWidgetValues();
 		if (initialResourceSelection != null)
@@ -165,7 +196,7 @@ public class LocationPickerDialog extends TitleAreaDialog {
 		});
 	}
 
-	protected void openWizard(NewCardElementWizard wizard, ISelection selection) {
+	protected void openWizard(AbstractCardListImportWizard wizard, ISelection selection) {
 		// Get the workbench and initialize, the wizard.
 		IWorkbench workbench = PlatformUI.getWorkbench();
 		wizard.init(workbench, (IStructuredSelection) selection);

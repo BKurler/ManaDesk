@@ -1,3 +1,10 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - setLocationFilter(): fixed a background-thread SWT
+ *                         access crash (now via WaitUtils.asyncExec), wrote to
+ *                         the wrong preference store (filter store, not the
+ *                         columns store), and did not match the "-extra" suffix
+ */
 package com.reflexit.magiccards.ui.views.lib;
 
 import java.util.Collection;
@@ -99,19 +106,24 @@ public class MyCardsView extends AbstractMyCardsView {
 	public void setLocationFilter(Location loc) {
 		// getMagicControl().setStatus("Loading " + loc + "...");
 		WaitUtils.scheduleJob("Updating location", () -> {
-			IPreferenceStore preferenceStore = getLocalPreferenceStore();
+			// the Location advanced-filter checkboxes live in the FILTER store
+			// (read by AbstractMagicCardsListControl.syncFilter()), not the columns
+			// store - writing there silently did nothing
+			IPreferenceStore preferenceStore = getFilterPreferenceStore();
 			Collection ids = Locations.getInstance().getIds();
 			String locId = Locations.getInstance().getPrefConstant(loc);
 			for (Iterator iterator = ids.iterator(); iterator.hasNext();) {
 				String id = (String) iterator.next();
 				if (id.startsWith(locId + ".") || id.startsWith(locId + "/") || id.equals(locId)
-						|| id.equals(locId + Location.SIDEBOARD_SUFFIX)) {
+						|| id.equals(locId + Location.SIDEBOARD_SUFFIX) || id.equals(locId + Location.EXTRA_SUFFIX)) {
 					preferenceStore.setValue(id, true);
 				} else {
 					preferenceStore.setValue(id, false);
 				}
 			}
-			reloadData();
+			// reloadData() touches SWT (e.g. Table.getTopIndex()) - this runs on a
+			// background Job, so it must hop back to the UI thread
+			WaitUtils.asyncExec(this::reloadData);
 		});
 	}
 
