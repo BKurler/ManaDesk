@@ -1,15 +1,27 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - createNewMenu(): dropped "Folder" from File ▸ New
+ *                         (only Deck/Collection); explicit newWizardAction()
+ *                         helper replacing BaseNewWizardMenu
+ */
 package com.reflexit.magiccards.ui;
 
+import org.eclipse.jface.action.Action;
+import org.eclipse.jface.action.IAction;
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.action.Separator;
+import org.eclipse.jface.viewers.ISelection;
+import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.wizard.WizardDialog;
 import org.eclipse.ui.IFolderLayout;
 import org.eclipse.ui.IPageLayout;
 import org.eclipse.ui.IPerspectiveFactory;
 import org.eclipse.ui.IPlaceholderFolderLayout;
 import org.eclipse.ui.IWorkbenchActionConstants;
 import org.eclipse.ui.IWorkbenchWindow;
+import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.actions.ActionFactory;
-import org.eclipse.ui.actions.BaseNewWizardMenu;
 
 import com.reflexit.magiccards.ui.views.MagicDbView;
 import com.reflexit.magiccards.ui.views.card.CardDescView;
@@ -81,15 +93,33 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 	 *
 	 */
 	public static MenuManager createNewMenu(IWorkbenchWindow window) {
-		// create the New submenu, using the same id for it as the New action
-		String newText = "New...";
+		// an explicit list - just the ManaDesk elements, no generic "Other..."
 		String newId = ActionFactory.NEW.getId();
-		MenuManager newMenu = new MenuManager(newText, newId);
+		MenuManager newMenu = new MenuManager("New", newId);
 		newMenu.setActionDefinitionId("org.eclipse.ui.file.newQuickMenu"); //$NON-NLS-1$
 		newMenu.add(new Separator(newId));
-		BaseNewWizardMenu newWizardMenu = new BaseNewWizardMenu(window, null);
-		newMenu.add(newWizardMenu);
+		newMenu.add(newWizardAction(window, "Deck", "icons/obj16/ideck16.png", NewDeckWizard::new));
+		newMenu.add(newWizardAction(window, "Collection", "icons/obj16/lib16.png", NewCardCollectionWizard::new));
+		// "Folder" is navigator-only (right-click ▸ New Folder…) - not useful from
+		// the main File menu, which has no notion of "current container"
 		newMenu.add(new Separator(IWorkbenchActionConstants.MB_ADDITIONS));
 		return newMenu;
+	}
+
+	private static IAction newWizardAction(IWorkbenchWindow window, String label, String icon,
+			java.util.function.Supplier<? extends IWorkbenchWizard> factory) {
+		Action a = new Action(label) {
+			@Override
+			public void run() {
+				ISelection s = window.getSelectionService().getSelection();
+				IStructuredSelection sel = s instanceof IStructuredSelection ? (IStructuredSelection) s
+						: StructuredSelection.EMPTY;
+				IWorkbenchWizard wizard = factory.get();
+				wizard.init(window.getWorkbench(), sel);
+				new WizardDialog(window.getShell(), wizard).open();
+			}
+		};
+		a.setImageDescriptor(MagicUIActivator.getImageDescriptor(icon));
+		return a;
 	}
 }

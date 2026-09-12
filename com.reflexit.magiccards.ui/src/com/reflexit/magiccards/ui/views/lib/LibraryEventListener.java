@@ -1,3 +1,12 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - name this job after the tab's secondary id (its
+ *                         deck/collection Location), not the generic
+ *                         site.getRegisteredName() ("Deck" for every single
+ *                         DeckView instance) - the startup splash surfaces
+ *                         this job's name and a name shared by every tab was
+ *                         useless for telling them apart
+ */
 package com.reflexit.magiccards.ui.views.lib;
 
 import org.eclipse.ui.IViewSite;
@@ -14,7 +23,9 @@ public class LibraryEventListener implements ICardEventListener, IDisposable {
 	private ICardEventListener eventHandler;
 
 	public void init(IViewSite site, Runnable postLoad) {
-		WaitUtils.scheduleJob("Initializing " + site.getRegisteredName(), () -> {
+		String secondaryId = site.getSecondaryId();
+		String label = secondaryId != null && !secondaryId.isEmpty() ? secondaryId : site.getRegisteredName();
+		WaitUtils.scheduleJob("Initializing " + label, () -> {
 			if (WaitUtils.waitForLibrary()) {
 				DM.getLibraryCardStore().addListener(LibraryEventListener.this);
 				DM.getModelRoot().addListener(LibraryEventListener.this);

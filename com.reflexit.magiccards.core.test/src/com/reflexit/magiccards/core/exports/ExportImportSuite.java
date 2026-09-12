@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - added CsvImporterTest (regression test for the
+ *                         "lineNum.separator" typo)
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -14,7 +16,7 @@ import org.junit.runners.Suite.SuiteClasses;
 import com.reflexit.magiccards.core.sync.TextPrinterTest;
 
 @RunWith(Suite.class)
-@SuiteClasses({ TablePipedImportTest.class,
+@SuiteClasses({ CsvImporterTest.class, TablePipedImportTest.class,
 		// !!! RD MtgoImportTest.class,
 		// !!! RD MagicWorkstationImportTest.class,
 		DeckParserTest.class, ImportUtilsTest.class,

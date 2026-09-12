@@ -15,6 +15,12 @@
  *     Rémi Dutil (2026) - create the deck's Sideboard / Extra list from this
  *                         dialog (checkboxes; checked+disabled when they already
  *                         exist, disabled for collections)
+ *     Rémi Dutil (2026) - rename from this dialog; Type is shown read-only (a deck
+ *                         stays a deck, a collection stays a collection)
+ *     Rémi Dutil (2026) - field order is now Type, then Name, then the
+ *                         checkboxes; the Sideboard/Extra group gets an
+ *                         explanatory label and clearer checkbox wording
+ *                         ("Create a Sideboard" / "Create an Extra list (...)")
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -23,12 +29,9 @@ import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.swt.SWT;
-import org.eclipse.swt.events.SelectionAdapter;
-import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
-import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -51,7 +54,8 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	private IStorageInfo info;
 	/** The edited element, when known - needed to create/detect its sideboard/extra. */
 	private CardCollection deck;
-	private Combo type;
+	private Text nameText;
+	private final boolean deckType;
 	private Button virtual;
 	private Button unsorted;
 	private Text text;
@@ -66,6 +70,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (info == null)
 			throw new NullPointerException();
 		this.info = info;
+		this.deckType = IStorageInfo.DECK_TYPE.equals(info.getType());
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
@@ -76,28 +81,35 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 
 	@Override
 	protected Control createDialogArea(Composite parent) {
-		getShell().setText("Edit...");
-		// setTitleImage(MagicUIActivator.getDefault().getImage("icons/Book-1-icon.gif"));
-		setTitle("Edit Properties");
-		setMessage("You can modify deck/collection properties here. Press OK to save.");
+		String kind = deckType ? "deck" : "collection";
+		getShell().setText("Edit " + (deckType ? "Deck" : "Collection"));
+		setTitle("Edit " + (deckType ? "Deck" : "Collection") + " Properties");
+		setMessage("Modify this " + kind + "'s properties, then press OK to save.");
 		Composite area = (Composite) super.createDialogArea(parent);
 		Composite comp = new Composite(area, SWT.NONE);
 		comp.setLayoutData(new GridData(GridData.FILL_BOTH));
 		GridLayout layout = new GridLayout(4, false);
 		comp.setLayout(layout);
+		int cols = ((GridLayout) comp.getLayout()).numColumns;
 		{
+			// Type leads - it is fixed (a deck stays a deck), so it orients the
+			// rest of the dialog before the editable fields below it
 			Label label = new Label(comp, SWT.NONE);
 			label.setText("Type:");
-			type = new Combo(comp, SWT.READ_ONLY | SWT.DROP_DOWN);
-			type.add(IStorageInfo.DECK_TYPE);
-			type.add(IStorageInfo.COLLECTION_TYPE);
-			type.setText(IStorageInfo.DECK_TYPE.equals(info.getType()) ? IStorageInfo.DECK_TYPE
-					: IStorageInfo.COLLECTION_TYPE);
+			Label typeLabel = new Label(comp, SWT.NONE);
+			typeLabel.setText(deckType ? "Deck" : "Collection");
 			GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-			// take the rest of the row so the checkboxes below aren't
-			// crowded onto the same line - easier to read as its own row
-			gd.horizontalSpan = ((GridLayout) comp.getLayout()).numColumns - 1;
-			type.setLayoutData(gd);
+			gd.horizontalSpan = cols - 1;
+			typeLabel.setLayoutData(gd);
+		}
+		if (deck != null) {
+			Label nl = new Label(comp, SWT.NONE);
+			nl.setText("Name:");
+			nameText = new Text(comp, SWT.BORDER | SWT.SINGLE);
+			nameText.setText(deck.getName());
+			GridData ngd = new GridData(GridData.FILL_HORIZONTAL);
+			ngd.horizontalSpan = cols - 1;
+			nameText.setLayoutData(ngd);
 		}
 		virtual = StatusDots.check(comp, StatusDots.VIRTUAL, "Virtual");
 		virtual.setSelection(info.isVirtual());
@@ -107,20 +119,13 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		unsorted.setSelection(info.isUnsorted());
 		StatusDots.exclusive(virtual, unsorted);
 		createFamilyGroup(comp);
-		// Unsorted (manual card order) only makes sense for a collection
-		type.addSelectionListener(new SelectionAdapter() {
-			@Override
-			public void widgetSelected(SelectionEvent e) {
-				syncForType();
-			}
-		});
 		syncForType();
 		createTextArea(comp);
 		return comp;
 	}
 
 	private void syncForType() {
-		boolean deckType = IStorageInfo.DECK_TYPE.equals(type.getText());
+		// Unsorted (manual card order) only makes sense for a collection
 		if (deckType)
 			unsorted.setSelection(false);
 		unsorted.setEnabled(!deckType);
@@ -138,7 +143,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	 * </ul>
 	 */
 	private void createFamilyGroup(Composite comp) {
-		if (deck == null)
+		if (deck == null || !deckType) // Sideboard / Extra are a deck-only notion
 			return;
 		Location loc = deck.getLocation();
 		boolean member = loc.isSideboard() || loc.isExtra();
@@ -155,14 +160,19 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		group.setLayoutData(ggd);
 		group.setLayout(new GridLayout());
 
+		Label hint = new Label(group, SWT.WRAP);
+		hint.setText("Checking a box below creates that list for this deck (already-existing lists are"
+				+ " shown checked and cannot be unchecked here).");
+		hint.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+
 		createSideboard = new Button(group, SWT.CHECK);
-		createSideboard.setText("Sideboard");
+		createSideboard.setText("Create a Sideboard");
 		createSideboard.setToolTipText(
 				"An empty, editable sideboard list alongside the deck. It never counts towards deck legality.");
 		createSideboard.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 
 		createExtra = new Button(group, SWT.CHECK);
-		createExtra.setText("Extra list (tokens, emblems, markers)");
+		createExtra.setText("Create an Extra list (tokens, emblems, markers)");
 		createExtra.setToolTipText(
 				"An editable extra list alongside the deck, pre-filled with the tokens / emblems / markers the deck needs at count 0. It never counts towards deck legality.");
 		createExtra.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -207,6 +217,8 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 
 	@Override
 	protected void okPressed() {
+		if (!applyRename())
+			return;
 		try {
 			save();
 		} catch (MagicException e) {
@@ -215,6 +227,26 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		}
 		createRequestedFamilyMembers();
 		super.okPressed();
+	}
+
+	/** Rename the element (and its sideboard / extra) if the Name field changed.
+	 *  Returns false (and keeps the dialog open) on an invalid name. */
+	private boolean applyRename() {
+		if (deck == null || nameText == null)
+			return true;
+		String newName = nameText.getText().trim();
+		if (newName.equals(deck.getName()))
+			return true;
+		if (newName.isEmpty() || newName.contains("/") || newName.contains("\\") || newName.contains(".")) {
+			setErrorMessage("Name cannot be empty or contain '.', '/' or '\\'");
+			return false;
+		}
+		if (deck.getParent() != null && deck.getParent().findChieldByName(newName + ".xml") != null) {
+			setErrorMessage("A deck or collection named \"" + newName + "\" already exists here");
+			return false;
+		}
+		deck.renameWithRelated(newName);
+		return true;
 	}
 
 	private void save() {
@@ -226,11 +258,10 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			info.setReadOnly(false);
 		}
 
-		// Apply all editable properties
+		// Apply all editable properties (Type is fixed - a deck stays a deck)
 		info.setComment(text.getText());
 		info.setVirtual(virtual.getSelection());
 		info.setUnsorted(unsorted.getSelection());
-		info.setType(type.getText());
 
 		// Case 2: enabling read-only → must enable last
 		if (!oldRO && newRO) {

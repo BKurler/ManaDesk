@@ -8,6 +8,13 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - setEnabled()/canRename(): a fixed node (a root, the
+ *                         Scryfall database) now just disables the menu item
+ *                         instead of showing an info dialog when clicked
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -88,21 +95,9 @@ public class RenameHandler extends AbstractHandler {
 		InputDialog inputDialog = new InputDialog(window.getShell(), "Rename", "New Name", f.getName(), null);
 		if (inputDialog.open() == Dialog.OK) {
 			String newName = inputDialog.getValue();
-			if (!f.getName().equals(newName)) {
-				Location sb = loc.toSideboard();
-				Location acc = loc.toExtra();
-				CardElement el = f.rename(newName);
-				CardElement fsb = f.getParent().findChieldByName(sb.getBaseFileName());
-				if (fsb != null) {
-					fsb.rename(Location.valueOf(newName).toSideboard().toString());
-				}
-				CardElement facc = f.getParent().findChieldByName(acc.getBaseFileName());
-				if (facc != null) {
-					facc.rename(Location.valueOf(newName).toExtra().toString());
-				}
-			}
+			if (!f.getName().equals(newName))
+				f.renameWithRelated(newName);
 		}
-		// f.rename();
 		return null;
 	}
 
@@ -131,12 +126,17 @@ public class RenameHandler extends AbstractHandler {
 			return;
 		}
 		if (iss.getFirstElement() instanceof CardElement) {
-			CardElement f = (CardElement) iss.getFirstElement();
-			if (f.getParent() == getModelRoot()) {
-				setBaseEnabled(false);
-				return;
-			}
-			setBaseEnabled(true);
+			setBaseEnabled(canRename((CardElement) iss.getFirstElement()));
 		}
+	}
+
+	/** Renameable: a real deck / collection - never a container root, the default
+	 *  library, a sideboard / extra list or the model root. */
+	private boolean canRename(CardElement f) {
+		ModelRoot root = getModelRoot();
+		if (f == null || f.getParent() == root || f instanceof CardOrganizer || f == root.getDefaultLib())
+			return false;
+		Location loc = f.getLocation();
+		return !loc.isSideboard() && !loc.isExtra();
 	}
 }

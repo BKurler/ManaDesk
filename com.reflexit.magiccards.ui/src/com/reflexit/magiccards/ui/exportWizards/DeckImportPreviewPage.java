@@ -1,6 +1,10 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getMainPage() etc. follow the DeckImportPage rename to
+ *                         AbstractCardListImportPage; dropped the dead
+ *                         getIntoChoice()-based branch (no more "extend the
+ *                         database" import target)
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -81,7 +85,7 @@ public class DeckImportPreviewPage extends WizardPage {
 	private ModifyListener modifyLister = new ModifyListener() {
 		@Override
 		public void modifyText(ModifyEvent e) {
-			DeckImportPage startingPage = getMainPage();
+			AbstractCardListImportPage startingPage = getMainPage();
 			startingPage.setInputChoice(ImportSource.TEXT);
 			CopySupport.runCopy(text.getText());
 			importData.setText(text.getText());
@@ -103,7 +107,7 @@ public class DeckImportPreviewPage extends WizardPage {
 	}
 
 	public void reload() {
-		DeckImportPage startingPage = getMainPage();
+		AbstractCardListImportPage startingPage = getMainPage();
 		setTitle("Importing format " + startingPage.getReportType().getLabel());
 		setErrorMessage(null);
 		setDescription(getFirstDescription());
@@ -1181,7 +1185,7 @@ public class DeckImportPreviewPage extends WizardPage {
 		int errorCount = importData.getErrorCount();
 		Throwable e = importData.getError();
 		if (e != null) {
-			DeckImportPage main = getMainPage();
+			AbstractCardListImportPage main = getMainPage();
 			String src = main != null ? main.getSourceDescription() : "input";
 			String fmt = main != null && main.getReportType() != null ? main.getReportType().getLabel() : "?";
 			// a MagicException is an expected "bad input / wrong format" condition -
@@ -1259,32 +1263,17 @@ public class DeckImportPreviewPage extends WizardPage {
 		return textFile;
 	}
 
-	public DeckImportPage getMainPage() {
+	public AbstractCardListImportPage getMainPage() {
 		IWizardPage[] pages = getWizard().getPages();
 		for (IWizardPage wizardPage : pages) {
-			if (wizardPage instanceof DeckImportPage)
-				return (DeckImportPage) wizardPage;
+			if (wizardPage instanceof AbstractCardListImportPage)
+				return (AbstractCardListImportPage) wizardPage;
 		}
 		return null;
 	}
 
 	public String getFirstDescription() {
-		DeckImportPage startingPage = getMainPage();
-		int choice = startingPage.getIntoChoice();
-		switch (choice) {
-		case 1:
-			return "Importing into a new deck/collection";
-		case 2:
-			CardElement element = startingPage.getElement();
-			String deckName = element == null ? "newdeck" : element.getName();
-			String desc = "Importing into " + deckName + ".";
-			return desc;
-		case 3:
-			return "Extending Magic Card Database";
-		default:
-			break;
-		}
-		return "";
+		return "Importing into " + getMainPage().getImportTargetDescription() + ".";
 	}
 
 	@Override
@@ -1340,7 +1329,7 @@ public class DeckImportPreviewPage extends WizardPage {
 		/*
 		 * !!! RD Button button = new Button(comp, SWT.PUSH); button.setText("Attempt to Auto Fix Errors"); button.addSelectionListener(new SelectionAdapter() {
 		 * 
-		 * @Override public void widgetSelected(SelectionEvent event) { Collection<IMagicCard> result = (Collection<IMagicCard>) importData.getList(); DeckImportPage mainPage = getMainPage(); int choice = mainPage.getIntoChoice(); final boolean dbImport = choice == 3; try { IRunnableWithProgress work = new IRunnableWithProgress() {
+		 * @Override public void widgetSelected(SelectionEvent event) { Collection<IMagicCard> result = (Collection<IMagicCard>) importData.getList(); AbstractCardListImportPage mainPage = getMainPage(); int choice = mainPage.getIntoChoice(); final boolean dbImport = choice == 3; try { IRunnableWithProgress work = new IRunnableWithProgress() {
 		 * 
 		 * @Override public void run(IProgressMonitor monitor) throws InvocationTargetException, InterruptedException { mainPage.fixErrors(result, dbImport, monitor); } }; getRunnableContext().run(true, true, work); } catch (InvocationTargetException ite) { Throwable e = ite.getCause(); if (e instanceof OperationCanceledException) { reload(); return; } importData.setError(e); if (e instanceof RuntimeException && !(e instanceof MagicException)) MagicUIActivator.log(e); } catch (InterruptedException e) { importData.setError(e); reload(); } } });
 		 */

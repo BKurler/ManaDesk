@@ -74,8 +74,17 @@ public class MASplashHandler extends BasicSplashHandler {
 	 * @param message  status line, or {@code null} to leave it
 	 * @param fraction 0..1 of the remaining tail slice
 	 */
+	/** Flip to {@code true} to trace every splash-text call on stderr (visible
+	 *  with {@code -consoleLog}) - temporary, for diagnosing "the text never
+	 *  seems to update" reports. */
+	static final boolean TRACE = false;
+
 	public static void reportStartupTail(String message, double fraction) {
 		IProgressMonitor bar = tailBar;
+		if (TRACE) {
+			System.err.println("[Startup] reportStartupTail(" + (message == null ? "null" : "\"" + message + "\"")
+					+ ", " + fraction + ")  bar=" + (bar == null ? "NULL - no-op" : bar.getClass().getName()));
+		}
 		if (bar == null)
 			return;
 		if (message != null && !message.isEmpty())
@@ -160,6 +169,10 @@ public class MASplashHandler extends BasicSplashHandler {
 			pm.subTask("Starting the workbench…");
 		tailBar = realMonitor;
 		dbPhaseDone = true;
+		if (TRACE) {
+			System.err.println("[Startup] DB phase done. splash.isDisposed()=" + splash.isDisposed()
+					+ "  tailBar=" + (tailBar == null ? "NULL" : tailBar.getClass().getName()));
+		}
 	}
 
 	@Override

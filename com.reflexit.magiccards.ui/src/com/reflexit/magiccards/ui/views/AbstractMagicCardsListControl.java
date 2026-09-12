@@ -5,6 +5,17 @@
  *                         background Job on every selection change
  *     Rémi Dutil (2026) - recache group aggregates on a DB-card UPDATE so grouped
  *                         totals refresh when a per-copy value changes
+ *     Rémi Dutil (2026) - loadData(): consumeLoadPriority()/backgroundLoadHint -
+ *                         a tab force-materialized only for its startup icon
+ *                         (not the one actually being shown) loads its cards at
+ *                         Job.DECORATE priority instead of competing with the
+ *                         tab that is
+ *     Rémi Dutil (2026) - persistLastSelection()/restorePersistedInitialSelection()/
+ *                         persistSelectionBeforeShutdown(): remembers the
+ *                         selected card per deck/collection Location across an
+ *                         app restart (previously nothing did - only an
+ *                         in-session reload's selection survived, via
+ *                         restoreSelection())
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -154,6 +165,33 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	 */
 	private boolean pendingRevealSticky = false;
 	private static final long PENDING_REVEAL_TIMEOUT_MS = 5000;
+	/**
+	 * Whether {@link #restorePersistedInitialSelection} has already been tried
+	 * for this control's lifetime - it only makes sense once, the first time
+	 * this list actually has data to select against after the tab opens.
+	 * {@link #restoreSelection(ISelection)} already re-applies whatever was
+	 * selected a moment ago across an in-session reload; nothing previously
+	 * carried a selection across an app RESTART, which is why a restored deck
+	 * tab could show the right scroll position (or the right card, via
+	 * {@code CardDescView}'s own unrelated "last database selection") with no
+	 * row actually highlighted.
+	 */
+	private boolean initialSelectionAttempted = false;
+	/** Preference key prefix persisting the selected card of a deck/collection
+	 *  Location across app restarts - keyed per Location so every open tab
+	 *  remembers its own last selection independently. */
+	private static final String LAST_SELECTED_CARD_PREF_PREFIX = "lastSelectedCard@";
+	/** Flip to {@code true} for a console trace of the persisted-selection
+	 *  save/restore path specifically (independent of {@link #DEBUG}, which is
+	 *  far noisier - this covers a handful of lines across a whole app close +
+	 *  restart) - temporary, for diagnosing "the card comes back but is not
+	 *  selected" reports. */
+	private static final boolean TRACE_LAST_SELECTION = false;
+
+	private static void traceLastSelection(String msg) {
+		if (TRACE_LAST_SELECTION)
+			System.err.println("[LastSel] " + msg);
+	}
 	/**
 	 * Table scroll position (first visible row) captured at the moment of the
 	 * user action, before the burst of store events can scroll the list. Restored
@@ -594,7 +632,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	@Override
 	public void dispose() {
+		traceLastSelection("dispose() entered, class=" + getClass().getSimpleName() + " viewer="
+				+ (viewer == null ? "null" : "non-null"));
 		if (viewer != null) {
+			persistLastSelection();
 			getSelectionProvider().removeSelectionChangedListener(statusSelectionListener);
 			this.viewer.dispose();
 		}
@@ -1590,6 +1631,32 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			// scroll ("jump to top").
 			restoreTopIndex(wantTop);
 			restoreSelection(previousSelection);
+			// Nothing carried a selection into this control's very first load (a
+			// fresh app start has no in-session previousSelection) - fall back to
+			// whatever was selected here the last time the app ran. A deck tab
+			// runs refreshViewer() at least twice on startup: once from its own
+			// createTableControl() before the deck's model element has even
+			// resolved (an empty/placeholder store), then again once
+			// loadInitialInBackground() resolves it for real - so the "only try
+			// once" flag must not be consumed by that first, empty pass, or the
+			// real one never gets a chance. Only give up once the store actually
+			// had leaves to check a match against.
+			if (!initialSelectionAttempted) {
+				if (getSelection().isEmpty()) {
+					boolean restored = restorePersistedInitialSelection(location);
+					boolean hasLeaves = !currentLeaves().isEmpty();
+					traceLastSelection("refreshViewer: initial-selection attempt, location="
+							+ (location == null ? "null" : location.getName()) + " restored=" + restored
+							+ " hasLeaves=" + hasLeaves + " giveUp=" + (restored || hasLeaves));
+					if (restored || hasLeaves)
+						initialSelectionAttempted = true;
+				} else {
+					traceLastSelection("refreshViewer: selection already non-empty ("
+							+ shortSel(getSelection()) + "), skipping initial-selection restore, location="
+							+ (location == null ? "null" : location.getName()));
+					initialSelectionAttempted = true;
+				}
+			}
 			// When a reveal ran, applyPendingReveal() has already positioned the
 			// list on its target; only re-assert the captured scroll otherwise.
 			if (!hadPendingReveal)
@@ -1680,6 +1747,120 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			// scroll on the extra refresh passes an operation triggers.
 			selectIfChanged(resolveInStore(keys), false);
 		}
+	}
+
+	/** Set by {@link #persistSelectionBeforeShutdown} so the later, generic
+	 *  {@link #persistLastSelection()} call from {@link #dispose()} does not
+	 *  clobber it with a re-read of the (by then unreliable) live widget. */
+	private boolean selectionAlreadyPersistedForShutdown = false;
+
+	/**
+	 * Persists {@code sel} - captured by the owning view, in
+	 * {@code AbstractGroupPageCardsView.dispose()}, from the CACHED
+	 * {@code SelectionProviderIntermediate} bridge - as this list's
+	 * about-to-close selection, and marks {@link #persistLastSelection()}
+	 * (called moments later from this page's own {@link #dispose()}) as a
+	 * no-op. A debug trace proved the live widget's own selection is already
+	 * unreliable (empty, with no {@code SelectionChangedEvent} ever announcing
+	 * it) by the time this page's {@code dispose()} runs - whatever disposes
+	 * the underlying SWT {@code Table} races ahead of the Java
+	 * {@code IWorkbenchPart.dispose()} cascade and resets its selection
+	 * without going through JFace at all. The view-level cached bridge, one
+	 * frame earlier in that same cascade, still reliably holds the real
+	 * selection.
+	 */
+	public void persistSelectionBeforeShutdown(ISelection sel) {
+		persistLastSelection(sel);
+		selectionAlreadyPersistedForShutdown = true;
+	}
+
+	/** Persists the currently selected card, keyed by this list's Location, so
+	 *  {@link #restorePersistedInitialSelection} can re-select it the next time
+	 *  the app starts. Called from {@link #dispose()} - once, at the point the
+	 *  final selection is known - mirroring how {@code CardDescView} persists
+	 *  its own last-viewed card. A location-less list (the whole library, the
+	 *  collector view...) has no stable per-tab identity to key on and is
+	 *  skipped. */
+	private void persistLastSelection() {
+		if (selectionAlreadyPersistedForShutdown) {
+			traceLastSelection("persistLastSelection: already persisted via persistSelectionBeforeShutdown() - skipping re-read");
+			return;
+		}
+		persistLastSelection(getSelection());
+	}
+
+	private void persistLastSelection(ISelection sel) {
+		IFilteredCardStore store = getFilteredStore();
+		Location location = store == null ? null : store.getLocation();
+		if (location == null || location.getName() == null || location.getName().isEmpty()) {
+			traceLastSelection("persistLastSelection: no usable Location (store=" + store + " location=" + location
+					+ ") - skipping, class=" + getClass().getSimpleName());
+			return;
+		}
+		String prefKey = LAST_SELECTED_CARD_PREF_PREFIX + location.getName();
+		IPreferenceStore prefStore = MagicUIActivator.getDefault().getPreferenceStore();
+		Object stable = sel instanceof IStructuredSelection && !sel.isEmpty()
+				? stableKey(((IStructuredSelection) sel).getFirstElement())
+				: null;
+		if (stable instanceof String) {
+			prefStore.setValue(prefKey, (String) stable);
+			traceLastSelection("persistLastSelection: prefKey=\"" + prefKey + "\" <- \"" + stable
+					+ "\"  (readBack=\"" + prefStore.getString(prefKey) + "\")");
+		} else {
+			prefStore.setToDefault(prefKey);
+			traceLastSelection("persistLastSelection: prefKey=\"" + prefKey + "\" cleared (selection=" + sel
+					+ ", stableKey=" + stable + ")");
+		}
+		// setValue() only updates the in-memory ScopedPreferenceStore - unlike the
+		// column/filter preference stores this class already explicitly .save()s a
+		// few lines below in dispose(), nothing here guaranteed this one reaches
+		// disk before the process actually exits (this is very likely why every
+		// deck showed "no saved value" on the next startup regardless of what was
+		// selected). Flush it the same way those other stores are already flushed.
+		if (prefStore instanceof IPersistentPreferenceStore) {
+			try {
+				((IPersistentPreferenceStore) prefStore).save();
+				traceLastSelection("persistLastSelection: saved to disk");
+			} catch (IOException e) {
+				traceLastSelection("persistLastSelection: save() FAILED: " + e);
+				MagicUIActivator.log(e);
+			}
+		} else {
+			traceLastSelection("persistLastSelection: prefStore is not an IPersistentPreferenceStore ("
+					+ prefStore.getClass().getName() + ") - cannot force a flush");
+		}
+	}
+
+	/** The counterpart to {@link #persistLastSelection()}: the first time this
+	 *  list has real data and nothing is selected yet, re-select whatever card
+	 *  was selected here the last time the app ran (a fresh app start has no
+	 *  in-session {@code previousSelection} to fall back on, unlike a normal
+	 *  reload - see {@link #restoreSelection}). Reveals the row too, since a
+	 *  restored tab's scroll position is otherwise whatever the widget happens
+	 *  to land on. */
+	private boolean restorePersistedInitialSelection(Location location) {
+		if (location == null || location.getName() == null || location.getName().isEmpty()) {
+			traceLastSelection("restorePersistedInitialSelection: no usable Location (location=" + location
+					+ ") - skipping, class=" + getClass().getSimpleName());
+			return false;
+		}
+		String prefKey = LAST_SELECTED_CARD_PREF_PREFIX + location.getName();
+		String key = MagicUIActivator.getDefault().getPreferenceStore().getString(prefKey);
+		if (key == null || key.isEmpty()) {
+			traceLastSelection("restorePersistedInitialSelection: prefKey=\"" + prefKey + "\" has no saved value");
+			return false;
+		}
+		java.util.List<Object> keys = new ArrayList<>();
+		keys.add(key);
+		java.util.List<Object> leaves = currentLeaves();
+		java.util.List<Object> resolved = resolveInStore(keys);
+		traceLastSelection("restorePersistedInitialSelection: prefKey=\"" + prefKey + "\" wantKey=\"" + key
+				+ "\" leafCount=" + leaves.size() + " resolvedCount=" + resolved.size());
+		if (resolved.isEmpty())
+			return false;
+		selectIfChanged(resolved, true);
+		traceLastSelection("restorePersistedInitialSelection: selected -> " + shortSel(getSelection()));
+		return true;
 	}
 
 	/**
@@ -2350,12 +2531,33 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	private Object jobFamility = new Object();
 	private Job loadingJob;
 
+	/** One-shot hint: the very next {@link #loadData} call across ANY control is
+	 *  for a tab that will not be shown right away (e.g. the startup routine
+	 *  force-materializing a background deck tab purely to refresh its icon), so
+	 *  it can run at the lowest job priority instead of competing with - and
+	 *  making the caller wait on - the tab that is actually about to be visible.
+	 *  Consumed (reset) the instant it is read; set and read on the UI thread
+	 *  back-to-back by the caller, so there is no real race. */
+	public static volatile boolean backgroundLoadHint = false;
+
+	private static int consumeLoadPriority() {
+		if (backgroundLoadHint) {
+			backgroundLoadHint = false;
+			return Job.DECORATE;
+		}
+		return Job.LONG;
+	}
+
 	public void loadData(final Runnable postLoad) {
 		synchronized (jobFamility) {
 			if (loadingJob != null) {
 				loadingJob.cancel();
 			}
-			loadingJob = WaitUtils.scheduleJob("Loading cards for " + AbstractMagicCardsListControl.this,
+			// getName() (the deck/collection name), not "this" - string-concatenating
+			// the control itself silently called Object.toString() (no override
+			// here), so the job name - and now the startup splash message that
+			// surfaces it - showed "ClassName@hashcode" instead of a card list name
+			loadingJob = WaitUtils.scheduleJob("Loading cards for " + getName(), consumeLoadPriority(),
 					(monitor) -> loadDataInJob(postLoad, monitor));
 		}
 	}

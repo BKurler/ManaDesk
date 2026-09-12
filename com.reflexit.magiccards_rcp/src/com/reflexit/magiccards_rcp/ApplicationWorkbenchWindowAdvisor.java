@@ -5,6 +5,24 @@
  *     Rémi Dutil (2026) - startup: pre-download the Scryfall bulk file; splash tail
  *                         "Restoring decks and collections" progress
  *     Rémi Dutil (2026) - startup: checkInitialDatabase() (first-run download prompt)
+ *     Rémi Dutil (2026) - startup: drainInitialCardLoads() now shows a live
+ *                         "(N left: <deck>)" count instead of a frozen caption
+ *     Rémi Dutil (2026) - startup: restoreDeckFamilyIcons() only force-materializes
+ *                         non-active deck/collection tabs for their icon - their
+ *                         card-list load runs at background priority
+ *                         (backgroundLoadHint) and no longer holds up the splash
+ *     Rémi Dutil (2026) - startup: drainInitialCardLoads()'s idle counter is now
+ *                         driven purely by "is there still real work pending",
+ *                         not by whether the SWT event queue happened to be
+ *                         empty on a given tick - a live workbench almost always
+ *                         has something to dispatch, so the old check never
+ *                         advanced and the loop ran to the full 6s deadline even
+ *                         once the real jobs had long finished
+ *     Rémi Dutil (2026) - startup: restoreDeckFamilyIcons()'s splash caption
+ *                         resolves the deck/collection's real name from the
+ *                         model (elementOf()/nameOf()), not ref.getPartName() -
+ *                         that is only the tab's static pre-materialization
+ *                         title, so every tab read "Restoring deck "Deck""
  */
 
 package com.reflexit.magiccards_rcp;
@@ -94,11 +112,39 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 			}
 		}
 
+		trace("postWindowOpen: about to call restoreDeckFamilyIcons()");
 		MASplashHandler.reportStartupTail("Restoring views…", 0.10);
 		restoreDeckFamilyIcons();
+		trace("postWindowOpen: restoreDeckFamilyIcons() returned, about to call drainInitialCardLoads()");
 		MASplashHandler.reportStartupTail("Loading card lists…", 0.35);
 		drainInitialCardLoads();
+		trace("postWindowOpen: drainInitialCardLoads() returned - done");
 		MASplashHandler.reportStartupTail("Finishing…", 0.95);
+	}
+
+	/** Flip to {@code false} to silence - temporary, for diagnosing "the splash
+	 *  text never seems to update" reports (visible with {@code -consoleLog}). */
+	private static final boolean TRACE = false;
+
+	private static void trace(String msg) {
+		if (TRACE) {
+			System.err.println("[Startup] " + msg);
+		}
+	}
+
+	private static String stateName(int jobState) {
+		switch (jobState) {
+		case Job.RUNNING:
+			return "RUNNING";
+		case Job.WAITING:
+			return "WAITING";
+		case Job.SLEEPING:
+			return "SLEEPING";
+		case Job.NONE:
+			return "NONE";
+		default:
+			return String.valueOf(jobState);
+		}
 	}
 
 	/**
@@ -114,43 +160,121 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		Shell shell = window == null ? null : window.getShell();
 		Display display = (shell == null || shell.isDisposed()) ? null : shell.getDisplay();
 		if (display == null) {
+			trace("drainInitialCardLoads: no display (window=" + (window == null ? "null" : "ok") + ", shell="
+					+ (shell == null ? "null" : (shell.isDisposed() ? "disposed" : "ok")) + ") - returning immediately");
 			return;
+		}
+		if (TRACE) {
+			trace("drainInitialCardLoads: starting. ALL jobs known to the JobManager right now:");
+			for (Job j : Job.getJobManager().find(null)) {
+				trace("  - \"" + j.getName() + "\"  state=" + stateName(j.getState()) + "  priority=" + j.getPriority());
+			}
 		}
 		long start = System.currentTimeMillis();
 		long deadline = start + 6000L;
 		int idle = 0;
+		int lastShownCount = -1;
+		long lastTextUpdate = 0L;
+		int poll = 0;
 		while (System.currentTimeMillis() < deadline) {
+			long now = System.currentTimeMillis();
 			// keep the splash bar drifting through the tail slice while we pump
-			double frac = 0.35 + 0.55 * (System.currentTimeMillis() - start) / 6000.0;
-			MASplashHandler.reportStartupTail(null, frac);
-			if (display.readAndDispatch()) {
-				idle = 0;
-				continue;
+			double frac = 0.35 + 0.55 * (now - start) / 6000.0;
+			List<String> pending = activeCardLoadJobNames();
+			if (TRACE && (++poll % 10) == 1) { // every ~400ms of polling, not every 40ms tick
+				trace("drainInitialCardLoads: t=" + (now - start) + "ms pending=" + pending + " idle=" + idle);
 			}
-			if (!cardLoadJobsActive() && ++idle >= 3) {
-				break;
+			// refresh the caption whenever the remaining count changes, and at
+			// least twice a second regardless - a static "Loading card lists..."
+			// for 6 straight seconds reads as a hang even while it is working
+			if (pending.size() != lastShownCount || now - lastTextUpdate >= 500L) {
+				String msg = pending.isEmpty() ? null
+						: "Loading card lists… (" + pending.size() + " left: " + pending.get(0) + ")";
+				MASplashHandler.reportStartupTail(msg, frac);
+				lastShownCount = pending.size();
+				lastTextUpdate = now;
+			} else {
+				MASplashHandler.reportStartupTail(null, frac);
+			}
+			// idle-tracking is driven purely by "is there still real work
+			// pending", NOT by whether the SWT event queue happened to be
+			// empty on this tick. A live workbench window almost always has
+			// SOMETHING to dispatch (caret blink, tooltips, the splash bar's
+			// own repaint), so display.readAndDispatch() returning true on
+			// basically every tick used to starve this counter entirely and
+			// ran the loop all the way to the 6s deadline even when the real
+			// jobs had finished in well under a second - a debug trace showed
+			// pending already [] at t=114ms while idle was still 0 past
+			// t=900ms.
+			if (pending.isEmpty()) {
+				if (++idle >= 3) {
+					trace("drainInitialCardLoads: nothing pending for " + idle + " consecutive polls at t="
+							+ (now - start) + "ms - exiting");
+					break;
+				}
+			} else {
+				idle = 0;
+			}
+			// Pump the UI queue for a short, bounded burst so the splash
+			// keeps painting, then always take a small fixed pause - this
+			// also gives every poll a real, roughly-consistent time budget
+			// instead of spinning as fast as the CPU allows whenever the
+			// queue is chatty (which is what made the old readAndDispatch()
+			// check above never fall through to the idle logic).
+			long pumpUntil = now + 20L;
+			while (System.currentTimeMillis() < pumpUntil && display.readAndDispatch()) {
+				// draining
 			}
 			try {
-				Thread.sleep(40L);
+				Thread.sleep(15L);
 			} catch (InterruptedException e) {
 				Thread.currentThread().interrupt();
 				break;
 			}
 		}
+		if (System.currentTimeMillis() >= deadline) {
+			trace("drainInitialCardLoads: hit the 6s deadline with pending=" + activeCardLoadJobNames());
+		} else {
+			trace("drainInitialCardLoads: finished after " + (System.currentTimeMillis() - start) + "ms total");
+		}
 	}
 
-	private static boolean cardLoadJobsActive() {
+	/** The tab-startup jobs a restored deck/collection tab actually runs, in
+	 *  order: {@code "Initializing <location>"} ({@code LibraryEventListener} -
+	 *  waits for the library, resolves the CardCollection, then triggers the
+	 *  refresh below) THEN {@code "Loading cards for <name>"}
+	 *  ({@code AbstractMagicCardsListControl} - reads/resolves the actual card
+	 *  list). Both prefixes must be tracked - the first one is what is usually
+	 *  still running during "Loading card lists...": watching only the second
+	 *  name left {@code pending} permanently empty and the caption frozen.
+	 *  Background-priority loads (deck/collection tabs the platform did not
+	 *  already have active - see {@code backgroundLoadHint}) are deliberately
+	 *  excluded: they keep loading, just not as something we hold the splash
+	 *  for. */
+	private static final String[] CARD_LOAD_JOB_PREFIXES = { "Initializing ", "Loading cards for " };
+
+	private static List<String> activeCardLoadJobNames() {
+		List<String> names = new ArrayList<>();
 		for (Job j : Job.getJobManager().find(null)) {
 			int state = j.getState();
 			if (state != Job.RUNNING && state != Job.WAITING) {
 				continue;
 			}
+			if (j.getPriority() == Job.DECORATE) {
+				continue;
+			}
 			String name = j.getName();
-			if (name != null && name.startsWith("Loading cards for")) {
-				return true;
+			if (name == null) {
+				continue;
+			}
+			for (String prefix : CARD_LOAD_JOB_PREFIXES) {
+				if (name.startsWith(prefix)) {
+					names.add(name.substring(prefix.length()));
+					break;
+				}
 			}
 		}
-		return false;
+		return names;
 	}
 
 	/**
@@ -171,10 +295,12 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 	private void restoreDeckFamilyIcons() {
 		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
 		if (window == null) {
+			trace("restoreDeckFamilyIcons: no active workbench window - returning immediately");
 			return;
 		}
 		IWorkbenchPage page = window.getActivePage();
 		if (page == null) {
+			trace("restoreDeckFamilyIcons: no active page - returning immediately");
 			return;
 		}
 		Display display = window.getShell() != null ? window.getShell().getDisplay() : Display.getCurrent();
@@ -182,26 +308,138 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		for (IViewReference ref : page.getViewReferences())
 			if (com.reflexit.magiccards.ui.views.lib.DeckView.ID.equals(ref.getId()))
 				decks.add(ref);
+		trace("restoreDeckFamilyIcons: found " + decks.size() + " DeckView tab(s) among "
+				+ page.getViewReferences().length + " total view reference(s); display="
+				+ (display == null ? "NULL" : "ok"));
+		if (decks.isEmpty()) {
+			// nothing to restore - say so explicitly rather than leaving the
+			// generic caption from before this method ran up on the splash
+			MASplashHandler.reportStartupTail("Restoring views… (no deck tabs to restore)", 0.12);
+			return;
+		}
+		long methodStart = System.currentTimeMillis();
 		int done = 0;
 		for (IViewReference ref : decks) {
 			done++;
-			// Label the deck we are about to materialize, not the last one we
-			// finished: getView(true) below can block for a moment on that
-			// deck's first data load, and a counter that already reads "(5/12)"
-			// looks like work in progress instead of a freeze at "(4/12)".
+			boolean alreadyActive = ref.getView(false) != null;
+			trace("restoreDeckFamilyIcons: [" + done + "/" + decks.size() + "] id=" + ref.getId() + " secId="
+					+ ref.getSecondaryId() + " partName=" + ref.getPartName() + " alreadyActive=" + alreadyActive);
+			// Label the deck/collection we are about to materialize, not the last
+			// one we finished: getView(true) below can block for a moment on that
+			// tab's first data load, and a counter that already reads "(5/12)"
+			// looks like work in progress instead of a freeze at "(4/12)". Name
+			// and TYPE it too, so consecutive updates visibly differ even when a
+			// whole batch of small tabs flies by between two splash repaints, and
+			// collections (same DeckView.ID, same tab kind at the API level) are
+			// visibly covered - not just decks.
+			//
+			// ref.getPartName() is NOT the real name here - it is the tab's
+			// static/persisted title from BEFORE this materialization (the
+			// plugin.xml default "Deck" the very first time, or whatever was
+			// last saved), which is exactly why every tab used to read
+			// "Restoring deck "Deck"": the real name only gets set by
+			// DeckView.updatePartName(), which runs AS PART OF getView(true)
+			// below - too late to read here. Resolve it from the model instead,
+			// the same way kindOf() already does from the secondary id.
+			com.reflexit.magiccards.core.model.nav.CardElement el = elementOf(ref);
+			String deckName = nameOf(ref, el);
 			MASplashHandler.reportStartupTail(
-					"(" + done + "/" + decks.size() + ")  Restoring decks and collections",
+					"(" + done + "/" + decks.size() + ")  Restoring " + kindOf(el) + " "
+							+ (deckName == null || deckName.isEmpty() ? "…" : "“" + deckName + "”"),
 					0.10 + 0.20 * done / Math.max(1, decks.size()));
 			if (display != null) {
-				display.readAndDispatch();
+				// give the splash a moment to actually paint this name - an
+				// already-warm getView(true) below can take under a millisecond,
+				// which would let several updates race by uncoalesced (never
+				// actually shown) without this floor
+				long dwell = System.currentTimeMillis() + 35L;
+				while (System.currentTimeMillis() < dwell) {
+					if (!display.readAndDispatch()) {
+						try {
+							Thread.sleep(5L);
+						} catch (InterruptedException e) {
+							Thread.currentThread().interrupt();
+							break;
+						}
+					}
+				}
 			}
+			// This tab is being force-materialized purely to fix its icon/title
+			// (see the class comment); getView(false) tells us whether the
+			// platform had ALREADY made it active on its own (the tab the user
+			// will actually see first) versus one we are only touching for its
+			// icon. Only the former needs its card list ready before the window
+			// is shown - hint the latter's upcoming loadData() to run at the
+			// lowest job priority so it does not hold up drainInitialCardLoads()
+			// (or compete with) the one tab that is actually about to be visible.
+			if (!alreadyActive) {
+				com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl.backgroundLoadHint = true;
+			}
+			// This is the real unknown cost of this method: getView(true)
+			// synchronously runs createPartControl() on the UI thread (table
+			// build, column model from the preference store, listener
+			// wiring...) for a tab the platform had NOT already materialized.
+			// The 35ms dwell above is a fixed, known cost (~350ms total for
+			// 10 tabs) - THIS number is what tells us whether "Restoring
+			// views..." being slow is actually this call, or something else.
+			long viewStart = System.currentTimeMillis();
 			ref.getView(true);
+			long viewMs = System.currentTimeMillis() - viewStart;
+			trace("restoreDeckFamilyIcons: [" + done + "/" + decks.size() + "] getView(true) took " + viewMs
+					+ "ms (alreadyActive=" + alreadyActive + ")");
 			if (display != null) {
 				for (int i = 0; i < 10 && display.readAndDispatch(); i++) {
 					// flush pending paints / async work before the next view
 				}
 			}
 		}
+		trace("restoreDeckFamilyIcons: finished " + decks.size() + " tab(s) in "
+				+ (System.currentTimeMillis() - methodStart) + "ms total");
+	}
+
+	/** Resolves the tab's secondary id (the element's Location path) to its
+	 *  in-memory model element - a tree walk, not a card-list load - or
+	 *  {@code null} if there is no secondary id or it cannot be resolved (the
+	 *  model may not be fully populated yet). Shared by {@link #kindOf} and
+	 *  {@link #nameOf} so a tab is only looked up once. */
+	private static com.reflexit.magiccards.core.model.nav.CardElement elementOf(IViewReference ref) {
+		String secId = ref.getSecondaryId();
+		if (secId == null || secId.isEmpty())
+			return null;
+		try {
+			return com.reflexit.magiccards.core.DataManager.getInstance().getModelRoot().findElement(secId);
+		} catch (RuntimeException e) {
+			return null;
+		}
+	}
+
+	/** "deck" or "collection". Both kinds are DeckView.ID tabs, so without this
+	 *  every restored tab reads as a "deck" in the splash text. */
+	private static String kindOf(com.reflexit.magiccards.core.model.nav.CardElement el) {
+		if (el == null)
+			return "deck";
+		return com.reflexit.magiccards.core.DataManager.getInstance().getModelRoot()
+				.sideOf(el) == com.reflexit.magiccards.core.model.nav.ModelRoot.Side.COLLECTION ? "collection"
+						: "deck";
+	}
+
+	/** The deck/collection's real name. {@code ref.getPartName()} is NOT this -
+	 *  before the tab is materialized it is only the static/persisted title
+	 *  (the plugin.xml default "Deck" on a first restore), so every tab used to
+	 *  read "Restoring deck "Deck"". Falls back to the last path segment of the
+	 *  secondary id, then to {@code getPartName()}, if the model element itself
+	 *  is not resolvable yet. */
+	private static String nameOf(IViewReference ref, com.reflexit.magiccards.core.model.nav.CardElement el) {
+		if (el != null && el.getName() != null && !el.getName().isEmpty())
+			return el.getName();
+		String secId = ref.getSecondaryId();
+		if (secId != null && !secId.isEmpty()) {
+			int slash = secId.lastIndexOf('/');
+			String last = slash >= 0 ? secId.substring(slash + 1) : secId;
+			if (!last.isEmpty())
+				return last;
+		}
+		return ref.getPartName();
 	}
 
 	private void hookWorkbenchFolderPatching() {

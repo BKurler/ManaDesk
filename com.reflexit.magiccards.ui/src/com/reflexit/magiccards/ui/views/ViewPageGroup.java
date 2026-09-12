@@ -1,3 +1,13 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - dispose() now gates on isContentCreated() instead of
+ *                         isInstantiated(), so a page never materialized (see
+ *                         FolderPageGroup's lazy loading) does not NPE disposing
+ *                         a control it never built; createContent()'s
+ *                         control-dispose pass calls resetContentCreated() so a
+ *                         later rebuild does not skip a page whose old control
+ *                         just got disposed out from under it
+ */
 package com.reflexit.magiccards.ui.views;
 
 import java.util.ArrayList;
@@ -36,8 +46,13 @@ public class ViewPageGroup {
 			safeRun(() -> {
 				if (page.isInstantiated()) {
 					Control control = page.getViewPage().getControl();
-					if (control != null)
+					if (control != null) {
 						control.dispose();
+						// the control is going away - a not-yet-rebuilt page must not
+						// report isContentCreated() true and have a caller (e.g.
+						// ensureMaterialized() in FolderPageGroup) skip rebuilding it
+						page.resetContentCreated();
+					}
 				}
 			});
 		}
@@ -158,7 +173,12 @@ public class ViewPageGroup {
 
 	public void dispose() {
 		for (ViewPageContribution page : pages) {
-			if (page.isInstantiated())
+			// A page whose control was never built (see FolderPageGroup's lazy
+			// materialization) holds no SWT resources and never registered
+			// listeners - isInstantiated() alone (the Java object exists) is
+			// not enough here, or every never-visited analyzer tab would NPE
+			// disposing a control/chart/etc. it never created.
+			if (page.isContentCreated())
 				page.getViewPage().dispose();
 		}
 	}

@@ -625,16 +625,7 @@
      
      <menuContribution
            locationURI="popup:com.reflexit.magiccards.ui.views.nav.CardsNavigatorView">
-                   <command
-              commandId="org.eclipse.ui.edit.cut"
-              mode="FORCE_TEXT"
-              style="push">
-        </command>
-                <command
-              commandId="org.eclipse.ui.edit.paste"
-              mode="FORCE_TEXT"
-              style="push">
-        </command>
+        <!-- Cut / Paste removed: "Move to..." (built into the view) replaces them -->
         <command
               commandId="org.eclipse.ui.edit.delete"
               mode="FORCE_TEXT"
@@ -729,7 +720,7 @@
            finalPerspective="com.reflexit.magiccards.ui.perspective.magic"
            icon="icons/obj16/lib16.png"
            id="com.reflexit.magiccards.ui.wizards.NewCardCollectionWizard"
-           name="Card Collection">
+           name="Collection">
      </wizard>
                <wizard
            category="com.reflexit.magiccards.ui"
@@ -737,7 +728,7 @@
            finalPerspective="com.reflexit.magiccards.ui.perspective.magic"
            icon="icons/obj16/folder-lib.png"
            id="com.reflexit.magiccards.ui.wizards.NewCollectionContainerWizard"
-           name="Container">
+           name="Folder">
      </wizard>
            <!--
                <wizard
@@ -770,21 +761,9 @@
            name="Export Collection">
      </wizard>
   </extension>
-  <extension
-        point="org.eclipse.ui.importWizards">
-     <wizard
-           class="com.reflexit.magiccards.ui.exportWizards.DeckImportWizard"
-           icon="icons/lib32.png"
-           id="com.reflexit.magiccards.ui.exportWizards.DeckImportWizard"
-           name="Import Deck or Collection">
-     </wizard>
-     <wizard
-           class="com.reflexit.magiccards.ui.exportWizards.SetImportWizard"
-           icon="icons/m24.gif"
-           id="com.reflexit.magiccards.ui.exportWizards.SetImportWizard"
-           name="Import New Set (Extend Database)">
-     </wizard>
-  </extension>
+  <!-- Deck / collection import is done from the Cards Navigator (New Deck / New
+       Collection wizard, or right-click an element), not the OS File > Import
+       menu. Database extension ("Import New Set") is not supported. -->
   <extension
         point="com.reflexit.magiccards.ui.deckPage">
                              
@@ -920,18 +899,11 @@ id="org.eclipse.ui.views.ProgressView">
             name="Extending Card Database">
       </activity>
 
-      <activityPatternBinding
-            activityId="com.reflexit.magiccards.activity.dbextend"
-            pattern="com.reflexit.magiccards.ui/com.reflexit.magiccards.ui.exportWizards.SetImportWizard"
-            isEqualityPattern="true"
-            >
-      </activityPatternBinding>
-
       <categoryActivityBinding
             activityId="com.reflexit.magiccards.activity.dbextend"
             categoryId="com.reflexit.magiccards.activity.category">
       </categoryActivityBinding>
-      
+
       <activityRequirementBinding
  		 activityId="com.reflexit.magiccards.activity.dbextend"
  		 requiredActivityId="com.reflexit.magiccards.activity.cardorganizer">

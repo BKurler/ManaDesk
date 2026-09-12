@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - reject a parent container on the wrong side (deck vs collection)
  */
 
 package com.reflexit.magiccards.ui.wizards;
@@ -65,6 +66,13 @@ public class NewCardCollectionWizardPage extends NewCardElementWizardPage {
 		CardElement parent = root.findElement(containerName);
 		if (!(parent instanceof CollectionsContainer)) {
 			updateStatus("Parent folder is not a proper container");
+			return;
+		}
+		// keep decks under Decks and collections under Collections
+		ModelRoot.Side want = root.sideOf(getRootContainer());
+		if (want != null && root.sideOf(parent) != want) {
+			updateStatus("A " + getElementTypeName() + " must live under \""
+					+ root.containerFor(want).getName() + "\"");
 			return;
 		}
 		String name = getElementName();

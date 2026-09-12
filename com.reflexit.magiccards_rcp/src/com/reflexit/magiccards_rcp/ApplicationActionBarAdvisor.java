@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the generic File ▸ Import action; deck/collection
+ *                         import is navigator-only now
  */
 package com.reflexit.magiccards_rcp;
 
@@ -47,7 +49,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 	private IAction resetAction;
 	private IWorkbenchAction searchHelpAction;
 	private IWorkbenchAction dynamicHelpAction;
-	private IWorkbenchAction importAction;
 	private IAction exportAction;
 	private MenuManager showViewMenuMgr;
 	private IContributionItem showViewItem;
@@ -88,8 +89,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		register(this.newAction);
 		this.resetAction = ActionFactory.RESET_PERSPECTIVE.create(window);
 		register(this.resetAction);
-		this.importAction = ActionFactory.IMPORT.create(window);
-		register(this.importAction);
 		this.exportAction = ActionFactory.EXPORT.create(window);
 		register(this.exportAction);
 		showViewMenuMgr = new MenuManager("Show View", "showView");
@@ -142,7 +141,6 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		// file
 		fileMenu.add(PerspectiveFactoryMagic.createNewMenu(getWindow()));
 		fileMenu.add(new Separator());
-		fileMenu.add(this.importAction);
 		fileMenu.add(this.exportAction);
 		fileMenu.add(new Separator());
 		fileMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

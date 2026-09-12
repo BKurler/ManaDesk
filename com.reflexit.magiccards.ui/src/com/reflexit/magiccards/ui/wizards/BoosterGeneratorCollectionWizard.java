@@ -44,6 +44,7 @@ import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
+import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.LocationPath;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.AbstractFilteredCardStore;
@@ -52,7 +53,7 @@ import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.ui.preferences.LocationFilterPreferencePage;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
 
-public class BoosterGeneratorCollectionWizard extends NewCardCollectionWizard implements INewWizard {
+public class BoosterGeneratorCollectionWizard extends NewCardElementWizard implements INewWizard {
 	public static final String ID = "com.reflexit.magiccards.ui.wizards.BoosterGeneratorCollectionWizard";
 	private BoosterGeneratorCollectionWizardPage page2;
 	private List sets;
@@ -382,5 +383,10 @@ public class BoosterGeneratorCollectionWizard extends NewCardCollectionWizard im
 			store.add(pcard);
 			succ = true;
 		}
+	}
+
+	@Override
+	protected CardElement doCreateCardElement(CollectionsContainer parent, String name, boolean virtual, boolean unsorted) {
+		return new CardCollection(name + ".xml", parent, false, virtual, unsorted);
 	}
 }
