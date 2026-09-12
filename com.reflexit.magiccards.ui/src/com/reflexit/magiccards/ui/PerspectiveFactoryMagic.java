@@ -3,6 +3,9 @@
  *     Rémi Dutil (2026) - createNewMenu(): dropped "Folder" from File ▸ New
  *                         (only Deck/Collection); explicit newWizardAction()
  *                         helper replacing BaseNewWizardMenu
+ *     Rémi Dutil (2026) - default layout: Rulings now stacks with Printings/
+ *                         Instances ("right" folder) instead of its own
+ *                         "bottom" folder under Scryfall Database
  */
 package com.reflexit.magiccards.ui;
 
@@ -52,12 +55,11 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		IFolderLayout right = layout.createFolder("right", IPageLayout.RIGHT, (float) 0.8, "main");
 		IPlaceholderFolderLayout pf = layout.createPlaceholderFolder("up", IPageLayout.TOP, 0.5f, "main");
 		IFolderLayout rightTop = layout.createFolder("rightTop", IPageLayout.TOP, 0.5f, "right");
-		IFolderLayout bottom = layout.createFolder("bottom", IPageLayout.BOTTOM, 0.72f, "main");
-		bottom.addView(RulingsView.ID);
 		left.addView(CardDescView.ID);
 		rightTop.addView(CardsNavigatorView.ID);
 		right.addView(PrintingsView.ID);
 		right.addView(InstancesView.ID);
+		right.addView(RulingsView.ID);
 		right.addPlaceholder(InstancesView.ID);
 		main.addView(MagicDbView.ID);
 		main.addView(MyCardsView.ID);
