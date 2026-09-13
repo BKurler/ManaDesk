@@ -5,6 +5,9 @@
  *     Rémi Dutil (2026) - PROXY filter field (Genuine / Proxy)
  *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
  *                         concept this app tracks anymore)
+ *     Rémi Dutil (2026) - POWER/TOUGHNESS/CCC/DBPRICE/COLLNUM now build a
+ *                         Min/Max range expression instead of a single
+ *                         comparison
  */
 
 package com.reflexit.magiccards.core.model;
@@ -209,44 +212,45 @@ public enum FilterField {
 				return BinaryExpr.textSearch(MagicCardField.LEGALITY_FILTER, value);
 			}
 			case CCC: {
-				Expr front = BinaryExpr.fieldInt(ff.getField(), value);
+				Expr front = BinaryExpr.fieldRange(ff.getField(), value);
 
 				// flip != null  =>  NOT (flip == null)
 				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.CMC_FLIP, null).not();
 
 				// flip comparison guarded by flipNotNull
-				Expr flip = BinaryExpr.fieldInt(MagicCardField.CMC_FLIP, value).and(flipNotNull);
+				Expr flip = BinaryExpr.fieldRange(MagicCardField.CMC_FLIP, value).and(flipNotNull);
 
 				return front.or(flip);
 			}
 
 			case POWER: {
-				Expr front = BinaryExpr.fieldInt(MagicCardField.POWER, value);
+				Expr front = BinaryExpr.fieldRange(MagicCardField.POWER, value);
 
 				// flip != null  =>  NOT (flip == null)
 				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.POWER_FLIP, null).not();
 
 				// flip comparison guarded by flipNotNull
-				Expr flip = BinaryExpr.fieldInt(MagicCardField.POWER_FLIP, value).and(flipNotNull);
+				Expr flip = BinaryExpr.fieldRange(MagicCardField.POWER_FLIP, value).and(flipNotNull);
 
 				return front.or(flip);
 			}
 
 			case TOUGHNESS: {
-				Expr front = BinaryExpr.fieldInt(MagicCardField.TOUGHNESS, value);
+				Expr front = BinaryExpr.fieldRange(MagicCardField.TOUGHNESS, value);
 
 				// flip != null  =>  NOT (flip == null)
 				Expr flipNotNull = BinaryExpr.fieldEquals(MagicCardField.TOUGHNESS_FLIP, null).not();
 
 				// flip comparison guarded by flipNotNull
-				Expr flip = BinaryExpr.fieldInt(MagicCardField.TOUGHNESS_FLIP, value).and(flipNotNull);
+				Expr flip = BinaryExpr.fieldRange(MagicCardField.TOUGHNESS_FLIP, value).and(flipNotNull);
 
 				return front.or(flip);
 			}
 
+			case COLLNUM:
+				return BinaryExpr.fieldRange(ff.getField(), value);
 			case COUNT:
 			case FORTRADECOUNT:
-			case COLLNUM:
 				return BinaryExpr.fieldInt(ff.getField(), value);
 			case COLOR: {
 				String en;
@@ -283,7 +287,8 @@ public enum FilterField {
 			}
 			case DBPRICE: {
 				return new BinaryExpr(new CardFieldExpr(MagicCardField.DBPRICE), Operation.EQ, new Value("0"))
-						.and(fieldInt(MagicCardField.PRICE, value)).or(fieldInt(MagicCardField.DBPRICE, value));
+						.and(BinaryExpr.fieldRange(MagicCardField.PRICE, value))
+						.or(BinaryExpr.fieldRange(MagicCardField.DBPRICE, value));
 			}
 			case PRICE: {
 				return new BinaryExpr(new CardFieldExpr(MagicCardField.PRICE), Operation.EQ, new Value("0"))

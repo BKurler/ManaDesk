@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - fieldRange(): Min/Max range constraint for the
+ *                         filter dialog's range-capable numeric fields
+ */
 package com.reflexit.magiccards.core.model.expr;
 
 import java.util.regex.Pattern;
@@ -152,6 +157,34 @@ public class BinaryExpr extends Expr {
 		} else {
 			return fieldOp(field, Operation.EQ, value.trim());
 		}
+	}
+
+	/**
+	 * Builds a Min/Max range constraint from a {@code "<min>:<max>"} preference
+	 * value (either side may be empty for "unbounded"; a value with no ':'
+	 * is treated as an exact match on both bounds). Used by the filter's
+	 * Min/Max range fields (Power, Toughness, Converted CC, Online Price,
+	 * Collector's Number).
+	 */
+	public static Expr fieldRange(ICardField field, String value) {
+		String min;
+		String max;
+		int idx = value.indexOf(':');
+		if (idx >= 0) {
+			min = value.substring(0, idx).trim();
+			max = value.substring(idx + 1).trim();
+		} else {
+			min = value.trim();
+			max = min;
+		}
+		Expr res = Expr.TRUE;
+		if (min.length() > 0) {
+			res = res.and(fieldOp(field, Operation.GE, min));
+		}
+		if (max.length() > 0) {
+			res = res.and(fieldOp(field, Operation.LE, max));
+		}
+		return res;
 	}
 
 	static public Expr textSearch(ICardField field, String text) {

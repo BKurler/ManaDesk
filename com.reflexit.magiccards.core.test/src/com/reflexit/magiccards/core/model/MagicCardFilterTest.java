@@ -3,6 +3,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - removed testCOMMUNITYRATING() (community rating is
  *                         not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - testPOWER/TOUGHNESS/CCC/DBPRICE/COLLNUM now exercise
+ *                         the "min:max" range format via the new
+ *                         genericRangeFieldText()/rangeFieldCheck() helpers
  */
 package com.reflexit.magiccards.core.model;
 
@@ -194,11 +197,11 @@ public class MagicCardFilterTest extends TestCase {
 	}
 
 	public void testPOWER() {
-		genericFieldText(FilterField.POWER, 15);
+		genericRangeFieldText(FilterField.POWER, 15);
 	}
 
 	public void testTOUGHNESS() {
-		genericFieldText(FilterField.TOUGHNESS, 22);
+		genericRangeFieldText(FilterField.TOUGHNESS, 22);
 	}
 
 	public void testEDITION() {
@@ -212,7 +215,7 @@ public class MagicCardFilterTest extends TestCase {
 
 	public void testCCC() {
 		mcp.set(MagicCardField.COST, "{3}");
-		intFieldCheck(FilterField.CCC, 3);
+		rangeFieldCheck(FilterField.CCC, 3);
 	}
 
 	protected void genericFieldText(FilterField ff, int i) {
@@ -239,6 +242,36 @@ public class MagicCardFilterTest extends TestCase {
 		checkFound();
 	}
 
+	/**
+	 * Power/Toughness/Converted CC/Online Price/Collector's Number now filter
+	 * on a "&lt;min&gt;:&lt;max&gt;" range instead of a single =/&lt;=/&gt;=
+	 * comparison - see {@code RangeComparisonFieldEditor} /
+	 * {@code BinaryExpr.fieldRange}.
+	 */
+	protected void genericRangeFieldText(FilterField ff, int i) {
+		genericFieldText(ff, String.valueOf(i));
+		rangeFieldCheck(ff, i);
+	}
+
+	protected void rangeFieldCheck(FilterField ff, int value) {
+		// exact value via "min:max"
+		setQuickFilter(ff, value + ":" + value);
+		checkFound();
+		// open-ended minimum (">= value" equivalent)
+		setQuickFilter(ff, value + ":");
+		checkFound();
+		setQuickFilter(ff, (value + 1) + ":");
+		checkNotFound();
+		// open-ended maximum ("<= value" equivalent)
+		setQuickFilter(ff, ":" + value);
+		checkFound();
+		setQuickFilter(ff, ":" + (value - 1));
+		checkNotFound();
+		// fully unbounded minimum
+		setQuickFilter(ff, "0:");
+		checkFound();
+	}
+
 	public void testCOUNT() {
 		mcp.setCount(1);
 		genericFieldText(FilterField.COUNT, 3);
@@ -257,11 +290,11 @@ public class MagicCardFilterTest extends TestCase {
 	}
 
 	public void testDBPRICE() {
-		genericFieldText(FilterField.DBPRICE, "2");
+		genericRangeFieldText(FilterField.DBPRICE, 2);
 	}
 
 	public void testCOLLNUM() {
-		genericFieldText(FilterField.COLLNUM, 23);
+		genericRangeFieldText(FilterField.COLLNUM, 23);
 	}
 
 	public void testARTIST() {
