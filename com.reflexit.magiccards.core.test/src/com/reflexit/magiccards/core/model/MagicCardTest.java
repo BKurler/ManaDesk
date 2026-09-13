@@ -1,6 +1,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the dead getCommunityRating()/setCommunityRating()
+ *                         stub placeholders (community rating is not a concept
+ *                         this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -239,8 +242,6 @@ public class MagicCardTest extends TestCase {
 	 *
 	 * @Test public void testGetDbPrice() { fail("Not yet implemented"); }
 	 *
-	 * @Test public void testGetCommunityRating() { fail("Not yet implemented"); }
-	 *
 	 * @Test public void testGetArtist() { fail("Not yet implemented"); }
 	 *
 	 * @Test public void testGetRulings() { fail("Not yet implemented"); }
@@ -296,8 +297,6 @@ public class MagicCardTest extends TestCase {
 	 * @Test public void testGet() { fail("Not yet implemented"); }
 	 *
 	 * @Test public void testSetDbPrice() { fail("Not yet implemented"); }
-	 *
-	 * @Test public void testSetCommunityRating() { fail("Not yet implemented"); }
 	 *
 	 * @Test public void testSetArtist() { fail("Not yet implemented"); }
 	 *

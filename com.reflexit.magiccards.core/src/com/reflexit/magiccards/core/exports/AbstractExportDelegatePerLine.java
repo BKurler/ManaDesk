@@ -1,6 +1,10 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isForExport() briefly excluded RATING explicitly;
+ *                         moot now that MagicCardField.RATING is gone entirely
+ *                         (community rating is not a concept this app tracks
+ *                         anymore) - reverted to the plain transient-only check
  */
 
 package com.reflexit.magiccards.core.exports;

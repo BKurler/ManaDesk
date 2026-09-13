@@ -4,6 +4,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - Proxy column in the deck / collection lists
+ *     Rémi Dutil (2026) - removed the Community Rating column (community
+ *                         rating is not a concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -59,7 +61,6 @@ public class MagicColumnCollection extends ColumnCollection {
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
 		columns.add(new SellerPriceColumn());
-		columns.add(new CommunityRatingColumn());
 		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
 		columns.add(createCollectorsNumberColumn());
 		if (myCards) {

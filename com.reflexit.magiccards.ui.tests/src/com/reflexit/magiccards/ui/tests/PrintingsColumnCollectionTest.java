@@ -67,11 +67,6 @@ public class PrintingsColumnCollectionTest extends TestCase {
 		assertFalse("Legality is identical on every printing", f.contains(MagicCardField.LEGALITY));
 	}
 
-	public void testDropsRating() {
-		assertFalse("community rating is not useful in the Printings view",
-				fields().contains(MagicCardField.RATING));
-	}
-
 	public void testDropsCollectionAndDeckColumns() {
 		List<ICardField> f = fields();
 		assertFalse("Count", f.contains(MagicCardField.COUNT));

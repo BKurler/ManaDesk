@@ -2,6 +2,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - Proxy column defaults + collector "count proxies" default
+ *     Rémi Dutil (2026) - dropped the stale "-Rating" token from every default
+ *                         column-order string - the column itself no longer
+ *                         exists (see MagicColumnCollection/CollectorColumnCollection)
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -61,7 +64,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_PROXIES, false);
 		// magic store
 		getMdbStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,Set,-Rarity,-Color Type,-Color,-Online Price,-Artist,-Rating,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,Set,-Rarity,-Color Type,-Color,-Online Price,-Artist,-Collector's Number,-Language,-Text");
 		getMdbStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getMdbStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.SET));
@@ -71,7 +74,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getMdbStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// library store
 		getLibStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getLibStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getLibStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.LOCATION));
@@ -80,7 +83,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		getLibStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 		// deck store
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-Rating,-For Trade,-Special,-Collector's Number,-Language,-Text");
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-For Trade,-Special,-Collector's Number,-Language,-Text");
 		getDeckStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		// !!! RD getDeckStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(MagicCardField.CMC));
@@ -94,7 +97,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// (see CollectorColumnCollection - no per-copy columns).
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
 				"Name,Progress,Progress4,Own Count,Own Unique,Own Total,User Price,Set,Rarity,Collector's Number,"
-						+ "-Artist,-Language,-Online Price,-Rating,-Release Date");
+						+ "-Artist,-Language,-Online Price,-Release Date");
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
 		// !!! RD getCollectorStore().setDefault(PreferenceConstants.GROUP_FIELD,
 		// GroupOrder.createGroupKey(CollectorListControl.DEF_GROUP));

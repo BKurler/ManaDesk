@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - testSlashR: repointed from the removed RATING field
+ *                         to ARTIST (community rating is not a concept this
+ *                         app tracks anymore)
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.IOException;
@@ -119,9 +125,9 @@ public class ParseGathererOracleTest extends TestCase {
 
 	public void testSlashR() throws IOException {
 		MagicCard card = load(366280);
-		Object rating = card.get(MagicCardField.RATING);
-		assertNotNull(rating);
-		assertTrue("Cannot update rating", rating.toString().length() > 0);
+		Object artist = card.get(MagicCardField.ARTIST);
+		assertNotNull(artist);
+		assertTrue("Cannot update artist", artist.toString().length() > 0);
 		assertEquals(164, Integer.parseInt(card.getCollNumber()));
 	}
 	

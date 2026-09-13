@@ -2,6 +2,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - Proxies filter group
+ *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
+ *                         concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -94,7 +96,7 @@ public class MagicCardFilter implements Cloneable {
 				.and(FilterField.TOUGHNESS.valueExpr(map)).and(FilterField.CCC.valueExpr(map))
 				.and(FilterField.COUNT.valueExpr(map)).and(FilterField.PRICE.valueExpr(map))
 				.and(FilterField.DBPRICE.valueExpr(map)).and(FilterField.COMMENT.valueExpr(map))
-				.and(FilterField.OWNERSHIP.valueExpr(map)).and(FilterField.COMMUNITYRATING.valueExpr(map))
+				.and(FilterField.OWNERSHIP.valueExpr(map))
 				.and(FilterField.COLLNUM.valueExpr(map)).and(FilterField.ARTIST.valueExpr(map))
 				.and(FilterField.SPECIAL.valueExpr(map)).and(FilterField.FORTRADECOUNT.valueExpr(map))
 				.and(FilterField.FORMAT.valueExpr(map)).and(FilterField.FORMAT_TEXT.valueExpr(map));

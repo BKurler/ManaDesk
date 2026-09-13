@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - removed testCOMMUNITYRATING() (community rating is
+ *                         not a concept this app tracks anymore)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -256,10 +258,6 @@ public class MagicCardFilterTest extends TestCase {
 
 	public void testDBPRICE() {
 		genericFieldText(FilterField.DBPRICE, "2");
-	}
-
-	public void testCOMMUNITYRATING() {
-		genericFieldText(FilterField.COMMUNITYRATING, 5);
 	}
 
 	public void testCOLLNUM() {

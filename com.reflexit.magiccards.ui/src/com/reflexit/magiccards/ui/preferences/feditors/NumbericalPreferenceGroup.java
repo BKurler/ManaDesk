@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - removed the "Community Rating" numeric filter
+ *                         (community rating is not a concept this app tracks
+ *                         anymore)
+ */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
 import java.util.ArrayList;
@@ -39,10 +45,6 @@ public class NumbericalPreferenceGroup extends MFieldEditorPreferencePage {
 		id = FilterField.DBPRICE.getPrefConstant();
 		getPreferenceStore().setDefault(id, "0");
 		addField(new NumericalComparisonFieldEditor(id, "Online Price", getFieldEditorParent()));
-		ids.add(id);
-		id = FilterField.COMMUNITYRATING.getPrefConstant();
-		getPreferenceStore().setDefault(id, "0");
-		addField(new NumericalComparisonFieldEditor(id, "Community Rating", getFieldEditorParent()));
 		ids.add(id);
 		id = FilterField.COLLNUM.getPrefConstant();
 		getPreferenceStore().setDefault(id, "0");

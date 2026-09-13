@@ -3,6 +3,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - PROXY filter field (Genuine / Proxy)
+ *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
+ *                         concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -30,7 +32,6 @@ public enum FilterField {
 	CCC(MagicCardField.CMC, Postfix.NUMERIC_POSTFIX), EDITION(MagicCardField.SET, Postfix.ENUM_POSTFIX),
 	RARITY(MagicCardField.RARITY, Postfix.ENUM_POSTFIX), LOCATION(MagicCardField.LOCATION, Postfix.ENUM_POSTFIX),
 	PRICE(MagicCardField.PRICE, Postfix.NUMERIC_POSTFIX), DBPRICE(MagicCardField.DBPRICE, Postfix.NUMERIC_POSTFIX),
-	COMMUNITYRATING(MagicCardField.RATING, Postfix.NUMERIC_POSTFIX),
 	ARTIST(MagicCardField.ARTIST, Postfix.TEXT_POSTFIX), COUNT(MagicCardField.COUNT, Postfix.NUMERIC_POSTFIX),
 	COMMENT(MagicCardField.COMMENT, Postfix.TEXT_POSTFIX), OWNERSHIP(MagicCardField.OWNERSHIP, Postfix.TEXT_POSTFIX),
 	LANG(MagicCardField.LANG, Postfix.TEXT_POSTFIX),
@@ -111,7 +112,6 @@ public enum FilterField {
 		ids.add(COUNT.getPrefConstant());
 		ids.add(PRICE.getPrefConstant());
 		ids.add(DBPRICE.getPrefConstant());
-		ids.add(COMMUNITYRATING.getPrefConstant());
 		ids.add(COLLNUM.getPrefConstant());
 		ids.add(ARTIST.getPrefConstant());
 		ids.add(COMMENT.getPrefConstant());
@@ -246,7 +246,6 @@ public enum FilterField {
 
 			case COUNT:
 			case FORTRADECOUNT:
-			case COMMUNITYRATING:
 			case COLLNUM:
 				return BinaryExpr.fieldInt(ff.getField(), value);
 			case COLOR: {

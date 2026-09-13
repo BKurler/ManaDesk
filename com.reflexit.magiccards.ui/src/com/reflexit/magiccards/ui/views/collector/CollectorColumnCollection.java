@@ -3,6 +3,8 @@
  *     Rémi Dutil (2026) - curated to the columns that make sense for whole-database
  *     collection tracking (drop the per-copy deck/collection columns)
  *     Rémi Dutil (2026) - proxy-aware User / Online Price columns
+ *     Rémi Dutil (2026) - removed the Community Rating column (community
+ *                         rating is not a concept this app tracks anymore)
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -14,7 +16,6 @@ import com.reflexit.magiccards.ui.preferences.CollectorViewPreferencePage;
 import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorIdentityColumn;
-import com.reflexit.magiccards.ui.views.columns.CommunityRatingColumn;
 import com.reflexit.magiccards.ui.views.columns.CostColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
 import com.reflexit.magiccards.ui.views.columns.GroupColumn;
@@ -64,7 +65,6 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(new GenColumn(MagicCardField.TCGID, "TCGplayer ID"));
 		columns.add(new CollectorUserPriceColumn());   // "User Price" - your valuation of the copies you own
 		columns.add(new CollectorOnlinePriceColumn()); // "Online Price" - market value of the copies you own
-		columns.add(new CommunityRatingColumn());      // "Rating"
 		columns.add(new CostColumn());
 		columns.add(new TypeColumn());
 		columns.add(new PowerColumn(MagicCardField.POWER, "P", "Power"));

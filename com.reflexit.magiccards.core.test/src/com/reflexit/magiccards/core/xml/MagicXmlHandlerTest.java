@@ -9,6 +9,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - proxy flag round-trip
+ *     Rémi Dutil (2026) - removed the <rating> fixtures/assertion (community
+ *                         rating is not a concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.xml;
@@ -327,7 +329,6 @@ public class MagicXmlHandlerTest extends TestCase {
 	      <edition>set19</edition>
 	      <rarity>Common</rarity>
 	      <lang>Russian</lang>
-	      <rating>2.39</rating>
 	      <artist>Elena 39</artist>
 	      <num>39b</num>
 	      <text>bla &lt;br&gt; bla 39</text>
@@ -371,7 +372,6 @@ public class MagicXmlHandlerTest extends TestCase {
 	<oracleText>Exile target attacking creature.&lt;br&gt;</oracleText>
 	<edition>Apocalypse</edition>
 	<rarity>Uncommon</rarity>
-	<rating>4.25</rating>
 	<artist>Greg &amp; Tim Hildebrandt</artist>
 	<num>132</num>
 	<text>Exile target attacking creature.&lt;br&gt;</text>
@@ -407,7 +407,6 @@ public class MagicXmlHandlerTest extends TestCase {
 		assertEquals("Chaos", p.getBase().getProperty(MagicCardField.OTHER_PART));
 		assertEquals(132, p.getCollectorNumberId());
 		assertEquals("Uncommon", p.getRarity());
-		assertEquals(4.25f, p.getRating());
 		assertEquals(true, p.getProperty(MagicCardField.NOUPDATE));
 	}
 
@@ -430,7 +429,6 @@ public class MagicXmlHandlerTest extends TestCase {
 	      <edition>set19</edition>
 	      <rarity>Common</rarity>
 	      <lang>Russian</lang>
-	      <rating>2.39</rating>
 	      <artist>Elena 39</artist>
 	      <num>39b</num>
 	      <text>bla &lt;br&gt; bla 39</text>
