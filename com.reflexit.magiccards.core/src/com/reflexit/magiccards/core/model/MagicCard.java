@@ -2,6 +2,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - hasGenuineOwnedCopy() (any physical copy that is a real card)
+ *     Rémi Dutil (2026) - removed the community rating field and its
+ *                         getRating()/setRating()/getCommunityRating() (not a
+ *                         concept this app tracks anymore)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -38,7 +41,6 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 	private String text;
 	private String gathererId;
 	private String tcgId;
-	private float rating;
 	private transient String colorType = "costless";
 	private transient int cmc = 0;
 	private LinkedHashMap<ICardField, Object> properties;
@@ -243,11 +245,6 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 
 	public void setDbPriceFoil(float price) {
 		DataManager.getDBPriceStore().setDbPriceFoil(this, price);
-	}
-
-	@Override
-	public float getCommunityRating() {
-		return rating;
 	}
 
 	@Override
@@ -750,10 +747,6 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 		return norm.getName();
 	}
 
-	public void setRating(float rating) {
-		this.rating = rating;
-	}
-
 	void setRulings(String rulings) {
 		this.rulings = rulings;
 	}
@@ -769,10 +762,6 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 
 	void setFlipId(String value) {
 		setPropertyString(MagicCardField.FLIPID, value);
-	}
-
-	public float getRating() {
-		return rating;
 	}
 
 	public String getEnglishType() {

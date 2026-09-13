@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - dropped the RATING exclusion (the field itself is
+ *                         gone - community rating is not a concept this app
+ *                         tracks anymore)
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.PrintStream;
@@ -21,7 +27,6 @@ public class TextPrinter {
 		for (ICardField magicCardField : values) {
 			list.add(magicCardField);
 		}
-		list.remove(MagicCardField.RATING);
 		list.remove(MagicCardField.RULINGS);
 		list.remove(MagicCardField.DBPRICE);
 		list.remove(MagicCardField.ENID);

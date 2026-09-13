@@ -2,6 +2,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - proxy flag (per-copy); a proxy is never for trade
+ *     Rémi Dutil (2026) - removed getCommunityRating() (community rating is
+ *                         not a concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -81,11 +83,6 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 	@Override
 	public float getDbPrice() {
 		return card.getDbPrice();
-	}
-
-	@Override
-	public float getCommunityRating() {
-		return card.getCommunityRating();
 	}
 
 	@Override

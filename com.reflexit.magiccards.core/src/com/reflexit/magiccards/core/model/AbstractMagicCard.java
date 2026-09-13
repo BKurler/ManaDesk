@@ -4,6 +4,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - proxy support: isProxy() + genuine-only own counts
+ *     Rémi Dutil (2026) - removed getCommunityRating() (community rating is
+ *                         not a concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -319,11 +321,6 @@ public abstract class AbstractMagicCard implements ICard, ICardModifiable, IMagi
 	@Override
 	public float getDbPrice() {
 		return getFloat(MagicCardField.DBPRICE); // !!! RD Probably not ok but current not used
-	}
-
-	@Override
-	public float getCommunityRating() {
-		return getFloat(MagicCardField.RATING);
 	}
 
 	@Override

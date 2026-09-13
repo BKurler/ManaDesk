@@ -3,6 +3,8 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - CONDITION field (per-copy card grade)
  *     Rémi Dutil (2026) - PROXY field + genuine-only own-count / progress fields
+ *     Rémi Dutil (2026) - removed RATING (community rating is not a concept
+ *                         this app tracks anymore)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -204,22 +206,6 @@ public enum MagicCardField implements ICardField {
 		@Override
 		public Object get(IMagicCard card) {
 			return card.getEdition().getMainAbbreviation();
-		};
-	},
-	RATING {
-		@Override
-		public ICardVisitor getAggregator() {
-			return new AbstractFloatCountAggregator(this);
-		}
-
-		@Override
-		public void setM(MagicCard card, Object value) {
-			card.setRating(castToFloat(value));
-		}
-
-		@Override
-		public Object getM(MagicCard card) {
-			return card.getRating();
 		};
 	},
 	ARTIST {

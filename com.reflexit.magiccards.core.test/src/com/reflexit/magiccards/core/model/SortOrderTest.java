@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - removed the RATING fixture (community rating is not
+ *                         a concept this app tracks anymore)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -23,7 +25,6 @@ public class SortOrderTest extends TestCase {
 		card.setCount(1);
 		card.setSpecialTag("foil");
 		card.setDbPrice(1.0f);
-		card.set(MagicCardField.RATING, "1");
 		card.set(MagicCardField.TOUGHNESS, "1.0");
 		card.set(MagicCardField.POWER, "1.0");
 		card.set(MagicCardField.SET, "Lorwyn");

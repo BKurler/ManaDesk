@@ -3,6 +3,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - removed the now-uncompilable card.setRating() call
+ *                         (community rating is not a concept this app tracks
+ *                         anymore)
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -26,7 +29,6 @@ public class TextPrinterTest extends AbstractMagicTest {
 	@Test
 	public void testMC() {
 		MagicCard card = CardGenerator.genMagicCard(39);
-		card.setRating(2);
 		String string = TextPrinter.getString(card);
 		assertEquals("-39|name 39|{4}|type 39|4|*|bla 39|set19|Common|Russian|Elena 39|39a|bla <br> bla 39|0|0|",
 				string);

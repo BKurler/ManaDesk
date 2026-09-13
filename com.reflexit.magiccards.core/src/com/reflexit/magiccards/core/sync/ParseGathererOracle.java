@@ -10,6 +10,12 @@
  *    Terry Long - refactored ParseGathererLegality to instead retrieve rulings on cards
  *
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - stopped scraping the community rating (not a concept
+ *                         this app tracks anymore)
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.IOException;
@@ -71,7 +77,6 @@ public class ParseGathererOracle extends AbstractParseHtmlPage {
 	
 	 */
 	private static Pattern rulingPattern = Pattern.compile("<td.*?rulingText\"[^>]*>(.+?)</td>");
-	private static Pattern ratingPattern = Pattern.compile("class=\"textRatingValue\">([0-9.]{1,5})</span");
 	private static Pattern artistPattern = Pattern.compile("ArtistCredit\"\\sclass=\"value\">.*?\">(.*?)</a>");
 	/*-
 	      <div id="ctl00_ctl00_ctl00_MainContent_SubContent_SubContent_numberRow" class="row">
@@ -463,7 +468,6 @@ public class ParseGathererOracle extends AbstractParseHtmlPage {
 		extractField(card, fieldMap, html, MagicCardField.NAME, cardNamePattern, true);
 		extractField(card, fieldMap, html, MagicCardField.RULINGS, rulingPattern, true);
 		extractField(card, fieldMap, html, MagicCardField.SET, expansionPattern, false);
-		extractField(card, fieldMap, html, MagicCardField.RATING, ratingPattern, false);
 		extractField(card, fieldMap, html, MagicCardField.ARTIST, artistPattern, false);
 		extractField(card, fieldMap, html, MagicCardField.COLLNUM, cardnumPattern, false);
 		extractField(card, fieldMap, html, MagicCardField.COLOR_INDICATOR, colorIdPattern, false);
@@ -507,7 +511,7 @@ public class ParseGathererOracle extends AbstractParseHtmlPage {
 		ParseGathererOracle parser = new ParseGathererOracle();
 		parser.setCard(card);
 		parser.load(ICoreProgressMonitor.NONE);
-		System.err.println(card.getArtist() + " " + card.getCommunityRating() + " " + card.getCollNumber());
+		System.err.println(card.getArtist() + " " + card.getCollNumber());
 	}
 
 	public void addFilter(MagicCardField field) {

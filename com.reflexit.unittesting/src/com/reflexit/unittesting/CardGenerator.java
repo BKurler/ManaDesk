@@ -8,6 +8,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the RATING fixture value from genMagicCard()
+ *                         (community rating is not a concept this app tracks
+ *                         anymore)
  */
 
 package com.reflexit.unittesting;
@@ -61,7 +64,6 @@ public class CardGenerator {
 		card.setPower(String.valueOf(id % 5));
 		card.setToughness("*");
 		card.setCollNumber(id + "a");
-		card.set(MagicCardField.RATING, "2." + id);
 		card.setDbPrice(1.2f + 1 / (float) id);
 		card.setArtist("Elena " + id);
 		card.setLanguage("Russian");

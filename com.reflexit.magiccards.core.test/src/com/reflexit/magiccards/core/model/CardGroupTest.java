@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - removed the RATING fixtures/assertions (community
+ *                         rating is not a concept this app tracks anymore)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -402,7 +404,6 @@ public class CardGroupTest extends TestCase {
 		checkConsistency(MagicCardField.DBPRICE, group.getDbPrice(), 1.0f * count);
 		checkConsistency(MagicCardField.LANG, group.getLanguage());
 		checkConsistency(MagicCardField.EDITION_ABBR);
-		checkConsistency(MagicCardField.RATING, 1.0f * count, 1.0f * count);
 		checkConsistency(MagicCardField.RULINGS, group.getRulings());
 		checkConsistency(MagicCardField.ENID, group.getEnglishCardId());
 		checkConsistency(MagicCardField.LEGALITY);
@@ -432,7 +433,6 @@ public class CardGroupTest extends TestCase {
 		card.setCount(1);
 		card.setSpecial("foil");
 		card.setDbPrice(1.0f);
-		card.set(MagicCardField.RATING, "1");
 		card.set(MagicCardField.TOUGHNESS, "1.0");
 		card.set(MagicCardField.POWER, "1.0");
 		card.set(MagicCardField.SET, "Lorwyn");
@@ -444,7 +444,6 @@ public class CardGroupTest extends TestCase {
 		card.setCount(1);
 		card.setSpecial("foil");
 		card.setDbPrice(1.0f);
-		card.set(MagicCardField.RATING, "1");
 		card.set(MagicCardField.TOUGHNESS, null);
 		card.set(MagicCardField.POWER, null);
 		card.set(MagicCardField.SET, "Lorwyn");

@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - dropped RATING from the debug header (the field
+ *                         itself is gone - community rating is not a concept
+ *                         this app tracks anymore)
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.BufferedReader;
@@ -160,7 +166,7 @@ public class ParseMagicCardsInfoSpoiler extends ParserHtmlHelper {
 	public static void main(String[] args) throws MalformedURLException, IOException {
 		OutputHandler handler = new OutputHandler(System.out, true, true);
 		System.out.println(
-				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|RATING|ARTIST|COLLNUM|RULINGS|TEXT|ENID|PROPERTIES");
+				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|ARTIST|COLLNUM|RULINGS|TEXT|ENID|PROPERTIES");
 		Editions.getInstance().addEdition("Duels of the Planeswalkers", "dpa");
 		new ParseMagicCardsInfoSpoiler().loadSingleUrl(getSearchQuery("Duels of the Planeswalkers"), handler);
 		System.err.println("Total " + handler.getCardCount());
