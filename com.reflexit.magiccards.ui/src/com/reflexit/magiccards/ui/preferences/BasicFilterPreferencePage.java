@@ -2,6 +2,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - added the Condition filter group
  *     Rémi Dutil (2026) - added the Proxy filter group
+ *     Rémi Dutil (2026) - moved Condition and Proxy to User Filter: they are
+ *                         specific to the user's own collection, not generic
+ *                         card-database facts like the other Basic Filter groups
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -12,10 +15,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
-import com.reflexit.magiccards.ui.preferences.feditors.CardConditionPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.ColorsPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.NumbericalPreferenceGroup;
-import com.reflexit.magiccards.ui.preferences.feditors.ProxyPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.RarityPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.TextSearchPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.TypesPreferenceGroup;
@@ -40,15 +41,11 @@ public class BasicFilterPreferencePage extends AbstractFilterPreferencePage {
 		// card-database facts
 		Composite firstRow = createColumnComposite(this.panel, 2);
 		Composite secondRow = createColumnComposite(this.panel, 2);
-		// your physical copies (collection-side): sits under the database groups
-		Composite physicalRow = createColumnComposite(this.panel, 2);
 		Composite thirdRow = createColumnComposite(this.panel, 1);
 		createAndAdd(new TypesPreferenceGroup(), firstRow);
 		createAndAdd(new ColorsPreferenceGroup(), firstRow);
 		createAndAdd(new RarityPreferenceGroup(), secondRow);
 		createAndAdd(new NumbericalPreferenceGroup(), secondRow);
-		createAndAdd(new CardConditionPreferenceGroup(), physicalRow);
-		createAndAdd(new ProxyPreferenceGroup(), physicalRow);
 		createAndAdd(new TextSearchPreferenceGroup(), thirdRow);
 		return this.panel;
 	}
