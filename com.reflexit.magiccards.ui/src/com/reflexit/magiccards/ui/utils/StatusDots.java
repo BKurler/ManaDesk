@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - status dots for virtual / read-only / unsorted collections
+ *     Rémi Dutil (2026) - Boxed indicator: a 4th marker in the icon's top-left
+ *                         corner (kept apart from the bottom-edge trio, which
+ *                         stays virtual/read-only/unsorted only)
+ *     Rémi Dutil (2026) - Boxed marker changed from brown to black - brown
+ *                         wasn't visible enough against the disk icons
  */
 package com.reflexit.magiccards.ui.utils;
 
@@ -21,34 +26,38 @@ import org.eclipse.swt.widgets.Composite;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 
 /**
- * The three small coloured dots that flag a deck / collection's state, used on
+ * The small coloured markers that flag a deck / collection's state, used on
  * the deck tab icons, the Cards Navigator icons and next to the check boxes in
  * the New / Edit Properties dialogs so all three read the same:
  * <ul>
- * <li>blue = virtual</li>
- * <li>red = read-only</li>
- * <li>green = unsorted</li>
+ * <li>blue = virtual (bottom-left)</li>
+ * <li>red = read-only (bottom-centre)</li>
+ * <li>green = unsorted (bottom-right)</li>
+ * <li>black = boxed (top-left - kept apart from the other three)</li>
  * </ul>
  */
 public final class StatusDots {
 	public static final RGB VIRTUAL = new RGB(40, 110, 235);
 	public static final RGB READ_ONLY = new RGB(210, 45, 45);
 	public static final RGB UNSORTED = new RGB(45, 165, 70);
+	public static final RGB BOXED = new RGB(0, 0, 0);
 
 	private StatusDots() {
 	}
 
 	/**
-	 * The plugin icon at {@code basePath} with the status dots painted along its
-	 * bottom edge (left = virtual, centre = read-only, right = unsorted). The
-	 * disk icon is never modified; the composed image is cached in the plugin
-	 * image registry. Returns the plain icon when no flag is set.
+	 * The plugin icon at {@code basePath} with the status markers painted on -
+	 * virtual/read-only/unsorted along the bottom edge, boxed in the top-left
+	 * corner. The disk icon is never modified; the composed image is cached in
+	 * the plugin image registry. Returns the plain icon when no flag is set.
 	 */
-	public static Image decorate(String basePath, boolean virtual, boolean readOnly, boolean unsorted) {
+	public static Image decorate(String basePath, boolean virtual, boolean readOnly, boolean unsorted,
+			boolean boxed) {
 		Image base = MagicUIActivator.getImage(basePath);
-		if (base == null || !(virtual || readOnly || unsorted))
+		if (base == null || !(virtual || readOnly || unsorted || boxed))
 			return base;
-		String key = "sdots2:" + basePath + (virtual ? "V" : "") + (readOnly ? "R" : "") + (unsorted ? "U" : "");
+		String key = "sdots2:" + basePath + (virtual ? "V" : "") + (readOnly ? "R" : "") + (unsorted ? "U" : "")
+				+ (boxed ? "B" : "");
 		Image cached = MagicUIActivator.getDefault().getImage(key, (Image) null);
 		if (cached != null)
 			return cached;
@@ -57,7 +66,7 @@ public final class StatusDots {
 		GC gc = new GC(img);
 		try {
 			gc.setAntialias(SWT.ON);
-			paint(gc, d.width, d.height, virtual, readOnly, unsorted);
+			paint(gc, d.width, d.height, virtual, readOnly, unsorted, boxed);
 		} finally {
 			gc.dispose();
 		}
@@ -65,14 +74,21 @@ public final class StatusDots {
 		return reg != null ? reg : img;
 	}
 
-	/** Paint the three bottom-edge dots into an already-open {@code gc} sized {@code w} x {@code h}. */
-	public static void paint(GC gc, int w, int h, boolean virtual, boolean readOnly, boolean unsorted) {
+	/**
+	 * Paint the status markers into an already-open {@code gc} sized {@code w} x
+	 * {@code h}: virtual/read-only/unsorted along the bottom edge, boxed in the
+	 * top-left corner (kept apart from the other three so it reads as a distinct
+	 * signal, not a fourth member of that trio).
+	 */
+	public static void paint(GC gc, int w, int h, boolean virtual, boolean readOnly, boolean unsorted,
+			boolean boxed) {
 		// still readable on the small (16px) sideboard / extra tab icons
 		int dot = Math.max(w >= 24 ? 6 : 4, w / 6);
 		int y = h - dot;
 		dot(gc, VIRTUAL, virtual, 0, y, dot);
 		dot(gc, READ_ONLY, readOnly, (w - dot) / 2, y, dot);
 		dot(gc, UNSORTED, unsorted, w - dot, y, dot);
+		dot(gc, BOXED, boxed, 0, 0, dot);
 	}
 
 	private static void dot(GC gc, RGB rgb, boolean on, int x, int y, int dia) {

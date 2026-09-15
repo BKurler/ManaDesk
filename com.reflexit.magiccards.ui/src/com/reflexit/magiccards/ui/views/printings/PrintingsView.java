@@ -8,6 +8,13 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - also react to selections from ProxierView (not an
+ *                         AbstractCardsView - it's a multi-deck pivot grid,
+ *                         not a single filtered card list)
+ */
 package com.reflexit.magiccards.ui.views.printings;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -40,6 +47,7 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.RefreshAction;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;
+import com.reflexit.magiccards.ui.views.proxier.ProxierView;
 import com.reflexit.magiccards.ui.views.AbstractSingleControlCardsView;
 import com.reflexit.magiccards.ui.views.IMagicCardListControl;
 import com.reflexit.magiccards.ui.views.instances.InstancesView;
@@ -149,7 +157,7 @@ public class PrintingsView extends AbstractSingleControlCardsView implements ISe
 
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection sel) {
-		if (part instanceof AbstractCardsView && part != this && !sel.isEmpty())
+		if ((part instanceof AbstractCardsView || part instanceof ProxierView) && part != this && !sel.isEmpty())
 			runLoadJob(sel);
 	}
 

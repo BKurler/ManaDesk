@@ -6,6 +6,9 @@
  *     Rémi Dutil (2026) - default layout: Rulings now stacks with Printings/
  *                         Instances ("right" folder) instead of its own
  *                         "bottom" folder under Scryfall Database
+ *     Rémi Dutil (2026) - Proxier view added to "main", alongside MagicDb/
+ *                         MyCards/Collector (an occasional planning tool, not
+ *                         needed at every startup)
  */
 package com.reflexit.magiccards.ui;
 
@@ -35,6 +38,7 @@ import com.reflexit.magiccards.ui.views.lib.DeckView;
 import com.reflexit.magiccards.ui.views.lib.MyCardsView;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorView;
 import com.reflexit.magiccards.ui.views.printings.PrintingsView;
+import com.reflexit.magiccards.ui.views.proxier.ProxierView;
 import com.reflexit.magiccards.ui.wizards.BoosterGeneratorCollectionWizard;
 import com.reflexit.magiccards.ui.wizards.BoosterGeneratorWizard;
 import com.reflexit.magiccards.ui.wizards.NewCardCollectionWizard;
@@ -64,6 +68,7 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		main.addView(MagicDbView.ID);
 		main.addView(MyCardsView.ID);
 		main.addView(CollectorView.ID);
+		main.addView(ProxierView.ID);
 		main.addPlaceholder("org.eclipse.ui.browser.view");
 		main.addPlaceholder("org.eclipse.ui.browser.view:*");
 		pf.addPlaceholder(DeckView.ID + ":*");
@@ -75,6 +80,7 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		layout.addShowViewShortcut(MagicDbView.ID);
 		layout.addShowViewShortcut(CardsNavigatorView.ID);
 		layout.addShowViewShortcut(MyCardsView.ID);
+		layout.addShowViewShortcut(ProxierView.ID);
 		layout.addNewWizardShortcut(NewDeckWizard.ID);
 		layout.addNewWizardShortcut(NewCardCollectionWizard.ID);
 		layout.addNewWizardShortcut(BoosterGeneratorWizard.ID);

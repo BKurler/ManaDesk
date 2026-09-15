@@ -3,6 +3,10 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isBoxed()/setBoxed(): manual "physically boxed up"
+ *                         marker for the Proxier view (independent of
+ *                         virtual/unsorted/readonly - no automatic behavior
+ *                         attached)
  */
 
 package com.reflexit.magiccards.core.model.storage;
@@ -36,4 +40,8 @@ public interface IStorageInfo {
 	public String getName();
 
 	public void setReadOnly(boolean value);
+
+	public void setBoxed(boolean value);
+
+	public boolean isBoxed();
 }

@@ -3,6 +3,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - LoadCardJob caches the card image on its background
  *                         thread so the UI-thread render never blocks on the network
+ *     Rémi Dutil (2026) - also react to selections from ProxierView (not an
+ *                         AbstractCardsView - it's a multi-deck pivot grid,
+ *                         not a single filtered card list)
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -71,6 +74,7 @@ import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;
 import com.reflexit.magiccards.ui.views.MagicDbView;
+import com.reflexit.magiccards.ui.views.proxier.ProxierView;
 
 public class CardDescView extends ViewPart implements ISelectionListener, IShowInTarget, IShowInSource {
 	public static final String ID = CardDescView.class.getName();
@@ -429,7 +433,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection sel) {
-		if (part instanceof AbstractCardsView)
+		if (part instanceof AbstractCardsView || part instanceof ProxierView)
 			runLoadJob(sel);
 	}
 
