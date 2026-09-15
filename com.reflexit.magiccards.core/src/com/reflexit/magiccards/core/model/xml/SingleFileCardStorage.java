@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isBoxed()/setBoxed() for the Proxier view (same
+ *                         property-bag pattern as virtual/unsorted/readonly)
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -23,6 +25,7 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	private static final transient String VIRTUAL = "virtual";
 	private static final transient String UNSORTED = "unsorted";
 	private static final transient String READ_ONLY = "readonly";
+	private static final transient String BOXED = "boxed";
 	protected transient File file;
 	protected Location location;
 	protected String name;
@@ -162,6 +165,11 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 		return Boolean.valueOf(getProperty(UNSORTED));
 	}
 
+	@Override
+	public boolean isBoxed() {
+		return Boolean.valueOf(getProperty(BOXED));
+	}
+
 	public void setName(String name) {
 		throw new UnsupportedOperationException();
 		// doSetName(name);
@@ -239,6 +247,11 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	@Override
 	public void setReadOnly(boolean value) {
 		setProperty(READ_ONLY, String.valueOf(value));
+	}
+
+	@Override
+	public void setBoxed(boolean value) {
+		setProperty(BOXED, String.valueOf(value));
 	}
 
 	@Override

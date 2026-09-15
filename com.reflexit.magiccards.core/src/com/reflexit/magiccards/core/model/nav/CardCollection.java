@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isBoxed(): "physically boxed up" marker for the
+ *                         Proxier view (manual, no automatic behavior)
  */
 
 package com.reflexit.magiccards.core.model.nav;
@@ -172,6 +174,16 @@ public class CardCollection extends CardElement {
 	public boolean isReadOnly() {
 		IStorageInfo info = getStorageInfo();
 		return info != null && info.isReadOnly();
+	}
+
+	/**
+	 * Whether the user has manually marked this deck "physically boxed up".
+	 * Purely informational - setting it does not touch owned/virtual mode,
+	 * materialize, or reserve/allocate anything by itself.
+	 */
+	public boolean isBoxed() {
+		IStorageInfo info = getStorageInfo();
+		return info != null && info.isBoxed();
 	}
 
 }

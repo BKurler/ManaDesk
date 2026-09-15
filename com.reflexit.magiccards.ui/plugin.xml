@@ -2,6 +2,7 @@
 <!--
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - registered the Proxier view + its Show In entry
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -174,6 +175,15 @@
             name="Instances"
             restorable="true">
       </view>
+      <view
+            allowMultiple="false"
+            category="com.reflexit.magiccards"
+            class="com.reflexit.magiccards.ui.views.proxier.ProxierView"
+            icon="icons/obj16/one_card16.png"
+            id="com.reflexit.magiccards.ui.views.proxier.ProxierView"
+            name="Proxier"
+            restorable="true">
+      </view>
    </extension>
    <extension
          point="org.eclipse.ui.perspectives">
@@ -206,8 +216,11 @@
                       <showInPart
                             id="com.reflexit.magiccards.ui.views.nav.CardsNavigatorView">
                       </showInPart>
+                      <showInPart
+                            id="com.reflexit.magiccards.ui.views.proxier.ProxierView">
+                      </showInPart>
 
-      
+
       </perspectiveExtension>
    </extension>
    <extension

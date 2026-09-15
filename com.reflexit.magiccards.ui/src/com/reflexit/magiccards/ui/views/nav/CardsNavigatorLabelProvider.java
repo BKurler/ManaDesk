@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - status dots on the deck / collection tree icons
+ *     Rémi Dutil (2026) - boxed indicator (top-left corner)
  */
 package com.reflexit.magiccards.ui.views.nav;
 
@@ -40,7 +41,7 @@ public class CardsNavigatorLabelProvider extends LabelProvider implements IColor
 		if (element instanceof CardCollection) {
 			CardCollection cc = (CardCollection) element;
 			String base = cc.isDeck() ? "icons/obj16/ideck16.png" : "icons/obj16/lib16.png";
-			return StatusDots.decorate(base, cc.isVirtual(), cc.isReadOnly(), cc.isUnsorted());
+			return StatusDots.decorate(base, cc.isVirtual(), cc.isReadOnly(), cc.isUnsorted(), cc.isBoxed());
 		}
 		if (element instanceof CollectionsContainer) {
 			return MagicUIActivator.getDefault().getImage("icons/obj16/folder-lib.png");

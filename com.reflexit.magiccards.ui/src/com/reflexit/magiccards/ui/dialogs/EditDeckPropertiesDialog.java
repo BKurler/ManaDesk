@@ -21,6 +21,9 @@
  *                         checkboxes; the Sideboard/Extra group gets an
  *                         explanatory label and clearer checkbox wording
  *                         ("Create a Sideboard" / "Create an Extra list (...)")
+ *     Rémi Dutil (2026) - "Boxed" checkbox (manual "physically boxed up"
+ *                         marker for the Proxier view; independent of the
+ *                         other checkboxes, no exclusivity/side effects)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -60,6 +63,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	private Button unsorted;
 	private Text text;
 	private Button protection;
+	private Button boxed;
 	private Button createSideboard;
 	private Button createExtra;
 	private boolean sideboardExists;
@@ -118,6 +122,8 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		unsorted = StatusDots.check(comp, StatusDots.UNSORTED, "Unsorted (collections only)");
 		unsorted.setSelection(info.isUnsorted());
 		StatusDots.exclusive(virtual, unsorted);
+		boxed = StatusDots.check(comp, StatusDots.BOXED, "Boxed (physically pulled together)");
+		boxed.setSelection(info.isBoxed());
 		createFamilyGroup(comp);
 		syncForType();
 		createTextArea(comp);
@@ -129,6 +135,10 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (deckType)
 			unsorted.setSelection(false);
 		unsorted.setEnabled(!deckType);
+		// Boxed ("physically pulled together for play") only makes sense for a deck
+		if (!deckType)
+			boxed.setSelection(false);
+		boxed.setEnabled(deckType);
 		syncFamilyForType(deckType);
 	}
 
@@ -262,6 +272,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		info.setComment(text.getText());
 		info.setVirtual(virtual.getSelection());
 		info.setUnsorted(unsorted.getSelection());
+		info.setBoxed(boxed.getSelection());
 
 		// Case 2: enabling read-only → must enable last
 		if (!oldRO && newRO) {

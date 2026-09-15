@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - status dots on the tab icon; refresh on properties change; disposed-widget guards
+ *     Rémi Dutil (2026) - boxed indicator (top-left corner) on the tab icon
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -235,17 +236,19 @@ public class DeckView extends AbstractMyCardsView {
 	}
 
 	private void setTitleImageIfChanged(String iconPath) {
-		setTitleImageIfChanged(iconPath, false, false, false);
+		setTitleImageIfChanged(iconPath, false, false, false, false);
 	}
 
 	/**
-	 * Sets the tab icon for {@code iconPath}, decorated with the status dots
+	 * Sets the tab icon for {@code iconPath}, decorated with the status markers
 	 * (bottom-left blue = virtual, centre red = read-only, right green =
-	 * unsorted). The disk icon is never touched; the composed image is cached
-	 * and the call is a no-op when the tab already shows it.
+	 * unsorted; top-left brown = boxed). The disk icon is never touched; the
+	 * composed image is cached and the call is a no-op when the tab already
+	 * shows it.
 	 */
-	private void setTitleImageIfChanged(String iconPath, boolean virtual, boolean readOnly, boolean unsorted) {
-		Image img = StatusDots.decorate(iconPath, virtual, readOnly, unsorted);
+	private void setTitleImageIfChanged(String iconPath, boolean virtual, boolean readOnly, boolean unsorted,
+			boolean boxed) {
+		Image img = StatusDots.decorate(iconPath, virtual, readOnly, unsorted, boxed);
 		if (img != null && getTitleImage() != img)
 			setTitleImage(img);
 	}
@@ -286,7 +289,8 @@ public class DeckView extends AbstractMyCardsView {
 		else if (location.isExtra())
 			setPartNameIfChanged("~" + name);
 		setTitleImageIfChanged(familyIcon(location, !member), deck != null && deck.isVirtual(),
-				deck != null && deck.isReadOnly(), deck != null && deck.isUnsorted());
+				deck != null && deck.isReadOnly(), deck != null && deck.isUnsorted(),
+				deck != null && deck.isBoxed());
 
 		if (deck == null) {
 			// IMagicControl c = getMagicControl();

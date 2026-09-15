@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - testBoxedPersisted(): isBoxed()/setBoxed() round-trip
  */
 
 package com.reflexit.magiccards.core.model.nav;
@@ -71,6 +72,24 @@ public class NewCardCollectionSettingsTest extends TestCase {
 		assertTrue("type not persisted", created.isDeck());
 		assertTrue("virtual not persisted", created.isVirtual());
 		assertEquals(IStorageInfo.DECK_TYPE, created.getStorageInfo().getType());
+	}
+
+	/**
+	 * "Boxed" is set later (via Edit Properties), not at creation time - unlike
+	 * virtual/unsorted it isn't part of {@link #wizardCreate}. Independent of
+	 * the other flags: no exclusivity, no automatic behavior attached to it.
+	 */
+	public void testBoxedPersisted() {
+		created = wizardCreate(dm.getModelRoot().getDeckContainer(), "wiz-deck-boxed", true, true, false);
+		assertFalse("not boxed by default", created.isBoxed());
+
+		created.getStorageInfo().setBoxed(true);
+		assertTrue(created.isBoxed());
+
+		// and survives a close/reopen - i.e. it really went into the file, not
+		// just the transient state
+		created.close();
+		assertTrue("boxed not persisted", created.isBoxed());
 	}
 
 	/** "unsorted" (a manual card order) is a collection-only notion - a deck must

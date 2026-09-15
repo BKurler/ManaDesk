@@ -8,6 +8,13 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - also react to selections from ProxierView (not an
+ *                         AbstractCardsView - it's a multi-deck pivot grid,
+ *                         not a single filtered card list)
+ */
 package com.reflexit.magiccards.ui.views.instances;
 
 import org.eclipse.jface.action.Action;
@@ -43,6 +50,7 @@ import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;
+import com.reflexit.magiccards.ui.views.proxier.ProxierView;
 import com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl;
 import com.reflexit.magiccards.ui.views.AbstractSingleControlCardsView;
 import com.reflexit.magiccards.ui.views.IMagicCardListControl;
@@ -180,7 +188,7 @@ public class InstancesView extends AbstractSingleControlCardsView implements ISe
 
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection sel) {
-		if (part instanceof AbstractCardsView && part != this && !sel.isEmpty()) {
+		if ((part instanceof AbstractCardsView || part instanceof ProxierView) && part != this && !sel.isEmpty()) {
 			((AbstractMagicCardsListControl) this.getMagicControl()).addStoreChangeListener();
 			runLoadJob(sel);
 		}
