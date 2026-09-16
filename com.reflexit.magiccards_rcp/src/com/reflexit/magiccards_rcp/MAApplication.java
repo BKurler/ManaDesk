@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - checkInstanceLocation(): guard against a null first
+ *                         entry in the recent-workspaces list (new File(null)
+ *                         threw an uncaught NPE - seen launching headless via
+ *                         maven, with no -data argument and no prior
+ *                         workspace history to draw a valid entry from)
  */
 
 /*******************************************************************************
@@ -233,8 +238,10 @@ public class MAApplication implements IApplication, IExecutableExtension {
 		// If the stored workspace no longer exists, force the dialog to open
 		String[] recent = launchData.getRecentWorkspaces();
 		if (recent != null && recent.length > 0) {
-			File stored = new File(recent[0]);
-			if (!stored.exists()) {
+			// recent[0] can itself be null (e.g. a corrupted/empty recent-workspaces
+			// entry, seen when launching headless with no prior workspace history) -
+			// treat that the same as "doesn't exist" instead of crashing on new File(null)
+			if (recent[0] == null || !new File(recent[0]).exists()) {
 				force = true;
 			}
 		}

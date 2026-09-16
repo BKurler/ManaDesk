@@ -17,6 +17,10 @@
  *     Rémi Dutil (2026) - "Open (Activate)" now also works on a multi-selection
  *                         of decks/collections - opens each one, the last
  *                         selected ends up active (selectedCollections())
+ *     Rémi Dutil (2026) - "Export..." now also shows for a multi-selection of
+ *                         decks/collections, not just a single one - the
+ *                         export dialog already pre-selects whatever selection
+ *                         it was opened with (DeckExportPage.setTextFromSelection())
  */
 
 package com.reflexit.magiccards.ui.views.nav;
@@ -372,6 +376,11 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 			manager.add(new Separator());
 			importInto.setText("Import into ‘" + sel.getName() + "’…");
 			manager.add(importInto);
+			manager.add(export);
+		} else if (!selectedCollections().isEmpty()) {
+			// a multi-selection of decks/collections - no single name for
+			// "Import into…", but Export works on any number of them
+			manager.add(new Separator());
 			manager.add(export);
 		}
 

@@ -7,6 +7,14 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - auto-refresh when the card database changes: unlike
+ *                         the card-list tabs (which extend
+ *                         AbstractMagicCardsListControl and already listen to
+ *                         the DB store), this page computed its model once on
+ *                         activate() and never again, so a tab left open while
+ *                         "Update Card Database" ran in the background (e.g.
+ *                         the first-run download) kept showing an empty/stale
+ *                         placeholder until the user manually reselected it
  *******************************************************************************/
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -40,6 +48,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.TableColumn;
@@ -54,6 +63,8 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.events.CardEvent;
+import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
 import com.reflexit.magiccards.ui.MagicUIActivator;
@@ -98,6 +109,27 @@ public class AccessoriesPage extends AbstractDeckPage {
 	/** the selected card in the detail panel, by scryfall id (raw). */
 	private String selectedCardId;
 
+	// the DB store fires a burst of events while a bulk update is unpacking (or
+	// replays one representative event when it's done, see
+	// DbMultiFileCardStore's deferEvents) - debounce the same way
+	// AbstractMagicCardsListControl does instead of recomputing per event
+	private static final int REFRESH_DEBOUNCE_MS = 200;
+	private boolean refreshPending;
+	private final Runnable debouncedRefresh = () -> {
+		refreshPending = false;
+		refresh();
+	};
+	private final ICardEventListener dbListener = event -> {
+		Display d = Display.getDefault();
+		d.asyncExec(() -> {
+			if (table == null || table.isDisposed())
+				return;
+			refreshPending = true;
+			d.timerExec(-1, debouncedRefresh); // cancel a pending one
+			d.timerExec(REFRESH_DEBOUNCE_MS, debouncedRefresh);
+		});
+	};
+
 	@Override
 	public void createPageContents(Composite area) {
 		area.setLayout(new org.eclipse.swt.layout.FillLayout());
@@ -112,6 +144,15 @@ public class AccessoriesPage extends AbstractDeckPage {
 			fallback = new Text(sash, SWT.READ_ONLY | SWT.MULTI | SWT.WRAP | SWT.V_SCROLL);
 		}
 		sash.setWeights(new int[] { 55, 45 });
+		DataManager.getInstance().getMagicDBStore().addListener(dbListener);
+	}
+
+	@Override
+	public void dispose() {
+		DataManager.getInstance().getMagicDBStore().removeListener(dbListener);
+		if (refreshPending)
+			Display.getDefault().timerExec(-1, debouncedRefresh);
+		super.dispose();
 	}
 
 	private void createList(Composite parent) {
