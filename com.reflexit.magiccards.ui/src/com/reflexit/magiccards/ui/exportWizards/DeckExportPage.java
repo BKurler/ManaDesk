@@ -1,6 +1,16 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - restoreWidgetValues(): only fall back to the
+ *                         last-used ("remembered") export selection when the
+ *                         page wasn't handed an explicit one - it used to
+ *                         reload the memento unconditionally, and since that
+ *                         indirectly overwrites resourceSelection (via the
+ *                         "Decks / collections:" field's ModifyListener)
+ *                         before setTextFromSelection() ever runs, opening
+ *                         Export on an actual deck/collection selection
+ *                         silently discarded it in favour of whatever was
+ *                         exported last time
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -310,8 +320,17 @@ public class DeckExportPage extends WizardDataTransferPage {
 	protected void restoreWidgetValues() {
 		super.restoreWidgetValues();
 		IDialogSettings dialogSettings = MagicUIActivator.getDefault().getDialogSettings(ID);
-		// restore selection
-		String ids = dialogSettings.get(EXPORTED_RESOURCES_SETTING);
+		// restore the last-used selection, but only when the caller didn't already
+		// hand us an explicit one (e.g. right-click "Export..." on a deck/collection
+		// selection in the navigator). loadFromMemento() sets the "Decks /
+		// collections:" text, which - via its ModifyListener - calls
+		// setDeckSelection() and overwrites resourceSelection; since
+		// setTextFromSelection() (called right after restoreWidgetValues() in
+		// createControl()) just re-derives the text FROM resourceSelection, an
+		// unconditional restore here silently clobbered any real incoming
+		// selection with whatever was exported last time, before it ever showed
+		String ids = shouldRestoreRememberedSelection(resourceSelection) ? dialogSettings.get(EXPORTED_RESOURCES_SETTING)
+				: null;
 		if (ids != null) {
 			loadFromMemento(ids);
 		}
@@ -344,6 +363,15 @@ public class DeckExportPage extends WizardDataTransferPage {
 		if (dialogSettings.get(OPEN_AFTER) != null) {
 			openAfter.setSelection(dialogSettings.getBoolean(OPEN_AFTER));
 		}
+	}
+
+	/** Package-visible for {@code DeckExportPageSelectionTest}: an explicit
+	 *  incoming selection (e.g. from the navigator's "Export..." context menu)
+	 *  must always win over whatever was exported last time - the remembered
+	 *  selection is only a fallback for when Export is opened with nothing
+	 *  explicitly selected. */
+	static boolean shouldRestoreRememberedSelection(IStructuredSelection resourceSelection) {
+		return resourceSelection == null || resourceSelection.isEmpty();
 	}
 
 	private void loadFromMemento(String ids) {
