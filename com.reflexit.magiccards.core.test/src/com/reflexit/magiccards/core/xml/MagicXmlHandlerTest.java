@@ -11,6 +11,11 @@
  *     Rémi Dutil (2026) - proxy flag round-trip
  *     Rémi Dutil (2026) - removed the <rating> fixtures/assertion (community
  *                         rating is not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - testXmlGen(): added the <finish>nonfoil</finish>
+ *                         fixture line - FINISH is a real, non-transient
+ *                         MagicCardField now, so it's always serialized
+ *                         (getFinish() never returns null, even with no
+ *                         explicit override)
  */
 
 package com.reflexit.magiccards.core.xml;
@@ -243,6 +248,7 @@ public class MagicXmlHandlerTest extends TestCase {
 	      <ownership>true</ownership>
 	      <special>foil,c=mint</special>
 	      <date>Sun Jan 11 22:37:54 EST 2015</date>
+	      <finish>nonfoil</finish>
 	    </mcp>
 	  </list>
 	</cards>

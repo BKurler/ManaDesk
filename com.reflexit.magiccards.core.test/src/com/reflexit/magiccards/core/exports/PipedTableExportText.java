@@ -7,6 +7,11 @@
  *     Rémi Dutil (2026) - testFull(): RATING dropped from the expected header/
  *                         row - AbstractExportDelegatePerLine#isForExport() no
  *                         longer offers it in any export format
+ *     Rémi Dutil (2026) - testFull(): FINISH added to the expected header/row -
+ *                         it's a real, non-transient MagicCardField, so
+ *                         deterimeColumns() now auto-includes it like any
+ *                         other; card1 has no explicit override, so it reads
+ *                         "Nonfoil" (the derived default)
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -66,10 +71,10 @@ public class PipedTableExportText extends AbstarctExportTest {
 		System.err.println(lines[0]);
 		System.err.println(lines[1]);
 		assertEquals(
-				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|ARTIST|COLLNUM|RULINGS|TEXT|ENID|GATHERERID|TCGID|PROPERTIES|COUNT|PRICE|COMMENT|LOCATION|CUSTOM|OWNERSHIP|SPECIAL|DATE|CONDITION|PROXY",
+				"ID|NAME|COST|TYPE|POWER|TOUGHNESS|ORACLE|SET|RARITY|DBPRICE|LANG|ARTIST|COLLNUM|RULINGS|TEXT|ENID|GATHERERID|TCGID|PROPERTIES|COUNT|PRICE|COMMENT|LOCATION|CUSTOM|OWNERSHIP|SPECIAL|DATE|FINISH|CONDITION|PROXY",
 				lines[0]);
 		assertEquals(
-				"-39|name 39|{4}|type 39|4|*|bla 39|set19|Common|1.2256411|Russian|Elena 39|39a||bla <br> bla 39||0|0||5|2.1|comment 40|mem||true|foil,c=mint|Sun Jan 11 22:37:54 EST 2015||",
+				"-39|name 39|{4}|type 39|4|*|bla 39|set19|Common|1.2256411|Russian|Elena 39|39a||bla <br> bla 39||0|0||5|2.1|comment 40|mem||true|foil,c=mint|Sun Jan 11 22:37:54 EST 2015|Nonfoil||",
 				lines[1]);
 	}
 }

@@ -112,6 +112,36 @@ public class CsvImportDelegateTest extends AbstarctImportTest {
 	}
 
 	/**
+	 * The card FINISH survives a Minimum-CSV export/import round trip through
+	 * {@link ManaDeskCsvImportDelegate}, exported as the label ("Nonfoil" /
+	 * "Foil" / "Etched") to match the app's own Finish column and Scryfall's
+	 * own wording.
+	 */
+	@Test
+	public void testRoundTripFinish() {
+		MagicCardPhysical a = CardGenerator.generatePhysicalCardWithValues();
+		MagicCardPhysical b = CardGenerator.generatePhysicalCardWithValues();
+		a.setFinish(com.reflexit.magiccards.core.model.CardFinish.FOIL);
+		// b: never explicitly set - exports/imports as the plain Nonfoil default
+
+		MinimumCsvExportDelegate exp = new MinimumCsvExportDelegate();
+		exp.setReportType(ImportExportFactory.createReportType("roundtrip-finish"));
+		line = exp.export(java.util.Arrays.asList((IMagicCard) a, (IMagicCard) b));
+		assertTrue("exported header carries FINISH: " + line, line.split("\n")[0].contains("FINISH"));
+		assertTrue("exported value is the label (\"Foil\"), not the canonical tag (\"foil\"): " + line,
+				line.contains("Foil"));
+
+		resolve = false;
+		preview(new ManaDeskCsvImportDelegate());
+		assertEquals(null, exception);
+		assertEquals(2, resSize);
+		assertEquals(com.reflexit.magiccards.core.model.CardFinish.FOIL,
+				((MagicCardPhysical) card1).getFinish());
+		assertEquals(com.reflexit.magiccards.core.model.CardFinish.NONFOIL,
+				((MagicCardPhysical) card2).getFinish());
+	}
+
+	/**
 	 * A "Full CSV" export - deck columns plus card-database columns like COST /
 	 * TYPE / RARITY / COLOR_IDENTITY - is accepted: the database columns are
 	 * recognised and simply ignored.

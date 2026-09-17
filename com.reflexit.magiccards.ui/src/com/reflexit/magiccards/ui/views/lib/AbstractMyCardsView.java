@@ -14,6 +14,10 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - dropped the per-set "Update cards of selected set(s)"
  *                         action and its UpdateMultipleSetsJob
+ *     Rémi Dutil (2026) - allowsMultipleFinishesPerRow() hook, threaded into
+ *                         the MyCardsFilterDialog it builds: false by default
+ *                         (a My Cards row is a single owned copy with one
+ *                         Finish); CollectorView overrides it to true
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -525,7 +529,21 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 
 	@Override
 	public CardFilterDialog getCardFilterDialog() {
-		return new MyCardsFilterDialog(getShell(), getFilterPreferenceStore());
+		MyCardsFilterDialog dialog = new MyCardsFilterDialog(getShell(), getFilterPreferenceStore());
+		dialog.setAllowsMultipleFinishesPerRow(allowsMultipleFinishesPerRow());
+		return dialog;
+	}
+
+	/**
+	 * Whether a single row in this view can legitimately offer several
+	 * finishes at once (e.g. Collector, which browses whole printings from
+	 * the Scryfall database). False here: the real My Cards / Collector
+	 * distinction is that My Cards only ever shows owned copies, each with
+	 * exactly one finish - {@link com.reflexit.magiccards.ui.views.collector.CollectorView}
+	 * overrides this to true.
+	 */
+	protected boolean allowsMultipleFinishesPerRow() {
+		return false;
 	}
 
 	@Override

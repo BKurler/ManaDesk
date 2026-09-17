@@ -8,6 +8,14 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - setAllowsMultipleFinishesPerRow(false): every row
+ *                         here is a single owned copy with exactly one
+ *                         Finish, so the Finish filter's "And" (exact match)
+ *                         mode would never do anything
+ */
 package com.reflexit.magiccards.ui.dialogs;
 
 import org.eclipse.jface.preference.IPreferenceStore;
@@ -22,6 +30,7 @@ import com.reflexit.magiccards.ui.preferences.UserFilterPreferencePage;
 public class DeckFilterDialog extends CardFilterDialog {
 	public DeckFilterDialog(Shell parentShell, IPreferenceStore store) {
 		super(parentShell, store);
+		setAllowsMultipleFinishesPerRow(false);
 		addNode(new PreferenceNode("user", new UserFilterPreferencePage(this)));
 		super.addSavePage();
 	}

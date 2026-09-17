@@ -12,12 +12,21 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - export the FINISH column as "Nonfoil"/"Foil"/
+ *                         "Etched" (CardFinish's label) instead of the raw
+ *                         property value the field's own aggregateValueOf()
+ *                         would give. This base class is shared by "ManaDesk
+ *                         Full CSV" and (via ScsvExportDelegate) "ManaDesk
+ *                         Full CSV Semicolon"; MinimumCsvExportDelegate
+ *                         already had this same fix on its own override,
+ *                         these two "Full" formats had not
  */
 
 package com.reflexit.magiccards.core.exports;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
 /**
@@ -27,6 +36,13 @@ public class CsvExportDelegate extends AbstractExportDelegatePerLine<IMagicCard>
 	@Override
 	protected boolean isForExport(ICardField field) {
 		return super.isForExport(field) || field == MagicCardField.SIDEBOARD;
+	}
+
+	@Override
+	public Object getObjectByField(IMagicCard card, ICardField field) {
+		if (field == MagicCardField.FINISH && card instanceof MagicCardPhysical)
+			return ((MagicCardPhysical) card).getFinish().getLabel();
+		return super.getObjectByField(card, field);
 	}
 
 	@Override

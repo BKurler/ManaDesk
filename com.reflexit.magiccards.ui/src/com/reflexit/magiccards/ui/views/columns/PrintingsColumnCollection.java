@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - Printings view column set: card-database facts only
+ *     Rémi Dutil (2026) - Finish column - which finishes (Nonfoil/Foil/Etched)
+ *                         a printing supports is a card-database fact, same as
+ *                         Rarity, not tied to any owned copy - matches the
+ *                         Scryfall Database view, which already carries it
+ *                         (MagicColumnCollection#createColumns())
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -30,6 +35,7 @@ public class PrintingsColumnCollection extends MagicColumnCollection {
 		columns.add(createCollectorsNumberColumn());   // "Collector's Number" - mandatory
 		columns.add(createSetColumn());                // "Set"
 		columns.add(new GenColumn(MagicCardField.RARITY, "Rarity"));
+		columns.add(createFinishColumn());              // "Finish" - which finishes this printing supports
 		columns.add(createGathererIdColumn());         // "Multiverse ID"
 		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
 		columns.add(new LanguageColumn());            // "Language"

@@ -4,6 +4,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - apply the Proxy field on OK
+ *     Rémi Dutil (2026) - apply the Finish field on OK
+ *     Rémi Dutil (2026) - the Finish combo no longer offers "Auto" - always a
+ *                         real value
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -30,6 +33,7 @@ import org.eclipse.swt.widgets.Shell;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.CardCondition;
+import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
@@ -134,6 +138,17 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 			if (card.getCondition() != next) {
 				card.setCondition(next);
 				fieldSet.add(MagicCardField.CONDITION);
+				modified = true;
+			}
+		}
+		String efinish = store.getString(EditCardsPropertiesDialog.FINISH_FIELD);
+		if (!UNCHANGED.equals(efinish)) {
+			// the combo only ever offers real labels now (no "Auto" choice), so this
+			// always resolves to a real value in practice
+			CardFinish next = CardFinish.resolve(efinish);
+			if (next != null && card.getRawFinish() != next) {
+				card.setFinish(next);
+				fieldSet.add(MagicCardField.FINISH);
 				modified = true;
 			}
 		}

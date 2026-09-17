@@ -3,6 +3,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - isBoxed()/setBoxed() for the Proxier view (same
  *                         property-bag pattern as virtual/unsorted/readonly)
+ *     Rémi Dutil (2026) - convertLegacyFoilTagsToFinish(): one-shot, run once
+ *                         when a deck/collection's cards are loaded, not on
+ *                         every MagicCardPhysical#getFinish() call
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -299,6 +302,30 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 		this.comment = obj.comment;
 		this.properties = obj.properties;
 		this.type = obj.type;
+		convertLegacyFoilTagsToFinish();
+	}
+
+	/**
+	 * One-shot Finish conversion, run once when this deck/collection's cards are
+	 * loaded - never on every read (that's what {@link MagicCardPhysical#getFinish()}
+	 * used to do, and reading the legacy free-text tag on every access was
+	 * explicitly ruled out). A copy that doesn't have an explicit
+	 * {@link MagicCardField#FINISH} yet, but does carry the legacy "foil"
+	 * special tag, gets it set once, here; from then on it's a real, explicit
+	 * value like any other, and this loop has nothing left to do for it. The
+	 * special tag itself is left untouched either way.
+	 */
+	private void convertLegacyFoilTagsToFinish() {
+		for (IMagicCard c : getList()) {
+			if (!(c instanceof MagicCardPhysical))
+				continue;
+			MagicCardPhysical mcp = (MagicCardPhysical) c;
+			if (mcp.getRawFinish() != null)
+				continue;
+			String special = mcp.getSpecial();
+			if (special != null && special.toLowerCase(java.util.Locale.ENGLISH).contains("foil"))
+				mcp.setFinish(com.reflexit.magiccards.core.model.CardFinish.FOIL);
+		}
 	}
 
 	/**

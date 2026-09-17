@@ -5,6 +5,9 @@
  *     Rémi Dutil (2026) - dropped the stale "-Rating" token from every default
  *                         column-order string - the column itself no longer
  *                         exists (see MagicColumnCollection/CollectorColumnCollection)
+ *     Rémi Dutil (2026) - getCollectionStore(): Collection views now persist
+ *                         their own column visibility/width/order instead of
+ *                         sharing the Deck store
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -30,11 +33,13 @@ import com.reflexit.magiccards.ui.views.printings.PrintingsView;
  */
 public class PreferenceInitializer extends AbstractPreferenceInitializer {
 	private static IPreferenceStore deckStore;
+	private static IPreferenceStore collectionStore;
 	private static IPreferenceStore libStore;
 	private static IPreferenceStore mdbStore;
 	private static IPreferenceStore collectorStore;
 	private static final String MY_CARRDS_PP_ID = LibViewPreferencePage.PPID;
 	private static final String DECK_VIEW_PP_ID = DeckViewPreferencePage.PPID;
+	private static final String COLLECTION_VIEW_PP_ID = CollectionViewPreferencePage.PPID;
 	private static final String DB_PP_ID = MagicDbViewPreferencePage.PPID;
 	private static final String COLLECTOR_PP_ID = CollectorViewPreferencePage.PPID;
 
@@ -90,6 +95,13 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		// !!! RD getDeckStore().setDefault(PreferenceConstants.PRESENTATION_VIEW,
 		// Presentation.GALLERY.key());
 		getDeckStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
+
+		// collection store - same starting point as the deck store, but persisted
+		// separately so a change to one doesn't bleed into the other
+		getCollectionStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
+				"Name,-Card Id,Cost,Type,Power,Toughness,-Oracle Text,-Set,-Rarity,-Color Type,Count,-Location,Condition,-Proxy,-Color,-Ownership,-Comment,-User Price,-Online Price,-Artist,-For Trade,-Special,-Collector's Number,-Language,-Text");
+		getCollectionStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
+		getCollectionStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 
 		// collector store - rows are whole-database printings; the default focuses
 		// on the collection side (progress + all the quantities + your valuation).
@@ -159,6 +171,12 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		if (deckStore == null)
 			deckStore = getLocalStore(DECK_VIEW_PP_ID);
 		return deckStore;
+	}
+
+	public static synchronized IPreferenceStore getCollectionStore() {
+		if (collectionStore == null)
+			collectionStore = getLocalStore(COLLECTION_VIEW_PP_ID);
+		return collectionStore;
 	}
 
 	public static synchronized IPreferenceStore getLibStore() {

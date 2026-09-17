@@ -1,14 +1,11 @@
 /*
  * Contributors:
- *     Rémi Dutil (2026) - "Visible Columns and Order" now built from
- *                         DeckColumnCollection instead of the generic
- *                         MagicColumnCollection, so Sideboard/Extra are no
- *                         longer offered as pickable columns here
- *     Rémi Dutil (2026) - split back to Deck-only: Collection views now have
- *                         their own CollectionViewPreferencePage/store, so
- *                         column visibility/width/order no longer bleeds
- *                         between the two (DeckView#getPreferencePageId()
- *                         picks whichever page/store applies)
+ *     Rémi Dutil (2026) - created for ManaDesk: split off DeckViewPreferencePage
+ *                         so Collection views persist their own column
+ *                         visibility/width/order instead of sharing the
+ *                         Deck view's - they don't want to display the same
+ *                         things and a change to one was silently bleeding
+ *                         into the other
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -21,16 +18,19 @@ import com.reflexit.magiccards.ui.preferences.feditors.ColumnFieldEditor;
 import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
 import com.reflexit.magiccards.ui.views.lib.DeckColumnCollection;
 
-public class DeckViewPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
-	public static String PPID = DeckViewPreferencePage.class.getName();
-	public DeckViewPreferencePage() {
+public class CollectionViewPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+	public static String PPID = CollectionViewPreferencePage.class.getName();
+	public CollectionViewPreferencePage() {
 		super(GRID);
-		setPreferenceStore(PreferenceInitializer.getDeckStore());
-		setDescription("Deck View Preferences");
+		setPreferenceStore(PreferenceInitializer.getCollectionStore());
+		setDescription("Collection View Preferences");
 	}
 
 	@Override
 	protected void createFieldEditors() {
+		// same column set as Deck (Sideboard/Extra dropped - a single
+		// deck/collection's own tab always shows one pile at a time), just a
+		// separately persisted store
 		ColumnCollection columnCollection = new DeckColumnCollection(getClass().getName());
 		addField(new BooleanFieldEditor(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, "Show quick filter",
 				getFieldEditorParent()));

@@ -1,3 +1,12 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - allowsMultipleFinishesPerRow(): whether the Finish
+ *                         filter's "And" (exact match) mode is meaningful for
+ *                         this dialog's rows - true by default (this base
+ *                         class backs the DB-browsing views, whose rows can
+ *                         legitimately offer several finishes at once);
+ *                         DeckFilterDialog turns it back off
+ */
 package com.reflexit.magiccards.ui.dialogs;
 
 import org.eclipse.jface.preference.IPreferenceNode;
@@ -18,6 +27,12 @@ import com.reflexit.magiccards.ui.preferences.SaveFilterPreferencePage;
 
 public class CardFilterDialog extends PreferenceDialog implements IPreferencePageContainer {
 	private IPreferenceStore store;
+	// Default true: the base dialog backs the DB-browsing views (Scryfall
+	// database, Printings, Instances), where a single row can legitimately
+	// offer several finishes at once, so the Finish filter's "And" mode is
+	// meaningful there. Subclasses for single-valued, owned-copy-only views
+	// (Deck/Collection, My Cards) turn this back off.
+	private boolean multiFinish = true;
 
 	public CardFilterDialog(Shell parentShell, IPreferenceStore store) {
 		super(parentShell, new PreferenceManager());
@@ -34,6 +49,14 @@ public class CardFilterDialog extends PreferenceDialog implements IPreferencePag
 
 	protected void addSavePage() {
 		addNode(new PreferenceNode("save", new SaveFilterPreferencePage(this)));
+	}
+
+	public boolean allowsMultipleFinishesPerRow() {
+		return this.multiFinish;
+	}
+
+	public void setAllowsMultipleFinishesPerRow(boolean multiFinish) {
+		this.multiFinish = multiFinish;
 	}
 
 	public void addNode(PreferenceNode node) {

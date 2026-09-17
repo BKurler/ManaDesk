@@ -1,3 +1,19 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - findElement(LocationPath): a leaf file (deck or
+ *                         collection) now always wins over a same-named
+ *                         folder in the same parent. CardElement#getName()
+ *                         (LocationPath#getBaseName()) strips the file
+ *                         extension, so a deck/collection "test.xml" and a
+ *                         folder "test" in the same parent both answer
+ *                         "test" to getName() - the name-matching branch
+ *                         findElement() actually uses for nested lookups
+ *                         (not the id-based LocationPath#equals() one, which
+ *                         never matches past the first path segment) used to
+ *                         return whichever of the two it iterated first,
+ *                         making the collection/deck unreachable by id
+ *                         lookup whenever the folder happened to come first
+ */
 package com.reflexit.magiccards.core.model.nav;
 
 import java.io.File;
@@ -145,20 +161,35 @@ public class CardOrganizer extends CardElement {
 	public CardElement findElement(LocationPath p) {
 		if (p.isRoot())
 			return this;
+		// a leaf (deck/collection file) always wins over a same-named folder -
+		// see the class-level contributor note on why this ambiguity exists.
+		// CardElement#getName() (LocationPath#getBaseName()) strips the file
+		// extension, so a deck/collection "test.xml" and a folder "test" both
+		// answer "test" here - remember the first organizer match instead of
+		// returning it immediately, so a leaf found later in iteration order
+		// still wins; only fall back to the organizer if no leaf ever matches.
 		String top = p.getHead();
+		CardElement organizerMatch = null;
 		for (Object element : getChildren()) {
 			CardElement el = (CardElement) element;
-			if (el.getPath().equals(p))
+			if (el.getPath().equals(p) && !(el instanceof CardOrganizer))
 				return el;
 			if (top.equals(el.getName())) {
 				LocationPath rest = p.getTail();
-				if (rest.isEmpty())
-					return el;
+				if (rest.isEmpty()) {
+					if (!(el instanceof CardOrganizer))
+						return el;
+					if (organizerMatch == null)
+						organizerMatch = el;
+					continue;
+				}
 				if (el instanceof CardOrganizer) {
 					return ((CardOrganizer) el).findElement(rest);
 				}
 			}
 		}
+		if (organizerMatch != null)
+			return organizerMatch;
 		for (Object element : getChildren()) {
 			CardElement el = (CardElement) element;
 			if (el instanceof CardOrganizer) {

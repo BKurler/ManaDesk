@@ -2,6 +2,12 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - accept the PROXY column
+ *     Rémi Dutil (2026) - accept the FINISH column - CardFinish.resolve()
+ *                         (used by MagicCardField.FINISH's own setter)
+ *                         already accepts the label ("Nonfoil"/"Foil"/
+ *                         "Etched") the ManaDesk exporters now write, as
+ *                         well as the canonical tag, so no special parsing
+ *                         is needed here beyond registering the header
  */
 package com.reflexit.magiccards.core.exports;
 
@@ -21,7 +27,7 @@ import com.reflexit.magiccards.core.model.abs.ICardField;
  * <ul>
  * <li>The deck / collection columns are imported:
  * {@code NAME, ID, GATHERERID, SET, EDITION_ABBR, COLLNUM, LANG, COUNT,
- * OWNERSHIP, SPECIAL, CONDITION, PROXY, COMMENT, PRICE}.</li>
+ * OWNERSHIP, SPECIAL, CONDITION, FINISH, PROXY, COMMENT, PRICE}.</li>
  * <li>Card-database columns a "Full CSV" also carries ({@code COST, TYPE, POWER,
  * TOUGHNESS, ORACLE, TEXT, RARITY, COLOR, COLOR_IDENTITY, CTYPE, ARTIST,
  * DBPRICE, ...} - any real {@link MagicCardField}) are recognised and their
@@ -53,6 +59,7 @@ public class ManaDeskCsvImportDelegate extends CsvImportDelegate {
 		headers.put("OWNERSHIP", MagicCardField.OWNERSHIP);
 		headers.put("SPECIAL", MagicCardField.SPECIAL);
 		headers.put("CONDITION", MagicCardField.CONDITION);
+		headers.put("FINISH", MagicCardField.FINISH);
 		headers.put("PROXY", MagicCardField.PROXY);
 		headers.put("COMMENT", MagicCardField.COMMENT);
 		headers.put("PRICE", MagicCardField.PRICE);

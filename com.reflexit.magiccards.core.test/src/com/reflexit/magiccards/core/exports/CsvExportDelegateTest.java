@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - Minimum-CSV header now carries the PROXY column
+ *     Rémi Dutil (2026) - Minimum-CSV header now also carries FINISH
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -75,10 +76,10 @@ public class CsvExportDelegateTest extends AbstarctExportTest {
 			fail(e.getMessage());
 		}
 		splitLines();
-		assertTrue("Minimum CSV header should lead with LOCATION: " + lines[0],
-				lines[0].equals("LOCATION,NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,PROXY"));
+		assertTrue("Minimum CSV header should lead with LOCATION: " + lines[0], lines[0].equals(
+				"LOCATION,NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,FINISH,PROXY"));
 		String[] cells = lines[1].split(",", -1);
-		assertTrue("data row should have 13 cells, got " + cells.length + ": " + lines[1], cells.length == 13);
+		assertTrue("data row should have 14 cells, got " + cells.length + ": " + lines[1], cells.length == 14);
 	}
 
 	@Test
@@ -94,8 +95,8 @@ public class CsvExportDelegateTest extends AbstarctExportTest {
 			fail(e.getMessage());
 		}
 		splitLines();
-		assertTrue("single-deck Minimum CSV header unchanged: " + lines[0],
-				lines[0].equals("NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,PROXY"));
+		assertTrue("single-deck Minimum CSV header unchanged: " + lines[0], lines[0]
+				.equals("NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,FINISH,PROXY"));
 	}
 
 	@Test

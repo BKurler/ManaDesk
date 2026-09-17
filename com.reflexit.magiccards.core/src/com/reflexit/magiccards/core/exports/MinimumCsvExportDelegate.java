@@ -13,6 +13,12 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - export the PROXY column
+ *     Rémi Dutil (2026) - export the FINISH column, as "Nonfoil"/"Foil"/
+ *                         "Etched" (CardFinish's label) - the field's own
+ *                         aggregateValueOf() would give the raw string
+ *                         instead, so it's special-cased the same way LANG
+ *                         already is, to match what the app's own Finish
+ *                         column actually displays
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -21,6 +27,7 @@ import java.lang.reflect.InvocationTargetException;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 
@@ -37,14 +44,14 @@ public class MinimumCsvExportDelegate extends CsvExportDelegate {
 	@Override
 	public void printHeader() {
 		stream.println((multiDeck ? "LOCATION," : "")
-				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,PROXY");
+				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,FINISH,PROXY");
 	}
 
 	protected ICardField[] doGetFields() {
 		ICardField fields[] = new ICardField[] { MagicCardField.NAME, MagicCardField.SET, MagicCardField.COUNT,
 				MagicCardField.SPECIAL, MagicCardField.COMMENT, MagicCardField.LANG, MagicCardField.COLLNUM,
 				MagicCardField.GATHERERID, MagicCardField.ID, MagicCardField.OWNERSHIP, MagicCardField.CONDITION,
-				MagicCardField.PROXY
+				MagicCardField.FINISH, MagicCardField.PROXY
 
 		};
 		return fields;
@@ -60,6 +67,8 @@ public class MinimumCsvExportDelegate extends CsvExportDelegate {
 	public Object getObjectByField(IMagicCard card, ICardField field) {
 		if (field == MagicCardField.LANG && card.getLanguage() == null)
 			return "English";
+		if (field == MagicCardField.FINISH && card instanceof MagicCardPhysical)
+			return ((MagicCardPhysical) card).getFinish().getLabel();
 		return field.aggregateValueOf(card);
 	}
 
