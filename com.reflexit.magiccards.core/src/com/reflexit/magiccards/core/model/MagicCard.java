@@ -5,6 +5,17 @@
  *     Rémi Dutil (2026) - removed the community rating field and its
  *                         getRating()/setRating()/getCommunityRating() (not a
  *                         concept this app tracks anymore)
+ *     Rémi Dutil (2026) - getFinishes()/setFinishes()/isEtchedOnly(): which
+ *                         finishes (nonfoil/foil/etched) this PRINTING
+ *                         supports, Scryfall-derived (same property-map
+ *                         pattern as getAccessories/setAccessories)
+ *     Rémi Dutil (2026) - getSupportedFinishes(): the above as real CardFinish
+ *                         values, for the Finish picker to offer only what
+ *                         this printing can actually be
+ *     Rémi Dutil (2026) - getSupportedFinishes(): unknown-data fallback
+ *                         changed from "all three" to "{NONFOIL, FOIL}" -
+ *                         Etched must be positively confirmed by Scryfall
+ *                         data, never offered just because data is missing
  */
 package com.reflexit.magiccards.core.model;
 
@@ -268,6 +279,51 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 
 	void setAccessories(String accessories) {
 		setPropertyString(MagicCardField.ACCESSORIES, accessories);
+	}
+
+	/** Comma-joined subset of {@code nonfoil,foil,etched} - which finishes this
+	 *  printing supports (from Scryfall's own {@code finishes} array). */
+	public String getFinishes() {
+		return (String) getProperty(MagicCardField.FINISHES);
+	}
+
+	void setFinishes(String finishes) {
+		setPropertyString(MagicCardField.FINISHES, finishes);
+	}
+
+	/** True when {@link #getFinishes()} is exactly {@code etched} - this
+	 *  printing has no nonfoil/foil option, so any owned copy of it can only
+	 *  physically be etched. */
+	public boolean isEtchedOnly() {
+		String finishes = getFinishes();
+		if (finishes == null || finishes.trim().isEmpty())
+			return false;
+		for (String part : finishes.split(","))
+			if (!"etched".equalsIgnoreCase(part.trim()))
+				return false;
+		return true;
+	}
+
+	/**
+	 * The finishes this printing actually supports, as real {@link CardFinish}
+	 * values - what a Finish picker should offer for a copy of THIS printing.
+	 * When the data isn't known (a DB that predates this field, or hasn't been
+	 * updated since) falls back to {@code {NONFOIL, FOIL}} - the two ordinary
+	 * finishes nearly every printing offers - rather than including Etched:
+	 * Etched is the exotic case, so it's only ever offered once Scryfall data
+	 * actually confirms this specific printing has it, never "just in case".
+	 */
+	public java.util.Set<CardFinish> getSupportedFinishes() {
+		String csv = getFinishes();
+		if (csv == null || csv.trim().isEmpty())
+			return java.util.EnumSet.of(CardFinish.NONFOIL, CardFinish.FOIL);
+		java.util.EnumSet<CardFinish> set = java.util.EnumSet.noneOf(CardFinish.class);
+		for (String part : csv.split(",")) {
+			CardFinish f = CardFinish.resolve(part.trim());
+			if (f != null)
+				set.add(f);
+		}
+		return set.isEmpty() ? java.util.EnumSet.of(CardFinish.NONFOIL, CardFinish.FOIL) : set;
 	}
 
 	@Override

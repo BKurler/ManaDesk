@@ -6,6 +6,19 @@
  *     Rémi Dutil (2026) - testPOWER/TOUGHNESS/CCC/DBPRICE/COLLNUM now exercise
  *                         the "min:max" range format via the new
  *                         genericRangeFieldText()/rangeFieldCheck() helpers
+ *     Rémi Dutil (2026) - Finish "Only" mode tests (contains vs. is only)
+ *     Rémi Dutil (2026) - testFinishOnlyExplicitlyFalseStillMeansContains():
+ *                         locks in the map.containsKey() -> "true".equals()
+ *                         fix in MagicCardFilter#createFinishGroup()
+ *     Rémi Dutil (2026) - replaced the Only-mode tests with And-mode ones
+ *                         (contains several checked finishes at once, never
+ *                         excludes an unchecked one) - same rename as
+ *                         CardFinishes.ONLY_ID -> AND_ID
+ *     Rémi Dutil (2026) - And redefined as an exact match: replaced
+ *                         testFinishAndDoesNotExcludeUncheckedFinishes with
+ *                         testFinishAndExcludesUncheckedFinishes (opposite
+ *                         expectation) and added
+ *                         testFinishAndSingleCheckedMeansExactlyThatFinish
  */
 package com.reflexit.magiccards.core.model;
 
@@ -211,6 +224,76 @@ public class MagicCardFilterTest extends TestCase {
 		checkNotFound();
 		mcp.set(ff.getField(), "Alara Reborn");
 		checkFound();
+	}
+
+	/** "Foil" checked (no And) matches a printing that offers Foil among
+	 *  other finishes too - the default "any of these" (OR) behavior. */
+	public void testFinishOrMatchesAPrintingOfferingSeveralFinishes() {
+		mc.set(MagicCardField.FINISHES, "foil,etched");
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Foil"), "true");
+		filter.update(propMap);
+		checkFound(mc);
+	}
+
+	/** "Foil" + "Etched" + And: must offer both at once - a printing with only
+	 *  one of the two does not match. */
+	public void testFinishAndRequiresEveryCheckedFinishAtOnce() {
+		MagicCard both = new MagicCard();
+		both.set(MagicCardField.FINISHES, "foil,etched");
+		MagicCard foilOnly = new MagicCard();
+		foilOnly.set(MagicCardField.FINISHES, "nonfoil,foil");
+
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Foil"), "true");
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Etched"), "true");
+		propMap.put(CardFinishes.AND_ID, "true");
+		filter.update(propMap);
+		checkFound(both);
+		checkNotFound(foilOnly);
+	}
+
+	/** "Foil" + "Etched" + And is an exact match: a printing that also offers
+	 *  Nonfoil (unchecked) does not match, even though it does offer both
+	 *  checked finishes - And excludes every unchecked finish too. */
+	public void testFinishAndExcludesUncheckedFinishes() {
+		MagicCard allThree = new MagicCard();
+		allThree.set(MagicCardField.FINISHES, "nonfoil,foil,etched");
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Foil"), "true");
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Etched"), "true");
+		propMap.put(CardFinishes.AND_ID, "true");
+		filter.update(propMap);
+		checkNotFound(allThree);
+	}
+
+	/** "Etched" + And matches only printings offering Etched alone - the
+	 *  exact-match reading of a single checked finish. */
+	public void testFinishAndSingleCheckedMeansExactlyThatFinish() {
+		MagicCard etchedOnly = new MagicCard();
+		etchedOnly.set(MagicCardField.FINISHES, "etched");
+		MagicCard regularAndEtched = new MagicCard();
+		regularAndEtched.set(MagicCardField.FINISHES, "nonfoil,etched");
+
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Etched"), "true");
+		propMap.put(CardFinishes.AND_ID, "true");
+		filter.update(propMap);
+		checkFound(etchedOnly);
+		checkNotFound(regularAndEtched);
+	}
+
+	/**
+	 * Regression: {@code AbstractMagicCardsListControl#storeToMap()} puts an
+	 * explicit {@code "false"} entry for an unchecked box, not merely omits
+	 * the key - {@code map.containsKey(AND_ID)} would have read this as "on"
+	 * regardless. This is the shape a real, unchecked "And" box actually
+	 * produces: "Foil" checked, And explicitly "false" - must behave as plain
+	 * "any of these" (OR), the same as
+	 * {@link #testFinishOrMatchesAPrintingOfferingSeveralFinishes}.
+	 */
+	public void testFinishAndExplicitlyFalseStillMeansOr() {
+		mc.set(MagicCardField.FINISHES, "foil,etched");
+		propMap.put(CardFinishes.getInstance().getPrefConstant("Foil"), "true");
+		propMap.put(CardFinishes.AND_ID, "false");
+		filter.update(propMap);
+		checkFound(mc);
 	}
 
 	public void testCCC() {

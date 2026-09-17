@@ -23,6 +23,35 @@
  *                         model (elementOf()/nameOf()), not ref.getPartName() -
  *                         that is only the tab's static pre-materialization
  *                         title, so every tab read "Restoring deck "Deck""
+ *     Rémi Dutil (2026) - startup: restoreProxierIcon() - same
+ *                         force-materialize-for-its-icon fix as
+ *                         restoreDeckFamilyIcons(), extended to the Proxier
+ *                         tab. Its icon was intermittently showing a random
+ *                         oversized image (a lazily-materialized-tab icon-
+ *                         caching quirk in Eclipse's own workbench, sticky
+ *                         across restarts once triggered, order-dependent
+ *                         during tab restoration - not traceable to
+ *                         anything in this app's own code despite extensive
+ *                         tracing) until the tab was clicked once, which
+ *                         always fixed it - so force-materializing it early
+ *                         sidesteps the same way, without waiting for a click
+ *     Rémi Dutil (2026) - root-caused the tab strip height flickering 1-2px
+ *                         across restarts/Reset Perspective: Reset
+ *                         Perspective tears down and recreates the
+ *                         CTabFolder tab-stack widgets from scratch (proven
+ *                         via trace - fresh identity hashes each time), each
+ *                         one starting at SWT's natural, un-patched height
+ *                         (18-31px depending on state) until
+ *                         hookWorkbenchFolderPatching()'s DPI-driven
+ *                         setTabHeight() corrects it - but that correction
+ *                         only ran once, in postWindowOpen(), so an
+ *                         in-session reset's fresh folders went uncorrected
+ *                         until the next full restart. Fixed with an
+ *                         IPerspectiveListener that re-runs the same
+ *                         scan-and-patch (scanAndPatchNow(), synchronously -
+ *                         not scheduleScanAndPatch()'s asyncExec, which left
+ *                         a visible natural-height-then-snap frame) plus
+ *                         restoreProxierIcon() on CHANGE_RESET_COMPLETE
  */
 
 package com.reflexit.magiccards_rcp;
@@ -47,6 +76,8 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.ui.IPerspectiveDescriptor;
+import org.eclipse.ui.IPerspectiveListener;
 import org.eclipse.ui.IViewReference;
 import org.eclipse.ui.IWorkbenchPage;
 import org.eclipse.ui.IWorkbenchWindow;
@@ -109,12 +140,38 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				if (ref != null) {
 					page.hideView(ref);
 				}
+				// Re-run the tab-height scan/patch and the Proxier icon
+				// force-materialize right after an in-session Reset
+				// Perspective completes - see the header comment above.
+				// addPerspectiveListener() lives on IWorkbenchWindow (via
+				// IPageService), not on IWorkbenchPage.
+				window.addPerspectiveListener(new IPerspectiveListener() {
+					@Override
+					public void perspectiveActivated(IWorkbenchPage activatedPage, IPerspectiveDescriptor perspective) {
+						// not needed
+					}
+
+					@Override
+					public void perspectiveChanged(IWorkbenchPage changedPage, IPerspectiveDescriptor perspective,
+							String changeId) {
+						if (IWorkbenchPage.CHANGE_RESET_COMPLETE.equals(changeId)) {
+							// Synchronous, not scheduleScanAndPatch()'s asyncExec:
+							// the new CTabFolder widgets already exist by the time
+							// this event fires, and patching them now (before the
+							// first paint) is what removes the visible
+							// natural-height-then-snap-to-28px flicker.
+							scanAndPatchNow();
+							restoreProxierIcon();
+						}
+					}
+				});
 			}
 		}
 
 		trace("postWindowOpen: about to call restoreDeckFamilyIcons()");
 		MASplashHandler.reportStartupTail("Restoring views…", 0.10);
 		restoreDeckFamilyIcons();
+		restoreProxierIcon();
 		trace("postWindowOpen: restoreDeckFamilyIcons() returned, about to call drainInitialCardLoads()");
 		MASplashHandler.reportStartupTail("Loading card lists…", 0.35);
 		drainInitialCardLoads();
@@ -122,7 +179,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		MASplashHandler.reportStartupTail("Finishing…", 0.95);
 	}
 
-	/** Flip to {@code false} to silence - temporary, for diagnosing "the splash
+	/** Flip to {@code true} to re-enable - temporary, for diagnosing "the splash
 	 *  text never seems to update" reports (visible with {@code -consoleLog}). */
 	private static final boolean TRACE = false;
 
@@ -397,6 +454,41 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				+ (System.currentTimeMillis() - methodStart) + "ms total");
 	}
 
+	/**
+	 * Force-materializes the Proxier tab purely to fix its icon - the same
+	 * rationale as {@link #restoreDeckFamilyIcons()} for deck/collection
+	 * tabs, extended to Proxier after the recurring black-tab-icon-at-startup
+	 * report turned out to be neither a paint-timing issue nor caused by
+	 * anything in this app's own image loading: reordering tabs changed
+	 * whether it reproduced, and once it did, it stayed wrong across
+	 * restarts until the tab was actually clicked - which always fixed it.
+	 * That is a lazily-materialized-tab icon-caching quirk in Eclipse's own
+	 * workbench, not something traceable in this app's code; force-
+	 * materializing the tab early (like restoreDeckFamilyIcons() already
+	 * does for every deck/collection tab) sidesteps it the same way clicking
+	 * does, without waiting for the user to click.
+	 */
+	private void restoreProxierIcon() {
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window == null)
+			return;
+		IWorkbenchPage page = window.getActivePage();
+		if (page == null)
+			return;
+		// referenced by literal id, not ProxierView.ID - com.reflexit.magiccards.ui.views.proxier
+		// isn't an exported package (same reason GallerySelectionView, above, uses a literal too)
+		IViewReference ref = page.findViewReference("com.reflexit.magiccards.ui.views.proxier.ProxierView");
+		if (ref == null || ref.getView(false) != null) {
+			// not open, or the platform already made it active on its own -
+			// nothing to force
+			return;
+		}
+		trace("restoreProxierIcon: force-materializing Proxier for its icon");
+		long start = System.currentTimeMillis();
+		ref.getView(true);
+		trace("restoreProxierIcon: getView(true) took " + (System.currentTimeMillis() - start) + "ms");
+	}
+
 	/** Resolves the tab's secondary id (the element's Location path) to its
 	 *  in-memory model element - a tree walk, not a card-list load - or
 	 *  {@code null} if there is no secondary id or it cannot be resolved (the
@@ -453,26 +545,36 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		if (display == null || display.isDisposed()) {
 			return;
 		}
+		display.asyncExec(this::scanAndPatchNow);
+	}
 
-		display.asyncExec(() -> {
-			IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
-			if (window == null) {
-				return;
-			}
-			Shell shell = window.getShell();
-			if (shell == null || shell.isDisposed()) {
-				return;
-			}
+	/**
+	 * Synchronous version of the scan - used right inside the
+	 * CHANGE_RESET_COMPLETE handler below, where the new CTabFolder widgets
+	 * Reset Perspective just created already exist, so there's no need to
+	 * (and no benefit to) defer via asyncExec: doing so left a visible gap
+	 * where the fresh folder briefly rendered at SWT's natural height (31px
+	 * in the user's environment) before snapping down to the patched 28px -
+	 * exactly the flicker the user reported seeing during a reset.
+	 */
+	private void scanAndPatchNow() {
+		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		if (window == null) {
+			return;
+		}
+		Shell shell = window.getShell();
+		if (shell == null || shell.isDisposed()) {
+			return;
+		}
 
-			List<CTabFolder> folders = new ArrayList<>();
-			findCTabFolders(shell, folders);
+		List<CTabFolder> folders = new ArrayList<>();
+		findCTabFolders(shell, folders);
 
-			for (CTabFolder folder : folders) {
-				if (isWorkbenchFolder(folder)) {
-					patchFolder(folder);
-				}
+		for (CTabFolder folder : folders) {
+			if (isWorkbenchFolder(folder)) {
+				patchFolder(folder);
 			}
-		});
+		}
 	}
 
 	// ------------------------------------------------------------------------
@@ -516,7 +618,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 		Display display = folder.getDisplay();
 		int dpiY = display.getDPI().y;
-		int minHeight = Math.max(28, dpiY / 5);  
+		int minHeight = Math.max(28, dpiY / 5);
 
 		folder.setTabHeight(minHeight);
 		folder.setSimple(false);
@@ -524,7 +626,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 		// Re-apply on every paint of this folder so new tabs also get the height
 		folder.addListener(SWT.Paint, e -> {
 			if (!folder.isDisposed()) {
-				if (folder.getTabHeight() != minHeight) {
+				int current = folder.getTabHeight();
+				if (current != minHeight) {
 					folder.setTabHeight(minHeight);
 				}
 			}

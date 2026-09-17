@@ -3,6 +3,24 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - registered the Proxier view + its Show In entry
+ *     Rémi Dutil (2026) - DeckViewPreferencePage renamed "View: Deck/Cards" ->
+ *                         "View: Deck/Collection" (it also governs Collection
+ *                         views, which don't have their own preference page)
+ *     Rémi Dutil (2026) - split into "View: Deck" + a new "View: Collection"
+ *                         (CollectionViewPreferencePage) - Deck and
+ *                         Collection now persist column visibility/width/
+ *                         order separately instead of sharing one store
+ *     Rémi Dutil (2026) - Proxier's icon switched from icons/obj16/one_card16.png
+ *                         (16x16) to the new icons/proxier24.png (22x24) - a
+ *                         bicubic upscale of the same "one card" artwork, to
+ *                         match the other main-folder tabs' icon size
+ *                         without changing the design (icons/one_card24.png
+ *                         already exists and is a different icon, used by
+ *                         Card Info/Rulings - do not repoint Proxier at it);
+ *                         unrelated to the black-tab-icon report, which was
+ *                         fixed separately by force-materializing the tab
+ *                         early (see
+ *                         ApplicationWorkbenchWindowAdvisor#restoreProxierIcon())
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -34,7 +52,13 @@
              category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
              class="com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage"
              id="com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage"
-             name="View: Deck/Cards">
+             name="View: Deck">
+       </page>
+       <page
+             category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
+             class="com.reflexit.magiccards.ui.preferences.CollectionViewPreferencePage"
+             id="com.reflexit.magiccards.ui.preferences.CollectionViewPreferencePage"
+             name="View: Collection">
        </page>
        <page
              category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
@@ -179,7 +203,7 @@
             allowMultiple="false"
             category="com.reflexit.magiccards"
             class="com.reflexit.magiccards.ui.views.proxier.ProxierView"
-            icon="icons/obj16/one_card16.png"
+            icon="icons/proxier24.png"
             id="com.reflexit.magiccards.ui.views.proxier.ProxierView"
             name="Proxier"
             restorable="true">

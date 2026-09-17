@@ -4,6 +4,15 @@
  *     Rémi Dutil (2026) - Proxies filter group
  *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
  *                         concept this app tracks anymore)
+ *     Rémi Dutil (2026) - CardFinishes filter group (Nonfoil / Foil / Etched)
+ *     Rémi Dutil (2026) - createFinishGroup(): "Only" mode for Finish, reusing
+ *                         the orOp/notOp mechanism Color's own (never wired to
+ *                         a checkbox) ONLY_ID already relied on
+ *     Rémi Dutil (2026) - "Only" renamed to "And", redefined as an exact
+ *                         match: notOp is now tied to the "And" flag itself
+ *                         (was always false), so once And is on, every
+ *                         unchecked finish is excluded too, not just the
+ *                         checked ones required together
  */
 
 package com.reflexit.magiccards.core.model;
@@ -90,6 +99,7 @@ public class MagicCardFilter implements Cloneable {
 		expr = expr.and(createOrGroup(map, CardTypes.getInstance())).and(createOrGroup(map, Editions.getInstance()))
 				.and(createOrGroup(map, Locations.getInstance())).and(createOrGroup(map, Rarity.getInstance()))
 			.and(createOrGroup(map, CardConditions.getInstance()))
+				.and(createFinishGroup(map))
 				.and(createOrGroup(map, Proxies.getInstance()))
 				.and(FilterField.LANG.valueExpr(map)).and(FilterField.TYPE_LINE.valueExpr(map))
 				.and(FilterField.NAME_LINE.valueExpr(map)).and(FilterField.POWER.valueExpr(map))
@@ -151,6 +161,29 @@ public class MagicCardFilter implements Cloneable {
 
 	private Expr createOrGroup(HashMap<String, String> map, ISearchableProperty sp) {
 		return createGroup(map, sp, true, false);
+	}
+
+	/**
+	 * {@link CardFinishes}, with the "And" checkbox wired in - the same
+	 * {@code orOp}/{@code notOp} mechanism {@link #createColorGroup} already
+	 * uses for {@link ColorTypes#AND_ID}/{@code ONLY_ID}. By default checking
+	 * several finishes matches "has any of these" (OR); with
+	 * {@code CardFinishes.AND_ID} checked, it is an <em>exact match</em>: a
+	 * printing must offer every checked finish AND none of the unchecked
+	 * ones - "Etched" + And matches only printings offering Etched alone,
+	 * "Nonfoil" + "Foil" + And matches only printings offering exactly those
+	 * two, etc. {@code notOp == and} is what turns each unchecked finish into
+	 * an exclusion once And is on.
+	 * <p>
+	 * Finish's {@code AND_ID} is present in {@code map} for every filter
+	 * update, holding {@code "true"} or {@code "false"} (unlike Color's own,
+	 * never wired to a checkbox) - so this checks the value, not just
+	 * {@code map.containsKey}, which would read as "on" either way.
+	 */
+	private Expr createFinishGroup(HashMap<String, String> map) {
+		boolean and = "true".equals(map.get(CardFinishes.AND_ID));
+		map.remove(CardFinishes.AND_ID);
+		return createGroup(map, CardFinishes.getInstance(), !and, and);
 	}
 
 	private Expr createGroup(HashMap<String, String> map, ISearchableProperty sp, boolean orOp, boolean notOp) {

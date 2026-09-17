@@ -12,17 +12,31 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - export the FINISH column as "Nonfoil"/"Foil"/
+ *                         "Etched" (CardFinish's label) instead of the raw
+ *                         property value - same fix as CsvExportDelegate/
+ *                         MinimumCsvExportDelegate
  */
 
 package com.reflexit.magiccards.core.exports;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.abs.ICardField;
 
 /**
  * Pipe separated table
  */
 public class TableExportDelegate extends AbstractExportDelegatePerLine<IMagicCard> {
 	private final String SEP = "|";
+
+	@Override
+	public Object getObjectByField(IMagicCard card, ICardField field) {
+		if (field == MagicCardField.FINISH && card instanceof MagicCardPhysical)
+			return ((MagicCardPhysical) card).getFinish().getLabel();
+		return super.getObjectByField(card, field);
+	}
 
 	@Override
 	public String getSeparator() {

@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getDbPriceEtched/setDbPriceEtched (3rd price bucket,
+ *                         alongside normal/foil)
  */
 
 package com.reflexit.magiccards.core.model.storage;
@@ -29,9 +31,13 @@ public interface IDbPriceStore {
 
 	float getDbPriceFoil(IMagicCard card);
 
+	float getDbPriceEtched(IMagicCard card);
+
 	void setDbPrice(IMagicCard card, float price);
 
 	void setDbPriceFoil(IMagicCard card, float price);
+
+	void setDbPriceEtched(IMagicCard card, float price);
 
 	boolean isInitialized();
 

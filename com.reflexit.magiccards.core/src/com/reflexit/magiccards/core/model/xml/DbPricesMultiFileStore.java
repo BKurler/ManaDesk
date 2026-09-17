@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getDbPriceEtched/setDbPriceEtched (3rd price bucket,
+ *                         alongside normal/foil)
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -156,7 +158,7 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 		return null;
 	}
 
-	// Set standard and foil price
+	// Set standard, foil and etched price
 	@Override
 	public synchronized void setDbPrice(IMagicCard card, float price) {
 		current.setDbPrice(card, price, CurrencyConvertor.getCurrency());
@@ -168,6 +170,11 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 	}
 
 	@Override
+	public synchronized void setDbPriceEtched(IMagicCard card, float price) {
+		current.setDbPriceEtched(card, price, CurrencyConvertor.getCurrency());
+	}
+
+	@Override
 	public synchronized float getDbPrice(IMagicCard card) {
 		return current.getDbPrice(card, CurrencyConvertor.getCurrency());
 	}
@@ -175,6 +182,11 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 	@Override
 	public synchronized float getDbPriceFoil(IMagicCard card) {
 		return current.getDbPriceFoil(card, CurrencyConvertor.getCurrency());
+	}
+
+	@Override
+	public synchronized float getDbPriceEtched(IMagicCard card) {
+		return current.getDbPriceEtched(card, CurrencyConvertor.getCurrency());
 	}
 
 	@Override

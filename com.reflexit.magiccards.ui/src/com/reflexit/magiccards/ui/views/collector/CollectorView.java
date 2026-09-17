@@ -15,6 +15,11 @@
  *                         of selected set(s)" action (one full "Update Card
  *                         Database" now covers it)
  *     Rémi Dutil (2026) - "Count proxies" toggle (completion % / value totals)
+ *     Rémi Dutil (2026) - allowsMultipleFinishesPerRow() overridden to true:
+ *                         Collector browses whole printings from the Scryfall
+ *                         database, which can legitimately offer several
+ *                         finishes at once, so the Finish filter's "And"
+ *                         (exact match) mode is meaningful here
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -68,6 +73,14 @@ public class CollectorView extends AbstractMyCardsView {
 	@Override
 	protected IViewPage getActivePage() {
 		return page;
+	}
+
+	@Override
+	protected boolean allowsMultipleFinishesPerRow() {
+		// Collector browses whole printings from the Scryfall database, not
+		// just owned copies - a printing can legitimately offer several
+		// finishes at once (e.g. regular + foil), unlike a My Cards row.
+		return true;
 	}
 
 	@Override

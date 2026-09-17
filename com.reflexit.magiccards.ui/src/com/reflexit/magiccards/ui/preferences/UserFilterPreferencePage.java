@@ -3,6 +3,13 @@
  *     Rémi Dutil (2026) - moved the Condition and Proxy filter groups here
  *                         from Basic Filter: they describe the user's own
  *                         physical copies, not generic card-database facts
+ *     Rémi Dutil (2026) - Finish filter group, alongside Condition and Proxy
+ *     Rémi Dutil (2026) - moved Finish back to Basic Filter: unlike
+ *                         Condition/Proxy it's also meaningful for a
+ *                         printing with no owned copy at all (which finishes
+ *                         does it come in?), so it needs to work when
+ *                         filtering the Scryfall database itself, not just
+ *                         the user's own decks/collections
  */
 package com.reflexit.magiccards.ui.preferences;
 

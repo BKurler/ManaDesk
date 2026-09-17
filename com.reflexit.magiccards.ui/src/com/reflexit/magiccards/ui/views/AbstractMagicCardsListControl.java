@@ -16,6 +16,18 @@
  *                         app restart (previously nothing did - only an
  *                         in-session reload's selection survived, via
  *                         restoreSelection())
+ *     Rémi Dutil (2026) - createViewer() calls a new, overridable
+ *                         createColumnCollection() instead of hardcoding
+ *                         MagicColumnCollection - lets a subclass (e.g.
+ *                         DeckListControl) curate its own column set, same
+ *                         pattern CollectorListControl already used ad hoc
+ *     Rémi Dutil (2026) - actionShowPrefs now passes getPreferencePageId() as
+ *                         a Supplier<String> instead of a plain String - the
+ *                         old eager capture froze the "Preferences..."
+ *                         button on whatever page id resolved at construction
+ *                         time (before a deck/collection's CardCollection had
+ *                         even loaded), which made Deck and Collection views
+ *                         appear to share their column settings
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -386,7 +398,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	public IMagicViewer createViewer(Composite parent) {
-		MagicColumnCollection columns = new MagicColumnCollection(getPreferencePageId());
+		MagicColumnCollection columns = createColumnCollection();
 		if (presentation == Presentation.TABLE) {
 			LazyTableViewer v = new LazyTableViewer(parent, columns);
 			return v;
@@ -403,6 +415,14 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			return new com.reflexit.magiccards.ui.gallery.SplitGalleryViewer(parent, getPreferencePageId());
 
 		throw new IllegalArgumentException(presentation.name());
+	}
+
+	/** Overridable so a subclass (e.g. deck/collection lists) can curate its
+	 *  own column set instead of the generic {@link MagicColumnCollection} -
+	 *  same pattern {@link com.reflexit.magiccards.ui.views.collector.CollectorColumnCollection}
+	 *  already uses for Collector. */
+	protected MagicColumnCollection createColumnCollection() {
+		return new MagicColumnCollection(getPreferencePageId());
 	}
 
 	@Override
@@ -1208,7 +1228,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 					refresh();
 				});
 		this.actionGroupBy = new GroupByAction(getGroups(), null, getPresentaionPreferenceStore(), this::reGroup);
-		this.actionShowPrefs = new ShowPreferencesAction(getPreferencePageId()) {
+		this.actionShowPrefs = new ShowPreferencesAction(this::getPreferencePageId) {
 			@Override
 			public void before() {
 				saveColumnLayout();

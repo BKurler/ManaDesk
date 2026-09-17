@@ -4,6 +4,14 @@
  *
  * Contributors: Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - testFindElementPrefersLeafOverSameNamedFolder() /
+ *                         testFindCardCollectionByIdPrefersLeafOverSameNamedFolder():
+ *                         lock in the leaf-over-folder fix in
+ *                         CardOrganizer#findElement()
+ */
 package com.reflexit.magiccards.core.model.nav;
 
 import org.junit.Before;
@@ -60,6 +68,38 @@ public class CardOrganizerTest extends TestCase {
 	 * {@link com.reflexit.magiccards.core.model.nav.CardElement#fireEvent(com.reflexit.magiccards.core.model.events.CardEvent)}
 	 * .
 	 */
+	/**
+	 * Regression: {@code CardElement#getName()} (= {@code LocationPath#getBaseName()})
+	 * strips the file extension, so a deck/collection "collide.xml" and a
+	 * folder "collide" in the same parent both answer "collide" to
+	 * {@code getName()} - the name-matching branch {@link CardOrganizer#findElement}
+	 * actually uses for a nested lookup (not the id-based
+	 * {@code LocationPath#equals()} one, which never matches past the first
+	 * path segment) used to return whichever of the two it iterated first.
+	 * The leaf file must always win. Uses the {@code CardCollection}
+	 * constructor directly (not {@code addDeck()}, which also calls
+	 * {@code getStorageInfo()} - needs the full card-DB runtime this
+	 * standalone-model test doesn't have) so this test actually runs here.
+	 */
+	@Test
+	public void testFindElementPrefersLeafOverSameNamedFolder() {
+		CollectionsContainer decks = this.root.getDeckContainer();
+		new CardCollection("collide.xml", decks, true, false, false);
+		decks.addCollectionsContainer("collide");
+		CardElement found = this.root.findElement(new LocationPath("/Decks/collide"));
+		assertTrue("the leaf deck must win over the same-named folder, not resolve to the folder",
+				found instanceof CardCollection);
+	}
+
+	@Test
+	public void testFindCardCollectionByIdPrefersLeafOverSameNamedFolder() {
+		CollectionsContainer decks = this.root.getDeckContainer();
+		new CardCollection("collide2.xml", decks, true, false, false);
+		decks.addCollectionsContainer("collide2");
+		CardCollection found = this.root.findCardCollectionById("Decks/collide2");
+		assertNotNull("must resolve to the deck, not fail because of the same-named folder", found);
+	}
+
 	@Test
 	public void testFireEvent() {
 		final boolean res[] = new boolean[1];

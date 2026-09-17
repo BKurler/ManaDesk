@@ -1,15 +1,31 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - id is now resolved lazily (Supplier<String>)
+ *                         instead of captured once at construction time - a
+ *                         Deck/Collection list control builds this action
+ *                         before its underlying CardCollection has loaded,
+ *                         so the old eager capture always froze on whichever
+ *                         page getPreferencePageId() happened to resolve to
+ *                         at that early point (in practice, always the same
+ *                         one), making the "Preferences..." button open the
+ *                         same page and edit the same store for every Deck
+ *                         AND every Collection, however DeckView#
+ *                         getPreferencePageId() was implemented
+ */
 package com.reflexit.magiccards.ui.actions;
+
+import java.util.function.Supplier;
 
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.window.Window;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
 public class ShowPreferencesAction extends ImageAction {
-	private String id;
+	private final Supplier<String> idSupplier;
 
-	public ShowPreferencesAction(String id) {
+	public ShowPreferencesAction(Supplier<String> idSupplier) {
 		super("Preferences...", "icons/clcl16/gear.png", "Opens UI preferences");
-		this.id = id;
+		this.idSupplier = idSupplier;
 		// setId(ActionFactory.DELETE.getId());
 		// setActionDefinitionId("org.eclipse.ui.edit.findReplace");
 	}
@@ -28,7 +44,7 @@ public class ShowPreferencesAction extends ImageAction {
 	}
 
 	public String getPreferencePageId() {
-		return id;
+		return idSupplier.get();
 	}
 
 	public void after() {

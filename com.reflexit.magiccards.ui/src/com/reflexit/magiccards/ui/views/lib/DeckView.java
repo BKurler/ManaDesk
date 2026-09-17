@@ -2,6 +2,10 @@
  * Contributors:
  *     Rémi Dutil (2026) - status dots on the tab icon; refresh on properties change; disposed-widget guards
  *     Rémi Dutil (2026) - boxed indicator (top-left corner) on the tab icon
+ *     Rémi Dutil (2026) - getPreferencePageId() now returns a different page
+ *                         (and store) for a Collection than for a Deck, so
+ *                         their column visibility/width/order are no longer
+ *                         shared
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -40,6 +44,7 @@ import com.reflexit.magiccards.ui.actions.OpenExtraAction;
 import com.reflexit.magiccards.ui.actions.OpenSideboardAction;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.DeckFilterDialog;
+import com.reflexit.magiccards.ui.preferences.CollectionViewPreferencePage;
 import com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage;
 import com.reflexit.magiccards.ui.utils.StatusDots;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
@@ -422,6 +427,13 @@ public class DeckView extends AbstractMyCardsView {
 
 	@Override
 	protected String getPreferencePageId() {
+		// this.deck is only populated once loadInitialInBackground() runs - fall
+		// back to a direct (cheap, in-memory) lookup by id for any earlier caller
+		CardCollection cc = this.deck;
+		if (cc == null)
+			cc = DataManager.getInstance().getModelRoot().findCardCollectionById(getDeckId());
+		if (cc != null && !cc.isDeck())
+			return CollectionViewPreferencePage.class.getName();
 		return DeckViewPreferencePage.class.getName();
 	}
 

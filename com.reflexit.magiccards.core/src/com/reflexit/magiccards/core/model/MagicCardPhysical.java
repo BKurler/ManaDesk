@@ -4,6 +4,31 @@
  *     Rémi Dutil (2026) - proxy flag (per-copy); a proxy is never for trade
  *     Rémi Dutil (2026) - removed getCommunityRating() (community rating is
  *                         not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - getFinish()/getRawFinish()/setFinish(): per-copy
+ *                         finish (Nonfoil/Foil/Etched), derived from the
+ *                         etched-only printing check then the legacy "foil"
+ *                         special tag when never explicitly set
+ *     Rémi Dutil (2026) - getDbPrice() now picks the price bucket by this
+ *                         copy's own Finish instead of delegating straight to
+ *                         the shared printing (which read its own, usually
+ *                         unset, special tag - foil pricing was effectively
+ *                         dead for owned copies before this)
+ *     Rémi Dutil (2026) - getFinish()/setMagicCard(): a Finish (explicit or
+ *                         derived) the new printing doesn't actually offer is
+ *                         no longer possible - getFinish() falls back to the
+ *                         first finish the printing supports, and a Set/
+ *                         CollNum edit (setMagicCard) proactively reverts a
+ *                         now-invalid explicit override the same way it
+ *                         already lands on the lowest collector number
+ *     Rémi Dutil (2026) - getFinish() no longer reads the legacy "foil"
+ *                         special tag on every call - that conversion is now
+ *                         one-shot, at load time (SingleFileCardStorage);
+ *                         etched-only stays a live check, since it's a fact
+ *                         about the printing, not stored legacy data
+ *     Rémi Dutil (2026) - getDbPrice() no longer falls back to another
+ *                         finish's price bucket - if this copy's own Finish
+ *                         has no price, the price is unavailable, not a
+ *                         substitute from a different finish
  */
 
 package com.reflexit.magiccards.core.model;
@@ -15,7 +40,9 @@ import java.util.HashMap;
 import java.util.Locale;
 import java.util.Map;
 
+import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.model.storage.IDbPriceStore;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
@@ -80,9 +107,24 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		return (IMagicCard) clone();
 	}
 
+	/**
+	 * This copy's price, picked from the bucket its {@link #getFinish()}
+	 * actually is - never the shared printing's own (usually unset) special
+	 * tag, which {@link MagicCard#getDbPrice()} would otherwise fall back to.
+	 * No fallback to another finish's price: if this exact finish has no
+	 * price, the price is unavailable ({@code 0f}), not a substitute.
+	 */
 	@Override
 	public float getDbPrice() {
-		return card.getDbPrice();
+		IDbPriceStore store = DataManager.getDBPriceStore();
+		switch (getFinish()) {
+		case ETCHED:
+			return store.getDbPriceEtched(card);
+		case FOIL:
+			return store.getDbPriceFoil(card);
+		default:
+			return store.getDbPrice(card);
+		}
 	}
 
 	@Override
@@ -104,10 +146,21 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		return this.card;
 	}
 
+	/**
+	 * Repoints this copy at a different printing (a Set / CollNum edit). If this
+	 * copy had an explicit {@link #setFinish} that the new printing doesn't
+	 * offer, it's reverted to the first finish the new printing does offer -
+	 * the same "auto-repair" spirit as {@code SetColumn} landing on the lowest
+	 * collector number in the new set, no need to set the Finish to Auto by
+	 * hand first.
+	 */
 	public void setMagicCard(MagicCard card) {
-		this.card = card;
-		if (this.card == null)
+		if (card == null)
 			throw new NullPointerException();
+		CardFinish raw = getRawFinish();
+		this.card = card;
+		if (raw != null && !card.getSupportedFinishes().contains(raw))
+			setFinish(firstSupported(card.getSupportedFinishes()));
 	}
 
 	@Override
@@ -170,6 +223,56 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 
 	public void setCondition(CardCondition condition) {
 		setProperty(MagicCardField.CONDITION, condition); // null clears the entry
+	}
+
+	/** The explicit per-copy override, or {@code null} if never set. */
+	public CardFinish getRawFinish() {
+		return (CardFinish) getProperty(MagicCardField.FINISH);
+	}
+
+	public void setFinish(CardFinish finish) {
+		setProperty(MagicCardField.FINISH, finish); // null clears the entry - back to derivation
+	}
+
+	/**
+	 * This copy's finish - always resolves to one the printing actually
+	 * supports, never {@code null}.
+	 * <ol>
+	 * <li>an explicit {@link #setFinish} wins, <em>if</em> the printing still
+	 * offers it. This is also how a legacy "foil" special tag ends up here -
+	 * {@code SingleFileCardStorage} converts it to a real Finish <em>once</em>,
+	 * when the deck/collection is loaded, never on every read - the special tag
+	 * itself is never consulted by this method;</li>
+	 * <li>otherwise, the printing has no nonfoil/foil option
+	 * ({@link MagicCard#isEtchedOnly()}) - it can only physically be etched.
+	 * Unlike the tag conversion, this stays live: it's an objective fact about
+	 * the current printing, not a one-time migration of stored data;</li>
+	 * <li>otherwise Nonfoil, or - if the printing doesn't even offer that - the
+	 * first finish it does offer (e.g. right after a Set/CollNum edit landed on
+	 * a printing that dropped the stored finish; {@link #setMagicCard} usually
+	 * settles this itself, this is the fallback for whatever it doesn't).</li>
+	 * </ol>
+	 * Pricing and the Finish filter both go through this.
+	 */
+	public CardFinish getFinish() {
+		java.util.Set<CardFinish> supported = supportedFinishes();
+		CardFinish explicit = getRawFinish();
+		if (explicit != null && supported.contains(explicit))
+			return explicit;
+		if (card != null && card.isEtchedOnly() && supported.contains(CardFinish.ETCHED))
+			return CardFinish.ETCHED;
+		return firstSupported(supported);
+	}
+
+	private java.util.Set<CardFinish> supportedFinishes() {
+		return card != null ? card.getSupportedFinishes() : java.util.EnumSet.allOf(CardFinish.class);
+	}
+
+	private static CardFinish firstSupported(java.util.Set<CardFinish> supported) {
+		for (CardFinish f : CardFinish.values())
+			if (supported.contains(f))
+				return f;
+		return CardFinish.NONFOIL; // supported is never actually empty
 	}
 
 	@Override

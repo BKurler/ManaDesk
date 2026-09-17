@@ -3,6 +3,12 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getDbPriceEtched/setDbPriceEtched: the priceMap value
+ *                         grew a 3rd ':'-joined segment (normal:foil:etched);
+ *                         reworked around shared readSegment/writeSegment
+ *                         helpers so all three read/write the same way (a
+ *                         missing 3rd segment on an older cached entry reads
+ *                         back as 0, same as a missing entry always has)
  */
 
 package com.reflexit.magiccards.core.seller;
@@ -130,114 +136,102 @@ public class AbstractPriceProvider implements IPriceProvider {
 		return result;
 	}
 
-	@Override
-	public synchronized void setDbPrice(String id, float price, Currency cur) {
+	// The priceMap value is 3 ':'-joined segments: normal:foil:etched (in the
+	// provider's own currency, see getCurrency()). Segment 0/1 are the original
+	// format; segment 2 (etched) was added later - readSegment() defaults a
+	// missing 3rd segment to 0, so older cached entries keep working untouched.
+	private static final int SEG_NORMAL = 0, SEG_FOIL = 1, SEG_ETCHED = 2;
 
-		float curr = CurrencyConvertor.convertFromInto(price, cur, getCurrency());
-		float currF = getDbPriceFoil(id, getCurrency());
-		if (currF != 0) {
-			currF = CurrencyConvertor.convertFromInto(currF, cur, getCurrency());
+	private float readSegment(String id, int segment) {
+		String prices = priceMap.get(id);
+		if (prices == null)
+			return 0f;
+		String[] parts = prices.split(":", -1);
+		if (segment >= parts.length || parts[segment].isEmpty())
+			return 0f;
+		try {
+			return Float.parseFloat(parts[segment]);
+		} catch (NumberFormatException e) {
+			return 0f;
 		}
-		if (curr == 0 && currF == 0) {
+	}
+
+	private synchronized void writeSegment(String id, int segment, float value, Currency cur) {
+		float[] segs = { readSegment(id, SEG_NORMAL), readSegment(id, SEG_FOIL), readSegment(id, SEG_ETCHED) };
+		float converted = CurrencyConvertor.convertFromInto(value, cur, getCurrency());
+		segs[segment] = converted;
+		if (segs[SEG_NORMAL] == 0 && segs[SEG_FOIL] == 0 && segs[SEG_ETCHED] == 0) {
 			priceMap.remove(id);
 		} else {
-			String prices = String.valueOf(curr) + ":" + String.valueOf(currF);
-
-			priceMap.put(id, prices);
+			priceMap.put(id, segs[SEG_NORMAL] + ":" + segs[SEG_FOIL] + ":" + segs[SEG_ETCHED]);
 		}
 	}
 
-	@Override
-	public synchronized void setDbPriceFoil(String id, float price, Currency cur) {
-
-		float curr = getDbPrice(id, getCurrency());
-		float currF = CurrencyConvertor.convertFromInto(price, cur, getCurrency());
-		if (curr != 0) {
-			curr = CurrencyConvertor.convertFromInto(curr, cur, getCurrency());
-		}
-		if (curr == 0 && currF == 0) {
-			priceMap.remove(id);
-		} else {
-			String prices = String.valueOf(curr) + ":" + String.valueOf(currF);
-
-			priceMap.put(id, prices);
-		}
+	private synchronized float readPrice(String id, int segment, Currency cur) {
+		if (!priceMap.containsKey(id))
+			return 0f;
+		float price = readSegment(id, segment);
+		return CurrencyConvertor.convertFromInto(price, getCurrency(), cur);
 	}
 
 	@Override
-	public synchronized void setDbPrice(IMagicCard magicCard, float price, Currency cur) {
-		String id = magicCard.getCardId();
-
-		setDbPrice(id, price, cur);
+	public void setDbPrice(String id, float price, Currency cur) {
+		writeSegment(id, SEG_NORMAL, price, cur);
 	}
 
 	@Override
-	public synchronized void setDbPriceFoil(IMagicCard magicCard, float price, Currency cur) {
-		String id = magicCard.getCardId();
-
-		setDbPriceFoil(id, price, cur);
+	public void setDbPriceFoil(String id, float price, Currency cur) {
+		writeSegment(id, SEG_FOIL, price, cur);
 	}
 
 	@Override
-	public synchronized float getDbPrice(IMagicCard card, Currency cur) {
-		String id = card.getCardId();
-		if (priceMap.containsKey(id)) {
-			String prices = priceMap.get(id);
-			int sep = prices.indexOf(":");
-			if (sep != -1) {
-				prices = prices.substring(0, sep);
-			}
-			float price = Float.valueOf(prices);
-			return CurrencyConvertor.convertFromInto(price, getCurrency(), cur);
-		}
-		return 0f;
+	public void setDbPriceEtched(String id, float price, Currency cur) {
+		writeSegment(id, SEG_ETCHED, price, cur);
 	}
 
 	@Override
-	public synchronized float getDbPrice(String id, Currency cur) {
-		if (priceMap.containsKey(id)) {
-			String prices = priceMap.get(id);
-			int sep = prices.indexOf(":");
-			if (sep != -1) {
-				prices = prices.substring(0, sep);
-			}
-			float price = Float.valueOf(prices);
-			return CurrencyConvertor.convertFromInto(price, getCurrency(), cur);
-		}
-		return 0f;
+	public void setDbPrice(IMagicCard magicCard, float price, Currency cur) {
+		setDbPrice(magicCard.getCardId(), price, cur);
 	}
 
 	@Override
-	public synchronized float getDbPriceFoil(IMagicCard card, Currency cur) {
-		String id = card.getCardId();
-		if (priceMap.containsKey(id)) {
-			String prices = priceMap.get(id);
-			int sep = prices.indexOf(":");
-			if (sep != -1 && sep < prices.length() - 1) {
-				prices = prices.substring(sep + 1);
-			} else {
-				prices = "-0.0001f";
-			}
-			float price = Float.valueOf(prices);
-			return CurrencyConvertor.convertFromInto(price, getCurrency(), cur);
-		}
-		return 0f;
+	public void setDbPriceFoil(IMagicCard magicCard, float price, Currency cur) {
+		setDbPriceFoil(magicCard.getCardId(), price, cur);
 	}
 
 	@Override
-	public synchronized float getDbPriceFoil(String id, Currency cur) {
-		if (priceMap.containsKey(id)) {
-			String prices = priceMap.get(id);
-			int sep = prices.indexOf(":");
-			if (sep != -1 && sep < prices.length() - 1) {
-				prices = prices.substring(sep + 1);
-			} else {
-				prices = "-0.0001f";
-			}
-			float price = Float.valueOf(prices);
-			return CurrencyConvertor.convertFromInto(price, getCurrency(), cur);
-		}
-		return 0f;
+	public void setDbPriceEtched(IMagicCard magicCard, float price, Currency cur) {
+		setDbPriceEtched(magicCard.getCardId(), price, cur);
+	}
+
+	@Override
+	public float getDbPrice(IMagicCard card, Currency cur) {
+		return readPrice(card.getCardId(), SEG_NORMAL, cur);
+	}
+
+	@Override
+	public float getDbPrice(String id, Currency cur) {
+		return readPrice(id, SEG_NORMAL, cur);
+	}
+
+	@Override
+	public float getDbPriceFoil(IMagicCard card, Currency cur) {
+		return readPrice(card.getCardId(), SEG_FOIL, cur);
+	}
+
+	@Override
+	public float getDbPriceFoil(String id, Currency cur) {
+		return readPrice(id, SEG_FOIL, cur);
+	}
+
+	@Override
+	public float getDbPriceEtched(IMagicCard card, Currency cur) {
+		return readPrice(card.getCardId(), SEG_ETCHED, cur);
+	}
+
+	@Override
+	public float getDbPriceEtched(String id, Currency cur) {
+		return readPrice(id, SEG_ETCHED, cur);
 	}
 
 	@Override

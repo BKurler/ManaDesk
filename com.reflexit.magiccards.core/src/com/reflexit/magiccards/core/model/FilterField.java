@@ -8,6 +8,17 @@
  *     Rémi Dutil (2026) - POWER/TOUGHNESS/CCC/DBPRICE/COLLNUM now build a
  *                         Min/Max range expression instead of a single
  *                         comparison
+ *     Rémi Dutil (2026) - FINISH filter field (Nonfoil / Foil / Etched)
+ *     Rémi Dutil (2026) - getAllIds() now also carries CardFinishes.AND_ID -
+ *                         AbstractMagicCardsListControl#storeToMap() only
+ *                         copies a preference key into the filter's map when
+ *                         it's in this list, so the checkbox's value was
+ *                         silently dropped before MagicCardFilter ever saw
+ *                         it, and checking it did nothing at all
+ *     Rémi Dutil (2026) - FINISH now matches a whole tag inside the field's
+ *                         comma-joined value instead of an exact string
+ *                         equals - needed once the field could also hold a
+ *                         printing's several supported finishes at once
  */
 
 package com.reflexit.magiccards.core.model;
@@ -45,6 +56,7 @@ public enum FilterField {
 	TEXT_NOT_3(MagicCardField.ORACLE, TEXT_LINE + "_exclude_3", Postfix.TEXT_POSTFIX),
 	COLLNUM(MagicCardField.COLLNUM, Postfix.NUMERIC_POSTFIX), SPECIAL(MagicCardField.SPECIAL, Postfix.TEXT_POSTFIX),
 	CONDITION(MagicCardField.CONDITION, Postfix.ENUM_POSTFIX),
+	FINISH(MagicCardField.FINISH, Postfix.ENUM_POSTFIX),
 	PROXY(MagicCardField.PROXY, Postfix.TEXT_POSTFIX),
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
@@ -104,6 +116,8 @@ public enum FilterField {
 		ids.addAll(Editions.getInstance().getIds());
 		ids.addAll(Rarity.getInstance().getIds());
 		ids.addAll(CardConditions.getInstance().getIds());
+		ids.addAll(CardFinishes.getInstance().getIds());
+		ids.add(CardFinishes.AND_ID);
 		ids.addAll(Proxies.getInstance().getIds());
 		ids.addAll(Locations.getInstance().getIds());
 		ids.add(TEXT_LINE.getPrefConstant());
@@ -163,6 +177,17 @@ public enum FilterField {
 				// the canonical serialized form the field actually holds
 				CardCondition cc = CardCondition.resolve(value);
 				return BinaryExpr.fieldEquals(MagicCardField.CONDITION, cc == null ? value : cc.toString());
+			}
+			case FINISH: {
+				// MagicCardField.FINISH.get() returns a comma-joined tag list - one
+				// tag for an owned copy ("foil"), several for a printing being
+				// browsed with no specific copy in play ("nonfoil,foil"). Match the
+				// tag as a whole item (comma or string-boundary delimited), not a
+				// plain substring, so "foil" doesn't also match inside "nonfoil".
+				CardFinish cf = CardFinish.resolve(value);
+				String tag = cf == null ? value : cf.toString();
+				return BinaryExpr.fieldMatches(MagicCardField.FINISH,
+						"(^|,)" + java.util.regex.Pattern.quote(tag) + "($|,)");
 			}
 			case PROXY: {
 				if (Proxies.PROXY.equalsIgnoreCase(value) || "true".equalsIgnoreCase(value))

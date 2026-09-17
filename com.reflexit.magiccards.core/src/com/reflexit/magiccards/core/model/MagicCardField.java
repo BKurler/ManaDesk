@@ -3,6 +3,14 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - CONDITION field (per-copy card grade)
  *     Rémi Dutil (2026) - PROXY field + genuine-only own-count / progress fields
+ *     Rémi Dutil (2026) - FINISH (per-copy: Nonfoil/Foil/Etched) + FINISHES
+ *                         (which finishes a PRINTING supports, Scryfall-derived)
+ *     Rémi Dutil (2026) - FINISH.getM(MagicCard): browsing a printing itself
+ *                         (Printings/DB view) now shows what IT supports,
+ *                         not an aggregate of the user's own copies (the
+ *                         inherited physical-field default, which read
+ *                         getRealCards() - so editing your own copy's finish
+ *                         in a deck was visibly "leaking" into the DB view)
  *     Rémi Dutil (2026) - removed RATING (community rating is not a concept
  *                         this app tracks anymore)
  */
@@ -1281,6 +1289,54 @@ public enum MagicCardField implements ICardField {
 		public Object getM(MagicCard card) {
 			return card.getAccessories();
 		};
+	},
+
+	FINISHES(null) { // Scryfall-derived: which finishes (nonfoil/foil/etched) this
+						// PRINTING supports; kept in the property map, not exported
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setFinishes(value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getFinishes();
+		};
+	},
+
+	FINISH(true) { // per-copy: Nonfoil / Foil / Etched - always resolves to one of the
+					// three (see MagicCardPhysical#getFinish())
+		@Override
+		public ICardVisitor getAggregator() {
+			return new CollisionAggregator(this, null);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			// a single-tag "list" (e.g. "foil") - same shape as the MagicCard
+			// override below, so filtering/generic display work identically
+			// whether this is an owned copy or a printing being browsed
+			return card.getFinish().toString();
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			// browsing the printing itself (Printings/DB view - no specific
+			// owned copy in play): what THIS PRINTING supports, never an
+			// aggregate of whatever the user's own copies happen to be set to
+			// (that's what the inherited default - CollisionAggregator over
+			// getRealCards() - would otherwise do, since this field is
+			// physical; explicitly overriding avoids it)
+			return CardFinish.joinTags(card.getSupportedFinishes());
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			if (value == null || value instanceof CardFinish)
+				card.setFinish((CardFinish) value);
+			else
+				card.setFinish(CardFinish.resolve(value.toString()));
+		}
 	},
 
 	CONDITION(true) { // physical grade (Near Mint .. Damaged); null == not graded

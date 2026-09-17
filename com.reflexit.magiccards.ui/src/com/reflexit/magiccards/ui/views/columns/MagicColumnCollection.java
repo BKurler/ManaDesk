@@ -6,6 +6,7 @@
  *     Rémi Dutil (2026) - Proxy column in the deck / collection lists
  *     Rémi Dutil (2026) - removed the Community Rating column (community
  *                         rating is not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - Finish column, right next to Condition
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -53,6 +54,7 @@ public class MagicColumnCollection extends ColumnCollection {
 			ownershipColumn = createOwnershipColumn();
 			columns.add(ownershipColumn);
 			columns.add(createConditionColumn());
+			columns.add(createFinishColumn());
 			columns.add(createProxyColumn());
 			commentColumn = createCommentColumn();
 			columns.add(commentColumn);
@@ -126,6 +128,10 @@ public class MagicColumnCollection extends ColumnCollection {
 
 	protected AbstractColumn createConditionColumn() {
 		return new ConditionColumn();
+	}
+
+	protected AbstractColumn createFinishColumn() {
+		return new FinishColumn();
 	}
 
 	protected AbstractColumn createProxyColumn() {

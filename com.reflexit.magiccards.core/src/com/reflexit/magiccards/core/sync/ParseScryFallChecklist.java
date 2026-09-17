@@ -7,6 +7,18 @@
  *                         gzip split/merge round-trip is gone
  *     Rémi Dutil (2026) - deleted the flat-file builder (saveAllFlat / generateFlat):
  *                         no bundled card database any more
+ *     Rémi Dutil (2026) - store MagicCardField.FINISHES (nonfoil/foil/etched
+ *                         this printing supports) on both faces; etched now
+ *                         gets its own DB price bucket instead of being
+ *                         folded into the foil price as a fallback
+ *     Rémi Dutil (2026) - BuildFinishes(): shown through CardFinish's label
+ *                         (Nonfoil/Foil/Etched, matching Scryfall's own
+ *                         wording) instead of the raw JSON values dumped
+ *                         verbatim, and comma-joined properly (the old loop
+ *                         left a trailing ":" after every entry)
+ *     Rémi Dutil (2026) - BuildPrice(): "R$"/"RE$" price prefixes renamed to
+ *                         "N$"/"NE$" (Nonfoil), matching the Foil/Etched
+ *                         prefixes already used right next to them
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -41,6 +53,7 @@ import org.json.simple.parser.ParseException;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -202,13 +215,35 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			return "";
 		}
 
-		String finishes = "Finishes: ";
-
+		// Scryfall's own raw values ("nonfoil"/"foil"/"etched") - shown through
+		// CardFinish's label (capitalized: "Nonfoil"/"Foil"/"Etched") like
+		// every other user-facing surface in the app, not dumped verbatim.
+		StringBuilder finishes = new StringBuilder("Finishes: ");
 		for (int i = 0; i < list.size(); i++) {
-			finishes += list.get(i).toString() + ":";
+			if (i > 0) {
+				finishes.append(", ");
+			}
+			String raw = list.get(i).toString();
+			CardFinish f = CardFinish.resolve(raw);
+			finishes.append(f == null ? raw : f.getLabel());
 		}
 
 		return finishes + "<br>";
+	}
+
+	/** Comma-joined {@code nonfoil,foil,etched} subset - stored on the printing
+	 *  ({@link MagicCardField#FINISHES}) so a copy's own Finish can tell an
+	 *  etched-only printing apart from one that also offers nonfoil/foil. */
+	private String finishesCsv(JSONArray list) {
+		if (list == null || list.size() == 0)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		for (int i = 0; i < list.size(); i++) {
+			if (sb.length() > 0)
+				sb.append(",");
+			sb.append(list.get(i).toString());
+		}
+		return sb.toString();
 	}
 
 	private String BuildPromos(JSONArray list) {
@@ -286,7 +321,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		Object obj = prices.get("usd");
 
 		if (obj != null) {
-			priceStr = "R$ " + obj.toString() + " ";
+			priceStr = "N$ " + obj.toString() + " ";
 		} else {
 
 			// Try EUR price if USD is not available
@@ -299,7 +334,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				if (eur != 0f) {
 					double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
 							Currency.getInstance("USD"));
-					priceStr = "RE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
+					priceStr = "NE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
 				}
 			}
 		}
@@ -471,6 +506,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 					float price = 0f;
 					float price_foil = 0f;
+					float price_etched = 0f;
 
 					JSONObject prices = (JSONObject) elem.get("prices");
 
@@ -509,26 +545,17 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 						if (price_foil == 0f) {
 
-							// Try Etched
-							obj = prices.get("usd_etched");
+							// Try EUR price if USD is not available
+							obj = prices.get("eur_foil");
 							if (obj != null) {
-								price_foil = Float.parseFloat(obj.toString());
-							}
 
-							if (price_foil == 0f) {
+								float eur_foil = Float.parseFloat(obj.toString());
 
-								// Try EUR price if USD is not available
-								obj = prices.get("eur_foil");
-								if (obj != null) {
-
-									float eur_foil = Float.parseFloat(obj.toString());
-
-									// If EUR exists, convert it to USD
-									if (eur_foil != 0f) {
-										double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-												Currency.getInstance("USD"));
-										price_foil = eur_foil * (float) eurToUsd;
-									}
+								// If EUR exists, convert it to USD
+								if (eur_foil != 0f) {
+									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+											Currency.getInstance("USD"));
+									price_foil = eur_foil * (float) eurToUsd;
 								}
 							}
 
@@ -536,10 +563,42 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 								price_foil = -0.0001f;
 							}
 						}
+
+						// Etched is its own bucket now (used to be folded into the foil
+						// price as a fallback) - MagicCardPhysical.getDbPrice() picks the
+						// bucket by the copy's own Finish.
+						obj = prices.get("usd_etched");
+						if (obj != null) {
+							price_etched = Float.parseFloat(obj.toString());
+						}
+
+						if (price_etched == 0f) {
+
+							// Try EUR price if USD is not available
+							obj = prices.get("eur_etched");
+							if (obj != null) {
+
+								float eur_etched = Float.parseFloat(obj.toString());
+
+								// If EUR exists, convert it to USD
+								if (eur_etched != 0f) {
+									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
+											Currency.getInstance("USD"));
+									price_etched = eur_etched * (float) eurToUsd;
+								}
+							}
+
+							if (price_etched == 0f) {
+								price_etched = -0.0001f;
+							}
+						}
+
 						priceStore.setDbPrice(frontCard, price);
 						priceStore.setDbPriceFoil(frontCard, price_foil);
+						priceStore.setDbPriceEtched(frontCard, price_etched);
 						priceProvider.setDbPrice(frontCard.getCardId(), price, CurrencyConvertor.USD);
 						priceProvider.setDbPriceFoil(frontCard.getCardId(), price_foil, CurrencyConvertor.USD);
+						priceProvider.setDbPriceEtched(frontCard.getCardId(), price_etched, CurrencyConvertor.USD);
 
 					}
 				}
@@ -578,6 +637,14 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		if (accessories != null) {
 			frontCard.set(MagicCardField.ACCESSORIES, accessories);
 			backCard.set(MagicCardField.ACCESSORIES, accessories);
+		}
+
+		// Which finishes (nonfoil/foil/etched) this printing supports - same for
+		// both faces, it's a property of the printing, not either face.
+		String finishesCsv = finishesCsv((JSONArray) elem.get("finishes"));
+		if (finishesCsv != null) {
+			frontCard.set(MagicCardField.FINISHES, finishesCsv);
+			backCard.set(MagicCardField.FINISHES, finishesCsv);
 		}
 
 		switch (cardLayout) {
