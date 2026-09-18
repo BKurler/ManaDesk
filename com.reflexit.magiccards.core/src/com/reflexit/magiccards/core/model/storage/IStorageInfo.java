@@ -7,6 +7,17 @@
  *                         marker for the Proxier view (independent of
  *                         virtual/unsorted/readonly - no automatic behavior
  *                         attached)
+ *     Rémi Dutil (2026) - getDefaultFormat()/setDefaultFormat(): a deck's own
+ *                         default legality format (Standard/Modern/Commander/...),
+ *                         used by the Legality tab to decide which format to
+ *                         validate against without the user re-picking it
+ *                         every time. Deck-only in spirit (not applicable to
+ *                         collections) - same "no automatic enforcement"
+ *                         contract as the other flags, callers decide what to
+ *                         do with it. Promotes what DeckLegalityPage2 already
+ *                         stored ad hoc under the raw "format" property key
+ *                         into a proper typed accessor - same key, no
+ *                         migration needed
  */
 
 package com.reflexit.magiccards.core.model.storage;
@@ -44,4 +55,10 @@ public interface IStorageInfo {
 	public void setBoxed(boolean value);
 
 	public boolean isBoxed();
+
+	/** The deck's default legality format ("Standard", "Modern", ...), or
+	 *  {@code null} if never set - see the class header. */
+	public String getDefaultFormat();
+
+	public void setDefaultFormat(String format);
 }

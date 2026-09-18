@@ -14,6 +14,18 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration;
  *                         dropped the "Check Legality Online" toolbar action
  *                         (legality now comes from the Scryfall bulk data)
+ *     Rémi Dutil (2026) - the combo's format is seeded once, from
+ *                         IStorageInfo#getDefaultFormat() (the deck's own
+ *                         Default Format, set in Edit Deck Properties) -
+ *                         picking a different one here is session-only and
+ *                         no longer writes back to storage. Previously
+ *                         setFormat() persisted every pick directly under the
+ *                         raw "format" property key, which is what
+ *                         Default Format now deliberately owns; decks that
+ *                         already had a value there (from having used this
+ *                         combo before Default Format existed) keep it as
+ *                         their starting default, but a same-session pick no
+ *                         longer silently overwrites it
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -73,6 +85,10 @@ import com.reflexit.magiccards.ui.views.columns.LegalityColumn;
 public class DeckLegalityPage2 extends AbstractDeckListPage {
 	private static final Format DEFAULT_FORMAT = Format.STANDARD;
 	private Format format = DEFAULT_FORMAT;
+	/** Seeded once from the deck's own Default Format on the first
+	 *  {@link #refresh()} - a same-session combo pick after that must not be
+	 *  clobbered by every later refresh() (card edits, the Refresh button, ...). */
+	private boolean formatSeeded = false;
 	private LegalityMap deckLegalities = LegalityMap.EMPTY; // format->legality
 	private Combo comboLegality;
 	protected TreeViewer tree;
@@ -209,14 +225,17 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 	public void refresh() {
 		setFStore();
 		deckLegalities = LegalityMap.calculateDeckLegality((ICardStore) fstore.getCardStore());
-		IStorageInfo storageInfo = getStorageInfo();
-		if (storageInfo != null) {
-			String f = storageInfo.getProperty("format");
-			if (f != null && f.trim().length() > 0) {
-				format = Format.valueOf(f);
-			} else {
-				format = DEFAULT_FORMAT;
-			}
+		if (!formatSeeded) {
+			// only the very first refresh() seeds from the deck's stored
+			// Default Format - a later refresh() (card edit, Refresh button,
+			// ...) must leave whatever format the user picked this session
+			// alone, not silently revert it
+			formatSeeded = true;
+			IStorageInfo storageInfo = getStorageInfo();
+			String f = storageInfo == null ? null : storageInfo.getDefaultFormat();
+			format = (f != null && f.trim().length() > 0) ? Format.valueOf(f) : DEFAULT_FORMAT;
+		}
+		if (comboLegality != null) {
 			reloadLegalityCombo(comboLegality);
 		}
 		updateInfo();
@@ -279,12 +298,13 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		this.fstore = mstore;
 	}
 
+	/** Session-only: picking a format here no longer persists it as the
+	 *  deck's Default Format - that's now a deliberate choice made in Edit
+	 *  Deck Properties. {@code formatSeeded} (already true by now - the combo
+	 *  can't be touched before the first {@link #refresh()} builds it) keeps
+	 *  the {@link #refresh()} call below from reverting this pick. */
 	public void setFormat(final String f) {
 		format = Format.valueOf(f);
-		IStorageInfo storageInfo = getStorageInfo();
-		if (storageInfo != null) {
-			storageInfo.setProperty("format", f);
-		}
 		refresh();
 	}
 

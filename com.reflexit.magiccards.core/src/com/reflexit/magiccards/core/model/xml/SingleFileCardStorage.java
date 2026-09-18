@@ -6,6 +6,10 @@
  *     Rémi Dutil (2026) - convertLegacyFoilTagsToFinish(): one-shot, run once
  *                         when a deck/collection's cards are loaded, not on
  *                         every MagicCardPhysical#getFinish() call
+ *     Rémi Dutil (2026) - getDefaultFormat()/setDefaultFormat() - reuses the
+ *                         "format" key DeckLegalityPage2 already wrote
+ *                         directly via getProperty/setProperty, so existing
+ *                         decks' remembered format survives unchanged
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -29,6 +33,7 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	private static final transient String UNSORTED = "unsorted";
 	private static final transient String READ_ONLY = "readonly";
 	private static final transient String BOXED = "boxed";
+	private static final transient String FORMAT = "format";
 	protected transient File file;
 	protected Location location;
 	protected String name;
@@ -173,6 +178,11 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 		return Boolean.valueOf(getProperty(BOXED));
 	}
 
+	@Override
+	public String getDefaultFormat() {
+		return getProperty(FORMAT);
+	}
+
 	public void setName(String name) {
 		throw new UnsupportedOperationException();
 		// doSetName(name);
@@ -255,6 +265,20 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	@Override
 	public void setBoxed(boolean value) {
 		setProperty(BOXED, String.valueOf(value));
+	}
+
+	@Override
+	public void setDefaultFormat(String format) {
+		// setProperty() is backed by java.util.Properties, which throws on a
+		// null value - route "clear it" through a removal instead, same
+		// accessCheck()/autoSave() contract as setProperty() itself.
+		if (format == null) {
+			accessCheck();
+			if (properties.remove(FORMAT) != null)
+				autoSave();
+			return;
+		}
+		setProperty(FORMAT, format);
 	}
 
 	@Override
