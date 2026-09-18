@@ -3,6 +3,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - isBoxed(): "physically boxed up" marker for the
  *                         Proxier view (manual, no automatic behavior)
+ *     Rémi Dutil (2026) - getDefaultFormat(): a deck's own default legality
+ *                         format, used by the Legality tab - see
+ *                         IStorageInfo#getDefaultFormat()
  */
 
 package com.reflexit.magiccards.core.model.nav;
@@ -184,6 +187,14 @@ public class CardCollection extends CardElement {
 	public boolean isBoxed() {
 		IStorageInfo info = getStorageInfo();
 		return info != null && info.isBoxed();
+	}
+
+	/** This deck's default legality format ("Standard", "Modern", ...), or
+	 *  {@code null} if never set. Not applicable to collections - always
+	 *  {@code null} for one, same as an unset deck. */
+	public String getDefaultFormat() {
+		IStorageInfo info = getStorageInfo();
+		return info == null ? null : info.getDefaultFormat();
 	}
 
 }

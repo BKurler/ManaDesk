@@ -24,6 +24,12 @@
  *     Rémi Dutil (2026) - "Boxed" checkbox (manual "physically boxed up"
  *                         marker for the Proxier view; independent of the
  *                         other checkboxes, no exclusivity/side effects)
+ *     Rémi Dutil (2026) - "Default Format" combo (deck-only, like Boxed) -
+ *                         the format the Legality tab validates against by
+ *                         default, without the user re-picking it every
+ *                         visit. Reuses the same storage DeckLegalityPage2
+ *                         already wrote as a side effect of its own combo -
+ *                         this just makes it a real, discoverable field
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -35,6 +41,7 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
@@ -43,6 +50,7 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -68,6 +76,9 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	private Button createExtra;
 	private boolean sideboardExists;
 	private boolean extraExists;
+	private Combo formatCombo;
+	/** First combo entry - clears the stored default format on save. */
+	private static final String NOT_SET_FORMAT = "(Not set)";
 
 	public EditDeckPropertiesDialog(Shell shell, IStorageInfo info) {
 		super(shell);
@@ -124,10 +135,37 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		StatusDots.exclusive(virtual, unsorted);
 		boxed = StatusDots.check(comp, StatusDots.BOXED, "Boxed (physically pulled together)");
 		boxed.setSelection(info.isBoxed());
+		createFormatField(comp, cols);
 		createFamilyGroup(comp);
 		syncForType();
 		createTextArea(comp);
 		return comp;
+	}
+
+	/**
+	 * "Default Format:" - which format the Legality tab validates this deck
+	 * against by default (Standard/Modern/Commander/...), without the user
+	 * re-picking it every visit. Deck-only, like Boxed - a collection has no
+	 * notion of legality.
+	 */
+	private void createFormatField(Composite comp, int cols) {
+		Label label = new Label(comp, SWT.NONE);
+		label.setText("Default Format:");
+		formatCombo = new Combo(comp, SWT.READ_ONLY);
+		formatCombo.add(NOT_SET_FORMAT);
+		for (Format f : Format.getFormats())
+			formatCombo.add(f.name());
+		String current = info.getDefaultFormat();
+		if (current != null && !current.trim().isEmpty()) {
+			if (formatCombo.indexOf(current) < 0)
+				formatCombo.add(current); // stale/unknown value - keep it visible & selected
+			formatCombo.setText(current);
+		} else {
+			formatCombo.setText(NOT_SET_FORMAT);
+		}
+		GridData fgd = new GridData(GridData.FILL_HORIZONTAL);
+		fgd.horizontalSpan = cols - 1;
+		formatCombo.setLayoutData(fgd);
 	}
 
 	private void syncForType() {
@@ -139,6 +177,11 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (!deckType)
 			boxed.setSelection(false);
 		boxed.setEnabled(deckType);
+		// Default Format ("which format to validate legality against") only
+		// makes sense for a deck - a collection has no legality concept
+		if (!deckType)
+			formatCombo.setText(NOT_SET_FORMAT);
+		formatCombo.setEnabled(deckType);
 		syncFamilyForType(deckType);
 	}
 
@@ -273,6 +316,8 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		info.setVirtual(virtual.getSelection());
 		info.setUnsorted(unsorted.getSelection());
 		info.setBoxed(boxed.getSelection());
+		String chosenFormat = formatCombo.getText();
+		info.setDefaultFormat(NOT_SET_FORMAT.equals(chosenFormat) ? null : chosenFormat);
 
 		// Case 2: enabling read-only → must enable last
 		if (!oldRO && newRO) {
