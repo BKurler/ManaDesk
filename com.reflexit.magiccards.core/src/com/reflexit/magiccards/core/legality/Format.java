@@ -1,3 +1,13 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - registered every remaining real Scryfall format
+ *                         (previously only Standard/Pioneer/Modern/Commander/
+ *                         Legacy/Vintage existed) - see BuildLegalities() in
+ *                         ParseScryFallChecklist for the matching per-card
+ *                         legality data. All new ones use ordinal >=
+ *                         SAN_ORDINAL so they never enter the Standard..
+ *                         Vintage ordinal-order inheritance chain
+ */
 package com.reflexit.magiccards.core.legality;
 
 import java.util.Collection;
@@ -33,6 +43,33 @@ public class Format {
 		add(Format.VINTAGE);
 		// !!! RD add(Format.CLASSIC);
 		// !!! RD add(Format.FREEFORM);
+
+		// Every other real Scryfall format, matching the full legalities
+		// object (see ParseScryFallChecklist#BuildLegalities()). Ordinals
+		// are all >= SAN_ORDINAL(10) so none of them fall into the
+		// Standard..Vintage ordinal-order "inherits the previous format's
+		// legality when unknown" chain (LegalityMap#completeL()) - each one
+		// is independent, defaulting to Not Legal when Scryfall has no data,
+		// never silently inheriting a neighboring format's status.
+		add(new ConstructedFormat("Future", 20));
+		add(new ConstructedFormat("Historic", 21));
+		add(new ConstructedFormat("Timeless", 22));
+		add(new ConstructedFormat("Explorer", 23));
+		add(new ConstructedFormat("Pauper", 24));
+		add(new ConstructedFormat("Penny Dreadful", 25));
+		add(new ConstructedFormat("Alchemy", 26));
+		add(new ConstructedFormat("Old School", 27));
+		add(new ConstructedFormat("Premodern", 28));
+		// Singleton, no commander
+		add(new SingletonFormat("Gladiator", 29, 100, 0));
+		// Commander-family: singleton main deck + a small commander zone
+		// (the deck's sideboard slot) - see CommanderFormat's header comment
+		add(new CommanderFormat("Duel Commander", 30));
+		add(new CommanderFormat("Pauper Commander", 31));
+		add(new CommanderFormat("PreDH", 32));
+		add(new CommanderFormat("Brawl", 33, 59, 1));
+		add(new CommanderFormat("Standard Brawl", 34, 59, 1));
+		add(new CommanderFormat("Oathbreaker", 35, 58, 2));
 	}
 	@NotNull
 	private final String name;

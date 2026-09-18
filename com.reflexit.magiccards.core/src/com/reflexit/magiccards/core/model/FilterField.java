@@ -19,6 +19,18 @@
  *                         comma-joined value instead of an exact string
  *                         equals - needed once the field could also hold a
  *                         printing's several supported finishes at once
+ *     Rémi Dutil (2026) - COLOR_IDENTITY now matches Scryfall's own
+ *                         authoritative color_identity by default - "Identity"
+ *                         means this. New COLOR_IDENTITY_EXTENDED filter
+ *                         field: the app's own oracle-text heuristic
+ *                         (formerly what COLOR_IDENTITY itself matched),
+ *                         picked instead when the new ColorTypes.EXTENDED_ID
+ *                         checkbox is also checked - see
+ *                         MagicCardFilter#createColorGroup(). getAllIds()
+ *                         needs no extra entry for it - unlike
+ *                         CardFinishes.AND_ID, ColorTypes' own checkbox ids
+ *                         are already all included via
+ *                         ColorTypes.getInstance().getIds()
  */
 
 package com.reflexit.magiccards.core.model;
@@ -61,7 +73,8 @@ public enum FilterField {
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
 	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
-	COLOR_IDENTITY(MagicCardField.COST, "identity", Postfix.ENUM_POSTFIX),;
+	COLOR_IDENTITY(MagicCardField.COST, "identity", Postfix.ENUM_POSTFIX),
+	COLOR_IDENTITY_EXTENDED(MagicCardField.COST, "identityExtended", Postfix.ENUM_POSTFIX),;
 
 	// fields
 	private ICardField field;
@@ -304,9 +317,18 @@ public enum FilterField {
 			}
 			case COLOR_IDENTITY: {
 				String en;
-				// Filter the Identity using directly the IDENTITY value
+				// Scryfall's own color_identity, already the whole card's
+				// (both faces combined) - no COMBINED-style DFC lookup needed
 				if ((en = Colors.getInstance().getEncodeByName(value)) != null) {
-					return BinaryExpr.fieldMatches(MagicCardField.COLOR_IDENTITY_COMBINED, en);
+					return BinaryExpr.fieldMatches(MagicCardField.COLOR_IDENTITY, en);
+				}
+				break;
+			}
+			case COLOR_IDENTITY_EXTENDED: {
+				String en;
+				// Filter using the app's own oracle-text heuristic instead
+				if ((en = Colors.getInstance().getEncodeByName(value)) != null) {
+					return BinaryExpr.fieldMatches(MagicCardField.COLOR_IDENTITY_EXTENDED_COMBINED, en);
 				}
 				break;
 			}

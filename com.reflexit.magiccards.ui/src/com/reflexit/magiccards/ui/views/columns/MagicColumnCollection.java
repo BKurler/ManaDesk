@@ -7,6 +7,9 @@
  *     Rémi Dutil (2026) - removed the Community Rating column (community
  *                         rating is not a concept this app tracks anymore)
  *     Rémi Dutil (2026) - Finish column, right next to Condition
+ *     Rémi Dutil (2026) - Extended Color Identity column, next to the
+ *                         existing Color Identity one (now Scryfall's own
+ *                         authoritative color_identity, the default)
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -62,6 +65,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		}
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
+		columns.add(new ExtendedColorIdentityColumn());
 		columns.add(new SellerPriceColumn());
 		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
 		columns.add(createCollectorsNumberColumn());

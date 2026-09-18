@@ -13,6 +13,17 @@
  *                         (was always false), so once And is on, every
  *                         unchecked finish is excluded too, not just the
  *                         checked ones required together
+ *     Rémi Dutil (2026) - createColorGroup(): "Extended Identity" checkbox
+ *                         switches the color-identity match from the
+ *                         default, COLOR_IDENTITY (Scryfall's authoritative
+ *                         color_identity), to COLOR_IDENTITY_EXTENDED (the
+ *                         app's own oracle-text heuristic)
+ *     Rémi Dutil (2026) - createColorGroup(): fixed "Extended Identity" only
+ *                         taking effect when "Identity" was ALSO checked -
+ *                         the two read as independent checkboxes, so
+ *                         checking Extended Identity alone must search by
+ *                         identity (the extended one) too, not silently fall
+ *                         through to plain COLOR
  */
 
 package com.reflexit.magiccards.core.model;
@@ -123,7 +134,14 @@ public class MagicCardFilter implements Cloneable {
 		FilterField ff = FilterField.COLOR;
 		boolean orOp = true;
 		boolean only = false;
-		if (map.containsKey(ColorTypes.IDENTITY_ID)) {
+		if (map.containsKey(ColorTypes.EXTENDED_ID)) {
+			// Extended Identity works standalone - checking it alone (without
+			// Identity too) must still search by identity, just the app's own
+			// oracle-text heuristic instead of Scryfall's own authoritative
+			// color_identity. Checked together with Identity, Extended wins
+			// (it is the more specific choice of the two).
+			ff = FilterField.COLOR_IDENTITY_EXTENDED;
+		} else if (map.containsKey(ColorTypes.IDENTITY_ID)) {
 			ff = FilterField.COLOR_IDENTITY;
 			// IDENTITY must work like color (using extra fields like and, only, etc...)
 		}
@@ -155,6 +173,7 @@ public class MagicCardFilter implements Cloneable {
 		map.remove(ColorTypes.ONLY_ID);
 		map.remove(ColorTypes.AND_ID);
 		map.remove(ColorTypes.IDENTITY_ID);
+		map.remove(ColorTypes.EXTENDED_ID);
 		expr = expr.and(createOrGroup(map, ColorTypes.getInstance()));
 		return expr;
 	}

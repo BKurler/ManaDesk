@@ -19,6 +19,26 @@
  *     Rémi Dutil (2026) - BuildPrice(): "R$"/"RE$" price prefixes renamed to
  *                         "N$"/"NE$" (Nonfoil), matching the Foil/Etched
  *                         prefixes already used right next to them
+ *     Rémi Dutil (2026) - BuildLegalities(): now reads every format Scryfall
+ *                         actually reports (previously only 6 of the 22 real
+ *                         keys were read - the rest were silently dropped,
+ *                         so those formats always showed "Unknown" no matter
+ *                         what Scryfall's data said). Matches the new Format
+ *                         registrations in Format.java's static initializer
+ *     Rémi Dutil (2026) - store MagicCardField.COLOR_IDENTITY (Scryfall's own
+ *                         color_identity array) on both faces - the
+ *                         authoritative source Commander-family legality
+ *                         needs; cacheComputedColors() now also caches
+ *                         COLOR/COLOR_IDENTITY_EXTENDED (the app's own
+ *                         oracle-text heuristic, unchanged, formerly what
+ *                         COLOR_IDENTITY itself computed) at import time
+ *                         instead of recomputing them on every get()
+ *     Rémi Dutil (2026) - PARSER_VERSION: a counter to bump whenever a
+ *                         change like the ones above needs already-imported
+ *                         cards re-derived from data they already have -
+ *                         UpdateDbHandler/CheckForUpdateDbHandler use it to
+ *                         prompt a refresh instead of waiting for the user
+ *                         to notice and click Update Card Database
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -54,6 +74,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.CardFinish;
+import com.reflexit.magiccards.core.model.Colors;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -66,6 +87,22 @@ import com.reflexit.magiccards.core.sync.ParserHtmlHelper.ILoadCardHander;
 import com.reflexit.magiccards.core.sync.ParserHtmlHelper.OutputHandler;
 
 public class ParseScryFallChecklist extends AbstractParseJson {
+	/**
+	 * Bump this whenever a code change alters what gets DERIVED from Scryfall's
+	 * raw bulk JSON (legality formats read, a new cached field, a changed
+	 * heuristic, ...) - i.e. whenever existing local card data would come out
+	 * different if simply re-parsed from the SAME Scryfall bytes it already
+	 * has. Do NOT bump it for changes that only affect display/formatting of
+	 * data already stored correctly.
+	 * <p>
+	 * {@code UpdateDbHandler}/{@code CheckForUpdateDbHandler} compare this
+	 * against the last version a full update actually completed with
+	 * ({@code UpdateDbHandler.LAST_PARSER_VERSION}) and prompt to refresh the
+	 * card database when they differ - re-parsing the already-downloaded bulk
+	 * file is enough, since parseBulkGrouped() always re-derives every card's
+	 * fields from scratch regardless of whether the raw JSON changed.
+	 */
+	public static final int PARSER_VERSION = 1;
 	CustomPriceProvider priceProvider = new CustomPriceProvider("TCG Player (Medium)");
 	DbPricesMultiFileStore priceStore = (DbPricesMultiFileStore) DbPricesMultiFileStore.getInstance();
 	public static final String BASE_SEARCH_URL = "https://api.scryfall.com/cards/search?";
@@ -246,6 +283,43 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		return sb.toString();
 	}
 
+	/** Scryfall's authoritative {@code color_identity} array as a cost
+	 *  string (e.g. {@code "{W}{U}"}, {@code "{C}"} for a CONFIRMED-colorless
+	 *  printing), or {@code null} if the array itself is missing (never
+	 *  synced). Stored under {@link MagicCardField#COLOR_IDENTITY} - the one
+	 *  used for Commander-family legality, as opposed to
+	 *  COLOR_IDENTITY_EXTENDED's own oracle-text heuristic (kept for search).
+	 *  <p>
+	 *  An empty {@code color_identity} array must become {@code "{C}"}, not
+	 *  {@code ""} - {@code Colors.toCost(emptyCollection)} would otherwise
+	 *  silently produce "", indistinguishable from "never synced" and,
+	 *  worse, never matching the "Colorless" filter checkbox at all
+	 *  ({@code FilterField}'s match is a literal "does the stored string
+	 *  contain {@code {C}}" check - the same convention the Extended
+	 *  Identity heuristic already relies on for its own generic-mana-as-"C"
+	 *  handling). */
+	private String colorIdentityCostString(JSONArray list) {
+		if (list == null)
+			return null;
+		if (list.size() == 0)
+			return "{C}";
+		java.util.List<String> tags = new java.util.ArrayList<>();
+		for (int i = 0; i < list.size(); i++)
+			tags.add(list.get(i).toString());
+		return Colors.toCost(tags);
+	}
+
+	/** Caches {@link MagicCardField#COLOR} and
+	 *  {@link MagicCardField#COLOR_IDENTITY_EXTENDED} (the app's own
+	 *  oracle-text heuristic) on {@code card} at import time, instead of
+	 *  recomputing them on every get() - needs cost/type/oracle text already
+	 *  set on {@code card}, so call this right before handing the card to
+	 *  {@code handler}, never earlier. */
+	private void cacheComputedColors(MagicCard card) {
+		card.set(MagicCardField.COLOR, Colors.getInstance().getColorAsCost(card));
+		card.set(MagicCardField.COLOR_IDENTITY_EXTENDED, Colors.getInstance().getColorIdentityAsCost(card));
+	}
+
 	private String BuildPromos(JSONArray list) {
 		if (list == null || list.size() == 0) {
 			return "";
@@ -272,6 +346,26 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		appendLegality(sb, "Commander", object.get("commander"));
 		appendLegality(sb, "Vintage", object.get("vintage"));
 		appendLegality(sb, "Legacy", object.get("legacy"));
+		// The rest of Scryfall's legalities object - previously silently
+		// dropped, so these formats always showed "Unknown" regardless of
+		// Scryfall's actual data. Names match Format's registrations in
+		// Format.java's static initializer exactly.
+		appendLegality(sb, "Future", object.get("future"));
+		appendLegality(sb, "Historic", object.get("historic"));
+		appendLegality(sb, "Timeless", object.get("timeless"));
+		appendLegality(sb, "Explorer", object.get("explorer"));
+		appendLegality(sb, "Pauper", object.get("pauper"));
+		appendLegality(sb, "Penny Dreadful", object.get("penny"));
+		appendLegality(sb, "Alchemy", object.get("alchemy"));
+		appendLegality(sb, "Old School", object.get("oldschool"));
+		appendLegality(sb, "Premodern", object.get("premodern"));
+		appendLegality(sb, "Gladiator", object.get("gladiator"));
+		appendLegality(sb, "Duel Commander", object.get("duel"));
+		appendLegality(sb, "Pauper Commander", object.get("paupercommander"));
+		appendLegality(sb, "PreDH", object.get("predh"));
+		appendLegality(sb, "Brawl", object.get("brawl"));
+		appendLegality(sb, "Standard Brawl", object.get("standardbrawl"));
+		appendLegality(sb, "Oathbreaker", object.get("oathbreaker"));
 
 		return sb.toString();
 	}
@@ -647,6 +741,15 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			backCard.set(MagicCardField.FINISHES, finishesCsv);
 		}
 
+		// The whole card's authoritative color identity - same for both
+		// faces (Scryfall already computes it as the union of both faces for
+		// a DFC/split card, so no per-face recombination is needed here).
+		String colorIdentityOfficial = colorIdentityCostString((JSONArray) elem.get("color_identity"));
+		if (colorIdentityOfficial != null) {
+			frontCard.set(MagicCardField.COLOR_IDENTITY, colorIdentityOfficial);
+			backCard.set(MagicCardField.COLOR_IDENTITY, colorIdentityOfficial);
+		}
+
 		switch (cardLayout) {
 		// Standard single face card
 		case 0:
@@ -714,6 +817,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
+			cacheComputedColors(frontCard);
 			handler.handleCard(frontCard);
 			break;
 
@@ -842,6 +946,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
+			cacheComputedColors(frontCard);
+			cacheComputedColors(backCard);
 			handler.handleCard(frontCard);
 			handler.handleCard(backCard);
 			break;

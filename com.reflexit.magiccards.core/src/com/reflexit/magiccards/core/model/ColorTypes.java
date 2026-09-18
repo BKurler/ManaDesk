@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - list Mono-Color above Multi-Color in the filter dialog
+ *     Rémi Dutil (2026) - "Extended Identity" checkbox: with Identity also
+ *                         checked, match the app's own oracle-text heuristic
+ *                         instead of Scryfall's own authoritative
+ *                         color_identity (the default once Identity alone is
+ *                         checked) - see MagicCardFilter#createColorGroup()
  */
 package com.reflexit.magiccards.core.model;
 
@@ -14,6 +19,7 @@ public class ColorTypes implements ISearchableProperty {
 	static public final String AND_ID = getInstance().getPrefConstant("And");
 	static public final String ONLY_ID = getInstance().getPrefConstant("Only");
 	static public final String IDENTITY_ID = getInstance().getPrefConstant("Identity");
+	static public final String EXTENDED_ID = getInstance().getPrefConstant("Extended Identity");
 
 	private ColorTypes() {
 		this.names = new LinkedHashMap<String, String>();
@@ -23,6 +29,7 @@ public class ColorTypes implements ISearchableProperty {
 		add("And");
 		add("Only");
 		add("Identity");
+		add("Extended Identity");
 	}
 
 	private void add(String string) {

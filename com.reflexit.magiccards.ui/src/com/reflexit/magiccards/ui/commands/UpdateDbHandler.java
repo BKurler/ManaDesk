@@ -15,6 +15,12 @@
  *     Rémi Dutil (2026) - offline is OK when a bulk file was already downloaded /
  *                         imported; record the set-file count for the startup
  *                         integrity check
+ *     Rémi Dutil (2026) - record LAST_PARSER_VERSION after a successful update
+ *                         (see ParseScryFallChecklist#PARSER_VERSION) - lets
+ *                         CheckForUpdateDbHandler notice "this data was
+ *                         derived by an older version of our own parsing
+ *                         logic" and prompt a refresh, instead of relying on
+ *                         the user to remember to click Update
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -40,6 +46,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.ICardHandler;
 import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore;
+import com.reflexit.magiccards.core.sync.ParseScryFallChecklist;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
@@ -63,6 +70,15 @@ public class UpdateDbHandler extends AbstractHandler {
 
 	public static int lastGoodSetCount() {
 		return MagicUIActivator.getDefault().getPreferenceStore().getInt(LAST_GOOD_SET_COUNT);
+	}
+
+	/** The {@code ParseScryFallChecklist#PARSER_VERSION} the local card
+	 *  database was last fully rebuilt with. 0 = never (a DB from before this
+	 *  existed, or one that's never actually finished an update). */
+	public static final String LAST_PARSER_VERSION = "cardDb.lastParserVersion";
+
+	public static int lastParserVersion() {
+		return MagicUIActivator.getDefault().getPreferenceStore().getInt(LAST_PARSER_VERSION);
 	}
 
 	/** True while an update job is scheduled or running. */
@@ -108,8 +124,11 @@ public class UpdateDbHandler extends AbstractHandler {
 					DataManager.getInstance().reconcile();
 					pm.worked(5);
 					int sets = ((DbMultiFileCardStore) DataManager.getInstance().getMagicDBStore()).loadedSetCount();
-					if (sets > 0)
+					if (sets > 0) {
 						MagicUIActivator.getDefault().getPreferenceStore().setValue(LAST_GOOD_SET_COUNT, sets);
+						MagicUIActivator.getDefault().getPreferenceStore().setValue(LAST_PARSER_VERSION,
+								ParseScryFallChecklist.PARSER_VERSION);
+					}
 					asyncExec(() -> {
 						reloadMagicDbView();
 						MessageDialog.openInformation(MagicUIActivator.getShell(), "Update Card Database",
