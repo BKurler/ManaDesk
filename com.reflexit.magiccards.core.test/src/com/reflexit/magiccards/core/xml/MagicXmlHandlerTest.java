@@ -11,11 +11,15 @@
  *     Rémi Dutil (2026) - proxy flag round-trip
  *     Rémi Dutil (2026) - removed the <rating> fixtures/assertion (community
  *                         rating is not a concept this app tracks anymore)
- *     Rémi Dutil (2026) - testXmlGen(): added the <finish>nonfoil</finish>
- *                         fixture line - FINISH is a real, non-transient
- *                         MagicCardField now, so it's always serialized
- *                         (getFinish() never returns null, even with no
- *                         explicit override)
+ *     Rémi Dutil (2026) - added the <finish>nonfoil</finish> line to the
+ *                         toXML() round-trip fixture below - FINISH is a
+ *                         real, non-transient MagicCardField now, so it's
+ *                         always serialized (getFinish() never returns null,
+ *                         even with no explicit override). NOTE: don't spell
+ *                         out test method names in this header - getAboveComment()'s
+ *                         line-scanner treats any "/*" comment other than
+ *                         "/*-" as plain code, so a stray method name here can
+ *                         false-match before the real fixture is even reached
  */
 
 package com.reflexit.magiccards.core.xml;

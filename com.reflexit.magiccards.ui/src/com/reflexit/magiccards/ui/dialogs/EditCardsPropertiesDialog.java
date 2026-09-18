@@ -15,6 +15,12 @@
  *                         multi-card-selection case is actually unit-tested
  *                         (EditCardsPropertiesDialogFinishTest), not just
  *                         reasoned about
+ *     Rémi Dutil (2026) - Condition combo now shows the abbreviation ("NM")
+ *                         instead of the full label ("Near Mint") - space is
+ *                         tight in every view that shows Condition, so every
+ *                         non-filter surface uses the abbreviation now; only
+ *                         the filter dialog's checkbox group still spells it
+ *                         out (CardConditions already did)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -155,13 +161,13 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 			shown = UNCHANGED;
 		} else {
 			CardCondition c = CardCondition.resolve(stored);
-			shown = c == null ? NOT_GRADED : c.getLabel();
+			shown = c == null ? NOT_GRADED : c.getAbbr();
 		}
 		CardCondition[] all = CardCondition.values();
 		String[] choices = new String[all.length + 2];
 		choices[0] = NOT_GRADED;
 		for (int i = 0; i < all.length; i++)
-			choices[i + 1] = all[i].getLabel();
+			choices[i + 1] = all[i].getAbbr();
 		choices[choices.length - 1] = UNCHANGED;
 		setComboChoices(condition, choices, shown);
 		condition.addSelectionListener(new SelectionAdapter() {

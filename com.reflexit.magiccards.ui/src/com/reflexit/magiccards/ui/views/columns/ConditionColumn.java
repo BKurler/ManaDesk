@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - created for ManaDesk: editable card-condition column
+ *     Rémi Dutil (2026) - drop-down choices now show the abbreviation ("NM")
+ *                         instead of the full label ("Near Mint") - space is
+ *                         tight in every view; the cell text itself was
+ *                         already the abbreviation (CardCondition#toString()),
+ *                         only the drop-down's own choice list was mismatched
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -20,7 +25,7 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 
 /**
- * The physical grade of a card copy. Cell text is the grade label ("Near Mint"),
+ * The physical grade of a card copy. Cell text is the abbreviation ("NM"),
  * blank for an ungraded copy - rendered by {@link AbstractColumn#getActualText}
  * straight from {@link CardCondition#toString()}. Editable via a drop-down whose
  * first entry clears the grade.
@@ -33,7 +38,7 @@ public class ConditionColumn extends GenColumn {
 		CHOICES = new String[v.length + 1];
 		CHOICES[0] = "—"; // em dash
 		for (int i = 0; i < v.length; i++)
-			CHOICES[i + 1] = v[i].getLabel();
+			CHOICES[i + 1] = v[i].getAbbr();
 	}
 
 	public ConditionColumn() {
