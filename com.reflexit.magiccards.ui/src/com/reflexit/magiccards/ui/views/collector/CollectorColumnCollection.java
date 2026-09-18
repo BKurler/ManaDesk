@@ -5,6 +5,9 @@
  *     Rémi Dutil (2026) - proxy-aware User / Online Price columns
  *     Rémi Dutil (2026) - removed the Community Rating column (community
  *                         rating is not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - Extended Color Identity column, next to the
+ *                         existing Color Identity one (now Scryfall's own
+ *                         authoritative color_identity, the default)
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -17,6 +20,7 @@ import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorIdentityColumn;
 import com.reflexit.magiccards.ui.views.columns.CostColumn;
+import com.reflexit.magiccards.ui.views.columns.ExtendedColorIdentityColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
 import com.reflexit.magiccards.ui.views.columns.GroupColumn;
 import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
@@ -73,6 +77,7 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(new GenColumn(MagicCardField.CTYPE, "Color Type"));
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
+		columns.add(new ExtendedColorIdentityColumn());
 		columns.add(new LegalityColumn());
 		columns.add(new TextColumn());
 		if (MagicUIActivator.TRACE_EXPORT) {

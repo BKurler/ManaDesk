@@ -13,6 +13,21 @@
  *                         in a deck was visibly "leaking" into the DB view)
  *     Rémi Dutil (2026) - removed RATING (community rating is not a concept
  *                         this app tracks anymore)
+ *     Rémi Dutil (2026) - COLOR now caches its value at import time instead
+ *                         of recomputing the oracle-text heuristic on every
+ *                         get() - falls back to the live computation only
+ *                         for a DB entry that predates this (see
+ *                         ParseScryFallChecklist). COLOR_IDENTITY is now
+ *                         Scryfall's own authoritative color_identity array
+ *                         (also cached at import), for legality (Commander
+ *                         color-identity rule) and as what "Identity" means
+ *                         everywhere in the app by default. The app's own
+ *                         oracle-text heuristic (what COLOR_IDENTITY used to
+ *                         compute) moved to the new COLOR_IDENTITY_EXTENDED -
+ *                         still there, unchanged, useful for search (e.g.
+ *                         finding a colorless fetch land that still
+ *                         "touches" green) but not accurate enough to gate
+ *                         legality on, and no longer the default
  */
 package com.reflexit.magiccards.core.model;
 
@@ -536,31 +551,64 @@ public enum MagicCardField implements ICardField {
 
 	COLOR(null) {
 		@Override
-		public Object get(IMagicCard card) {
-			// RD Return the Color, not the cost
-			return Colors.getInstance().getColorAsCost(card);
-		};
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
 
 		@Override
-		public void set(IMagicCard card, Object value) {
-			// ignore
-		}
+		public Object getM(MagicCard card) {
+			// Cached at import time (ParseScryFallChecklist); a DB entry
+			// that predates this still recomputes live here, same heuristic
+			// as before - RD Return the Color, not the cost
+			Object cached = card.getProperty(this);
+			return cached != null ? cached : Colors.getInstance().getColorAsCost(card);
+		};
 	},
-	COLOR_IDENTITY(null) {
+	COLOR_IDENTITY(null) { // Scryfall's own authoritative color_identity array
+							// (a cost string, e.g. "{W}{U}"; "{C}" for a
+							// CONFIRMED-colorless printing - see
+							// ParseScryFallChecklist#colorIdentityCostString();
+							// "" only ever means "never synced", not
+							// colorless - it never matches the "Colorless"
+							// filter checkbox, same as any other unknown
+							// value) - see the class header. "Identity"
+							// means this one; the app's own oracle-text
+							// heuristic is COLOR_IDENTITY_EXTENDED below
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			Object cached = card.getProperty(this);
+			return cached != null ? cached : "";
+		};
+	},
+	COLOR_IDENTITY_EXTENDED(null) { // the app's own oracle-text heuristic -
+										// looser than Scryfall's own
+										// COLOR_IDENTITY, useful for search
+										// (e.g. finding a colorless fetch
+										// land that still "touches" green),
+										// not accurate enough to gate
+										// legality on
 		@Override
 		public ICardVisitor getAggregator() {
 			return new StringAggregator(this);
 		}
 
 		@Override
-		public Object get(IMagicCard card) {
-			return Colors.getInstance().getColorIdentityAsCost(card);
-		};
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
 
 		@Override
-		public void set(IMagicCard card, Object value) {
-			// ignore
-		}
+		public Object getM(MagicCard card) {
+			// Cached at import time; live fallback for pre-existing DB
+			// entries - same oracle-text heuristic as before, unchanged
+			Object cached = card.getProperty(this);
+			return cached != null ? cached : Colors.getInstance().getColorIdentityAsCost(card);
+		};
 	},
 	ENGLISH_NAME(null) { // block of the set
 		@Override
@@ -1170,13 +1218,20 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
-	COLOR_IDENTITY_COMBINED(null) {
+	COLOR_IDENTITY_EXTENDED_COMBINED(null) { // the app's own heuristic
+												// (COLOR_IDENTITY_EXTENDED),
+												// concatenated across both
+												// faces - COLOR_IDENTITY
+												// itself (Scryfall's own data)
+												// needs no such combining, it
+												// is already the whole card's
+												// value on either face
 		@Override
 		public Object getM(MagicCard card) {
 			StringBuilder sb = new StringBuilder();
 
 			// front identity
-			Object front = card.get(COLOR_IDENTITY);
+			Object front = card.get(COLOR_IDENTITY_EXTENDED);
 			if (front != null)
 				sb.append(front.toString());
 
@@ -1187,7 +1242,7 @@ public enum MagicCardField implements ICardField {
 				if (store != null) {
 					IMagicCard flip = store.getCard(flipId);
 					if (flip != null) {
-						Object flipIden = flip.get(COLOR_IDENTITY);
+						Object flipIden = flip.get(COLOR_IDENTITY_EXTENDED);
 						if (flipIden != null) {
 							if (sb.length() > 0)
 								sb.append("\n");

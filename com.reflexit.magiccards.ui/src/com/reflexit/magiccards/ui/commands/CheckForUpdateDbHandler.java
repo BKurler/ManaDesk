@@ -4,6 +4,16 @@
  *     Rémi Dutil (2026) - checkInitialDatabase(): there is no bundled card DB any
  *                         more; on first run prompt to download it, and repair a
  *                         DB that has lost most of its set files
+ *     Rémi Dutil (2026) - checkParserVersion(): prompt to refresh the card
+ *                         database when it was last fully rebuilt by an
+ *                         older ParseScryFallChecklist#PARSER_VERSION than
+ *                         this build's - a code-only change to what gets
+ *                         derived from Scryfall's data (a new cached field,
+ *                         more legality formats read, ...) needs the SAME
+ *                         already-downloaded bulk file re-parsed to reach
+ *                         cards already in the local DB; nothing did that
+ *                         automatically before, it relied on the user
+ *                         noticing and clicking Update Card Database
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -26,6 +36,7 @@ import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
+import com.reflexit.magiccards.core.sync.ParseScryFallChecklist;
 import com.reflexit.magiccards.core.sync.ParseScryFallSets;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
 import com.reflexit.magiccards.core.sync.WebUtils;
@@ -108,7 +119,9 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 				if (good > 20 && db.loadedSetCount() < good - 10 && !WebUtils.isWorkOffline()) {
 					asyncInfo("Some card data is missing - updating the card database in the background.");
 					UpdateDbHandler.performUpdate();
+					return Status.OK_STATUS;
 				}
+				checkParserVersion();
 				return Status.OK_STATUS;
 			}
 		}.schedule(4000);
@@ -162,6 +175,35 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 	private static void asyncInfo(String msg) {
 		Display.getDefault().asyncExec(
 				() -> MessageDialog.openInformation(MagicUIActivator.getShell(), "Card Database", msg));
+	}
+
+	/**
+	 * Compares {@link ParseScryFallChecklist#PARSER_VERSION} (this build) against
+	 * {@link UpdateDbHandler#lastParserVersion()} (what the local database was
+	 * last fully rebuilt with). If this build derives more/different data from
+	 * Scryfall's bulk file than the local database was built with, prompt to
+	 * refresh - {@link UpdateDbHandler#performUpdate()} re-parses the already
+	 * downloaded bulk file, so this never needs a fresh network fetch.
+	 * <p>
+	 * Only called once {@link #checkInitialDatabase()} has already established
+	 * the database is non-empty and not missing a large chunk of its set files -
+	 * those cases already trigger their own update.
+	 */
+	private static void checkParserVersion() {
+		if (UpdateDbHandler.lastParserVersion() >= ParseScryFallChecklist.PARSER_VERSION)
+			return;
+		if (UpdateDbHandler.isRunning())
+			return;
+		if (WebUtils.isWorkOffline() && !ScryfallBulkCache.hasLocalBulk())
+			return; // nothing to re-parse from yet - same guard performUpdate() itself uses
+		Display.getDefault().asyncExec(() -> {
+			if (UpdateDbHandler.isRunning())
+				return;
+			if (MessageDialog.openQuestion(MagicUIActivator.getShell(), "Card Database",
+					"This version of ManaDesk reads some additional card data that your local database "
+							+ "hasn't been refreshed with yet.\n\nRefresh the card database now?"))
+				UpdateDbHandler.performUpdate();
+		});
 	}
 
 	/** Auto-check ~15 s after startup (silent when there is nothing new). */

@@ -19,6 +19,22 @@
  *                         testFinishAndExcludesUncheckedFinishes (opposite
  *                         expectation) and added
  *                         testFinishAndSingleCheckedMeansExactlyThatFinish
+ *     Rémi Dutil (2026) - split each old *Identity test in two, covering both
+ *                         sides of the Identity/Extended Identity swap:
+ *                         testColorBlackOrRedIdentity/testColorBlackAndRedIdentity/
+ *                         testColorlessIdentity now test strict Identity via
+ *                         the new mcpIdentity() helper (an explicit
+ *                         MagicCardField.COLOR_IDENTITY value, the way
+ *                         ParseScryFallChecklist actually populates it from
+ *                         Scryfall) instead of inferring anything from cost;
+ *                         testColorIdentityNeverInfersFromCostOrOracleText
+ *                         locks that in. The original cost/oracle-text-based
+ *                         versions moved to
+ *                         testColorBlackOrRedExtendedIdentity/
+ *                         testColorBlackAndRedExtendedIdentity/
+ *                         testColorlessExtendedIdentity (ColorTypes.EXTENDED_ID)
+ *                         - unchanged otherwise, that heuristic is exactly
+ *                         what they were already testing
  */
 package com.reflexit.magiccards.core.model;
 
@@ -504,13 +520,81 @@ public class MagicCardFilterTest extends TestCase {
 		checkFound(wbr);
 	}
 
+	/** Identity (strict, no Extended Identity) - matches only against an
+	 *  EXPLICIT {@link MagicCardField#COLOR_IDENTITY} value, the way
+	 *  ParseScryFallChecklist actually populates it from Scryfall's own
+	 *  color_identity array. Never inferred from cost/oracle text - that is
+	 *  what {@link #testColorBlackOrRedExtendedIdentity} covers instead. */
+	public MagicCardPhysical mcpIdentity(String identityCost) {
+		MagicCardPhysical p = mcp();
+		p.getCard().set(MagicCardField.COLOR_IDENTITY, identityCost);
+		return p;
+	}
+
 	public void testColorBlackOrRedIdentity() {
+		MagicCardPhysical b = mcpIdentity(BLACK_COST);
+		MagicCardPhysical r = mcpIdentity(RED_COST);
+		MagicCardPhysical w = mcpIdentity(WHITE_COST);
+		MagicCardPhysical wb = mcpIdentity(WHITE_COST + BLACK_COST);
+		MagicCardPhysical br = mcpIdentity(BLACK_COST + RED_COST);
+		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID);
+		checkFound(b);
+		checkFound(r);
+		checkNotFound(w);
+		checkFound(wb);
+		checkFound(br);
+	}
+
+	/** Strict Identity never falls back to guessing from cost/oracle text -
+	 *  a card whose COLOR_IDENTITY was never synced from Scryfall reads as
+	 *  colorless here, even though its cost clearly implies a color (that
+	 *  cost-based guess is exactly what Extended Identity is for). */
+	public void testColorIdentityNeverInfersFromCostOrOracleText() {
+		MagicCardPhysical b = mcpCost(BLACK_COST); // cost only, no explicit identity
+		setFilterTrue(black_id, ColorTypes.IDENTITY_ID);
+		checkNotFound(b);
+		b.set(MagicCardField.ORACLE, "{B} - do something"); // black in oracle text either
+		checkNotFound(b);
+	}
+
+	public void testColorBlackAndRedIdentity() {
+		MagicCardPhysical b = mcpIdentity(BLACK_COST);
+		MagicCardPhysical r = mcpIdentity(RED_COST);
+		MagicCardPhysical w = mcpIdentity(WHITE_COST);
+		MagicCardPhysical wb = mcpIdentity(WHITE_COST + BLACK_COST);
+		MagicCardPhysical br = mcpIdentity(BLACK_COST + RED_COST);
+		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID, ColorTypes.AND_ID);
+		checkNotFound(b);
+		checkNotFound(r);
+		checkNotFound(w);
+		checkNotFound(wb);
+		checkFound(br);
+	}
+
+	// --- Extended Identity (the app's own oracle-text heuristic, inferred
+	// live from cost/oracle text - ColorTypes.EXTENDED_ID) -------------------
+
+	/** Regression: Extended Identity must work checked on its own, without
+	 *  also needing the plain "Identity" checkbox - the two read as
+	 *  independent checkboxes in the UI, and checking only Extended Identity
+	 *  used to silently fall through to plain COLOR (ignoring identity
+	 *  entirely) because MagicCardFilter#createColorGroup() only looked at
+	 *  ColorTypes.EXTENDED_ID inside the "if IDENTITY_ID is checked" branch. */
+	public void testColorExtendedIdentityWorksWithoutIdentityCheckbox() {
+		MagicCardPhysical b = mcpCost(BLACK_COST);
+		MagicCardPhysical w = mcpCost(WHITE_COST);
+		setFilterTrue(black_id, ColorTypes.EXTENDED_ID); // no IDENTITY_ID here
+		checkFound(b);
+		checkNotFound(w);
+	}
+
+	public void testColorBlackOrRedExtendedIdentity() {
 		MagicCardPhysical b = mcpCost(BLACK_COST);
 		MagicCardPhysical r = mcpCost(RED_COST);
 		MagicCardPhysical w = mcpCost(WHITE_COST);
 		MagicCardPhysical wb = mcpCost(WHITE_COST + BLACK_COST);
 		MagicCardPhysical br = mcpCost(BLACK_COST + RED_COST);
-		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID);
+		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID, ColorTypes.EXTENDED_ID);
 		checkFound(b);
 		checkFound(r);
 		checkNotFound(w);
@@ -526,14 +610,14 @@ public class MagicCardFilterTest extends TestCase {
 		checkNotFound(w);
 	}
 
-	public void testColorBlackAndRedIdentity() {
+	public void testColorBlackAndRedExtendedIdentity() {
 		MagicCardPhysical b = mcpCost(BLACK_COST);
 		MagicCardPhysical r = mcpCost(RED_COST);
 		MagicCardPhysical w = mcpCost(WHITE_COST);
 		MagicCardPhysical wb = mcpCost(WHITE_COST + BLACK_COST);
 		MagicCardPhysical br = mcpCost(BLACK_COST + RED_COST);
 		MagicCardPhysical brh = mcpCost("{B/R}");
-		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID, ColorTypes.AND_ID);
+		setFilterTrue(black_id, red_id, ColorTypes.IDENTITY_ID, ColorTypes.EXTENDED_ID, ColorTypes.AND_ID);
 		checkNotFound(b);
 		checkNotFound(r);
 		checkNotFound(w);
@@ -578,14 +662,32 @@ public class MagicCardFilterTest extends TestCase {
 		checkFound(wbr);
 	}
 
+	/** Strict Identity: "Colorless" only matches a printing Scryfall
+	 *  positively CONFIRMED colorless (an empty color_identity array, stored
+	 *  as the literal marker {@code "{C}"} - see
+	 *  ParseScryFallChecklist#colorIdentityCostString()). A card never synced
+	 *  from Scryfall (no explicit COLOR_IDENTITY at all) is "" - unknown, not
+	 *  colorless - and does NOT match, same as {@link #testColorlessExtendedIdentity}'s
+	 *  own {@code c0} (a literal empty cost) doesn't match either. */
 	public void testColorlessIdentity() {
+		MagicCardPhysical neverSynced = mcp();
+		MagicCardPhysical confirmedColorless = mcpIdentity("{C}");
+		MagicCardPhysical black = mcpIdentity(BLACK_COST);
+		String colorless_id = Colors.getInstance().getPrefConstant(Colors.getColorName("{C}"));
+		setFilterTrue(colorless_id, ColorTypes.IDENTITY_ID);
+		checkNotFound(neverSynced);
+		checkFound(confirmedColorless);
+		checkNotFound(black);
+	}
+
+	public void testColorlessExtendedIdentity() {
 		MagicCardPhysical c2 = mcpCost("{2}");
 		MagicCardPhysical c1 = mcpCost("{1}");
 		MagicCardPhysical c0 = mcpCost("");
 		MagicCardPhysical wc = mcpCost("{W}{1}");
 		MagicCardPhysical w = mcpCost("{W}");
 		String colorless_id = Colors.getInstance().getPrefConstant(Colors.getColorName("{C}"));
-		setFilterTrue(colorless_id, ColorTypes.IDENTITY_ID);
+		setFilterTrue(colorless_id, ColorTypes.IDENTITY_ID, ColorTypes.EXTENDED_ID);
 		checkFound(c2);
 		checkFound(c1);
 		checkNotFound(c0);

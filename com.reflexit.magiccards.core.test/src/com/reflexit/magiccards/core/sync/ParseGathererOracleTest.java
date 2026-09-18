@@ -3,6 +3,14 @@
  *     Rémi Dutil (2026) - testSlashR: repointed from the removed RATING field
  *                         to ARTIST (community rating is not a concept this
  *                         app tracks anymore)
+ *     Rémi Dutil (2026) - testColorIndicatorBG: repointed from COLOR_IDENTITY
+ *                         to COLOR_IDENTITY_EXTENDED - this card is built via
+ *                         load() (a Gatherer HTML fixture), never through
+ *                         ParseScryFallChecklist, so it has no cached
+ *                         COLOR_IDENTITY (Scryfall's own authoritative data,
+ *                         "" when absent); what this test actually checks -
+ *                         the color-indicator-aware oracle-text heuristic -
+ *                         is COLOR_IDENTITY_EXTENDED now
  */
 package com.reflexit.magiccards.core.sync;
 
@@ -191,7 +199,7 @@ public class ParseGathererOracleTest extends TestCase {
 		assertEquals("181b", card.getCollNumber());
 		assertEquals("Black, Green", card.get(MagicCardField.COLOR_INDICATOR));
 		// String icost = Colors.getInstance().getColorIdentityAsCost(card);
-		Object object = card.get(MagicCardField.COLOR_IDENTITY);
+		Object object = card.get(MagicCardField.COLOR_IDENTITY_EXTENDED);
 		assertEquals("{B}{G}", object);
 	}
 
