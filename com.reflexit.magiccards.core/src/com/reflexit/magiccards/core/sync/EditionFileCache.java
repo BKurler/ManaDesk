@@ -1,12 +1,20 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - ensureSetSymbolExists()/renderWithBackground(): the
+ *                         icon was painted on a SOLID rarity-colour square
+ *                         (filled the whole 19x19 canvas) with the raw,
+ *                         un-tinted SVG glyph drawn on top - it displayed as
+ *                         a blocky coloured square with a plain black shape
+ *                         cut into it, not the usual thin rarity-tinted
+ *                         symbol on a transparent background. Switched to
+ *                         the same render-then-tint-on-transparent approach
+ *                         getImageCachedFile() already used correctly.
  */
 
 package com.reflexit.magiccards.core.sync;
 
 import java.awt.Color;
-import java.awt.Graphics2D;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
@@ -31,9 +39,9 @@ public class EditionFileCache {
 	}
 
 	/**
-	 * Ensures that the set symbol PNG exists locally.
-	 * Downloads the SVG, rasterizes at high resolution, applies rarity tint,
-	 * adds outline (except for black), downsizes to 19x19, sharpens, and saves.
+	 * Ensures that the set symbol PNG exists locally. Downloads the SVG,
+	 * rasterizes it at 19x19 on a transparent background, tints it per
+	 * rarity, and saves it as a PNG.
 	 */
 	public File ensureSetSymbolExists(String rarity) {
 		try {
@@ -57,9 +65,9 @@ public class EditionFileCache {
 			}
 
 			RarityColor rc = RarityColor.valueOf(rarity.toUpperCase());
-			Color bg = rc.color;
 
-			BufferedImage bi = renderWithBackground(svgUrl, 19, bg);
+			BufferedImage bi = SvgRasterizer.renderSvg(svgUrl, 19, 19);
+			bi = SvgRasterizer.tint(bi, rc.color);
 
 			localFile.getParentFile().mkdirs();
 			ImageIO.write(bi, "PNG", localFile);
@@ -76,20 +84,6 @@ public class EditionFileCache {
 		if ("Land".equals(rarity))
 			return "Common";
 		return rarity;
-	}
-
-	public static BufferedImage renderWithBackground(URL svgUrl, int size, Color bg) throws Exception {
-		BufferedImage out = new BufferedImage(size, size, BufferedImage.TYPE_INT_ARGB);
-
-		Graphics2D g = out.createGraphics();
-		g.setColor(bg);
-		g.fillRect(0, 0, size, size);
-
-		BufferedImage symbol = SvgRasterizer.renderSvgPreserveColor(svgUrl, size, size);
-		g.drawImage(symbol, 0, 0, null);
-
-		g.dispose();
-		return out;
 	}
 
 	public CachedFile getImageCachedFile(String rarity, boolean forceRemote) throws IOException {

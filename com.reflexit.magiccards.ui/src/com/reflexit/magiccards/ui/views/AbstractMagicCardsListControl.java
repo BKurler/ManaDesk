@@ -28,6 +28,16 @@
  *                         time (before a deck/collection's CardCollection had
  *                         even loaded), which made Deck and Collection views
  *                         appear to share their column settings
+ *     Rémi Dutil (2026) - createTopBar(): quickFilter's layout data was a
+ *                         bare "new GridData()", silently overriding the grab
+ *                         QuickFilterControl already sets on itself - all the
+ *                         row's leftover space went to statusLine instead, so
+ *                         the quick filter's own Set field was stuck at its
+ *                         floor width no matter how wide the view was
+ *     Rémi Dutil (2026) - new showOwnershipKindFilters() hook, passed through
+ *                         to QuickFilterControl - lets only "My Cards" (the
+ *                         one view spanning every deck/collection at once)
+ *                         show the Own/Virtual and Collections/Decks toggles
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -951,8 +961,21 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			public void run() {
 				refilterData();
 			}
-		}, false);
+		}, false, showOwnershipKindFilters());
 		return quickFilter;
+	}
+
+	/**
+	 * Whether the quick filter bar's Own/Virtual and Collections/Decks toggle
+	 * buttons make sense here - only "My Cards" spans every deck/collection at
+	 * once, so it's the only place a card's ownership or its container's kind
+	 * is even an ambiguous question. Everywhere else (a single deck, a single
+	 * collection, the card database, Collector, Printings, ...) every row
+	 * already has a fixed answer to both, so the toggles would just be dead
+	 * weight. Overridden to {@code true} only by MyCardsView's own control.
+	 */
+	protected boolean showOwnershipKindFilters() {
+		return false;
 	}
 
 	/**
@@ -1064,9 +1087,14 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		topToolBar.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		topToolBar.setLayout(GridLayoutFactory.fillDefaults().numColumns(3).create());
 		quickFilter = createQuickFilterControl(topToolBar);
-		quickFilter.setLayoutData(new GridData());
+		// grabs the row's leftover horizontal space - previously a bare
+		// "new GridData()" here silently overrode the grab QuickFilterControl
+		// already sets on itself, so all the leftover space went to
+		// statusLine instead, leaving the quick filter's own Set field stuck
+		// at its floor width no matter how wide the view was
+		quickFilter.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		statusLine = createStatusLine(topToolBar);
-		statusLine.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).grab(true, false).create());
+		statusLine.setLayoutData(GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).create());
 		warning = new Label(topToolBar, SWT.NONE);
 		warning.setImage(MagicUIActivator.getImage("icons/clcl16/exclamation.gif"));
 		warning.setToolTipText("There are filtered cards!");

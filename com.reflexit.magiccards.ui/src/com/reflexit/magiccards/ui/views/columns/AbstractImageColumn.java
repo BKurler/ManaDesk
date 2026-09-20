@@ -1,3 +1,15 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - handleMeasureEvent(): row height was never adjusted
+ *                         for the image a column paints (paintCellWithImage
+ *                         is a custom PaintListener draw, not a native
+ *                         TableItem/TreeItem icon, so SWT's own row-height
+ *                         auto-sizing never saw it) - a row shorter than the
+ *                         image got the image's top/bottom clipped by the
+ *                         cell's paint region, which reads as a squashed,
+ *                         too-wide icon (e.g. the 19x19 Set symbol in a view
+ *                         whose row height otherwise comes out under 19px)
+ */
 package com.reflexit.magiccards.ui.views.columns;
 
 import org.eclipse.swt.SWT;
@@ -86,7 +98,15 @@ public abstract class AbstractImageColumn extends GenColumn implements Listener 
 	}
 
 	protected void handleMeasureEvent(Event event) {
-		// do nothing
+		Item item = (Item) event.item;
+		Object row = item.getData();
+		Image image = getActualImage(row);
+		if (image != null) {
+			int imageHeight = image.getBounds().height;
+			if (event.height < imageHeight) {
+				event.height = imageHeight;
+			}
+		}
 	}
 
 	protected void handleEraseEvent(Event event) {
