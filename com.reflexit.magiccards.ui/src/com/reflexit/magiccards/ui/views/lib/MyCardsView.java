@@ -4,6 +4,10 @@
  *                         access crash (now via WaitUtils.asyncExec), wrote to
  *                         the wrong preference store (filter store, not the
  *                         columns store), and did not match the "-extra" suffix
+ *     Rémi Dutil (2026) - MyCardPresentation#showOwnershipKindFilters(): the
+ *                         only view where the quick filter bar's Own/Virtual
+ *                         and Collections/Decks toggles make sense (see
+ *                         AbstractMagicCardsListControl#showOwnershipKindFilters())
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -53,6 +57,14 @@ public class MyCardsView extends AbstractMyCardsView {
 		@Override
 		protected void makeActions() {
 			super.makeActions();
+		}
+
+		@Override
+		protected boolean showOwnershipKindFilters() {
+			// "My Cards" is the one view that spans every deck/collection at
+			// once, so the Own/Virtual and Collections/Decks quick-filter
+			// toggles are only meaningful here
+			return true;
 		}
 	}
 
