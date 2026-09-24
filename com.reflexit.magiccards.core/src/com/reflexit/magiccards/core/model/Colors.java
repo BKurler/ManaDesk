@@ -1,6 +1,16 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - COLOR/COLOR_IDENTITY/COLOR_IDENTITY_EXTENDED now
+ *                         aggregate a Collector Name-group (several printings
+ *                         of the same card) via ColorUnionAggregator, which
+ *                         concatenates every printing's own cost-string
+ *                         instead of colliding to "*" on any disagreement -
+ *                         getColorName() already only looks at which W/U/B/
+ *                         R/G symbols are PRESENT, not how many times, so no
+ *                         change was needed here: it naturally reports the
+ *                         union, e.g. "White-Blue" for a group mixing a
+ *                         white printing and a blue one
  */
 
 package com.reflexit.magiccards.core.model;

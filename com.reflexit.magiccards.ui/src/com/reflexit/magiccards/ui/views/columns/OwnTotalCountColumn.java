@@ -13,7 +13,7 @@ public class OwnTotalCountColumn extends CountColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 60;
+		return 75; // +25% from 60
 	}
 
 	@Override

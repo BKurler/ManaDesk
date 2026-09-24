@@ -27,6 +27,6 @@ public class OwnUniqueColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 45;
+		return 71; // +25% from 45, then +15px
 	}
 }

@@ -9,12 +9,31 @@
  *                         cell's paint region, which reads as a squashed,
  *                         too-wide icon (e.g. the 19x19 Set symbol in a view
  *                         whose row height otherwise comes out under 19px)
+ *     Rémi Dutil (2026) - paintCellWithImage(): schedule a one-shot, debounced
+ *                         redraw of the whole control when getActualImage()
+ *                         comes back null - images like the Set symbol load
+ *                         asynchronously (see ImageCreator#getSetImage(IMagicCard)'s
+ *                         own "first paint returns null; next paint will find
+ *                         cached image" comment) and nothing was ever
+ *                         triggering that "next paint" once the async load
+ *                         actually finished (the refreshSetIconViewer()/
+ *                         setSetIconViewer() machinery meant for this is
+ *                         never wired up - setSetIconViewer() has no
+ *                         callers), so a row only ever got its icon if some
+ *                         unrelated repaint happened to land after the load
+ *                         completed - otherwise it was stuck blank/glitched
+ *                         indefinitely
  */
 package com.reflexit.magiccards.ui.views.columns;
+
+import java.util.Collections;
+import java.util.Set;
+import java.util.WeakHashMap;
 
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Image;
 import org.eclipse.swt.graphics.Rectangle;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Item;
 import org.eclipse.swt.widgets.Listener;
@@ -25,6 +44,31 @@ import com.reflexit.magiccards.core.model.abs.ICardField;
 
 public abstract class AbstractImageColumn extends GenColumn implements Listener {
 	protected boolean cannotPaintImage = false;
+
+	/** One pending redraw timer per control at a time - getActualImage()
+	 *  returning null happens on every paint of every not-yet-loaded cell,
+	 *  so without this a single screenful of rows would each schedule their
+	 *  own timer. */
+	private static final Set<Control> pendingImageRedraws = Collections
+			.newSetFromMap(new WeakHashMap<Control, Boolean>());
+
+	/** See this class' own header for why - retries a control's paint once,
+	 *  400ms later, after an image column found nothing to draw yet. */
+	private static void scheduleRedrawWhenImageReady(Control control) {
+		if (control == null || control.isDisposed())
+			return;
+		synchronized (pendingImageRedraws) {
+			if (!pendingImageRedraws.add(control))
+				return; // already scheduled
+		}
+		control.getDisplay().timerExec(400, () -> {
+			synchronized (pendingImageRedraws) {
+				pendingImageRedraws.remove(control);
+			}
+			if (!control.isDisposed())
+				control.redraw();
+		});
+	}
 
 	public AbstractImageColumn(ICardField field, String name) {
 		super(field, name);
@@ -68,6 +112,12 @@ public abstract class AbstractImageColumn extends GenColumn implements Listener 
 			leftMargin = imageWidth;
 			Rectangle imageBounds = image.getBounds();
 			event.gc.drawImage(image, x + (imageWidth - imageBounds.width) / 2, y + (h - imageBounds.height) / 2);
+		} else {
+			// nothing to draw *this* time - if it's actually still loading
+			// asynchronously (e.g. the Set symbol), retry once it's had a
+			// chance to finish; a permanently image-less row just repaints
+			// the same way again, which is harmless
+			scheduleRedrawWhenImageReady(event.widget instanceof Control ? (Control) event.widget : null);
 		}
 		paintCellText(event, row, y, x, w, h, leftMargin);
 	}

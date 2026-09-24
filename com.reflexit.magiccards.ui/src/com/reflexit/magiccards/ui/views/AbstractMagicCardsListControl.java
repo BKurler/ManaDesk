@@ -38,6 +38,17 @@
  *                         to QuickFilterControl - lets only "My Cards" (the
  *                         one view spanning every deck/collection at once)
  *                         show the Own/Virtual and Collections/Decks toggles
+ *     Rémi Dutil (2026) - refreshViewer() now saves/restores the tree's
+ *                         expanded elements around setInput() (unlike
+ *                         refresh(), setInput() never preserves expansion on
+ *                         its own) - every reload goes through here, even
+ *                         ones that only change displayed numbers, not which
+ *                         rows exist (e.g. Collector's "Count Proxies"/"Count
+ *                         Finishes Separately" toggles), so every such toggle
+ *                         used to visibly collapse the whole tree. Each half
+ *                         is wrapped in its own try/catch - a failure there
+ *                         must never skip setInput() itself (that briefly
+ *                         broke Collector's very first load at app startup)
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -62,6 +73,7 @@ import org.eclipse.jface.preference.IPersistentPreferenceStore;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.jface.util.PropertyChangeEvent;
+import org.eclipse.jface.viewers.AbstractTreeViewer;
 import org.eclipse.jface.viewers.DoubleClickEvent;
 import org.eclipse.jface.viewers.IDoubleClickListener;
 import org.eclipse.jface.viewers.ISelection;
@@ -1638,6 +1650,17 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		debouncedRefresh.run();
 	}
 
+	/** The tree underlying {@link #viewer}, or null when this control's
+	 *  presentation isn't tree-based (a flat table, or SplitViewer's own
+	 *  {@link IMagicViewer#getViewer()} - which returns its right-pane
+	 *  table, not its left-pane group navigator). */
+	private AbstractTreeViewer underlyingTreeViewer() {
+		if (viewer == null)
+			return null;
+		Viewer v = viewer.getViewer();
+		return v instanceof AbstractTreeViewer ? (AbstractTreeViewer) v : null;
+	}
+
 	/**
 	 * Update view in UI thread after data load is finished.
 	 */
@@ -1665,8 +1688,39 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 			boolean hadPendingReveal = !pendingRevealKeys.isEmpty();
 
+			// setInput() unconditionally collapses a tree (unlike refresh(), it
+			// does not diff old vs. new content) - every reload goes through
+			// here, including ones that don't change *what* rows exist at all
+			// (e.g. Collector's "Count Proxies"/"Count Finishes Separately"
+			// toggles, which only change displayed numbers). CardGroup#equals()
+			// is name/parent based, so an equivalent group in the freshly
+			// rebuilt tree matches an old one here the same way it already
+			// does for JFace's own expand-state diffing inside refresh().
+			// Capture/restore are each independently swallowed - this whole
+			// method already runs inside one big try/catch, so letting either
+			// call throw uncaught here would skip setInput() itself on this
+			// pass (e.g. a first-ever call on a still-empty virtual tree),
+			// which made the view appear simply never populated rather than
+			// just losing its expand state for one refresh.
+			AbstractTreeViewer treeViewer = underlyingTreeViewer();
+			Object[] expandedElements = null;
+			if (treeViewer != null) {
+				try {
+					expandedElements = treeViewer.getExpandedElements();
+				} catch (Exception e) {
+					MagicLogger.log(e);
+				}
+			}
+
 			viewer.setInput(filteredStore);
 			lastInput = filteredStore;
+			if (treeViewer != null && expandedElements != null && expandedElements.length > 0) {
+				try {
+					treeViewer.setExpandedElements(expandedElements);
+				} catch (Exception e) {
+					MagicLogger.log(e);
+				}
+			}
 			// Snapshot the element list *now*, right after setInput populated the
 			// viewer's content from it. A background update() can rebuild the
 			// group tree with fresh instances a moment later; selecting against a

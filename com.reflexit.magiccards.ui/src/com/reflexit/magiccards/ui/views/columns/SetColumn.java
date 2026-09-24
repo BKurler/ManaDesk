@@ -74,7 +74,7 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 
 	@Override
 	public int getColumnWidth() {
-		return 150;
+		return 165; // +10% from 150
 	}
 
 	@Override

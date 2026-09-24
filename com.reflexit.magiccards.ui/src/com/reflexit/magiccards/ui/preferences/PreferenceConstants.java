@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - COLLECTOR_COUNT_PROXIES constant
+ *     Rémi Dutil (2026) - COLLECTOR_COUNT_FINISHES_SEPARATELY constant
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -43,4 +44,8 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String PRESENTATION_VIEW = PREFIX + ".viewas";
 	/** Collector view: include proxy copies in completion % and value totals. */
 	public static final String COLLECTOR_COUNT_PROXIES = PREFIX + ".collectorCountProxies";
+	/** Collector view: treat each finish (nonfoil/foil/etched) of a printing
+	 *  as its own slot to complete, instead of any one finish completing the
+	 *  whole printing. */
+	public static final String COLLECTOR_COUNT_FINISHES_SEPARATELY = PREFIX + ".collectorCountFinishesSeparately";
 }

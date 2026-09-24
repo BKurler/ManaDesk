@@ -1,3 +1,18 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - checkStateChanged()/Select All/Deselect All now
+ *                         call setPresentsDefaultValue(false), matching what
+ *                         swap() (the Up/Down buttons) already did -
+ *                         FieldEditor.store() checks that flag and, while
+ *                         it's still true from a prior "Restore Defaults"
+ *                         click, skips doStore() entirely in favour of just
+ *                         re-applying the default straight to the
+ *                         preference store on OK. Any checkbox toggle or
+ *                         Select All/Deselect All made after Restore
+ *                         Defaults - but before OK - was silently discarded
+ *                         because of this; only reordering via Up/Down
+ *                         happened to survive.
+ */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
 import java.util.ArrayList;
@@ -97,6 +112,7 @@ public class ColumnFieldEditor extends CheckedTreeEditor {
 	@Override
 	public void checkStateChanged(CheckStateChangedEvent event) {
 		super.checkStateChanged(event);
+		setPresentsDefaultValue(false);
 		Object element = event.getElement();
 		if (element instanceof AbstractColumn) {
 			((AbstractColumn) element).setVisible(event.getChecked());
@@ -138,6 +154,7 @@ public class ColumnFieldEditor extends CheckedTreeEditor {
 		selectButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				setPresentsDefaultValue(false);
 				modelFromString("+");
 				getViewer().refresh();
 			}
@@ -145,6 +162,7 @@ public class ColumnFieldEditor extends CheckedTreeEditor {
 		deselectButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
+				setPresentsDefaultValue(false);
 				modelFromString("-");
 				getViewer().refresh();
 			}

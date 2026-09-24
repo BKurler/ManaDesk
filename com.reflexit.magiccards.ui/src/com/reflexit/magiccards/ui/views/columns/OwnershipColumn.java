@@ -38,7 +38,7 @@ public class OwnershipColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 22;
+		return 25; // +3px
 	}
 
 	@Override

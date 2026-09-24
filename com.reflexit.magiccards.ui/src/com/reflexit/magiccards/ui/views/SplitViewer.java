@@ -1,3 +1,22 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - doGetColumnCollection(): drop Sideboard/Extra/Date/
+ *                         User Price/Ownership/Count/Location/Condition/
+ *                         Proxy/Comment/Special/For Trade - this is the
+ *                         split-tree presentation's column set, used by the
+ *                         Scryfall Database view; every one of these is a
+ *                         single-copy attribute that can differ across every
+ *                         deck/collection a card is owned in, so a single
+ *                         value per row here would be misleading
+ *     Rémi Dutil (2026) - moved that filtering into a real, named class
+ *                         (MagicDbColumnCollection, see its own header) - it
+ *                         used to live in an anonymous MagicColumnCollection
+ *                         subclass defined inline here, invisible to
+ *                         MagicDbViewPreferencePage, whose "Visible Columns
+ *                         and Order" list built its own separate, unfiltered
+ *                         collection and kept offering every one of these
+ *                         columns regardless
+ */
 package com.reflexit.magiccards.ui.views;
 
 import java.util.List;
@@ -24,8 +43,7 @@ import com.reflexit.magiccards.core.model.storage.ArrayCardStorage;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.ui.utils.SelectionProviderIntermediate;
 import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
-import com.reflexit.magiccards.ui.views.columns.GroupColumn;
-import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
+import com.reflexit.magiccards.ui.views.columns.MagicDbColumnCollection;
 import com.reflexit.magiccards.ui.views.model.ExpandContentProvider;
 import com.reflexit.magiccards.ui.views.model.ISizeContentProvider;
 
@@ -133,13 +151,12 @@ public class SplitViewer implements IMagicColumnViewer {
 		return true;
 	};
 
+	/** A real, named class (see its own header) instead of an anonymous one
+	 *  here - {@link com.reflexit.magiccards.ui.preferences.MagicDbViewPreferencePage}'s
+	 *  "Visible Columns and Order" list needs the exact same column set, and
+	 *  an anonymous class defined inline here would be invisible to it. */
 	protected ColumnCollection doGetColumnCollection(String prefPageId) {
-		return new MagicColumnCollection(prefPageId) {
-			@Override
-			protected GroupColumn createGroupColumn() {
-				return new GroupColumn(false, true, false);
-			}
-		};
+		return new MagicDbColumnCollection(prefPageId);
 	}
 
 	@Override
