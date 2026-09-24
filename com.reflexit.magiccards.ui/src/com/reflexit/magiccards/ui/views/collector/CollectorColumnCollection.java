@@ -8,6 +8,22 @@
  *     Rémi Dutil (2026) - Extended Color Identity column, next to the
  *                         existing Color Identity one (now Scryfall's own
  *                         authoritative color_identity, the default)
+ *     Rémi Dutil (2026) - Finish column - a printing can offer more than one
+ *                         (nonfoil/foil/etched), which the completion math
+ *                         doesn't distinguish between (see class-level note)
+ *                         but is still worth being able to see and filter by
+ *     Rémi Dutil (2026) - createFinishColumn(): +30px here only (+15, then
+ *                         +15 more) - a row here is a printing, not a single
+ *                         owned copy, so the cell shows every finish the
+ *                         printing supports joined together ("Nonfoil, Foil,
+ *                         Etched"), which needs more room than a
+ *                         single-copy view's one-word value
+ *     Rémi Dutil (2026) - Artist/Color Type/TCGplayer ID now built via the
+ *                         base class' own createArtistColumn()/
+ *                         createColorTypeColumn()/createTcgIdColumn()
+ *                         instead of a separate inline GenColumn(...) each -
+ *                         so their tuned widths apply here too, not just in
+ *                         the other 6 regular views
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -21,6 +37,7 @@ import com.reflexit.magiccards.ui.views.columns.ColorColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorIdentityColumn;
 import com.reflexit.magiccards.ui.views.columns.CostColumn;
 import com.reflexit.magiccards.ui.views.columns.ExtendedColorIdentityColumn;
+import com.reflexit.magiccards.ui.views.columns.FinishColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
 import com.reflexit.magiccards.ui.views.columns.GroupColumn;
 import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
@@ -60,13 +77,14 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(new OwnTotalCountColumn());
 		columns.add(createSetColumn());                // "Set"
 		columns.add(new GenColumn(MagicCardField.RARITY, "Rarity"));
+		columns.add(createFinishColumn());             // "Finish" - which finishes this printing supports
 		columns.add(createCollectorsNumberColumn());   // "Collector's Number"
-		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
+		columns.add(createArtistColumn());
 		columns.add(new LanguageColumn());
 		columns.add(new ReleaseDateColumn());
 		columns.add(createGathererIdColumn());         // "Multiverse ID"
 		columns.add(createIdColumn());                 // "Card Id"
-		columns.add(new GenColumn(MagicCardField.TCGID, "TCGplayer ID"));
+		columns.add(createTcgIdColumn());
 		columns.add(new CollectorUserPriceColumn());   // "User Price" - your valuation of the copies you own
 		columns.add(new CollectorOnlinePriceColumn()); // "Online Price" - market value of the copies you own
 		columns.add(new CostColumn());
@@ -74,7 +92,7 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(new PowerColumn(MagicCardField.POWER, "P", "Power"));
 		columns.add(new PowerColumn(MagicCardField.TOUGHNESS, "T", "Toughness"));
 		columns.add(new OracleTextColumn());
-		columns.add(new GenColumn(MagicCardField.CTYPE, "Color Type"));
+		columns.add(createColorTypeColumn());
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
 		columns.add(new ExtendedColorIdentityColumn());
@@ -88,5 +106,15 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 	@Override
 	protected GroupColumn createGroupColumn() {
 		return new GroupColumn(false, true, false);
+	}
+
+	@Override
+	protected AbstractColumn createFinishColumn() {
+		return new FinishColumn() {
+			@Override
+			public int getColumnWidth() {
+				return super.getColumnWidth() + 30;
+			}
+		};
 	}
 }

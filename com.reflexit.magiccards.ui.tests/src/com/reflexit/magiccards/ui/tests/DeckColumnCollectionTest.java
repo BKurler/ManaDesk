@@ -23,10 +23,11 @@ import junit.framework.TestCase;
 
 /**
  * Within a single deck/collection's own tab every row already belongs to the
- * one pile you opened, so Sideboard/Extra are always the same value there and
- * never useful as columns - unlike My Cards, which searches across every pile
- * of every deck at once. {@link DeckColumnCollection} must drop exactly those
- * two columns and keep everything else {@code MagicColumnCollection} defines.
+ * one pile you opened, so Sideboard/Extra/Location are always the same value
+ * there and never useful as columns - unlike My Cards, which searches across
+ * every pile of every deck at once. {@link DeckColumnCollection} must drop
+ * exactly those three columns and keep everything else
+ * {@code MagicColumnCollection} defines.
  */
 public class DeckColumnCollectionTest extends TestCase {
 
@@ -58,7 +59,12 @@ public class DeckColumnCollectionTest extends TestCase {
 		assertTrue("Finish", f.contains(MagicCardField.FINISH));
 		assertTrue("Comment", f.contains(MagicCardField.COMMENT));
 		assertTrue("Count", f.contains(MagicCardField.COUNT));
-		assertTrue("Location", f.contains(MagicCardField.LOCATION));
+	}
+
+	public void testDropsLocationColumnToo() {
+		List<ICardField> f = fields();
+		assertFalse("Location is always the same value in a single deck/collection tab",
+				f.contains(MagicCardField.LOCATION));
 	}
 
 	public void testIdIsThePreferencePageId() {

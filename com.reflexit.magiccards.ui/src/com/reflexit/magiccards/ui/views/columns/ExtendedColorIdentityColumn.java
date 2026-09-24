@@ -30,6 +30,11 @@ public class ExtendedColorIdentityColumn extends AbstractImageColumn implements 
 	}
 
 	@Override
+	public int getColumnWidth() {
+		return 75; // +20px, then +15px more, from AbstractImageColumn's inherited 40
+	}
+
+	@Override
 	public String getText(Object element) {
 		if (element instanceof IMagicCard) {
 			String icost = ((IMagicCard) element).getString(MagicCardField.COLOR_IDENTITY_EXTENDED);

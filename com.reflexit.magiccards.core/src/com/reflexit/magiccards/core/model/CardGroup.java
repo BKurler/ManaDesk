@@ -1,6 +1,10 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getChildren(): collapse a NAME sub-group down to
+ *                         its lone card live, once a filter leaves it with
+ *                         only one visible printing - see
+ *                         collapseSingleNameChildren()'s own header
  */
 
 /*******************************************************************************
@@ -98,18 +102,56 @@ public final class CardGroup extends MagicCardHash implements ICardGroup, Iterab
 			if (children.size() == 0) {
 				return new ICard[0];
 			}
+			ICard[] result;
 			if (filter == null) {
-				visibleElements = children.toArray(new ICard[children.size()]);
+				result = children.toArray(new ICard[children.size()]);
 			} else {
-				visibleElements = filter.filterCards(children);
+				result = filter.filterCards(children);
 				SortOrder sortOrder = filter.getSortOrder();
 				if (!sortOrder.isEmpty()) {
 					Comparator<ICard> comparator = sortOrder.getComparator();
-					Arrays.sort(visibleElements, comparator);
+					Arrays.sort(result, comparator);
 				}
 			}
+			visibleElements = collapseSingleNameChildren(result);
 		}
 		return visibleElements;
+	}
+
+	/**
+	 * A live text/set/quick filter narrows each group's visible children on
+	 * every keystroke without re-running {@code removeSingleNameGroups}
+	 * (that one-time collapse only sees each name's *unfiltered* printing
+	 * count at full regroup time). A name with many printings therefore kept
+	 * its group wrapper - now showing a single filtered-down child - while a
+	 * name with exactly one printing ever was already collapsed to a flat
+	 * leaf before any filter ran, making otherwise-identical single-result
+	 * rows inconsistently show an expand arrow. Re-check the same rule here,
+	 * live: once filtering leaves a NAME sub-group with just one visible
+	 * card, show that card directly instead of the now-redundant wrapper.
+	 */
+	private ICard[] collapseSingleNameChildren(ICard[] base) {
+		boolean anyCollapse = false;
+		for (ICard c : base) {
+			if (c instanceof CardGroup && ((CardGroup) c).getFieldIndex() == MagicCardField.NAME
+					&& ((CardGroup) c).size() == 1) {
+				anyCollapse = true;
+				break;
+			}
+		}
+		if (!anyCollapse)
+			return base;
+		ICard[] result = new ICard[base.length];
+		for (int i = 0; i < base.length; i++) {
+			ICard c = base[i];
+			if (c instanceof CardGroup && ((CardGroup) c).getFieldIndex() == MagicCardField.NAME
+					&& ((CardGroup) c).size() == 1) {
+				result[i] = ((CardGroup) c).getChildAtIndex(0);
+			} else {
+				result[i] = c;
+			}
+		}
+		return result;
 	}
 
 	@Override

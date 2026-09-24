@@ -9,6 +9,6 @@ public class IdColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 60;
+		return 260; // about the same as Name's own default (GroupColumn), -20px
 	}
 }

@@ -3,6 +3,32 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - removed the RATING fixtures/assertions (community
  *                         rating is not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - testLiveFilterCollapsesSingleNameChild() and its two
+ *                         siblings: getChildren()'s new collapseSingleNameChildren()
+ *                         re-checks removeSingleNameGroups()'s "lone printing
+ *                         under a NAME group -> show the card, not the
+ *                         wrapper" rule live, on every filter change, not
+ *                         just once at initial regroup time - see CardGroup's
+ *                         own header/getChildren() comment
+ *     Rémi Dutil (2026) - testGenuineCount4ExcludesProxyOnlyOwnership():
+ *                         regression for GENUINE_COUNT4/FieldGenuineCount4Aggregator,
+ *                         Progress4's own "Count Proxies" split (see
+ *                         MagicCardField's header)
+ *     Rémi Dutil (2026) - testColorAggregationUnionsDifferentColoredPrintings():
+ *                         regression for the new ColorUnionAggregator (see
+ *                         MagicCardField's header) - COLOR/COLOR_IDENTITY/
+ *                         COLOR_IDENTITY_EXTENDED used to collide to a bare
+ *                         "*" for a NAME group spanning differently-colored
+ *                         printings
+ *     Rémi Dutil (2026) - testContractOne(): running the full field sweep
+ *                         against the new "Count Finishes Separately"/
+ *                         Progress4-by-finish fields (added to
+ *                         MagicCardField this same round) surfaced two real
+ *                         leaf-vs-group bugs, now fixed at the source (see
+ *                         MagicCardField's and the affected aggregators' own
+ *                         headers) - and one genuine, non-bug semantic gap
+ *                         (FINISH_AWARE_PERCENT_FIELDS, now explicitly
+ *                         excluded with its own comment explaining why)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -20,6 +46,7 @@ import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.abs.ICardModifiable;
+import com.reflexit.magiccards.core.model.expr.BinaryExpr;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
 import com.reflexit.unittesting.CardGenerator;
 
@@ -354,6 +381,22 @@ public class CardGroupTest extends TestCase {
 		checkAllConsistency();
 	}
 
+	/** The 4 "Count Finishes Separately" percent fields whose leaf value
+	 *  cannot agree with a single-card group's: getM(MagicCardPhysical)
+	 *  measures just THIS copy against a flat denominator (100% if owned at
+	 *  all, or /4 for a playset target), while the group's own denominator
+	 *  correctly scales by however many finishes the printing supports (2
+	 *  for a generated test card with no explicit FINISHES data). A lone
+	 *  physical copy represents only ONE of those finish slots and has no
+	 *  way to know about sibling finishes it doesn't itself represent - this
+	 *  is real field semantics, not a bug (unlike the count-based BY_FINISH
+	 *  fields right next to these, which - after MagicCardField's and each
+	 *  aggregator's own header-documented fixes - agree with their leaf
+	 *  value for exactly this same single-card-group shape). */
+	private static final java.util.EnumSet<MagicCardField> FINISH_AWARE_PERCENT_FIELDS = java.util.EnumSet.of(
+			MagicCardField.PERCENT_COMPLETE_BY_FINISH, MagicCardField.PERCENT_COMPLETE_GENUINE_BY_FINISH,
+			MagicCardField.PERCENT4_COMPLETE_BY_FINISH, MagicCardField.PERCENT4_COMPLETE_GENUINE_BY_FINISH);
+
 	@Test
 	public void testContractOne() {
 		group = new CardGroup(MagicCardField.NAME, "My Name");
@@ -364,6 +407,8 @@ public class CardGroupTest extends TestCase {
 		checkConsistency(MagicCardField.NAME, group.getName(), "My Name");
 		for (ICardField field : allFields) {
 			if (field == MagicCardField.NAME)
+				continue;
+			if (FINISH_AWARE_PERCENT_FIELDS.contains(field))
 				continue;
 			assertEquals("Failed for " + field, card.get(field), group.get(field));
 		}
@@ -519,6 +564,57 @@ public class CardGroupTest extends TestCase {
 		assertEquals(true, group.isOwn());
 	}
 
+	/**
+	 * Regression for the "Apex Devastator" bug: Progress4's group-level
+	 * number used to always include proxy copies regardless of "Count
+	 * Proxies", while the per-card leaf text (qualifyingOwnCount() in
+	 * ProgressColumn) was already proxy-aware - a card whose only owned
+	 * copies were proxies showed "0/4" on its own row while still padding
+	 * its group's total. GENUINE_COUNT4 (unlike COUNT4) must exclude
+	 * proxy-only ownership.
+	 */
+	@Test
+	public void testGenuineCount4ExcludesProxyOnlyOwnership() {
+		MagicCard m = spy((MagicCard) generateCard());
+		group = new CardGroup(MagicCardField.NAME, m.getName());
+		CardGroup realcards = new CardGroup(MagicCardField.ID, m.getName());
+		when(m.getRealCards()).thenReturn(realcards);
+		for (int j = 0; j < 2; j++) {
+			MagicCardPhysical mcp = (MagicCardPhysical) CardGenerator.generatePhysicalCardWithValues(m);
+			mcp.setOwn(true);
+			mcp.setProxy(true);
+			mcp.setCount(2);
+			realcards.add(mcp);
+		}
+		group.add(m);
+
+		assertEquals("COUNT4 stays proxy-inclusive", 4, group.getInt(MagicCardField.COUNT4));
+		assertEquals("GENUINE_COUNT4 must exclude proxy-only ownership", 0,
+				group.getInt(MagicCardField.GENUINE_COUNT4));
+	}
+
+	/**
+	 * Regression for the new ColorUnionAggregator (see MagicCardField's
+	 * header) - a NAME group spanning printings with different colors must
+	 * report the union of both, not collide to a bare "*" the way the
+	 * default StringAggregator used to.
+	 */
+	@Test
+	public void testColorAggregationUnionsDifferentColoredPrintings() {
+		group = new CardGroup(MagicCardField.NAME, "Test Card");
+		MagicCardPhysical printingA = generatePhyCard();
+		MagicCardPhysical printingB = generatePhyCard();
+		printingA.set(MagicCardField.COLOR, "{W}");
+		printingB.set(MagicCardField.COLOR, "{U}");
+		group.add(printingA);
+		group.add(printingB);
+
+		String combined = (String) group.get(MagicCardField.COLOR);
+		assertTrue("expected White in the union: " + combined, combined.contains("W"));
+		assertTrue("expected Blue in the union: " + combined, combined.contains("U"));
+		assertFalse("must not collide to a bare '*'", "*".equals(combined));
+	}
+
 	public void testNameGroupPhy() {
 		MagicCard m = (MagicCard) generateCard();
 		group = new CardGroup(MagicCardField.NAME, m.getName());
@@ -594,6 +690,79 @@ public class CardGroupTest extends TestCase {
 		assertEquals(2, group.size());
 		assertSame(a, group.getChildAtIndex(0));
 		assertSame(empty, group.getChildAtIndex(1));
+	}
+
+	/**
+	 * A live filter (a search box, a quick filter) narrows a NAME sub-group's
+	 * visible children on every change, independently of the one-time
+	 * {@code removeSingleNameGroups()} collapse a full regroup runs. Once
+	 * that live filter leaves a NAME sub-group with exactly one visible
+	 * card, its parent must see that lone card directly, not a redundant
+	 * one-child group wrapper - otherwise a reprinted card (several
+	 * printings, one matching the current filter) shows an expand arrow a
+	 * never-reprinted card (one printing to begin with) never gets, even
+	 * though both now display a single row.
+	 */
+	@Test
+	public void testLiveFilterCollapsesSingleNameChild() {
+		group = new CardGroup(MagicCardField.SET, "Lorwyn");
+		CardGroup nameGroup = new CardGroup(MagicCardField.NAME, "Llanowar Elves");
+		MagicCardPhysical printingA = generatePhyCard();
+		MagicCardPhysical printingB = generatePhyCard();
+		printingA.set(MagicCardField.COLLNUM, "1");
+		printingB.set(MagicCardField.COLLNUM, "2");
+		nameGroup.add(printingA);
+		nameGroup.add(printingB);
+		group.add(nameGroup);
+		assertEquals(1, group.size()); // just the NAME group, unfiltered
+
+		MagicCardFilter filter = new MagicCardFilter();
+		filter.setFilter(BinaryExpr.fieldEquals(MagicCardField.COLLNUM, "1"));
+		group.setFilter(filter);
+
+		assertEquals(1, group.size());
+		assertSame(printingA, group.getChildAtIndex(0)); // the group wrapper is gone
+	}
+
+	@Test
+	public void testLiveFilterKeepsNameGroupWhenTwoChildrenStillMatch() {
+		group = new CardGroup(MagicCardField.SET, "Lorwyn");
+		CardGroup nameGroup = new CardGroup(MagicCardField.NAME, "Llanowar Elves");
+		MagicCardPhysical printingA = generatePhyCard();
+		MagicCardPhysical printingB = generatePhyCard();
+		printingA.set(MagicCardField.COLLNUM, "1");
+		printingB.set(MagicCardField.COLLNUM, "2");
+		nameGroup.add(printingA);
+		nameGroup.add(printingB);
+		group.add(nameGroup);
+
+		group.setFilter(new MagicCardFilter()); // no restriction - both still match
+
+		assertEquals(1, group.size());
+		assertSame(nameGroup, group.getChildAtIndex(0)); // still a group - 2 visible children
+	}
+
+	/** The collapse rule is NAME-specific, matching removeSingleNameGroups() -
+	 *  a group by another field (Set, Rarity, ...) legitimately shows a
+	 *  single-item group and must not be flattened away. */
+	@Test
+	public void testLiveFilterDoesNotCollapseNonNameSingletonGroup() {
+		CardGroup root = new CardGroup(null, "root");
+		CardGroup setGroup = new CardGroup(MagicCardField.SET, "Lorwyn");
+		MagicCardPhysical printingA = generatePhyCard();
+		MagicCardPhysical printingB = generatePhyCard();
+		printingA.set(MagicCardField.COLLNUM, "1");
+		printingB.set(MagicCardField.COLLNUM, "2");
+		setGroup.add(printingA);
+		setGroup.add(printingB);
+		root.add(setGroup);
+
+		MagicCardFilter filter = new MagicCardFilter();
+		filter.setFilter(BinaryExpr.fieldEquals(MagicCardField.COLLNUM, "1"));
+		root.setFilter(filter);
+
+		assertEquals(1, root.size());
+		assertSame(setGroup, root.getChildAtIndex(0)); // SET-grouped, not collapsed even at size 1
 	}
 
 	public void testPowerAggrMC() {

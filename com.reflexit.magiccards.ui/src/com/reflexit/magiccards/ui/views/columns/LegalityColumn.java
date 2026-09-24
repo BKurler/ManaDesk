@@ -10,6 +10,11 @@ public class LegalityColumn extends GenColumn {
 	}
 
 	@Override
+	public int getColumnWidth() {
+		return 90; // -10px from AbstractColumn's inherited 100
+	}
+
+	@Override
 	public String getToolTipText(Object element) {
 		if (element instanceof IMagicCard) {
 			IMagicCard card = (IMagicCard) element;

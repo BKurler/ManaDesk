@@ -10,6 +10,23 @@
  *                         symbol on a transparent background. Switched to
  *                         the same render-then-tint-on-transparent approach
  *                         getImageCachedFile() already used correctly.
+ *     Rémi Dutil (2026) - createSetImageRemoteURL(): null-check the looked-up
+ *                         Edition before calling getIconAbbr() on it -
+ *                         getEditionByAbbr() legitimately returns null for an
+ *                         unresolved abbreviation or before the edition DB
+ *                         has loaded, which was throwing an uncaught NPE (its
+ *                         only try/catch here only catches
+ *                         MalformedURLException) on every set-icon paint
+ *                         until the DB finished loading - callers already
+ *                         handle a null return (no icon yet) gracefully
+ *     Rémi Dutil (2026) - RarityColor.COMMON: a prior "brighten the rarity
+ *                         tints" pass had accidentally flipped this one to
+ *                         pure white (0xFFFFFF) while every other entry got
+ *                         a genuine brightening tweak - its own "// black"
+ *                         comment never changed, only the value did, which
+ *                         is how it went unnoticed. Restored to black
+ *                         (0x000000), matching the comment and every other
+ *                         Common-rarity set symbol Scryfall itself renders.
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -153,7 +170,7 @@ public class EditionFileCache {
 	}
 
 	public enum RarityColor {
-		COMMON(new Color(0xFFFFFF)), // black
+		COMMON(new Color(0x000000)), // black
 		UNCOMMON(new Color(0xC8C8C8)), // brighter silver
 		RARE(new Color(0xF4C542)), // brighter gold
 		MYTHIC(new Color(0xE84A1A)), // vivid mythic orange
@@ -190,6 +207,8 @@ public class EditionFileCache {
 	public static URL createSetImageRemoteURL(String editionAbbr) throws MalformedURLException {
 		Editions editions = Editions.getInstance();
 		Edition ed = editions.getEditionByAbbr(editionAbbr);
+		if (ed == null)
+			return null; // unresolved abbreviation, or the edition DB isn't loaded yet
 		try {
 			if (ed.getIconAbbr() != null && !ed.getIconAbbr().equals("null") && !ed.getIconAbbr().isBlank()) {
 				return new URL("https://svgs.scryfall.io/sets/" + ed.getIconAbbr() + ".svg?1770008400");

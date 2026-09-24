@@ -1,6 +1,20 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - created for ManaDesk: editable per-copy "Proxy" column
+ *     Rémi Dutil (2026) - getText(): a genuine (non-proxy) copy showed a
+ *                         blank cell, indistinguishable at a glance from a
+ *                         row this column doesn't even apply to - now shows
+ *                         "Genuine" explicitly, same treatment as "Proxy"
+ *     Rémi Dutil (2026) - getText(): the previous fix checked for
+ *                         Boolean.FALSE, but MagicCardField.PROXY.getM()
+ *                         deliberately returns null (not FALSE) for a
+ *                         genuine leaf copy - see that field's own comment,
+ *                         it's on purpose, so exports leave the cell blank -
+ *                         which meant the "Genuine" text never actually
+ *                         showed for an ordinary single-copy row, only for a
+ *                         uniformly-genuine collapsed group. Now checks the
+ *                         element directly instead of going through the
+ *                         export-oriented field value.
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -21,7 +35,8 @@ import com.reflexit.magiccards.core.model.abs.ICard;
 
 /**
  * Whether a card copy is a home-printed proxy rather than the real card. Cell
- * text is "Proxy" for a proxy copy, blank otherwise. Editable via a drop-down
+ * text is "Proxy" for a proxy copy, "Genuine" for an explicitly non-proxy one,
+ * blank where the field doesn't apply at all. Editable via a drop-down
  * (Genuine / Proxy). A colliding group shows "*".
  */
 public class ProxyColumn extends GenColumn {
@@ -49,7 +64,11 @@ public class ProxyColumn extends GenColumn {
 				return "*";
 			if (Boolean.TRUE.equals(v) || "true".equals(v))
 				return "Proxy";
+			if (Boolean.FALSE.equals(v) || "false".equals(v))
+				return "Genuine";
 		}
+		if (element instanceof MagicCardPhysical)
+			return "Genuine"; // getM() returns null (not FALSE) for a genuine leaf - see field comment
 		return "";
 	}
 

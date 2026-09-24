@@ -28,11 +28,24 @@
  *                         visibly changed this column too
  *     Rémi Dutil (2026) - label reverted from "Regular" to "Nonfoil" - match
  *                         Scryfall's own wording, not an invented one
+ *     Rémi Dutil (2026) - getActualText(ICardGroup): a "Name" group (several
+ *                         printings of the same card, e.g. one etched-only
+ *                         and one nonfoil+foil) is a "transient" group, and
+ *                         AbstractColumn's default getActualText() for those
+ *                         just shows the FIRST child's value for every
+ *                         column - a reasonable shortcut for fields that
+ *                         never actually differ between printings of the
+ *                         same name (Cost, Type, Oracle Text, ...), but
+ *                         wrong for Finish, which very much can. Now
+ *                         explicitly unions every printing's finishes
+ *                         instead - "Etched, Nonfoil, Foil", not just
+ *                         whichever printing happened to be first.
  */
 package com.reflexit.magiccards.ui.views.columns;
 
 import java.util.ArrayList;
 import java.util.Collections;
+import java.util.EnumSet;
 import java.util.List;
 import java.util.Set;
 
@@ -48,6 +61,8 @@ import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.abs.ICard;
+import com.reflexit.magiccards.core.model.abs.ICardGroup;
 
 /**
  * This copy's finish (Nonfoil/Foil/Etched). Cell text is always the resolved
@@ -63,7 +78,7 @@ public class FinishColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 90;
+		return 63; // -30% from 90
 	}
 
 	@Override
@@ -76,7 +91,28 @@ public class FinishColumn extends GenColumn {
 		// own copies (see MagicCardField.FINISH.getM(MagicCard))
 		if (element instanceof MagicCard)
 			return CardFinish.joinLabels(((MagicCard) element).getSupportedFinishes());
+		if (element instanceof ICardGroup)
+			return CardFinish.joinLabels(unionFinishes((ICardGroup) element));
 		return super.getActualText(element);
+	}
+
+	/** Every finish owned/supported anywhere under this group, recursively -
+	 *  a printing's own supported finishes for a MagicCard leaf, this copy's
+	 *  actual finish for a MagicCardPhysical leaf, so a mixed group (some
+	 *  etched-only, some nonfoil+foil) reads as the true union instead of
+	 *  whichever child happened to be first. */
+	private static EnumSet<CardFinish> unionFinishes(ICardGroup group) {
+		EnumSet<CardFinish> union = EnumSet.noneOf(CardFinish.class);
+		for (ICard child : group.getChildrenList()) {
+			if (child instanceof ICardGroup) {
+				union.addAll(unionFinishes((ICardGroup) child));
+			} else if (child instanceof MagicCardPhysical) {
+				union.add(((MagicCardPhysical) child).getFinish());
+			} else if (child instanceof MagicCard) {
+				union.addAll(((MagicCard) child).getSupportedFinishes());
+			}
+		}
+		return union;
 	}
 
 	/** {@link CardFinish#values()}, filtered to what the card's printing

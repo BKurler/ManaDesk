@@ -5,6 +5,11 @@
  *                         AbstractCardListImportPage; dropped the dead
  *                         getIntoChoice()-based branch (no more "extend the
  *                         database" import target)
+ *     Rémi Dutil (2026) - includeErrorColumn() override: the Error column was
+ *                         pulled out of MagicColumnCollection's shared base
+ *                         (meaningless once a card is actually in the
+ *                         library) - this preview grid is the one place it's
+ *                         still populated and needed, so it opts back in
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -1615,6 +1620,13 @@ public class DeckImportPreviewPage extends WizardPage {
 					};
 				}
 			};
+		}
+
+		@Override
+		protected boolean includeErrorColumn() {
+			// the one place this column belongs - see MagicColumnCollection's
+			// own comment on the hook
+			return true;
 		}
 
 		@Override

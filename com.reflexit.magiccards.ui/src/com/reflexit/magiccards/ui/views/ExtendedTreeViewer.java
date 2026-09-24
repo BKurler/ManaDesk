@@ -1,6 +1,12 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - context menu item renamed "Column Preferences..."
+ *                         -> "Preferences..." to match ExtendedTableViewer's
+ *                         own wording for the exact same action (every view
+ *                         using this tree presentation - Collector, and the
+ *                         Deck Analyzer's Legality/Draw/Stats tabs - had the
+ *                         different label)
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -163,7 +169,7 @@ public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer
 			 * manager.callSortAction(-1, 0); } });
 			 */
 			final MenuItem itemShow = new MenuItem(menu, SWT.PUSH);
-			itemShow.setText("Column Preferences... ");
+			itemShow.setText("Preferences... ");
 			itemShow.addSelectionListener(new SelectionAdapter() {
 				@Override
 				public void widgetSelected(SelectionEvent e) {

@@ -47,7 +47,7 @@ public class ConditionColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 110;
+		return 70;
 	}
 
 	static CardCondition fromIndex(int idx) {

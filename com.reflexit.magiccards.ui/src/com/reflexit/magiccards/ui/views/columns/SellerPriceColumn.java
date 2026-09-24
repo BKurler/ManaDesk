@@ -48,6 +48,6 @@ public class SellerPriceColumn extends GenColumn {
 
 	@Override
 	public int getColumnWidth() {
-		return 50;
+		return 75; // +30% from 50, then +10px - the price text was getting clipped
 	}
 }

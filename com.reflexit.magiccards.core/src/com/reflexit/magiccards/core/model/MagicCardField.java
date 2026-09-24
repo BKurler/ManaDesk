@@ -28,6 +28,57 @@
  *                         finding a colorless fetch land that still
  *                         "touches" green) but not accurate enough to gate
  *                         legality on, and no longer the default
+ *     Rémi Dutil (2026) - UNIQUE_COUNT_BY_FINISH/OWN_UNIQUE_BY_FINISH/
+ *                         GENUINE_OWN_UNIQUE_BY_FINISH/PERCENT_COMPLETE_BY_FINISH/
+ *                         PERCENT_COMPLETE_GENUINE_BY_FINISH: back Collector's
+ *                         new "Count Finishes Separately" completion mode -
+ *                         same shape as UNIQUE_COUNT/OWN_UNIQUE/
+ *                         GENUINE_OWN_UNIQUE/PERCENT_COMPLETE/
+ *                         PERCENT_COMPLETE_GENUINE, just keyed on
+ *                         (printing, finish) instead of printing alone
+ *     Rémi Dutil (2026) - COUNT4_BY_FINISH/PERCENT4_COMPLETE_BY_FINISH: the
+ *                         Progress4 ("own a full playset") counterpart to
+ *                         the pair above - a printing's target scales with
+ *                         how many finishes it supports (etched-only needs
+ *                         4; nonfoil+foil needs 4 of EACH, i.e. 8) instead
+ *                         of a flat 4 per printing regardless of finish
+ *     Rémi Dutil (2026) - GENUINE_COUNT4/GENUINE_COUNT4_BY_FINISH/
+ *                         PERCENT4_COMPLETE_GENUINE/
+ *                         PERCENT4_COMPLETE_GENUINE_BY_FINISH: Progress4's own
+ *                         "Count Proxies" split (same relationship COUNT4/
+ *                         PERCENT4_COMPLETE has to these) - without it,
+ *                         Progress4's group-level number always included
+ *                         proxy copies regardless of that toggle, while the
+ *                         per-card leaf text was already proxy-aware
+ *     Rémi Dutil (2026) - COLOR/COLOR_IDENTITY/COLOR_IDENTITY_EXTENDED now
+ *                         use the new ColorUnionAggregator instead of the
+ *                         default StringAggregator - a Collector Name-group
+ *                         spanning printings with different colors now shows
+ *                         the combined colors (e.g. "White-Blue") instead of
+ *                         colliding to a bare "*"
+ *     Rémi Dutil (2026) - UNIQUE_COUNT_BY_FINISH.get(IMagicCard): was
+ *                         delegating to card.getUniqueCount() (always 1,
+ *                         finish-oblivious), which disagreed with its own
+ *                         aggregator (FieldUniqueByFinishAggregator, one
+ *                         slot per finish the printing supports) for a
+ *                         single-card group - CardGroupTest#testContractOne
+ *                         caught this as a leaf-vs-1-member-group mismatch
+ *     Rémi Dutil (2026) - OWN_UNIQUE_BY_FINISH.getM(MagicCardPhysical): same
+ *                         class of bug as UNIQUE_COUNT_BY_FINISH above, and
+ *                         caught by the same test - getM() was also
+ *                         delegating to card.getUniqueCount(), completely
+ *                         ignoring ownership despite the field's own name;
+ *                         now checks isOwn() directly, matching its sibling
+ *                         GENUINE_OWN_UNIQUE_BY_FINISH's leaf. The three
+ *                         "*_BY_FINISH"/Progress4-by-finish aggregators that
+ *                         unconditionally scanned a printing's globally
+ *                         registered getPhysicalCards() instead of checking
+ *                         the visited node directly when it's already a
+ *                         MagicCardPhysical - FieldOwnUniqueByFinishAggregator,
+ *                         FieldCount4ByFinishAggregator,
+ *                         FieldGenuineCount4ByFinishAggregator - were fixed
+ *                         the same way FieldGenuineCount4Aggregator already
+ *                         did it (see each class' own header)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -45,20 +96,32 @@ import com.reflexit.magiccards.core.model.aggr.AbstractFloatCountAggregator;
 import com.reflexit.magiccards.core.model.aggr.AbstractIntTransAggregator;
 import com.reflexit.magiccards.core.model.aggr.AbstractPowerAggregator;
 import com.reflexit.magiccards.core.model.aggr.CollisionAggregator;
+import com.reflexit.magiccards.core.model.aggr.ColorUnionAggregator;
 import com.reflexit.magiccards.core.model.aggr.DateAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldCount4Aggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldCount4ByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldCreatureCountAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineCount4Aggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineCount4ByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldGenuineOwnCountAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldGenuineOwnUniqueAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineOwnUniqueByFinishAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineProggress4Aggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineProggress4ByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldGenuineProggressAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldGenuineProggressByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldLegalityMapAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldOwnCountAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldOwnTotalCountAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldOwnUniqueAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldOwnUniqueByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldProggress4Aggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldProggress4ByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldProggressAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldProggressByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldSizeAggregator;
 import com.reflexit.magiccards.core.model.aggr.FieldUniqueAggregator;
+import com.reflexit.magiccards.core.model.aggr.FieldUniqueByFinishAggregator;
 import com.reflexit.magiccards.core.model.aggr.StringAggregator;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 
@@ -551,6 +614,11 @@ public enum MagicCardField implements ICardField {
 
 	COLOR(null) {
 		@Override
+		public ICardVisitor getAggregator() {
+			return new ColorUnionAggregator(this);
+		}
+
+		@Override
 		protected void setStr(MagicCard card, String value) {
 			card.setPropertyString(this, value);
 		}
@@ -575,6 +643,11 @@ public enum MagicCardField implements ICardField {
 							// means this one; the app's own oracle-text
 							// heuristic is COLOR_IDENTITY_EXTENDED below
 		@Override
+		public ICardVisitor getAggregator() {
+			return new ColorUnionAggregator(this);
+		}
+
+		@Override
 		protected void setStr(MagicCard card, String value) {
 			card.setPropertyString(this, value);
 		}
@@ -594,7 +667,7 @@ public enum MagicCardField implements ICardField {
 										// legality on
 		@Override
 		public ICardVisitor getAggregator() {
-			return new StringAggregator(this);
+			return new ColorUnionAggregator(this);
 		}
 
 		@Override
@@ -1478,6 +1551,230 @@ public enum MagicCardField implements ICardField {
 		@Override
 		public Object getM(MagicCardPhysical card) {
 			return card.isOwn() && !card.isProxy() ? 100f : 0f;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	// The five fields below back Collector's "Count Finishes Separately"
+	// completion mode: a printing that offers nonfoil+foil counts as TWO
+	// slots to complete instead of one, mirroring the plain/genuine split
+	// UNIQUE_COUNT/OWN_UNIQUE/GENUINE_OWN_UNIQUE/PERCENT_COMPLETE/
+	// PERCENT_COMPLETE_GENUINE already have, just keyed on (printing, finish)
+	// instead of printing alone.
+	UNIQUE_COUNT_BY_FINISH(null) { // one slot per (printing, finish) that exists
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldUniqueByFinishAggregator(this);
+		}
+
+		@Override
+		public Object get(IMagicCard card) {
+			// card.getUniqueCount() (what plain UNIQUE_COUNT uses) is always 1
+			// for a leaf - finish-oblivious, since UNIQUE_COUNT only counts
+			// printings. This field counts one slot per FINISH the printing
+			// supports instead, matching FieldUniqueByFinishAggregator's own
+			// per-card contribution - a leaf's own value must agree with what
+			// a single-card group reports for the same field.
+			MagicCard base = card instanceof MagicCardPhysical ? ((MagicCardPhysical) card).getBase() : (MagicCard) card;
+			return base.getSupportedFinishes().size();
+		};
+	},
+
+	OWN_UNIQUE_BY_FINISH(null, true) { // one slot per (printing, finish) owned, proxies included
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldOwnUniqueByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			// was card.getUniqueCount() - a copy-paste from UNIQUE_COUNT_BY_
+			// FINISH's own (also-buggy, now-fixed) leaf, not ownership-aware
+			// at all. This field means "owned", so it must check isOwn() -
+			// proxies count too, matching GENUINE_OWN_UNIQUE_BY_FINISH's own
+			// leaf (isOwn() && !isProxy()) minus the proxy exclusion.
+			return card.isOwn() ? 1 : 0;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	GENUINE_OWN_UNIQUE_BY_FINISH(null, true) { // OWN_UNIQUE_BY_FINISH excluding proxy copies
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineOwnUniqueByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? 1 : 0;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT_COMPLETE_BY_FINISH(null, true) { // completion % counting finishes separately
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldProggressByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			int c = card.getOwnCount();
+			if (c > 0)
+				return 100f;
+			else
+				return 0f;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT_COMPLETE_GENUINE_BY_FINISH(null, true) { // ...counting finishes separately, genuine copies only
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineProggressByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? 100f : 0f;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	// Progress4's own finish-aware pair: like COUNT4/PERCENT4_COMPLETE, but a
+	// printing's target scales with how many finishes it supports (an
+	// etched-only printing needs 4 copies to complete; a nonfoil+foil one
+	// needs 4 of EACH, i.e. 8) instead of a flat 4 regardless of finish
+	// variety. Always proxy-inclusive, matching COUNT4/PERCENT4_COMPLETE's
+	// own long-standing proxy-agnostic behavior - Progress4 never had a
+	// genuine-only variant to begin with.
+	COUNT4_BY_FINISH(null, true) {
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldCount4ByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getCount4();
+		};
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.getCount4();
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT4_COMPLETE_BY_FINISH(null, true) {
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldProggress4ByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			int c = card.getCount4();
+			return (float) c * 100 / 4;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	// Progress4's own "Count Proxies" split, mirroring OWN_UNIQUE/
+	// GENUINE_OWN_UNIQUE/PERCENT_COMPLETE/PERCENT_COMPLETE_GENUINE - without
+	// this pair, Progress4's group-level number always included proxy
+	// copies no matter what "Count Proxies" said, while the per-card leaf
+	// text (proxy-aware via ProgressColumn#qualifyingOwnCount) did not, so a
+	// card whose only copies were excluded proxies showed "0/4" on its own
+	// row while still padding its group's total.
+	GENUINE_COUNT4(null, true) { // COUNT4 excluding proxy copies
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineCount4Aggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? Math.min(card.getCount(), 4) : 0;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	GENUINE_COUNT4_BY_FINISH(null, true) { // COUNT4_BY_FINISH excluding proxy copies
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineCount4ByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? Math.min(card.getCount(), 4) : 0;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT4_COMPLETE_GENUINE(null, true) { // completion % for playsets, genuine copies only
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineProggress4Aggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? (float) Math.min(card.getCount(), 4) * 100 / 4 : 0f;
+		}
+
+		@Override
+		protected void setM(MagicCardPhysical card, Object value) {
+			// ignore
+		}
+	},
+
+	PERCENT4_COMPLETE_GENUINE_BY_FINISH(null, true) { // ...counting finishes separately too, genuine copies only
+		@Override
+		public ICardVisitor getAggregator() {
+			return new FieldGenuineProggress4ByFinishAggregator(this);
+		}
+
+		@Override
+		public Object getM(MagicCardPhysical card) {
+			return card.isOwn() && !card.isProxy() ? (float) Math.min(card.getCount(), 4) * 100 / 4 : 0f;
 		}
 
 		@Override
