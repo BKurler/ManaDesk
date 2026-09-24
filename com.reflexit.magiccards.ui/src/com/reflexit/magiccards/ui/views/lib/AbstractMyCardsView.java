@@ -18,6 +18,16 @@
  *                         the MyCardsFilterDialog it builds: false by default
  *                         (a My Cards row is a single owned copy with one
  *                         Finish); CollectorView overrides it to true
+ *     Rémi Dutil (2026) - removeSelected(): now asks for confirmation before
+ *                         deleting the selection, regardless of how many
+ *                         cards are selected - Shift+Delete skips it,
+ *                         matching Delete's own previous unconfirmed-by-
+ *                         default behavior for users who explicitly opt
+ *                         into the fast path. The Shift check itself lives
+ *                         in DeleteCardAction#isShiftHeld() - see that
+ *                         class' own header. dispose() now also disposes
+ *                         the delete action, releasing the Display-level
+ *                         key filter isShiftHeld() relies on
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -72,7 +82,7 @@ import com.reflexit.magiccards.ui.views.ViewPageGroup;
 
 public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView implements ICardEventListener {
 	private final DataManager DM = DataManager.getInstance();
-	private Action delete;
+	private DeleteCardAction delete;
 	private Action split;
 	private Action edit;
 	private ExportAction export;
@@ -366,6 +376,10 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		if (sel.isEmpty())
 			return;
 
+		if (!delete.isShiftHeld() && !MessageDialog.openQuestion(getShell(), "Removal Confirmation",
+				"Are you sure you want to delete " + sel.size() + " card(s)?"))
+			return;
+
 		trace("removeSelected selection=" + sel.toList());
 
 		// Select the following row once the view has reloaded.
@@ -506,6 +520,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	@Override
 	public void dispose() {
 		eventListener.dispose();
+		delete.dispose();
 		super.dispose();
 	}
 

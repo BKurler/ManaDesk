@@ -411,6 +411,26 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+0">
       </key>
+      <!-- Rémi Dutil (2026) - the platform's own default binding for
+           org.eclipse.ui.edit.delete (in org.eclipse.ui's own plugin.xml)
+           is the exact, unmodified sequence "DEL" - Eclipse key-sequence
+           matching is modifier-exact, so holding Shift produces a DIFFERENT
+           sequence ("SHIFT+DEL") that never matched anything, and the
+           Delete command's handler (DeleteCardAction, activated per-view by
+           AbstractCardsView#activateActionHandler) never fired at all on
+           Shift+Delete - not even reaching DeleteCardAction's own Shift
+           detection. Binding SHIFT+DEL to the SAME command id here, in the
+           same broad org.eclipse.ui.contexts.window scope the platform's
+           own DEL binding implicitly uses (it specifies no contextId),
+           makes Shift+Delete route to that same handler like plain Delete
+           already does - DeleteCardAction#isShiftHeld() then bypasses
+           removeSelected()'s confirmation dialog. -->
+      <key
+            commandId="org.eclipse.ui.edit.delete"
+            contextId="org.eclipse.ui.contexts.window"
+            schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
+            sequence="SHIFT+DEL">
+      </key>
    </extension>
    <extension
          point="org.eclipse.ui.commands">
