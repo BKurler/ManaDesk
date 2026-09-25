@@ -21,10 +21,30 @@
  *                         derived by an older version of our own parsing
  *                         logic" and prompt a refresh, instead of relying on
  *                         the user to remember to click Update
+ *     Rémi Dutil (2026) - runs BackupHandler#createBackup() (the same
+ *                         mechanism the manual "Backup" command uses - a zip
+ *                         of the whole workspace) before the update, and
+ *                         aborts rather than proceeding unprotected if it
+ *                         fails - a major update overwrites every
+ *                         <DB>/*.xml set file in place
+ *                         (DbMultiFileCardStore#saveDirtySets, called from
+ *                         downloadUpdates below) with no way back if the
+ *                         parse goes wrong or the Scryfall data itself is
+ *                         bad, and it's the same folder tree (decks,
+ *                         collections, AND the card database all live under
+ *                         the one workspace) this zip already covers whole -
+ *                         no need for a second, DB-only backup mechanism of
+ *                         its own. Runs synchronously, since this Job
+ *                         already IS the background thread. Every update
+ *                         path funnels through this one performUpdate(), so
+ *                         this covers the manual "Update Card Database"
+ *                         command, the startup checks, and the "new sets
+ *                         available" prompt alike.
  */
 
 package com.reflexit.magiccards.ui.commands;
 
+import java.io.IOException;
 import java.util.Properties;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -111,9 +131,22 @@ public class UpdateDbHandler extends AbstractHandler {
 						return Status.OK_STATUS;
 					}
 					pm.beginTask("Updating card database", 100);
+					pm.subTask("Backing up your decks and collections…");
+					try {
+						BackupHandler.createBackup();
+					} catch (IOException e) {
+						MagicUIActivator.log(e);
+						asyncInfo("Could not back up your decks and collections - update aborted.\n"
+								+ "Check the Error Log for details.");
+						return Status.OK_STATUS;
+					}
+					pm.worked(10);
+					if (pm.isCanceled())
+						return Status.CANCEL_STATUS;
+
 					ICardHandler ch = DataManager.getCardHandler();
 					final int rec = ch.downloadUpdates(null, new Properties(),
-							new CoreMonitorAdapter(new SubProgressMonitor(pm, 85)));
+							new CoreMonitorAdapter(new SubProgressMonitor(pm, 75)));
 					if (pm.isCanceled())
 						return Status.CANCEL_STATUS;
 
