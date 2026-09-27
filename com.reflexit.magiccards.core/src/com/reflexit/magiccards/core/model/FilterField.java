@@ -31,6 +31,36 @@
  *                         CardFinishes.AND_ID, ColorTypes' own checkbox ids
  *                         are already all included via
  *                         ColorTypes.getInstance().getIds()
+ *     Rémi Dutil (2026) - wildcardNameExpr()/NAME_LINE: '*' now means "zero or
+ *                         more characters" (the conventional glob meaning)
+ *                         instead of "exactly one" - the old behavior made
+ *                         "Jace*" fail to match "Jace, the Mind Sculptor"
+ *                         (needs 20+ trailing chars, not one), which isn't
+ *                         what anyone typing a wildcard expects. Added '?'
+ *                         for "exactly one character", the conventional glob
+ *                         meaning '*' used to have, so that use case (fixed-
+ *                         length gap) is still expressible. Also triggers the
+ *                         wildcard path on '?' alone, not just '*'.
+ *     Rémi Dutil (2026) - COUNT/FORTRADECOUNT/PRICE (User Price) were still
+ *                         calling fieldInt() - the OLD single-comparison
+ *                         parser (">=5", "<=5", "==5", or a bare number for
+ *                         "="), from before these fields switched to
+ *                         RangeComparisonFieldEditor. That editor always
+ *                         stores a "<min>:<max>" string now (see its own
+ *                         header) - regardless of operator, since even ">=5"
+ *                         encodes as "5:" and "<=5" as ":5" - which
+ *                         fieldInt() doesn't understand at all: none of its
+ *                         prefix checks match a colon-containing string, so
+ *                         every one of them fell through to its last case,
+ *                         an EXACT match against the literal string "5:" (or
+ *                         "3:8", etc) - which no real card's field ever
+ *                         equals, silently matching nothing no matter what
+ *                         operator was actually chosen. Switched all three to
+ *                         fieldRange(), the "<min>:<max>"-aware parser CCC/
+ *                         POWER/TOUGHNESS/COLLNUM/DBPRICE already correctly
+ *                         used - same fix DBPRICE's own case already models
+ *                         for the "field is 0, fall back to the other price"
+ *                         pattern PRICE mirrors.
  */
 
 package com.reflexit.magiccards.core.model;
@@ -210,12 +240,13 @@ public enum FilterField {
 						.or(BinaryExpr.fieldEquals(MagicCardField.PROXY, "false"));
 			}
 			case NAME_LINE:
-				if (value.indexOf('*') >= 0) {
-					// '*' never appears in a card name, so it's free to use as an
-					// explicit wildcard standing for exactly one arbitrary character
-					// (e.g. "Jace*" matches a 5-letter name starting with "Jace") -
-					// bypasses the normal word tokenizer, which would otherwise treat
-					// the whole value as a literal string containing a literal '*'.
+				if (value.indexOf('*') >= 0 || value.indexOf('?') >= 0) {
+					// neither '*' nor '?' ever appears in a card name, so they're free
+					// to use as explicit wildcards - '*' for zero or more arbitrary
+					// characters (e.g. "Jace*" matches every Jace), '?' for exactly one
+					// (e.g. "Bo?k" matches "Book" or "Bork") - bypasses the normal word
+					// tokenizer, which would otherwise treat the whole value as a
+					// literal string containing literal '*'/'?' characters.
 					// QuickFilterControl always wraps its stored value in a literal
 					// "\"...\"" pair (a signal the tokenizer would normally strip to mean
 					// "treat as one literal phrase"), unlike the filter dialog's
@@ -286,10 +317,9 @@ public enum FilterField {
 			}
 
 			case COLLNUM:
-				return BinaryExpr.fieldRange(ff.getField(), value);
 			case COUNT:
 			case FORTRADECOUNT:
-				return BinaryExpr.fieldInt(ff.getField(), value);
+				return BinaryExpr.fieldRange(ff.getField(), value);
 			case COLOR: {
 				String en;
 				// RD Review the logic to support correctly colorless, hybrid and variations 
@@ -339,7 +369,8 @@ public enum FilterField {
 			}
 			case PRICE: {
 				return new BinaryExpr(new CardFieldExpr(MagicCardField.PRICE), Operation.EQ, new Value("0"))
-						.and(fieldInt(MagicCardField.DBPRICE, value)).or(fieldInt(MagicCardField.PRICE, value));
+						.and(BinaryExpr.fieldRange(MagicCardField.DBPRICE, value))
+						.or(BinaryExpr.fieldRange(MagicCardField.PRICE, value));
 			}
 			case OWNERSHIP: {
 				BinaryExpr b1 = fieldEquals(MagicCardField.OWNERSHIP, value);
@@ -377,18 +408,21 @@ public enum FilterField {
 	}
 
 	/**
-	 * Builds a NAME_LINE search expression where each {@code '*'} in
-	 * {@code value} stands for exactly one arbitrary character and every other
-	 * character must match literally - e.g. "Jace*" matches a 5-letter name
-	 * starting with "Jace". Case-insensitive, substring match (same as the
-	 * normal text-search path), but bypasses the word tokenizer entirely, so
-	 * only single-word/no-tokenizer semantics apply once '*' is used.
+	 * Builds a NAME_LINE search expression with conventional glob wildcards:
+	 * {@code '*'} stands for zero or more arbitrary characters (e.g. "Jace*"
+	 * matches every Jace), {@code '?'} for exactly one (e.g. "Bo?k" matches
+	 * "Book" or "Bork"), every other character matches literally.
+	 * Case-insensitive, substring match (same as the normal text-search path),
+	 * but bypasses the word tokenizer entirely, so only single-word/no-tokenizer
+	 * semantics apply once a wildcard is used.
 	 */
 	private static Expr wildcardNameExpr(ICardField field, String value) {
 		StringBuilder pattern = new StringBuilder();
 		for (int i = 0; i < value.length(); i++) {
 			char c = value.charAt(i);
 			if (c == '*') {
+				pattern.append(".*");
+			} else if (c == '?') {
 				pattern.append('.');
 			} else {
 				pattern.append(Pattern.quote(String.valueOf(c)));

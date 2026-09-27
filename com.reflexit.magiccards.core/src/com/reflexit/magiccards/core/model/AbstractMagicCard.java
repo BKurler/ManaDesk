@@ -6,6 +6,12 @@
  *     Rémi Dutil (2026) - proxy support: isProxy() + genuine-only own counts
  *     Rémi Dutil (2026) - removed getCommunityRating() (community rating is
  *                         not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - matches(): strips parenthetical reminder text
+ *                         before matching when right.stripParens is set (a
+ *                         [ability] search - see TextValue/MagicCardFilter's
+ *                         own headers), so a card mentioning an ability by
+ *                         name only inside another ability's reminder text
+ *                         doesn't count as having it
  */
 
 package com.reflexit.magiccards.core.model;
@@ -362,6 +368,9 @@ public abstract class AbstractMagicCard implements ICard, ICardModifiable, IMagi
 		String value = String.valueOf(card.get(left));
 		if (left == MagicCardField.TYPE && !right.regex) {
 			return CardTypes.getInstance().hasType(card, right.getText());
+		}
+		if (right.stripParens && value.indexOf('(') >= 0) {
+			value = value.replaceAll("\\([^)]*\\)", " ");
 		}
 		return right.getPattern().matcher(value).find();
 	}

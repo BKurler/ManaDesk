@@ -28,6 +28,10 @@
  *                         class' own header. dispose() now also disposes
  *                         the delete action, releasing the Display-level
  *                         key filter isShiftHeld() relies on
+ *     Rémi Dutil (2026) - getCardFilterDialog(): wires setOnApply() so the
+ *                         filter dialog's OK/Apply actually refresh this
+ *                         view - see CardFilterDialog#performApply()'s own
+ *                         comment
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -546,6 +550,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	public CardFilterDialog getCardFilterDialog() {
 		MyCardsFilterDialog dialog = new MyCardsFilterDialog(getShell(), getFilterPreferenceStore());
 		dialog.setAllowsMultipleFinishesPerRow(allowsMultipleFinishesPerRow());
+		dialog.setOnApply(getFilterApplyCallback());
 		return dialog;
 	}
 

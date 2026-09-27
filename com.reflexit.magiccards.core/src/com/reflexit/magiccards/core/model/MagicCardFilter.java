@@ -24,6 +24,15 @@
  *                         checking Extended Identity alone must search by
  *                         identity (the extended one) too, not silently fall
  *                         through to plain COLOR
+ *     Rémi Dutil (2026) - tokenSearch()'s ABI case: the TextValue built from
+ *                         an ability's Pattern now sets stripParens=true, so
+ *                         a [ability] search strips reminder text before
+ *                         matching, the same as Abilities.RegexAbilityMatcher
+ *                         #match() already does for ability grouping/stats -
+ *                         see TextValue's own header. Before this, [Flying]
+ *                         matched a Reach creature whose only mention of
+ *                         "flying" was inside Reach's own reminder text
+ *                         ("...can block creatures with flying.").
  */
 
 package com.reflexit.magiccards.core.model;
@@ -84,7 +93,8 @@ public class MagicCardFilter implements Cloneable {
 		} else if (token.getType() == TokenType.ABI) {
 			Pattern pattern = Abilities.getPattern(value);
 			if (pattern != null) {
-				TextValue tvalue = new TextValue(pattern);
+				// stripParens=true - see TextValue's own header
+				TextValue tvalue = new TextValue(pattern, true);
 				return new BinaryExpr(new CardFieldExpr(field), Operation.MATCHES, tvalue);
 			} else {
 				// fall back to text value

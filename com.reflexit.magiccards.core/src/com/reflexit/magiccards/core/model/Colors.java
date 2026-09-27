@@ -11,6 +11,22 @@
  *                         change was needed here: it naturally reports the
  *                         union, e.g. "White-Blue" for a group mixing a
  *                         white printing and a blue one
+ *     Rémi Dutil (2026) - getColorPresense(): removed the "oracle.charAt(0)
+ *                         != '{'" gate around the land-type-name-to-color
+ *                         substitution (e.g. "Plains or Island card" -> W/U)
+ *                         - it was meant to skip this for a plain mana-cost
+ *                         string like "{2}{W}{U}" (getColorAsCost()'s own
+ *                         caller), but real oracle text for an activated
+ *                         ability commonly starts with its own tap/mana
+ *                         symbol too - every fetch land, for example
+ *                         ("{T}, Pay 1 life, Sacrifice ...: Search your
+ *                         library for a Plains or Island card..."). That
+ *                         made Extended Color Identity report Costless for
+ *                         Flooded Strand and every other fetch/tap land
+ *                         instead of the colors of the basic land types they
+ *                         search for. A plain cost string never contains
+ *                         these literal phrases, so running the substitution
+ *                         unconditionally is harmless for that caller too.
  */
 
 package com.reflexit.magiccards.core.model;
@@ -125,37 +141,40 @@ public class Colors implements ISearchableProperty {
 		// Before doing the color pattern check, remove all the "Pay life" tag
 		oracle = oracle.replaceAll("P}", "}");
 
-		// For oracle, search deeper, including reference to "named cards", improving the search capability
-		if (oracle.charAt(0) != '{') {
-			// Replace all the land types with a equivalent mana color to allow the pattern to find it
-			oracle = oracle.replaceAll(", or Island card", " card {U}");
-			oracle = oracle.replaceAll(", or Plains card", " card {W}");
-			oracle = oracle.replaceAll(", or Mountain card", " card {R}");
-			oracle = oracle.replaceAll(", or Swamp card", " card {B}");
-			oracle = oracle.replaceAll(", or Forest card", " card {G}");
+		// Replace all the land types with a equivalent mana color to allow the pattern to find it
+		// (used to be gated on the text not starting with '{', meant to skip this for a plain
+		// mana-cost string like "{2}{W}{U}" - but oracle text for an activated ability commonly
+		// starts with its own tap/mana symbol too, e.g. every fetch land ("{T}, Pay 1 life,
+		// Sacrifice ... Search your library for a Plains or Island card..."), so that gate was
+		// skipping the substitution for exactly the land type of card it's meant to catch. A
+		// plain cost string never contains these literal phrases anyway, so always running this
+		// is harmless for that caller and fixes it for oracle text.
+		oracle = oracle.replaceAll(", or Island card", " card {U}");
+		oracle = oracle.replaceAll(", or Plains card", " card {W}");
+		oracle = oracle.replaceAll(", or Mountain card", " card {R}");
+		oracle = oracle.replaceAll(", or Swamp card", " card {B}");
+		oracle = oracle.replaceAll(", or Forest card", " card {G}");
 
-			// Replace all the land types with a equivalent mana color to allow the pattern to find it
-			oracle = oracle.replaceAll("or Island card", "card {U}");
-			oracle = oracle.replaceAll("or Plains card", "card {W}");
-			oracle = oracle.replaceAll("or Mountain card", "card {R}");
-			oracle = oracle.replaceAll("or Swamp card", "card {B}");
-			oracle = oracle.replaceAll("or Forest card", "card {G}");
+		// Replace all the land types with a equivalent mana color to allow the pattern to find it
+		oracle = oracle.replaceAll("or Island card", "card {U}");
+		oracle = oracle.replaceAll("or Plains card", "card {W}");
+		oracle = oracle.replaceAll("or Mountain card", "card {R}");
+		oracle = oracle.replaceAll("or Swamp card", "card {B}");
+		oracle = oracle.replaceAll("or Forest card", "card {G}");
 
-			// Replace all the land types with a equivalent mana color to allow the pattern to find it
-			oracle = oracle.replaceAll(", Island card", " card {U}");
-			oracle = oracle.replaceAll(", Plains card", " card {W}");
-			oracle = oracle.replaceAll(", Mountain card", " card {R}");
-			oracle = oracle.replaceAll(", Swamp card", " card {B}");
-			oracle = oracle.replaceAll(", Forest card", " card {G}");
+		// Replace all the land types with a equivalent mana color to allow the pattern to find it
+		oracle = oracle.replaceAll(", Island card", " card {U}");
+		oracle = oracle.replaceAll(", Plains card", " card {W}");
+		oracle = oracle.replaceAll(", Mountain card", " card {R}");
+		oracle = oracle.replaceAll(", Swamp card", " card {B}");
+		oracle = oracle.replaceAll(", Forest card", " card {G}");
 
-			// Replace all the land types with a equivalent mana color to allow the pattern to find it
-			oracle = oracle.replaceAll("Island card", "card {U}");
-			oracle = oracle.replaceAll("Plains card", "card {W}");
-			oracle = oracle.replaceAll("Mountain card", "card {R}");
-			oracle = oracle.replaceAll("Swamp card", "card {B}");
-			oracle = oracle.replaceAll("Forest card", "card {G}");
-
-		}
+		// Replace all the land types with a equivalent mana color to allow the pattern to find it
+		oracle = oracle.replaceAll("Island card", "card {U}");
+		oracle = oracle.replaceAll("Plains card", "card {W}");
+		oracle = oracle.replaceAll("Mountain card", "card {R}");
+		oracle = oracle.replaceAll("Swamp card", "card {B}");
+		oracle = oracle.replaceAll("Forest card", "card {G}");
 
 		Matcher matcher = colorpattern.matcher(oracle);
 		while (matcher.find()) {

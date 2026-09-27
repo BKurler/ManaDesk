@@ -7,16 +7,20 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *
+ *     Rémi Dutil (2026) - addNode() now takes the page directly, not a
+ *                         PreferenceNode - see CardFilterDialog's own header
+ *     Rémi Dutil (2026) - User Filter is no longer its own tab - now
+ *                         setAllowsUserFilter(true), folding its fields into
+ *                         Main Filter instead
  *******************************************************************************/
 package com.reflexit.magiccards.ui.dialogs;
 
 import org.eclipse.jface.preference.IPreferenceStore;
-import org.eclipse.jface.preference.PreferenceNode;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Shell;
 
 import com.reflexit.magiccards.ui.preferences.LocationFilterPreferencePage;
-import com.reflexit.magiccards.ui.preferences.UserFilterPreferencePage;
 
 /**
  * Filter dialog for My Cards view
@@ -24,8 +28,8 @@ import com.reflexit.magiccards.ui.preferences.UserFilterPreferencePage;
 public class MyCardsFilterDialog extends CardFilterDialog {
 	public MyCardsFilterDialog(Shell parentShell, IPreferenceStore store) {
 		super(parentShell, store);
-		addNode(new PreferenceNode("locations", new LocationFilterPreferencePage(SWT.MULTI)));
-		addNode(new PreferenceNode("user", new UserFilterPreferencePage(this)));
+		setAllowsUserFilter(true);
+		addNode("locations", new LocationFilterPreferencePage(SWT.MULTI));
 		super.addSavePage();
 	}
 

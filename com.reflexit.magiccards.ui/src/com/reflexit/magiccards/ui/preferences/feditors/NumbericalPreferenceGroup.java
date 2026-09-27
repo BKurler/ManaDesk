@@ -5,6 +5,17 @@
  *                         anymore)
  *     Rémi Dutil (2026) - switched every field here to a Min/Max range editor
  *                         instead of a single =/&lt;=/&gt;= comparison
+ *     Rémi Dutil (2026) - optional userFilter constructor flag: when true,
+ *                         User Price and Count (the former, separate
+ *                         UserPriceCountPreferenceGroup) are added right
+ *                         after Collector's Number, in this SAME field grid -
+ *                         being two more rows of the one shared
+ *                         FieldEditorPreferencePage grid is what actually
+ *                         aligns their operator/bound columns with Power/
+ *                         Toughness/etc. above; two separate pages (the old
+ *                         design) each compute their own column widths from
+ *                         their own labels, so "User Price"/"Count" - shorter
+ *                         than "Collector's Number" - never lined up
  */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
@@ -17,7 +28,19 @@ import org.eclipse.swt.widgets.Composite;
 import com.reflexit.magiccards.core.model.FilterField;
 
 public class NumbericalPreferenceGroup extends MFieldEditorPreferencePage {
-	private Collection<String> ids = new ArrayList<String>(6);
+	private Collection<String> ids = new ArrayList<String>(7);
+	private final boolean userFilter;
+
+	public NumbericalPreferenceGroup() {
+		this(false);
+	}
+
+	/** @param userFilter whether to also add User Price and Count - only
+	 *            meaningful for owned copies, so off when filtering the
+	 *            Scryfall database itself */
+	public NumbericalPreferenceGroup(boolean userFilter) {
+		this.userFilter = userFilter;
+	}
 
 	@Override
 	public Collection<String> getIds() {
@@ -52,6 +75,16 @@ public class NumbericalPreferenceGroup extends MFieldEditorPreferencePage {
 		getPreferenceStore().setDefault(id, "");
 		addField(new RangeComparisonFieldEditor(id, "Collector's Number", getFieldEditorParent()));
 		ids.add(id);
+		if (this.userFilter) {
+			id = FilterField.PRICE.getPrefConstant();
+			getPreferenceStore().setDefault(id, "");
+			addField(new RangeComparisonFieldEditor(id, "User Price", getFieldEditorParent()));
+			ids.add(id);
+			id = FilterField.COUNT.getPrefConstant();
+			getPreferenceStore().setDefault(id, "");
+			addField(new RangeComparisonFieldEditor(id, "Count", getFieldEditorParent()));
+			ids.add(id);
+		}
 	}
 
 	@Override

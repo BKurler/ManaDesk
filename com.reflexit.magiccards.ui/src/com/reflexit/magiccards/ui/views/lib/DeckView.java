@@ -6,6 +6,10 @@
  *                         (and store) for a Collection than for a Deck, so
  *                         their column visibility/width/order are no longer
  *                         shared
+ *     Rémi Dutil (2026) - getCardFilterDialog(): wires setOnApply() so the
+ *                         filter dialog's OK/Apply actually refresh this
+ *                         view - see CardFilterDialog#performApply()'s own
+ *                         comment
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -476,6 +480,8 @@ public class DeckView extends AbstractMyCardsView {
 
 	@Override
 	public CardFilterDialog getCardFilterDialog() {
-		return new DeckFilterDialog(getShell(), getFilterPreferenceStore());
+		DeckFilterDialog dialog = new DeckFilterDialog(getShell(), getFilterPreferenceStore());
+		dialog.setOnApply(getFilterApplyCallback());
+		return dialog;
 	}
 }

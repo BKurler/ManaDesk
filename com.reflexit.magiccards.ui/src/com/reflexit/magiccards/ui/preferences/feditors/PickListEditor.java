@@ -1,3 +1,13 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - doFillIntoGrid(): gave the list a real heightHint
+ *                         (450, matching EditionsComposite's own tree) - it
+ *                         only showed a handful of rows before, now that the
+ *                         Set Filter tab's taller tree already sets the
+ *                         dialog's overall height, Save/Load Filter's own
+ *                         list can use that same room instead of sitting
+ *                         short next to a lot of empty space
+ */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
 import org.eclipse.jface.dialogs.IDialogConstants;
@@ -165,6 +175,10 @@ public abstract class PickListEditor extends FieldEditor {
 		gd.verticalAlignment = GridData.FILL;
 		gd.horizontalSpan = numColumns - 1;
 		gd.grabExcessHorizontalSpace = true;
+		// matches the Set Filter tab's own tree heightHint (EditionsComposite)
+		// - without this the list only shows its own tiny natural height
+		// (a handful of rows), the only user of this class
+		gd.heightHint = 450;
 		list.setLayoutData(gd);
 		buttonBox = getButtonBoxControl(parent);
 		gd = new GridData();
