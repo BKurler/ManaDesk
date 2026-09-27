@@ -3,6 +3,19 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - new testColorIdentityLandTypeName*() tests: none of
+ *                         the existing tests here ever combined a land-type-
+ *                         name phrase ("Plains or Island card") with oracle
+ *                         text starting with '{' (a tap/mana symbol), which
+ *                         is exactly how every fetch/tap land's own oracle
+ *                         text is shaped - so none of them could have caught
+ *                         Colors#getColorPresense()'s bug where that exact
+ *                         shape made Extended Color Identity report Costless
+ *                         instead of the land types' own colors (see that
+ *                         method's own header). These cover all 5 basic land
+ *                         types across the three grammatical shapes the
+ *                         substitution chain actually handles (bare, "or X
+ *                         card", ", or X card").
  */
 
 package com.reflexit.magiccards.core.model;
@@ -139,6 +152,37 @@ public class ColorsTest {
 		assertEquals("White-Blue-Black", cs.getColorName("{W/B}{U}"));
 		assertEquals("White-Blue-Black-Colorless", cs.getColorName("{W/B}{U}{1}"));
 		assertEquals("White-Blue-Black-Red-Green-Colorless", cs.getColorName("{1}{G}{R}{B}{U}{W}"));
+	}
+
+	private static final String[] LAND_TYPES = { "Island", "Plains", "Mountain", "Swamp", "Forest" };
+	private static final String[] LAND_COLORS = { "U", "W", "R", "B", "G" };
+
+	@Test
+	public void testColorIdentityLandTypeNameStartingWithBrace() {
+		for (int i = 0; i < LAND_TYPES.length; i++) {
+			String type = LAND_TYPES[i];
+			String color = LAND_COLORS[i];
+			MagicCardPhysical bare = mcpCost("");
+			bare.set(MagicCardField.ORACLE,
+					"{T}: Search your library for a " + type + " card, put it onto the battlefield.");
+			checkIdentity(bare, color);
+		}
+	}
+
+	@Test
+	public void testColorIdentityLandTypeNameTwoItemListStartingWithBrace() {
+		MagicCardPhysical fetch = mcpCost("");
+		fetch.set(MagicCardField.ORACLE, "{T}, Pay 1 life, Sacrifice this land: Search your library for a Plains "
+				+ "or Island card, put it onto the battlefield, then shuffle.");
+		checkIdentity(fetch, "W", "U");
+	}
+
+	@Test
+	public void testColorIdentityLandTypeNameThreeItemListStartingWithBrace() {
+		MagicCardPhysical panorama = mcpCost("");
+		panorama.set(MagicCardField.ORACLE, "{T}, Sacrifice this land: Search your library for a Mountain, Swamp, "
+				+ "or Forest card, put it onto the battlefield, then shuffle.");
+		checkIdentity(panorama, "R", "B", "G");
 	}
 
 	@Test

@@ -7,6 +7,11 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *
+ *     Rémi Dutil (2026) - performApply(): routes each page's own "Apply"
+ *                         button through CardFilterDialog#performApply()
+ *                         instead of the inherited per-page-only default -
+ *                         see that method's own comment
  *******************************************************************************/
 package com.reflexit.magiccards.ui.preferences;
 
@@ -99,6 +104,18 @@ public abstract class AbstractFilterPreferencePage extends PreferencePage implem
 			page.performDefaults();
 		}
 		super.performDefaults();
+	}
+
+	/** Routes this page's own "Apply" button through the owning dialog's
+	 *  performApply() instead of the inherited default (performOk() on just
+	 *  this one page) - see CardFilterDialog#performApply()'s own comment
+	 *  for why that default looked like it did nothing. */
+	@Override
+	protected void performApply() {
+		if (this.dialog != null)
+			this.dialog.performApply();
+		else
+			super.performApply();
 	}
 
 	@Override

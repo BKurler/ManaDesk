@@ -29,6 +29,16 @@
  *                         finish's price bucket - if this copy's own Finish
  *                         has no price, the price is unavailable, not a
  *                         substitute from a different finish
+ *     Rémi Dutil (2026) - matches(): now delegates to AbstractMagicCard's
+ *                         shared static matches() instead of its own
+ *                         duplicated copy of the same logic - that duplicate
+ *                         was the actual reason a [ability] search's
+ *                         stripParens fix (see AbstractMagicCard/TextValue/
+ *                         MagicCardFilter's own headers) never took effect
+ *                         for real owned copies: MagicCardPhysical doesn't
+ *                         extend AbstractMagicCard, so its own matches() was
+ *                         silently bypassing the fix entirely. Sharing one
+ *                         implementation means this can't drift again.
  */
 
 package com.reflexit.magiccards.core.model;
@@ -530,11 +540,7 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 
 	@Override
 	public boolean matches(ICardField left, TextValue right) {
-		String value = String.valueOf(get(left));
-		if (left == MagicCardField.TYPE && !right.regex) {
-			return CardTypes.getInstance().hasType(this, right.getText());
-		}
-		return right.getPattern().matcher(value).find();
+		return AbstractMagicCard.matches(this, left, right);
 	}
 
 	@Override

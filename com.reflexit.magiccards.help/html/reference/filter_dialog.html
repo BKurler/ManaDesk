@@ -53,8 +53,15 @@ If you add "-" right before the word it would mean "not" for example "life -loos
 By default text search is case insensitive, if you need case sensitive search or more advanced search you can use regular expressions.
 Regular expressions are recognised in text as m/expression/, for example m/Flying/ will search with Flying starting with capital F.
 Regular expressions are very powerful, google java regular expression for help on how to write them.
-If you put ability in square brackets it will search for minded ability like [draw] will search for cards which allows you 
-to draw more cards
+If you put ability in square brackets it will search for minded ability like [draw] will search for cards which allows you
+to draw more cards. This is meant for the Text field, since that's where a card's abilities are actually described - typing
+it into Name/Type/Artist parses the same way but only finds a card by coincidence (one whose name/type/artist credit
+happens to contain the word), never because it has the ability.
+
+<p/>
+The Name field also supports wildcards: "*" stands for any run of characters (including none), and "?" stands for exactly
+one character. For example <tt>Jace*</tt> finds every card whose name starts with "Jace", and <tt>Bo?k</tt> finds "Book"
+or "Bork". Wildcards only apply to the Name field, not Type/Text/Artist.
 
 <p/>
 <li>Example 1: Select all Green creatures with flying - Select Green in Color, Create in Type, and type <tt>flying</tt> in Text field</li>

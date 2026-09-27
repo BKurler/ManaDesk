@@ -2,6 +2,11 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - removed the dead "Load Extra Fields…" web action
+ *     Rémi Dutil (2026) - getCardFilterDialog()/getFilterApplyCallback():
+ *                         wires the filter dialog's OK/Apply to actually
+ *                         refresh this view - see CardFilterDialog#
+ *                         performApply()'s own comment for why that wasn't
+ *                         happening on its own
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -391,6 +396,19 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 	public abstract IPreferenceStore getFilterPreferenceStore();
 
 	public CardFilterDialog getCardFilterDialog() {
-		return new CardFilterDialog(getShell(), getFilterPreferenceStore());
+		CardFilterDialog dialog = new CardFilterDialog(getShell(), getFilterPreferenceStore());
+		dialog.setOnApply(getFilterApplyCallback());
+		return dialog;
+	}
+
+	/** What "OK"/"Apply" on the filter dialog should do to actually show the
+	 *  new filter's results - same as the toolbar "Refresh" action's own
+	 *  callback, since writing the new values to the preference store alone
+	 *  (what performOk() does) isn't observed by anything on its own. */
+	protected Runnable getFilterApplyCallback() {
+		return () -> {
+			getFilteredStore().getCardStore().updateList(null, null);
+			reloadData();
+		};
 	}
 }

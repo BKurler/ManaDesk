@@ -12,6 +12,48 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - createDefaultColumns(): no longer wires cell
+ *                         editing for a checked (SWT.CHECK) tree - see the
+ *                         method's own comment
+ *     Rémi Dutil (2026) - grew the tree's heightHint (300 -> 450): the Main
+ *                         Filter tab got noticeably more compact this round
+ *                         (two-column Text/Legality/Artist/etc. layout), so
+ *                         the Set Filter tab - which actually sets the whole
+ *                         dialog's height (see this class' own class-level
+ *                         javadoc) - had room to show more sets at once
+ *                         without growing the dialog further.
+ *     Rémi Dutil (2026) - two new buttons, "Show Selected Only"/"Show All
+ *                         Sets" - a display-only ViewerFilter
+ *                         (selectedOnlyFilter) toggled by a showOnlySelected
+ *                         flag, filtering rows by whether checkedSet
+ *                         contains them. Deliberately reads checkedSet (the
+ *                         same model-backed store the check-state provider
+ *                         already uses so a row keeps its check even while
+ *                         scrolled out of view or hidden by the search box's
+ *                         own PatternFilter) rather than the tree widget's
+ *                         own checkbox bits, and never writes to it - hiding
+ *                         or reshowing a row this way can't change what's
+ *                         actually checked, only what's currently visible.
+ *                         Combines with the existing search-text PatternFilter
+ *                         via ordinary multi-filter AND semantics (both
+ *                         JFace ViewerFilters on the same TreeViewer), so
+ *                         typing a search AND toggling "Show Selected Only"
+ *                         narrows to matches that are also checked. Gated on
+ *                         checkedTree - meaningless for the non-checkbox
+ *                         tree modes (BoosterGeneratorWizard/
+ *                         EditionsPreferencePage), where checkedSet is never
+ *                         populated at all.
+ *     Rémi Dutil (2026) - performApply(): Editions.getInstance().save()
+ *                         (rewrites the WHOLE editions data file to disk) is
+ *                         now only called for a non-checked tree - a checked
+ *                         tree (the Set Filter tab) never has cell editing
+ *                         wired at all (see createDefaultColumns()'s own
+ *                         comment), so nothing about edition data itself can
+ *                         ever change there; only which sets are checked
+ *                         does, and that's a preference-store value already
+ *                         written a few lines above, not edition data. Every
+ *                         Apply/OK in the Set Filter tab was rewriting that
+ *                         file for nothing.
  */
 
 package com.reflexit.magiccards.ui.views.editions;
@@ -34,6 +76,7 @@ import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.viewers.TreeViewer;
 import org.eclipse.jface.viewers.TreeViewerColumn;
 import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.ToolTip;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -101,6 +144,8 @@ public class EditionsComposite extends Composite {
 	private final Set<Edition> checkedSet = new HashSet<>();
 	private ArrayList<AbstractEditionColumn> columns;
 	private EditionsViewerComparator vcomp;
+	/** "Show Selected Only" state - display-only, never touches checkedSet. */
+	private boolean showOnlySelected = false;
 
 	protected Control createContents(Composite parent, int treeStyle) {
 		this.panel = new Composite(parent, SWT.NONE);
@@ -136,9 +181,19 @@ public class EditionsComposite extends Composite {
 		this.treeViewer.setUseHashlookup(true);
 		treeViewer.getControl().setFont(parent.getFont());
 		GridData gd = new GridData(GridData.FILL_HORIZONTAL);
-		gd.heightHint = 300;
+		gd.heightHint = 450;
 		filteredTree.setLayoutData(gd);
 		createDefaultColumns();
+		// display-only: hides rows without touching checkedSet - see this
+		// class' own header
+		this.treeViewer.addFilter(new ViewerFilter() {
+			@Override
+			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				if (!showOnlySelected)
+					return true;
+				return element instanceof Edition && checkedSet.contains(element);
+			}
+		});
 		this.countLabel = new Label(panel, SWT.NONE);
 		this.countLabel.setFont(panel.getFont());
 		this.countLabel.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
@@ -205,7 +260,17 @@ public class EditionsComposite extends Composite {
 			if (man instanceof Listener) {
 				treeViewer.getTree().addListener(SWT.PaintItem, (Listener) man);
 			}
-			colv.setEditingSupport(man.getEditingSupport(treeViewer));
+			// A checked tree (SWT.CHECK) is a selection UI - the checkbox is the
+			// only thing meant to be interactive, e.g. the Set Filter page. The
+			// generic AbstractEditionColumn#getEditingSupport() default lets
+			// every cell open a live TextCellEditor regardless, so a set's name
+			// looked directly editable there even though nothing was meant to
+			// let the user rename/retype it. Only wire real cell editing for a
+			// plain (non-checked) tree, i.e. the actual edition-editing admin
+			// page (EditionsPreferencePage).
+			if (!checkedTree) {
+				colv.setEditingSupport(man.getEditingSupport(treeViewer));
+			}
 		}
 		ColumnViewerToolTipSupport.enableFor(treeViewer, ToolTip.NO_RECREATE);
 		treeViewer.getTree().setHeaderVisible(true);
@@ -282,6 +347,31 @@ public class EditionsComposite extends Composite {
 			});
 			selAll.setFont(panel.getFont());
 			deselAll.setFont(panel.getFont());
+			// display-only, never touches which sets are checked - see this
+			// class' own header. Meaningless outside a checked tree (nothing
+			// is ever tracked in checkedSet there).
+			if (checkedTree) {
+				Button showSelectedOnly = new Button(panel, SWT.PUSH);
+				showSelectedOnly.setText("Show Selected Only");
+				showSelectedOnly.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						showOnlySelected = true;
+						treeViewer.refresh();
+					}
+				});
+				showSelectedOnly.setFont(panel.getFont());
+				Button showAllSets = new Button(panel, SWT.PUSH);
+				showAllSets.setText("Show All Sets");
+				showAllSets.addSelectionListener(new SelectionAdapter() {
+					@Override
+					public void widgetSelected(SelectionEvent e) {
+						showOnlySelected = false;
+						treeViewer.refresh();
+					}
+				});
+				showAllSets.setFont(panel.getFont());
+			}
 		}
 	}
 
@@ -394,10 +484,20 @@ public class EditionsComposite extends Composite {
 				getPreferenceStore().setValue(id, true);
 			}
 		}
-		try {
-			Editions.getInstance().save();
-		} catch (FileNotFoundException e) {
-			// ignore
+		if (!this.checkedTree) {
+			// only the non-checked tree (EditionsPreferencePage's own set-
+			// editing admin page) can actually change edition DATA (name,
+			// abbreviations, block, etc - see createDefaultColumns()'s own
+			// comment on why cell editing is only wired there); a checked
+			// tree (the Set Filter tab) only ever changes which sets are
+			// checked, a preference-store value already written above, so
+			// rewriting the whole editions file here was pure waste on every
+			// Apply/OK
+			try {
+				Editions.getInstance().save();
+			} catch (FileNotFoundException e) {
+				// ignore
+			}
 		}
 	}
 

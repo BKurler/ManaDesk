@@ -35,6 +35,48 @@
  *                         testColorlessExtendedIdentity (ColorTypes.EXTENDED_ID)
  *                         - unchanged otherwise, that heuristic is exactly
  *                         what they were already testing
+ *     Rémi Dutil (2026) - testNameWildcard() split into
+ *                         testNameWildcardStar()/testNameWildcardQuestionMark(),
+ *                         updated for '*' now meaning "zero or more" instead
+ *                         of "exactly one" (see FilterField's own header),
+ *                         plus a new '?' case covering the "exactly one"
+ *                         meaning '*' used to have
+ *     Rémi Dutil (2026) - new testAbilityBracketMatchesRealAbility()/
+ *                         testAbilityBracketStripsReminderText(): lock in
+ *                         [ability]'s new stripParens behavior - see
+ *                         TextValue/MagicCardFilter/AbstractMagicCard's own
+ *                         headers
+ *     Rémi Dutil (2026) - testCOUNT/testPRICE switched from genericFieldText()
+ *                         to genericRangeFieldText(), matching testCCC/
+ *                         testPOWER/testTOUGHNESS/testDBPRICE/testCOLLNUM -
+ *                         Count and User Price both moved to
+ *                         RangeComparisonFieldEditor a while back but these
+ *                         two tests were never updated, so they kept
+ *                         exercising intFieldCheck()'s old ">=5"/"<=5"-style
+ *                         strings against fieldRange()'s "<min>:<max>" parser,
+ *                         which doesn't understand that format at all - see
+ *                         FilterField's own header for the actual production
+ *                         bug this masked (every operator silently matched
+ *                         nothing, not just "between")
+ *     Rémi Dutil (2026) - new testAbilityBracketMatchesRealAbilityOnPhysical-
+ *                         Card()/testAbilityBracketStripsReminderTextOn-
+ *                         PhysicalCard(): the existing ability-bracket tests
+ *                         only ever evaluate against a plain MagicCard, whose
+ *                         matches() was never the broken one - they could not
+ *                         have caught MagicCardPhysical's own separately-
+ *                         implemented matches() silently ignoring stripParens
+ *                         (see MagicCardPhysical's own header). These two run
+ *                         the identical scenarios against mcp instead, so a
+ *                         future re-duplication of matches() would actually
+ *                         fail a test.
+ *     Rémi Dutil (2026) - new testColorExtendedIdentityFetchLandStarting-
+ *                         WithBrace(): locks in Colors#getColorPresense()'s
+ *                         fix for oracle text that starts with '{' (a fetch
+ *                         land's own activated-ability cost) - none of the
+ *                         existing Extended Identity tests used a land-type-
+ *                         name phrase ("Plains or Island card") together
+ *                         with a leading brace, so none of them could have
+ *                         caught this - see Colors' own header.
  */
 package com.reflexit.magiccards.core.model;
 
@@ -102,6 +144,41 @@ public class MagicCardFilterTest extends TestCase {
 	public void testTextSearchNot() {
 		search("flying -with", "create with flying", false);
 		search("flying -with", "Flying", true);
+	}
+
+	@Test
+	public void testAbilityBracketMatchesRealAbility() {
+		search("[flying]", "Flying");
+		search("[Flying]", "Flying");
+	}
+
+	@Test
+	public void testAbilityBracketStripsReminderText() {
+		// Reach's own reminder text mentions "flying" in passing - having
+		// Reach does not mean the card itself has Flying
+		search("[flying]", "Reach (This creature can block creatures with flying.)", false);
+	}
+
+	/**
+	 * Regression: {@link #search(String, String, boolean)} above evaluates
+	 * against a plain {@code MagicCard}, whose matches() is
+	 * AbstractMagicCard's own - it can never catch a bug where
+	 * MagicCardPhysical's OWN, separately-implemented matches() silently
+	 * ignores stripParens (which is exactly what happened - see
+	 * MagicCardPhysical's own header). Locks in that it now delegates.
+	 */
+	@Test
+	public void testAbilityBracketMatchesRealAbilityOnPhysicalCard() {
+		mcp.getCard().setOracleText("Flying");
+		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, "[flying]");
+		assertTrue("MagicCardPhysical.matches() must find [flying] on \"Flying\"", e.evaluate(mcp));
+	}
+
+	@Test
+	public void testAbilityBracketStripsReminderTextOnPhysicalCard() {
+		mcp.getCard().setOracleText("Reach (This creature can block creatures with flying.)");
+		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, "[flying]");
+		assertFalse("MagicCardPhysical.matches() must not match a reminder-text-only mention", e.evaluate(mcp));
 	}
 
 	@Test
@@ -184,14 +261,32 @@ public class MagicCardFilterTest extends TestCase {
 		assertFalse(filter.isFiltered(mc));
 	}
 
-	public void testNameWildcard() {
+	public void testNameWildcardStar() {
+		// '*' means "zero or more characters" (conventional glob semantics),
+		// not "exactly one" - see FilterField's own header for why
 		setQuickFilter(FilterField.NAME_LINE, "Bo*");
 		mc.setName("Bo");
-		assertTrue("no character after 'Bo' - the wildcard needs exactly one", filter.isFiltered(mc));
+		assertFalse("'*' matches zero characters too", filter.isFiltered(mc));
 		mc.setName("Boo");
+		assertFalse("'*' matches any run of characters", filter.isFiltered(mc));
+		mc.setName("Boombastic");
+		assertFalse("'*' matches any LENGTH run of characters, not just one", filter.isFiltered(mc));
+		mc.setName("Foo");
+		assertTrue("does not start with 'Bo'", filter.isFiltered(mc));
+	}
+
+	public void testNameWildcardQuestionMark() {
+		// '?' means "exactly one character" - the conventional glob meaning
+		// '*' used to have here before it became "zero or more"
+		setQuickFilter(FilterField.NAME_LINE, "Bo?k");
+		mc.setName("Book");
 		assertFalse("'o' satisfies the single-character wildcard", filter.isFiltered(mc));
-		mc.setName("Bob");
-		assertFalse("any single character satisfies the wildcard, not just 'o'", filter.isFiltered(mc));
+		mc.setName("Bork");
+		assertFalse("any single character satisfies '?', not just 'o'", filter.isFiltered(mc));
+		mc.setName("Bok");
+		assertTrue("'?' needs exactly one character - none is too few", filter.isFiltered(mc));
+		mc.setName("Boook");
+		assertTrue("'?' needs exactly one character - two is too many", filter.isFiltered(mc));
 	}
 
 	public void testNameWildcardQuoted() {
@@ -199,10 +294,10 @@ public class MagicCardFilterTest extends TestCase {
 		// value in a literal "\"...\"" pair - the wildcard branch must strip
 		// that itself, since it bypasses the tokenizer that normally would
 		setQuickFilter(FilterField.NAME_LINE, "\"Bo*\"");
-		mc.setName("Bo");
-		assertTrue("no character after 'Bo' - the wildcard needs exactly one", filter.isFiltered(mc));
-		mc.setName("Boo");
-		assertFalse("'o' satisfies the single-character wildcard", filter.isFiltered(mc));
+		mc.setName("Boombastic");
+		assertFalse("'*' matches any run of characters, even inside a quoted value", filter.isFiltered(mc));
+		mc.setName("Foo");
+		assertTrue("does not start with 'Bo'", filter.isFiltered(mc));
 	}
 
 	public void testNameBooPhy() {
@@ -373,7 +468,7 @@ public class MagicCardFilterTest extends TestCase {
 
 	public void testCOUNT() {
 		mcp.setCount(1);
-		genericFieldText(FilterField.COUNT, 3);
+		genericRangeFieldText(FilterField.COUNT, 3);
 	}
 
 	public void checkFound() {
@@ -385,7 +480,7 @@ public class MagicCardFilterTest extends TestCase {
 	}
 
 	public void testPRICE() {
-		genericFieldText(FilterField.PRICE, 2);
+		genericRangeFieldText(FilterField.PRICE, 2);
 	}
 
 	public void testDBPRICE() {
@@ -608,6 +703,22 @@ public class MagicCardFilterTest extends TestCase {
 		checkFound(w);
 		w.set(MagicCardField.ORACLE, "Red"); // W but not cost
 		checkNotFound(w);
+	}
+
+	/** Regression: Colors#getColorPresense() used to skip its land-type-name
+	 *  -> color substitution ("Plains or Island card" -> W/U) whenever the
+	 *  oracle text started with '{' - exactly the shape of a fetch land's
+	 *  own activated ability cost, so a fetch land's Extended Identity came
+	 *  back Costless instead of the colors of the basic land types it
+	 *  searches for. See Colors' own header. */
+	public void testColorExtendedIdentityFetchLandStartingWithBrace() {
+		MagicCardPhysical fetch = mcpCost("");
+		fetch.getCard().setOracleText("{T}, Pay 1 life, Sacrifice Flooded Strand: Search your library for a "
+				+ "Plains or Island card, put it onto the battlefield, then shuffle.");
+		String white_id = Colors.getInstance().getPrefConstant(Colors.getColorName(WHITE_COST));
+		String blue_id = Colors.getInstance().getPrefConstant(Colors.getColorName("{U}"));
+		setFilterTrue(white_id, blue_id, ColorTypes.IDENTITY_ID, ColorTypes.EXTENDED_ID);
+		checkFound(fetch);
 	}
 
 	public void testColorBlackAndRedExtendedIdentity() {
