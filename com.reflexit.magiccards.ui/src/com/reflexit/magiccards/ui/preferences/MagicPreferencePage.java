@@ -1,6 +1,39 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - "When card is selected" dropped its own Group box -
+ *                         it only ever held the one checkbox, so the group
+ *                         title got folded into that checkbox's own label
+ *                         instead ("...when a card is selected") - a single
+ *                         sentence checkbox needs no surrounding box
+ *     Rémi Dutil (2026) - new "Show workspace selection dialog at startup"
+ *                         checkbox: the ONLY way to reverse the Workspace
+ *                         Launcher's own "Use this as the default and do not
+ *                         ask again" checkbox was to manually edit/delete
+ *                         config files - no in-app UI for it. Both read/write
+ *                         the exact same persisted flag
+ *                         (ChooseWorkspaceData/MAWorkbenchPreferences#
+ *                         SHOW_WORKSPACE_SELECTION_DIALOG, at
+ *                         ConfigurationScope under com.reflexit.magiccards_rcp
+ *                         - NOT this plugin's own InstanceScope store, since
+ *                         MAApplication#checkInstanceLocation() has to read
+ *                         it before any workspace, and therefore any
+ *                         InstanceScope preference, even exists yet). Doesn't
+ *                         reference ChooseWorkspaceData/MAWorkbenchPreferences
+ *                         directly - com.reflexit.magiccards_rcp already
+ *                         depends on this plugin, so importing the other way
+ *                         would be circular - the plugin id and preference
+ *                         key are duplicated here as plain string literals
+ *                         instead (see the constants below). Not a
+ *                         BooleanFieldEditor/addField() like every other
+ *                         field on this page - those all get set to this
+ *                         page's own single IPreferenceStore
+ *                         (MagicUIActivator's), which would silently
+ *                         overwrite this field's own, different store if it
+ *                         went through the same mechanism - so it's a plain
+ *                         SWT Button, loaded/stored/defaulted by hand in
+ *                         createFieldEditors()/performOk()/
+ *                         performDefaults().
  */
 
 package com.reflexit.magiccards.ui.preferences;
@@ -8,15 +41,19 @@ package com.reflexit.magiccards.ui.preferences;
 import java.util.Collection;
 import java.util.Iterator;
 
+import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchPreferencePage;
+import org.osgi.service.prefs.BackingStoreException;
+import org.osgi.service.prefs.Preferences;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.seller.IPriceProvider;
@@ -35,6 +72,13 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
  * preferences can be accessed directly via the preference store.
  */
 public class MagicPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+	/** com.reflexit.magiccards_rcp's own plugin id and MAWorkbenchPreferences#
+	 *  SHOW_WORKSPACE_SELECTION_DIALOG, duplicated as literals - see this
+	 *  class' own header for why this isn't just an import. */
+	private static final String WORKSPACE_CHOOSER_PLUGIN_ID = "com.reflexit.magiccards_rcp";
+	private static final String SHOW_WORKSPACE_SELECTION_DIALOG = "SHOW_WORKSPACE_SELECTION_DIALOG";
+	private Button showWorkspaceDialog;
+
 	public MagicPreferencePage() {
 		super(GRID);
 		setPreferenceStore(MagicUIActivator.getDefault().getPreferenceStore());
@@ -64,7 +108,17 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 			}
 		};
 		addField(owncopy);
-		/* !!! RD 
+		// workspace - not a BooleanFieldEditor: it targets a different plugin's
+		// ConfigurationScope preference, not this page's own store - see this
+		// class' own header
+		this.showWorkspaceDialog = new Button(getFieldEditorParent(), SWT.CHECK);
+		this.showWorkspaceDialog.setText("Show workspace selection dialog at startup");
+		GridData wgd = new GridData();
+		wgd.horizontalSpan = 2;
+		this.showWorkspaceDialog.setLayoutData(wgd);
+		this.showWorkspaceDialog.setSelection(getWorkspaceSelectionDialogPreference().getBoolean(
+				SHOW_WORKSPACE_SELECTION_DIALOG, true));
+		/* !!! RD
 		StringFieldEditor cur = new StringFieldEditor(PreferenceConstants.CURRENCY, //
 				"Default currency (code)", getFieldEditorParent()) {
 			@Override
@@ -114,30 +168,22 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		 * values, inetOptions); addField(combo);
 		 */
 		createButtons(inetOptions);
-		// selection
-		createCardSelectGroup(inetOptions);
-	}
-
-	protected void createCardSelectGroup(Composite parent) {
-		Group onCardSelect = new Group(parent, SWT.NONE);
-		onCardSelect.setText("When card is selected");
-		GridData ld = new GridData(GridData.FILL_HORIZONTAL | GridData.GRAB_HORIZONTAL);
-		ld.horizontalSpan = 2;
-		onCardSelect.setLayoutData(ld);
+		// selection - a single sentence checkbox, no separate group box: it
+		// only ever held this one field (see this class' own header)
 		BooleanFieldEditor load = new BooleanFieldEditor(PreferenceConstants.LOAD_IMAGES,
-				"Load card graphics from the web", onCardSelect);
+				"Load card graphics from the web when a card is selected", inetOptions);
 		addField(load);
 		/*
 		 * !!! RD Deprecated, all extras loaded all the time now BooleanFieldEditor
 		 * rulings = new BooleanFieldEditor(PreferenceConstants.LOAD_RULINGS,
-		 * "Load rulings from the web", onCardSelect); addField(rulings);
+		 * "Load rulings from the web", inetOptions); addField(rulings);
 		 * BooleanFieldEditor other = new
 		 * BooleanFieldEditor(PreferenceConstants.LOAD_EXTRAS,
-		 * "Load extra fields and update oracle text from the web", onCardSelect);
+		 * "Load extra fields and update oracle text from the web", inetOptions);
 		 * addField(other); BooleanFieldEditor printings = new
 		 * BooleanFieldEditor(PreferenceConstants.LOAD_PRINTINGS,
 		 * "Load all card's printings (all sets and artworks) from the web",
-		 * onCardSelect); addField(printings);
+		 * inetOptions); addField(printings);
 		 */
 	}
 
@@ -158,6 +204,35 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 	@Override
 	public void propertyChange(PropertyChangeEvent event) {
 		super.propertyChange(event);
+	}
+
+	private Preferences getWorkspaceSelectionDialogPreference() {
+		return ConfigurationScope.INSTANCE.getNode(WORKSPACE_CHOOSER_PLUGIN_ID);
+	}
+
+	@Override
+	public boolean performOk() {
+		boolean ok = super.performOk();
+		if (this.showWorkspaceDialog != null) {
+			Preferences node = getWorkspaceSelectionDialogPreference();
+			node.putBoolean(SHOW_WORKSPACE_SELECTION_DIALOG, this.showWorkspaceDialog.getSelection());
+			try {
+				node.flush();
+			} catch (BackingStoreException e) {
+				// ignore - same as ChooseWorkspaceData#writePersistedData()
+			}
+		}
+		return ok;
+	}
+
+	@Override
+	protected void performDefaults() {
+		super.performDefaults();
+		if (this.showWorkspaceDialog != null) {
+			// documented default for SHOW_WORKSPACE_SELECTION_DIALOG is true
+			// (MAWorkbenchPreferences' own javadoc)
+			this.showWorkspaceDialog.setSelection(true);
+		}
 	}
 
 	private String[][] getPriceProviders() {
