@@ -8,6 +8,16 @@
  * Contributors:
  *     IBM Corporation - initial API and implementation
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - createShowDialogButton(): added a plain Label below
+ *                         the "do not ask again" checkbox pointing at
+ *                         MagicPreferencePage's new "Show workspace selection
+ *                         dialog at startup" checkbox - the only way back
+ *                         once this one's been checked, and previously
+ *                         undiscoverable from inside this dialog itself
+ */
 package com.reflexit.magiccards_rcp;
 
 import java.io.File;
@@ -329,6 +339,9 @@ public class ChooseWorkspaceDialog extends TitleAreaDialog {
 				launchData.toggleShowDialog();
 			}
 		});
+		Label updateLater = new Label(panel, SWT.WRAP);
+		updateLater.setText(MAWorkbenchMessages.ChooseWorkspaceDialog_updateLaterMessage);
+		updateLater.setFont(parent.getFont());
 	}
 
 	private void setInitialTextValues(Combo text) {

@@ -15,6 +15,16 @@
  *     Markus Schorn (Wind River Systems) -  bug 284447
  *     James Blackburn (Broadcom Corp.)   -  bug 340978
  *******************************************************************************/
+
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - ChooseWorkspaceDialog_updateLaterMessage: points to
+ *                         the new "Show workspace selection dialog at
+ *                         startup" checkbox in ManaDesk Preferences, which
+ *                         reverses this same dialog's own "do not ask again"
+ *                         checkbox - see ChooseWorkspaceDialog/
+ *                         MagicPreferencePage's own headers
+ */
 package com.reflexit.magiccards_rcp;
 
 import org.eclipse.osgi.util.NLS;
@@ -801,6 +811,7 @@ public class MAWorkbenchMessages extends NLS {
 	public static String ChooseWorkspaceDialog_directoryBrowserTitle;
 	public static String ChooseWorkspaceDialog_directoryBrowserMessage;
 	public static String ChooseWorkspaceDialog_useDefaultMessage;
+	public static String ChooseWorkspaceDialog_updateLaterMessage;
 	public static String ChooseWorkspaceWithSettingsDialog_SettingsGroupName;
 	public static String ChooseWorkspaceWithSettingsDialog_ProblemsTransferTitle;
 	public static String ChooseWorkspaceWithSettingsDialog_TransferFailedMessage;
