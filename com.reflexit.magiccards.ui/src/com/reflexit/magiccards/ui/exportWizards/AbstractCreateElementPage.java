@@ -6,6 +6,9 @@
  *                         the Virtual / Read only options. A new element always
  *                         lands under this page's side root; importing into an
  *                         existing element is a separate wizard.
+ *     Rémi Dutil (2026) - restoreWidgetValues() also re-asserts Empty over a
+ *                         restored Website radio, same as it already does for
+ *                         Clipboard/File (see that method's own comment)
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -301,6 +304,8 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 				clipboardRadio.setSelection(false);
 			if (fileRadio != null && !fileRadio.isDisposed())
 				fileRadio.setSelection(false);
+			if (websiteRadio != null && !websiteRadio.isDisposed())
+				websiteRadio.setSelection(false);
 			syncEmptyImport();
 		}
 	}

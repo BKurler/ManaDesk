@@ -10,6 +10,28 @@
  *                         (meaningless once a card is actually in the
  *                         library) - this preview grid is the one place it's
  *                         still populated and needed, so it opts back in
+ *     Rémi Dutil (2026) - validate() never actually said how many cards would
+ *                         be imported - the error-free description was just
+ *                         "Importing into X.", and even the error path only
+ *                         showed the ERROR count, not the total; a user
+ *                         importing from a web page had no way to sanity-
+ *                         check the parse (e.g. "7 cards" for what's really
+ *                         a 60-card deck) without counting rows by hand.
+ *                         Every branch now appends importData.size() (total
+ *                         parsed rows) - and, when relevant, how many of
+ *                         those will actually import - to its message.
+ *     Rémi Dutil (2026) - importData.size() is a bare ROW count, not what
+ *                         actually gets imported (a 20-row table where rows
+ *                         are 4x/3x/etc adds up to a lot more than "20
+ *                         cards") - added cardCountSummary(), the same
+ *                         "Total N (unique M) card(s)" convention already
+ *                         used elsewhere in ManaDesk (and by
+ *                         BrowseWebsiteDialog's live count), and used it in
+ *                         both validate()'s own message AND
+ *                         showErrorForSelection() - the zone below the
+ *                         table now also shows the count when nothing needs
+ *                         a row selected, so it stays visible without
+ *                         needing to look up at the title area.
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -281,7 +303,10 @@ public class DeckImportPreviewPage extends WizardPage {
 		return null;
 	}
 
-	/** Fill the zone below the table with the full error for the selected row. */
+	/** Fill the zone below the table with the full error for the selected row,
+	 *  or - when nothing needs a row selected - the Total/unique card count
+	 *  summary, so it stays visible near the table itself, not just in the
+	 *  page's own title-area message above. */
 	private void showErrorForSelection() {
 		if (errorZone == null || errorZone.isDisposed())
 			return;
@@ -289,9 +314,11 @@ public class DeckImportPreviewPage extends WizardPage {
 		MagicCardPhysical card = selectedCard();
 		if (card != null && card.getError() != null)
 			msg = String.valueOf(card.getError());
-		if (msg.isEmpty()) {
-			int n = importData == null ? 0 : importData.getErrorCount();
-			msg = n == 0 ? "" : n + " card(s) have errors - select a row for the details.";
+		if (msg.isEmpty() && importData != null) {
+			int n = importData.getErrorCount();
+			msg = n == 0 ? cardCountSummary(false) + " will be imported."
+					: n + " card(s) have errors - select a row for the details. " + cardCountSummary(true)
+							+ " will be imported.";
 		}
 		errorZone.setText(msg);
 	}
@@ -1185,6 +1212,24 @@ public class DeckImportPreviewPage extends WizardPage {
 		text.addModifyListener(modifyLister);
 	}
 
+	/** "Total N (unique M) card(s)" - the same convention the deck/collection
+	 *  views (and BrowseWebsiteDialog's live count) already use, rather than
+	 *  a bare row count that doesn't match what actually gets imported (a
+	 *  20-row table where rows are 4x/3x/etc. is a lot more than "20 cards"). */
+	private String cardCountSummary(boolean excludeErrors) {
+		int total = 0, unique = 0;
+		if (importData != null && importData.getList() != null) {
+			for (Object o : importData.getList()) {
+				boolean errored = o instanceof MagicCardPhysical && ((MagicCardPhysical) o).getError() != null;
+				if (excludeErrors && errored)
+					continue;
+				unique++;
+				total += (o instanceof MagicCardPhysical) ? ((MagicCardPhysical) o).getCount() : 1;
+			}
+		}
+		return "Total " + total + " (unique " + unique + ") card(s)";
+	}
+
 	public void validate() {
 		setErrorMessage(null);
 		int errorCount = importData.getErrorCount();
@@ -1204,15 +1249,17 @@ public class DeckImportPreviewPage extends WizardPage {
 		} else if (!importData.isOk())
 			setErrorMessage("Cannot parse data file: unknown reason");
 		else if (errorCount == 0) {
-			setDescription(getFirstDescription());
+			setDescription(getFirstDescription() + " " + cardCountSummary(false) + " will be imported.");
 		} else if (isIgnoreErrors()) {
-			setMessage(errorCount + " card(s) still have errors and will be skipped on Finish.",
+			setMessage(cardCountSummary(true) + " will be imported - " + errorCount
+					+ " still have errors and will be skipped on Finish.",
 					org.eclipse.jface.dialogs.IMessageProvider.WARNING);
 			setPageComplete(true);
 			return;
 		} else {
 			setErrorMessage(errorCount + " card(s) have errors - select a row to see why, fix the Num / Set in "
-					+ "the table, or tick \"Ignore cards with errors\" to import only the valid ones.");
+					+ "the table, or tick \"Ignore cards with errors\" to import the valid " + cardCountSummary(true)
+					+ ".");
 			setPageComplete(false);
 			return;
 		}

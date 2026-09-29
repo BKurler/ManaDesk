@@ -1,0 +1,951 @@
+Decks
+Community
+Collection
+Register
+Login
+Deck sandbox
+Random commander
+Card search
+Decks links
+Community links
+Register
+Log in
+Site theme
+System theme
+Card controls on left
+Hide toolbar on scroll
+Thranduil, Sindarin Liege // Silvan Rally
+62 views
+16 hrs ago
+0
+Commander
+Legal
+Est Bracket: Upgraded (3)
+Size: 100
+Est cost: $1,108.62
+Salt sum: 38.75
+No deck tags
+Jess1722
+Clone deck
+More
+Playtester
+Add card
+Card search
+View as
+Stacks
+Group by
+Categories
+Sort by
+Alphabet
+Price sources
+Local filter
+
+Choose your preferred layout. You can mix and match options using the View as & Group by drop-downs above.
+
+Commander
+Qty: 1
+Price: $0.49
+Thranduil, Sindarin Liege
+Other Elves you control get +1/+1.
+Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token.
+Legendary Creature - Elf Noble
+1
+$0.49
+$0.29
+$0.15
+Commander
+(CTRL to add secondary)
+Artifact
+Qty: 1
+Price: $19.99
+Necklace of Girion
+Whenever you cast a green spell and whenever a Forest you control enters, put a +1/+1 counter on target creature you control.
+: Add .
+Legendary Artifact
+1
+$19.99
+$15.67
+$14.67
+Artifact
+(CTRL to add secondary)
+Creature
+Qty: 3
+Price: $54.47
+Elrond, Moon-Reader
+Whenever you activate an ability of a creature, draw a card. This ability triggers only once each turn.
+: Exile up to two other target nonland permanents you control. Return those cards to the battlefield under their owner's control at the beginning of the next end step.
+Legendary Creature - Elf Noble
+1
+Thranduil the Strategist
+Other Elves you control have ": Add  or ."
+Landfall — Whenever a land you control enters, create a 1/1 green Elf creature token.
+Legendary Creature - Elf Noble
+1
+Thranduil's Company
+As long as you control another Elf, you may play an additional land on each of your turns.
+Landfall — Whenever a land you control enters, put two +1/+1 counters on target creature you control. It gains vigilance until end of turn.
+Creature - Soldier Elf
+1
+$0.49
+$0.41
+$0.15
+Creature
+(CTRL to add secondary)
+Land
+Qty: 34
+Price: $285.02
+Boseiju, Who Endures
+: Add .
+Channel — , Discard this card: Destroy target artifact, enchantment, or nonbasic land an opponent controls. That player may search their library for a land card with a basic land type, put it onto the battlefield, then shuffle. This ability costs  less to activate for each legendary creature you control.
+Legendary Land
+1
+Breeding Pool
+(: Add  or .)
+As this land enters, you may pay 2 life. If you don't, it enters tapped.
+Land - Island Forest
+1
+Command Tower
+: Add one mana of any color in your commander's color identity.
+Land
+1
+Dreamroot Cascade
+This land enters tapped unless you control two or more other lands.
+: Add  or .
+Land
+1
+Eclipsed Realms
+As this land enters, choose Elemental, Elf, Faerie, Giant, Goblin, Kithkin, Merfolk, or Treefolk.
+: Add .
+: Add one mana of any color. Spend this mana only to cast a spell of the chosen type or activate an ability of a source of the chosen type.
+Land
+1
+Elven Passage
+, Pay 1 life, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. You may behold an Elf. If you do, untap that land. (To behold an Elf, choose an Elf you control or reveal an Elf card from your hand.)
+Land
+1
+Elvenking's Halls
+This land enters tapped.
+: Add  or .
+, , Sacrifice this land: Put two +1/+1 counters on target Elf you control. Activate only as a sorcery.
+Land
+1
+Fabled Passage
+, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle. Then if you control four or more lands, untap that land.
+Land
+1
+Forest
+(: Add .)
+Basic Land - Forest
+7
+Hedge Maze
+(: Add  or .)
+This land enters tapped.
+When this land enters, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+Land - Island Forest
+1
+Hinterland Harbor
+This land enters tapped unless you control a Forest or an Island.
+: Add  or .
+Land
+1
+Island
+(: Add .)
+Basic Land - Island
+7
+Misty Rainforest
+, Pay 1 life, Sacrifice this land: Search your library for a Forest or Island card, put it onto the battlefield, then shuffle.
+Land
+1
+Path of Ancestry
+This land enters tapped.
+: Add one mana of any color in your commander's color identity. When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+Land
+1
+Reliquary Tower
+You have no maximum hand size.
+: Add .
+Land
+1
+Rivendell
+Rivendell enters tapped unless you control a legendary creature.
+: Add .
+, : Scry 2. Activate only if you control a legendary creature.
+Legendary Land
+1
+Simic Growth Chamber
+This land enters tapped.
+When this land enters, return a land you control to its owner's hand.
+: Add .
+Land
+1
+Sodden Verdure
+(: Add  or .)
+This land enters tapped unless you control two or more basic lands.
+Land - Island Forest
+1
+Temple of Mystery
+This land enters tapped.
+When this land enters, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+: Add  or .
+Land
+1
+Turbulent Wilderness
+(: Add  or .)
+This land enters tapped unless your opponents control eight or more lands.
+Land - Island Forest
+1
+Vineglimmer Snarl
+As this land enters, you may reveal a Forest or Island card from your hand. If you don't, this land enters tapped.
+: Add  or .
+Land
+1
+Willowrush Verge
+: Add .
+: Add . Activate only if you control a Forest or an Island.
+Land
+1
+$9.49
+$6.20
+$4.67
+Land
+(CTRL to add secondary)
+Protection
+Qty: 4
+Price: $26.46
+Galadhrim Ambush
+Create X 1/1 green Elf Warrior creature tokens, where X is the number of attacking creatures.
+Prevent all combat damage that would be dealt this turn by non-Elf creatures.
+Instant
+1
+Lightning Greaves
+Equipped creature has haste and shroud. (It can't be the target of spells or abilities.)
+Equip
+Artifact - Equipment
+1
+Selfless Safewright
+Flash
+Convoke (Your creatures can help cast this spell. Each creature you tap while casting this spell pays for  or one mana of that creature's color.)
+When this creature enters, choose a creature type. Other permanents you control of that type gain hexproof and indestructible until end of turn.
+Creature - Warrior Elf
+1
+Swiftfoot Boots
+Equipped creature has hexproof and haste. (It can't be the target of spells or abilities your opponents control. It can attack and  no matter when it came under your control.)
+Equip  (: Attach to target creature you control. Equip only as a sorcery.)
+Artifact - Equipment
+1
+$4.99
+$2.31
+$2.39
+Protection
+(CTRL to add secondary)
+Ramp
+Qty: 30
+Price: $420.11
+Arcane Signet
+: Add one mana of any color in your commander's color identity.
+Artifact
+1
+Azusa, Lost but Seeking
+You may play two additional lands on each of your turns.
+Legendary Creature - Human Monk
+1
+Crop Rotation
+As an additional cost to cast this spell, sacrifice a land.
+Search your library for a land card, put that card onto the battlefield, then shuffle.
+Instant
+1
+Cultivate
+Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle.
+Sorcery
+1
+Elven Chorus
+You may look at the top card of your library any time.
+You may cast creature spells from the top of your library.
+Creatures you control have ": Add one mana of any color."
+Enchantment
+1
+Elvish Archdruid
+Other Elf creatures you control get +1/+1.
+: Add  for each Elf you control.
+Creature - Elf Druid
+1
+Elvish Mystic
+: Add .
+Creature - Elf Druid
+1
+Entish Restoration
+Sacrifice a land. Search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle. If you control a creature with power 4 or greater, instead search your library for up to three basic land cards, put them onto the battlefield tapped, then shuffle.
+Instant
+1
+Farhaven Elf
+When this creature enters, you may search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
+Creature - Elf Druid
+1
+Farseek
+Search your library for a Plains, Island, Swamp, or Mountain card, put it onto the battlefield tapped, then shuffle.
+Sorcery
+1
+Fyndhorn Elves
+: Add .
+Creature - Elf Druid
+1
+Growth Spiral
+Draw a card. You may put a land card from your hand onto the battlefield.
+Instant
+1
+Harrow
+As an additional cost to cast this spell, sacrifice a land.
+Search your library for up to two basic land cards, put them onto the battlefield, then shuffle.
+Instant
+1
+Icetill Explorer
+You may play an additional land on each of your turns.
+You may play lands from your graveyard.
+Landfall — Whenever a land you control enters, mill a card.
+Creature - Scout Insect
+1
+Kodama's Reach
+Search your library for up to two basic land cards, reveal those cards, put one onto the battlefield tapped and the other into your hand, then shuffle.
+Sorcery - Arcane
+1
+Llanowar Elves
+: Add .
+Creature - Elf Druid
+1
+Marwyn, the Nurturer
+Whenever another Elf you control enters, put a +1/+1 counter on Marwyn.
+: Add an amount of  equal to Marwyn's power.
+Legendary Creature - Elf Druid
+1
+Nature's Lore
+Search your library for a Forest card, put that card onto the battlefield, then shuffle.
+Sorcery
+1
+Oracle of Mul Daya
+You may play an additional land on each of your turns.
+Play with the top card of your library revealed.
+You may play lands from the top of your library.
+Creature - Elf Shaman
+1
+Paradise Druid
+This creature has hexproof as long as it's untapped. (It can't be the target of spells or abilities your opponents control.)
+: Add one mana of any color.
+Creature - Elf Druid
+1
+Priest of Titania
+: Add  for each Elf on the battlefield.
+Creature - Elf Druid
+1
+Rampant Growth
+Search your library for a basic land card, put that card onto the battlefield tapped, then shuffle.
+Sorcery
+1
+Skyshroud Claim
+Search your library for up to two Forest cards, put them onto the battlefield, then shuffle.
+Sorcery
+1
+Sol Ring
+: Add .
+Artifact
+1
+Spelunking
+When this enchantment enters, draw a card, then you may put a land card from your hand onto the battlefield. If you put a Cave onto the battlefield this way, you gain 4 life.
+Lands you control enter untapped.
+Enchantment
+1
+Springbloom Druid
+When this creature enters, you may sacrifice a land. If you do, search your library for up to two basic land cards, put them onto the battlefield tapped, then shuffle.
+Creature - Elf Druid
+1
+Thought Vessel
+You have no maximum hand size.
+: Add .
+Artifact
+1
+Three Visits
+Search your library for a Forest card, put it onto the battlefield, then shuffle.
+Sorcery
+1
+Tireless Provisioner
+Landfall — Whenever a land you control enters, create a Food token or a Treasure token. (Food is an artifact with ", , Sacrifice this token: You gain 3 life." Treasure is an artifact with ", Sacrifice this token: Add one mana of any color.")
+Creature - Elf Scout
+1
+Wood Elves
+When this creature enters, search your library for a Forest card, put that card onto the battlefield, then shuffle.
+Creature - Elf Scout
+1
+$0.79
+$0.42
+$0.31
+Ramp
+(CTRL to add secondary)
+Removal
+Qty: 4
+Price: $34.66
+An Offer You Can't Refuse
+Counter target noncreature spell. Its controller creates two Treasure tokens. (They're artifacts with ", Sacrifice this token: Add one mana of any color.")
+Instant
+1
+Counterspell
+Counter target spell.
+Instant
+1
+Reclamation Sage
+When this creature enters, you may destroy target artifact or enchantment.
+Creature - Elf Shaman
+1
+Swan Song
+Counter target enchantment, instant, or sorcery spell. Its controller creates a 2/2 blue Bird creature token with flying.
+Instant
+1
+$17.99
+$10.04
+$9.37
+Removal
+(CTRL to add secondary)
+Tokens
+Qty: 2
+Price: $19.98
+Elvish Warmaster
+Whenever one or more other Elves you control enter, create a 1/1 green Elf Warrior creature token. This ability triggers only once each turn.
+: Elves you control get +2/+2 and gain deathtouch until end of turn.
+Creature - Warrior Elf
+1
+Imperious Perfect
+Other Elves you control get +1/+1.
+, : Create a 1/1 green Elf Warrior creature token.
+Creature - Warrior Elf
+1
+$14.99
+$16.56
+$15.64
+Tokens
+(CTRL to add secondary)
+Anthem
+Qty: 1
+Price: $22.99
+Galadhrim Brigade
+Squad  (As an additional cost to cast this spell, you may pay  any number of times. When this creature enters, create that many tokens that are copies of it.)
+Other Elves you control get +1/+1.
+Creature - Soldier Elf
+1
+$22.99
+$15.20
+$12.72
+Anthem
+(CTRL to add secondary)
+Counters
+Qty: 3
+Price: $60.97
+Arwen, Weaver of Hope
+Each other creature you control enters with a number of additional +1/+1 counters on it equal to Arwen's toughness.
+Legendary Creature - Elf Noble
+1
+Elrond, Master of Healing
+Whenever you scry, put a +1/+1 counter on each of up to X target creatures, where X is the number of cards looked at while scrying this way.
+Whenever a creature you control with a +1/+1 counter on it becomes the target of a spell or ability an opponent controls, you may draw a card.
+Legendary Creature - Elf Noble
+1
+Scythecat Cub
+Trample
+Landfall — Whenever a land you control enters, put a +1/+1 counter on target creature you control. If this is the second time this ability has resolved this turn, double the number of +1/+1 counters on that creature instead.
+Creature - Cat
+1
+$34.99
+$25.46
+$25.58
+Counters
+(CTRL to add secondary)
+Draw
+Qty: 9
+Price: $118.27
+Aesi, Tyrant of Gyre Strait
+You may play an additional land on each of your turns.
+Landfall — Whenever a land you control enters, you may draw a card.
+Legendary Creature - Serpent
+1
+Beast Whisperer
+Whenever you cast a creature spell, draw a card.
+Creature - Elf Druid
+1
+Chronicle of Victory
+As Chronicle of Victory enters, choose a creature type.
+Creatures you control of the chosen type get +2/+2 and have first strike and trample.
+Whenever you cast a spell of the chosen type, draw a card.
+Legendary Artifact
+1
+Elrond, Lord of Rivendell
+Whenever Elrond or another creature you control enters, scry 1. If this is the second time this ability has resolved this turn, the Ring tempts you.
+Legendary Creature - Elf Noble
+1
+Kindred Discovery
+As this enchantment enters, choose a creature type.
+Whenever a creature you control of the chosen type enters or attacks, draw a card.
+Enchantment
+1
+Opt
+Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+Draw a card.
+Instant
+1
+Preordain
+Scry 2, then draw a card. (To scry 2, look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
+Sorcery
+1
+Shamanic Revelation
+Draw a card for each creature you control.
+Ferocious — You gain 4 life for each creature you control with power 4 or greater.
+Sorcery
+1
+Tatyova, Benthic Druid
+Landfall — Whenever a land you control enters, you gain 1 life and draw a card.
+Legendary Creature - Druid Merfolk
+1
+$2.99
+$1.58
+$1.02
+Draw
+(CTRL to add secondary)
+Landfall
+Qty: 3
+Price: $28.67
+Retreat to Coralhelm
+Landfall — Whenever a land you control enters, choose one —
+• You may tap or untap target creature.
+• Scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+Enchantment
+1
+Retreat to Kazandu
+Landfall — Whenever a land you control enters, choose one —
+• Put a +1/+1 counter on target creature.
+• You gain 2 life.
+Enchantment
+1
+Scute Swarm
+Landfall — Whenever a land you control enters, create a 1/1 green Insect creature token. If you control six or more lands, create a token that's a copy of this creature instead.
+Creature - Insect
+1
+$20.99
+$18.83
+$18.80
+Landfall
+(CTRL to add secondary)
+Pump
+Qty: 1
+Price: $1.79
+Crown of Skemfar
+Enchant creature
+Enchanted creature gets +1/+1 for each Elf you control and has reach.
+: Return this card from your graveyard to your hand.
+Enchantment - Aura
+1
+$1.79
+$1.40
+$1.12
+Pump
+(CTRL to add secondary)
+Recursion
+Qty: 2
+Price: $8.98
+Glacierwood Siege
+As this enchantment enters, choose Temur or Sultai.
+• Temur — Whenever you cast an instant or sorcery spell, target player mills four cards.
+• Sultai — You may play lands from your graveyard.
+Enchantment
+1
+Life from the Loam
+Return up to three target land cards from your graveyard to your hand.
+Dredge 3 (If you would draw a card, you may mill three cards instead. If you do, return this card from your graveyard to your hand.)
+Sorcery
+1
+$7.99
+$5.46
+$4.95
+Recursion
+(CTRL to add secondary)
+Sorcery
+Qty: 2
+Price: $3.78
+Planar Engineering
+Sacrifice two lands. Search your library for four basic land cards, put them onto the battlefield tapped, then shuffle.
+Sorcery
+1
+Through the Forest Gate
+Look at the top twenty cards of your library, put any number of land cards from among them onto the battlefield tapped, then shuffle. You gain 8 life.
+Sorcery
+1
+$1.49
+$1.95
+$0.83
+Sorcery
+(CTRL to add secondary)
+Sideboard
+Qty: 3
+Price: $1.99
+Elfsworn Giant
+Reach (This creature can block creatures with flying.)
+Landfall — Whenever a land you control enters, create a 1/1 green Elf Warrior creature token.
+Creature - Giant
+1
+Silvan Reveler
+When this creature enters, draw a card, then discard a card. If you discard a land card this way, put it from your graveyard onto the battlefield tapped.
+Landfall — Whenever a land you control enters, you may pay . If you do, return this card from your graveyard to your hand.
+Creature - Elf Citizen
+1
+Virulent Emissary
+Deathtouch
+Whenever another creature you control enters, you gain 1 life.
+Creature - Elf Assassin
+1
+$1.29
+$0.80
+$0.15
+Sideboard
+(CTRL to add secondary)
+Maybeboard
+Qty: 9
+Price: $748.91
+Cyclonic Rift
+Return target nonland permanent you don't control to its owner's hand.
+Overload  (You may cast this spell for its overload cost. If you do, change "target" in its text to "each.")
+Instant
+1
+Doubling Season
+If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.
+If an effect would put one or more counters on a permanent you control, it puts twice that many of those counters on that permanent instead.
+Enchantment
+1
+Exploration
+You may play an additional land on each of your turns.
+Enchantment
+1
+Lavaspur Boots
+Equipped creature gets +1/+0 and has haste and ward . (Whenever it becomes the target of a spell or ability an opponent controls, counter it unless that player pays .)
+Equip
+Artifact - Equipment
+1
+Lumra, Bellow of the Woods
+Reach, vigilance
+Lumra's power and toughness are each equal to the number of lands you control.
+When Lumra enters, mill four cards. Then return all land cards from your graveyard to the battlefield tapped.
+Legendary Creature - Elemental Bear
+1
+Parallel Lives
+If an effect would create one or more tokens under your control, it creates twice that many of those tokens instead.
+Enchantment
+1
+Rhystic Study
+Whenever an opponent casts a spell, you may draw a card unless that player pays .
+Enchantment
+1
+Sylvan Library
+At the beginning of your draw step, you may draw two additional cards. If you do, choose two cards in your hand drawn this turn. For each of those cards, pay 4 life or put the card on top of your library.
+Enchantment
+1
+Zuran Orb
+Sacrifice a land: You gain 2 life.
+Artifact
+1
+$20.99
+$18.77
+$13.22
+Maybeboard
+(CTRL to add secondary)
+Condensed view
+Pin
+Deck Info
+Deck size: 100
+Est cost: $1,108.62
+Color Cost & Production
+Cost
+26%
+Prod
+41%
+Cost
+74%
+Prod
+51%
+Cost
+0%
+Prod
+7%
+Avg Mana Value: 2.98
+Total Mana Value: 197.00
+9
+15
+23
+11
+5
+2
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Quantity of
+Categories
+Anthem
+1
+Artifact
+1
+Commander
+1
+Counters
+3
+Creature
+3
+Draw
+9
+Land
+34
+Landfall
+3
+Protection
+4
+Pump
+1
+Ramp
+30
+Recursion
+2
+Removal
+4
+Sorcery
+2
+Tokens
+2
+Deck stats
+Optimize basics
+Pin above
+Cost
+Production
+Cost
+26%
+22 pips - 17 cards
+Production
+41%
+28 mana - 28 cards
+Cost
+74%
+62 pips - 51 cards
+Production
+51%
+35 mana - 35 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+7%
+5 mana - 4 cards
+Avg Mana Value: 2.98
+Total Mana Value: 197.00
+9
+15
+23
+11
+5
+2
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Mana curve by
+Color
+Blue Spells
+4
+2
+4
+3
+3
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Green Spells
+4
+10
+20
+11
+4
+1
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Colorless Spells
+1
+4
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Probability of draw
+At least
+card(s) by
+Categories
+having drawn
+card(s)
+Categories
+Qty
+Odds
+Anthem
+1
+7%
+Artifact
+1
+7%
+Counters
+3
+20%
+Creature
+3
+20%
+Draw
+9
+50%
+Land
+34
+95%
+Landfall
+3
+20%
+Protection
+4
+26%
+Pump
+1
+7%
+Ramp
+30
+93%
+Recursion
+2
+14%
+Removal
+4
+26%
+Sorcery
+2
+14%
+Tokens
+2
+14%
+Quantity of
+Categories
+Anthem
+1
+Artifact
+1
+Commander
+1
+Counters
+3
+Creature
+3
+Draw
+9
+Land
+34
+Landfall
+3
+Protection
+4
+Pump
+1
+Ramp
+30
+Recursion
+2
+Removal
+4
+Sorcery
+2
+Tokens
+2
+Focused
+Selected
+Full deck
+Group by
+Categories
+Sort by
+Alphabet
+Click charts to focus on cards
+Deck Tokens & Extras (8)
+Tokens (7)
+Extras (1)
+Bird
+Flying
+Creature Token - Bird
+Copy
+(This token can be used to represent a token that's a copy of a permanent.)
+Token
+Elf
+Creature Token - Elf
+Elf Warrior
+Creature Token - Warrior Elf
+Food
+, , Sacrifice this token: You gain 3 life.
+Artifact Token - Food
+Insect
+Creature Token - Insect
+Treasure
+, Sacrifice this token: Add one mana of any color.
+Artifact Token - Treasure
+Description
+
+This deck has no description
+
+
+
+
+Submit
+APPS
+FAQ
+CONTACT
+SUPPORT
+Privacy Policy
+Terms of Service
+Privacy Settings
+Magic: The Gathering is a Trademark of Wizards of the Coast, Inc. and Hasbro, Inc. Archidekt is unaffiliated.
+Comments and deck descriptions are user submitted and do not represent the views of Archidekt.
+Current card prices are provided by TCG Player, Card Kingdom, Cardmarket and Cardhoarder
+Additional data from Scryfall and EDHREC
+
+Space Cow Media ©2026
+
+Build Id - 355879a
+
+Auto
+New Category
+Maybeboard
+Sideboard
+Pinned Cards

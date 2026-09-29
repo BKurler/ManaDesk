@@ -6,6 +6,15 @@
  *                         threw an uncaught NPE - seen launching headless via
  *                         maven, with no -data argument and no prior
  *                         workspace history to draw a valid entry from)
+ *     Rémi Dutil (2026) - start(): pin org.eclipse.swt.browser.EdgeDataDir to
+ *                         a workspace-scoped folder once the real workspace
+ *                         is resolved, so the "Browse Website..." embedded
+ *                         browser (see com.reflexit.magiccards.ui.web) gets a
+ *                         persistent WebView2 profile instead of an
+ *                         undocumented default - a live JUnit Plug-in Test
+ *                         harness pins the same property to the same path
+ *                         formula so it shares this exact profile/cookies
+ *                         rather than starting cold every run
  */
 
 /*******************************************************************************
@@ -46,6 +55,9 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.WorkbenchPlugin;
+
+import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.FileUtils;
 
 /**
  * The "main program" for the Eclipse IDE.
@@ -113,6 +125,19 @@ public class MAApplication implements IApplication, IExecutableExtension {
 				WorkbenchPlugin.unsetSplashShell(display);
 				Platform.endSplash();
 				return instanceLocationCheck;
+			}
+			// Give the embedded "Browse Website..." Edge/WebView2 browser a
+			// persistent, workspace-scoped profile directory instead of
+			// whatever undocumented default WebView2 would otherwise pick -
+			// this is what lets a login on a deck site survive across app
+			// restarts. Must be set only once the real workspace is known
+			// (checkInstanceLocation() above is what resolves it), and
+			// before any Browser widget is ever constructed. Not set if
+			// something upstream (e.g. a test harness) already pinned it.
+			if (System.getProperty("org.eclipse.swt.browser.EdgeDataDir") == null) {
+				System.setProperty("org.eclipse.swt.browser.EdgeDataDir",
+						FileUtils.getWorkspaceFile(".metadata/.plugins/" + DataManager.ID + "/browser-profile")
+								.getAbsolutePath());
 			}
 			// create the workbench with this advisor and run it until it exits
 			// N.B. createWorkbench remembers the advisor, and also registers

@@ -21,6 +21,9 @@
  *                         fixed separately by force-materializing the tab
  *                         early (see
  *                         ApplicationWorkbenchWindowAdvisor#restoreProxierIcon())
+ *     Rémi Dutil (2026) - registered "Web Favorites" - the "Browse Website..."
+ *                         favorites list used by the New Deck/Collection
+ *                         wizard's Website import source
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -106,7 +109,13 @@
              id="com.reflexit.magiccards.ui.preferences.CustomGroupsPreferencePage"
              name="Custom Groups">
        </page>
-      
+       <page
+             category="com.reflexit.magiccards.ui.preferences.MagicPreferencePage"
+             class="com.reflexit.magiccards.ui.preferences.WebFavoritesPreferencePage"
+             id="com.reflexit.magiccards.ui.preferences.WebFavoritesPreferencePage"
+             name="Web Favorites">
+       </page>
+
    </extension>
    <extension
          point="org.eclipse.core.runtime.preferences">

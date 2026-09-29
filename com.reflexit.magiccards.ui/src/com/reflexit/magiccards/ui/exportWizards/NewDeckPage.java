@@ -4,6 +4,28 @@
  *                         deck under "Decks" - empty or from a card list - and can
  *                         also create its Sideboard / Extra lists. Importing into
  *                         an existing deck is ImportIntoDeckPage.
+ *     Rémi Dutil (2026) - "Also create a Sideboard/Extra" now also takes
+ *                         effect for an imported deck, not just an empty one
+ *                         (see AbstractCardListImportPage's own header) -
+ *                         createEmptyExtras() (Empty-mode, UI thread, reads
+ *                         the live checkboxes) and createImportExtras()
+ *                         (import, background thread, takes the already-
+ *                         cached choices) now share the same createExtras()
+ *                         logic instead of duplicating it.
+ *     Rémi Dutil (2026) - onSideboardDetected()/gateSideboardOnImport(): a
+ *                         Commander deck's own commander card needs to land
+ *                         in the sideboard (MTG convention, and how
+ *                         DeckTextExtractor now tags it), and a real
+ *                         Sideboard section is easy to miss remembering to
+ *                         check for - "Also create a Sideboard" now auto-
+ *                         checks itself once browsing a page detects either
+ *                         one (see AbstractCardListImportPage's own header),
+ *                         and this is the one page where unchecking it
+ *                         afterward now actually EXCLUDES those cards from
+ *                         the import (not just skips pre-creating an empty
+ *                         sideboard sibling), so a user who genuinely
+ *                         doesn't want the sideboard/commander can still opt
+ *                         out.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -59,15 +81,46 @@ public class NewDeckPage extends AbstractCreateElementPage {
 	}
 
 	@Override
+	protected boolean wantSideboard() {
+		return createSideboard != null && createSideboard.getSelection();
+	}
+
+	@Override
+	protected boolean gateSideboardOnImport() {
+		return true; // this is the one page where the checkbox is a real, live user choice
+	}
+
+	@Override
+	protected void onSideboardDetected(boolean hasSideboard) {
+		if (hasSideboard && createSideboard != null && !createSideboard.isDisposed())
+			createSideboard.setSelection(true);
+	}
+
+	@Override
+	protected boolean wantExtra() {
+		return createExtra != null && createExtra.getSelection();
+	}
+
+	@Override
 	protected void createEmptyExtras(CollectionsContainer parent) {
+		createExtras(parent, wantSideboard(), wantExtra(), wantVirtual());
+	}
+
+	@Override
+	protected void createImportExtras(CollectionsContainer parent, boolean wantSideboard, boolean wantExtra,
+			boolean virtual) {
+		createExtras(parent, wantSideboard, wantExtra, virtual);
+	}
+
+	private void createExtras(CollectionsContainer parent, boolean sideboard, boolean extra, boolean virtual) {
 		CardCollection deck = createdElement();
 		if (deck == null)
 			return;
 		Location base = deck.getLocation();
-		if (createSideboard != null && createSideboard.getSelection())
-			addFamily(parent, base.toSideboard(), wantVirtual(), false);
-		if (createExtra != null && createExtra.getSelection())
-			addFamily(parent, base.toExtra(), wantVirtual(), true);
+		if (sideboard)
+			addFamily(parent, base.toSideboard(), virtual, false);
+		if (extra)
+			addFamily(parent, base.toExtra(), virtual, true);
 	}
 
 	private static void addFamily(CollectionsContainer parent, Location loc, boolean virtual, boolean populate) {
