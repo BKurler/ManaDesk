@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setWorkOffline(true) renamed
+ *                         setSimulateWebDown(true).
+ */
 package com.reflexit.magicassistant.swtbot.tests;
 
 import java.util.Collection;
@@ -39,7 +45,7 @@ public abstract class AbstractSwtBotTest {
 	@BeforeClass
 	public static void beforeClass() throws Exception {
 		bot = new SWTMABot();
-		WebUtils.setWorkOffline(true);
+		WebUtils.setSimulateWebDown(true);
 	}
 
 	@Before

@@ -7,6 +7,9 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - renderSvg() reads through WebUtils.openUrl() - fast
+ *                         failure and the simulated outage apply to set icons
+ *                         too.
  *******************************************************************************/
 
 package com.reflexit.magiccards.core.sync;
@@ -33,7 +36,7 @@ public class SvgRasterizer {
 
 	// --- Public API: render from URL ---
 	public static BufferedImage renderSvg(URL url, int width, int height) throws IOException {
-		try (InputStream in = url.openStream()) {
+		try (InputStream in = WebUtils.openUrl(url, 1)) {
 			String svg = new String(in.readAllBytes(), StandardCharsets.UTF_8);
 
 			// Normalize fill colors to white for tinting

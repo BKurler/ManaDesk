@@ -9,6 +9,10 @@
  *     Rémi Dutil - created for ManaDesk
  *     Rémi Dutil (2026) - installLocalBulk() (offline import) + remoteBulkSizeMB()
  *                         / hasLocalBulk() for the first-run download prompt
+ *     Rémi Dutil (2026) - isReachable(): can the bulk-data index be fetched
+ *                         right now (also probes the connection - the index
+ *                         may be cached); isLocalImportPending(). Replace the
+ *                         "Work Offline" checks of the startup / update logic.
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -88,6 +92,26 @@ public final class ScryfallBulkCache {
 		if (!f.isFile() || f.length() == 0)
 			return true;
 		return !cachedRemoteUpdatedAt.equals(readMarker(bulkMetaFile()));
+	}
+
+	/** {@code true} when Scryfall's bulk-data index can be reached (or was, less
+	 *  than {@link #CHECK_TTL_MS} ago). Blocking - never call from the UI thread. */
+	public static boolean isReachable() {
+		refreshIndex();
+		if (cachedDownloadUri == null)
+			return false;
+		try {
+			// the index may be cached from earlier - make sure the web is still there
+			return WebUtils.isReachable(new URL(BULK_INDEX_URL));
+		} catch (IOException e) {
+			return false;
+		}
+	}
+
+	/** {@code true} when a user-imported bulk file is waiting to be parsed by the
+	 *  next update (see {@link #installLocalBulk}) - no web needed for it. */
+	public static boolean isLocalImportPending() {
+		return useLocalOnce && hasLocalBulk();
 	}
 
 	/** {@code true} once a Default Cards bulk file has been downloaded (or imported). */

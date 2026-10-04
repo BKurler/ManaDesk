@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - reloadImageFromUrl(): no "Work Offline" check; no
+ *                         web = keep the current picture, nothing logged.
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -280,13 +282,12 @@ public class EditMagicCardDialog extends MagicDialog {
 	}
 
 	private void reloadImageFromUrl() {
-		if (WebUtils.isWorkOffline())
-			return;
 		try {
 			CardCache.saveCachedFile(new File(localPath), new URL(store.getString(MagicCardField.IMAGE_URL.name())));
 			reloadImage(localPath);
 		} catch (IOException e) {
-			MagicUIActivator.log(e);
+			if (!WebUtils.isWebUnavailable(e)) // no web: keep the current picture
+				MagicUIActivator.log(e);
 		}
 	}
 

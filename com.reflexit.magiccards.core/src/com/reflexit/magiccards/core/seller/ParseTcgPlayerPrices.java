@@ -1,6 +1,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the "Work Offline" pre-check
+ *                         (OfflineException) - WebUtils fails fast when the
+ *                         web is not accessible.
  */
 package com.reflexit.magiccards.core.seller;
 
@@ -18,7 +21,6 @@ import java.util.Set;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
-import com.reflexit.magiccards.core.OfflineException;
 import com.reflexit.magiccards.core.exports.HtmlTableImportDelegate;
 import com.reflexit.magiccards.core.exports.ImportData;
 import com.reflexit.magiccards.core.exports.ImportSource;
@@ -98,8 +100,6 @@ public class ParseTcgPlayerPrices extends AbstractPriceProvider {
 	@Override
 	public Iterable<IMagicCard> updatePrices(Iterable<IMagicCard> iterable, ICoreProgressMonitor monitor)
 			throws IOException {
-		if (WebUtils.isWorkOffline())
-			throw new OfflineException();
 		CardList list = new CardList(iterable);
 		int size = list.size();
 		Set<Object> uniqueSets = list.getUnique(MagicCardField.SET);

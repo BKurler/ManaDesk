@@ -1,3 +1,10 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - dropped the "Work Offline" pre-check -
+ *                         WebUtils.openUrl() now fails fast when the web is
+ *                         not accessible.
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.File;
@@ -5,7 +12,6 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.net.URL;
 import com.reflexit.magiccards.core.FileUtils;
-import com.reflexit.magiccards.core.OfflineException;
 
 public class CachedFile {
 	private URL url;
@@ -48,8 +54,6 @@ public class CachedFile {
 		if (file.exists()) {
 			return localUrl;
 		}
-		if (WebUtils.isWorkOffline())
-			throw new IOException("No local copy of file, offline updates are disabled", new OfflineException());
 		try (InputStream st = WebUtils.openUrl(url)) {
 			FileUtils.saveStream(st, file);
 		}

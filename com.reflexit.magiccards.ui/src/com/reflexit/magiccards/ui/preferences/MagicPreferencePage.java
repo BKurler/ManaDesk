@@ -34,6 +34,10 @@
  *                         SWT Button, loaded/stored/defaulted by hand in
  *                         createFieldEditors()/performOk()/
  *                         performDefaults().
+ *     Rémi Dutil (2026) - "Work Offline" removed as a user feature (the app
+ *                         now copes quietly with no web); the same switch
+ *                         lives on as "Simulate web not working", shown in
+ *                         debug launches only, for testing that behaviour.
  */
 
 package com.reflexit.magiccards.ui.preferences;
@@ -146,13 +150,17 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		GridData ld = new GridData(GridData.FILL_HORIZONTAL | GridData.GRAB_HORIZONTAL);
 		ld.horizontalSpan = 2;
 		inetOptions.setLayoutData(ld);
-		addField(new BooleanFieldEditor(PreferenceConstants.WORK_OFFLINE, "Work Offline", inetOptions) {
-			@Override
-			protected void fireStateChanged(String property, boolean oldValue, boolean newValue) {
-				super.fireStateChanged(property, oldValue, newValue);
-				WebUtils.setWorkOffline(newValue);
-			}
-		});
+		if (MagicUIActivator.isDebugLaunch()) {
+			// testing aid, debug launches only: the app must cope quietly with no web
+			addField(new BooleanFieldEditor(PreferenceConstants.SIMULATE_WEB_DOWN,
+					"Simulate web not working (testing)", inetOptions) {
+				@Override
+				protected void fireStateChanged(String property, boolean oldValue, boolean newValue) {
+					super.fireStateChanged(property, oldValue, newValue);
+					WebUtils.setSimulateWebDown(newValue);
+				}
+			});
+		}
 		addField(new BooleanFieldEditor(PreferenceConstants.CHECK_FOR_CARDS, "Check for new cards on startup",
 				inetOptions));
 		/*

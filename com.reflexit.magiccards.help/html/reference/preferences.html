@@ -35,10 +35,16 @@ It contains the following pages:
 <img src="../screenshots/preferences/magic_prefs.png" alt="common preferences"/>
 </p>
 This pages control some general aspects of card organiser.
-<li> Enable loading graphics from the net - this controls if card images and set symbols will be loaded from the net. To work offline 
-or to preserve traffic you may want to disable this. 
-You won't see art of the cards in this case (unless they were cached previously), 
+<li> Load card graphics from the web when a card is selected - this controls if card images will be loaded from the web.
+To preserve traffic you may want to disable this.
+You won't see art of the cards in this case (unless they were cached previously),
 but you will still see card text, type and other parameters in the cards view.
+<p>
+There is no "work offline" setting: when the web is not accessible ManaDesk simply carries on with what it already
+has - cached card images and set symbols are shown, a card without a cached image shows an "image not available"
+picture, and actions that need the web (updating the card database, importing a deck from a website, rulings)
+tell you the web is not accessible instead of waiting.
+</p>
 
 <h2><a name="columnpref"/>Column Layout Preference Page</h2>
 This preference allow to change order and visibility of columns in views.

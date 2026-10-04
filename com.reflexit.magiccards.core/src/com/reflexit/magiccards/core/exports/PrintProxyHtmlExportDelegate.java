@@ -1,12 +1,17 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getCardImageUrl(): no NPE when
+ *                         CardCache.getImageURL() returns null; falls back to
+ *                         the remote image URL (the exported page may be
+ *                         opened when the web is back).
  */
 
 package com.reflexit.magiccards.core.exports;
 
 import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -135,7 +140,11 @@ public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicC
 		 */
 		String url = "";
 		try {
-			url = CardCache.getImageURL(card).toExternalForm();
+			URL u = CardCache.getImageURL(card);
+			if (u == null) // web not accessible now - the exported page may be opened later
+				u = CardCache.createRemoteImageURL(card);
+			if (u != null)
+				url = u.toExternalForm();
 		} catch (MalformedURLException e) {
 			// oki
 		}

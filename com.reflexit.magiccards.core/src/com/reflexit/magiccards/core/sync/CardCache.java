@@ -12,6 +12,12 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - "Work Offline" removed: images are always attempted
+ *                         (WebUtils fails fast with no web);
+ *                         loadCardImageOffline() skips queueing when the
+ *                         image host is known down; getImageURL() returns
+ *                         null instead of an unreachable remote URL, so
+ *                         callers show the "image not available" picture.
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -78,8 +84,15 @@ public class CardCache {
 		return new URL(strUrl);
 	}
 
-	private static boolean isLoadingEnabled() {
-		return !WebUtils.isWorkOffline();
+	/** {@code false} when the card's image host is known not to be reachable
+	 *  right now (see {@link WebUtils#checkWebAccess(URL)}) - no point queueing. */
+	private static boolean isLoadingEnabled(IMagicCard card) {
+		try {
+			WebUtils.checkWebAccess(createRemoteImageURL(card));
+			return true;
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	private static ArrayList<IMagicCard> cardImageQueue = new ArrayList<>();
@@ -112,7 +125,7 @@ public class CardCache {
 						continue;
 					synchronized (card) {
 						try {
-							downloadAndSaveImage(card, isLoadingEnabled(), true);
+							downloadAndSaveImage(card, true, true);
 						} catch (Exception e) {
 							// ignore
 						} finally {
@@ -204,12 +217,23 @@ public class CardCache {
 	/* ============================================================
 	 *  UPDATED: getImageURL now uses provider indirectly
 	 * ============================================================ */
+	/**
+	 * The cached image file, else the remote image URL - or {@code null} when
+	 * there is neither a cached file nor a reachable web (caller shows its
+	 * "image not available" placeholder).
+	 */
 	public static URL getImageURL(IMagicCard card) throws MalformedURLException {
 		File file = requireLocalPath(card);
 		if (file.exists()) {
 			return file.toURI().toURL();
 		}
-		return createRemoteImageURL(card);
+		URL remote = createRemoteImageURL(card);
+		try {
+			WebUtils.checkWebAccess(remote);
+		} catch (IOException e) {
+			return null;
+		}
+		return remote;
 	}
 
 	/* ============================================================
@@ -224,7 +248,7 @@ public class CardCache {
 			return true;
 		}
 
-		if (!isLoadingEnabled()) {
+		if (!isLoadingEnabled(card)) {
 			throw new CachedImageNotFoundException("Cannot find cached image for " + card.getName());
 		}
 

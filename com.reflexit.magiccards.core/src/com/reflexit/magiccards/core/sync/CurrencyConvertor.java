@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - avoid re-fetching exchange rates several times per session
+ *     Rémi Dutil (2026) - dropped the "Work Offline" check; no web = one
+ *                         quiet log line, cached rates kept.
  */
 package com.reflexit.magiccards.core.sync;
 
@@ -100,8 +102,6 @@ public class CurrencyConvertor {
 	}
 
 	public static synchronized void update(boolean force) {
-		if (WebUtils.isWorkOffline())
-			return;
 		if (!force && System.currentTimeMillis() - lastRatesFetch < RATES_TTL_MS
 				&& rates.get(convertCu(EUR, "USD")) != null)
 			return; // already have fresh rates this session
@@ -129,7 +129,10 @@ public class CurrencyConvertor {
 			}
 			lastRatesFetch = System.currentTimeMillis();
 		} catch (Exception e) {
-			MagicLogger.log(e);
+			if (WebUtils.isWebUnavailable(e))
+				MagicLogger.log("Currency rates not refreshed: " + e.getMessage()); // keep the cached ones
+			else
+				MagicLogger.log(e);
 		}
 	}
 

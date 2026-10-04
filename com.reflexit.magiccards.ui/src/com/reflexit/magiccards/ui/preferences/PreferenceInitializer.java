@@ -76,6 +76,7 @@
  *                         Count/Own Unique/Own Total inserted right after
  *                         Name (before Card Id/Set) - still the one view
  *                         that doesn't follow the shared order as-is.
+ *     Rémi Dutil (2026) - SIMULATE_WEB_DOWN default (replaces WORK_OFFLINE).
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -131,7 +132,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.CHECK_FOR_CARDS, false);
 		store.setDefault(PreferenceConstants.OWNED_COPY, false);
 		store.setDefault(PreferenceConstants.CURRENCY, "USD");
-		store.setDefault(PreferenceConstants.WORK_OFFLINE, false);
+		store.setDefault(PreferenceConstants.SIMULATE_WEB_DOWN, false);
 		store.setDefault(PreferenceConstants.PRICE_PROVIDER,
 				PriceProviderManager.getInstance().getDefaultProvider().getName());
 		store.setDefault(PreferenceConstants.LAST_SELECTION, 205961);

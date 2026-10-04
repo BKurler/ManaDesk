@@ -5,6 +5,8 @@
  *                         Scryfall Default Cards bulk file (no per-set path);
  *                         cancellable, reports progress per phase
  *     Rémi Dutil (2026) - dropped the bundled flat-file seed (loadFromFlat*)
+ *     Rémi Dutil (2026) - downloadUpdates(): set-list refresh failing for lack
+ *                         of web is not logged as an error any more.
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -31,6 +33,7 @@ import com.reflexit.magiccards.core.monitor.SubCoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.ParseScryFallChecklist;
 import com.reflexit.magiccards.core.sync.ParseScryFallSets;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
+import com.reflexit.magiccards.core.sync.WebUtils;
 
 public class XmlCardHolder implements ICardHandler {
 	private String activeDeck;
@@ -145,7 +148,8 @@ public class XmlCardHolder implements ICardHandler {
 						for (Edition ed : sets.getAll())
 							Editions.getInstance().addEdition(ed);
 					} catch (Exception e) {
-						MagicLogger.log(e); // set-list refresh is best effort
+						if (!WebUtils.isWebUnavailable(e)) // no web: keep the current set list
+							MagicLogger.log(e); // set-list refresh is best effort
 					}
 					Editions.getInstance().save();
 					pm1.worked(50);

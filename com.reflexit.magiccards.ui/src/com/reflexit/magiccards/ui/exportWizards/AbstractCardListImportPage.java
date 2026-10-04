@@ -123,6 +123,11 @@
  *                         hasSideboardSection() (public) so
  *                         BrowseWebsiteDialog can share it for a live
  *                         "Sideboard detected" indicator too.
+ *     Rémi Dutil (2026) - URL source: a no-web failure reports
+ *                         BrowseWebsiteDialog.WEB_NOT_ACCESSIBLE instead of
+ *                         the raw connection error.
+ *     Rémi Dutil (2026) - the Website format-detection trace is disabled
+ *                         (kept, behind DeckTextExtractor.TRACE_WEB_IMPORT).
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -783,7 +788,13 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		case URL:
 			importData.setProperty(inputChoice.name(), urlName);
 			if (!urlName.isEmpty()) {
-				text = WebUtils.openUrlText(new URL(urlName));
+				try {
+					text = WebUtils.openUrlText(new URL(urlName));
+				} catch (IOException e) {
+					if (WebUtils.isWebUnavailable(e))
+						throw new IOException(BrowseWebsiteDialog.WEB_NOT_ACCESSIBLE, e);
+					throw e;
+				}
 				importData.setText(text);
 			}
 			break;
@@ -1180,7 +1191,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 					// and does its own re-fetch): the page is already captured.
 					if (capturedWebsiteText != null && !capturedWebsiteText.isEmpty()) {
 						type = ReportType.autoDetectType(capturedWebsiteText, types);
-						MagicLogger.log("AbstractCardListImportPage: Website source, " + capturedWebsiteText.length()
+						if (DeckTextExtractor.TRACE_WEB_IMPORT)
+							MagicLogger.log("AbstractCardListImportPage: Website source, " + capturedWebsiteText.length()
 								+ " char(s) sniffed -> detected format "
 								+ (type == null ? "none" : type.getLabel()));
 					}

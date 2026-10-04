@@ -2,6 +2,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - COLLECTOR_COUNT_PROXIES constant
  *     Rémi Dutil (2026) - COLLECTOR_COUNT_FINISHES_SEPARATELY constant
+ *     Rémi Dutil (2026) - WORK_OFFLINE replaced by SIMULATE_WEB_DOWN (testing
+ *                         only, debug launches).
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -37,7 +39,9 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String CHECK_FOR_CARDS = "cardUpdates";
 	public static final String OWNED_COPY = PREFIX + ".nomycopy";
 	public static final String CURRENCY = PREFIX + ".currency";
-	public static final String WORK_OFFLINE = PREFIX + ".offline";
+	/** Testing only, shown in debug launches: make every web access fail as if
+	 *  the network were down (see {@code WebUtils#setSimulateWebDown}). */
+	public static final String SIMULATE_WEB_DOWN = PREFIX + ".simulateWebDown";
 	public static final String LAST_SELECTION = PREFIX + ".cardselection";
 	public static final String GROUP_FIELD = FilterField.GROUP_FIELD.toString();
 	public static final String SORT_ORDER = PREFIX + ".sortorder";
