@@ -1,0 +1,796 @@
+ArchidektArchidekt
+Decks
+Community
+Collection
+Register
+Login
+Deck sandbox
+Random commander
+Card search
+Decks links
+Community links
+Register
+Log in
+Site theme
+System theme
+Card controls on left
+Hide toolbar on scroll
+Calling All Angels - Foundations Commander - Mono-White EDH Precon Decklist
+9.3k views
+11 days ago
+0
+Commander
+Legal
+Est Bracket: Core (2)
+Size: 100
+Est cost: $136.75
+Salt sum: 29.23
+Angels
+Flying
+Lifegain
+Archidekt_Precons avatar
+Archidekt_Precons
+Clone deck
+More
+Playtester
+Add card
+Card search
+View as
+Stacks
+Group by
+Categories
+Sort by
+Alphabet
+Price sources
+Local filter
+
+Choose your preferred layout. You can mix and match options using the View as & Group by drop-downs above.
+
+stacked view
+text with static card view
+text view
+grid view
+Commander
+Qty: 1
+Price: $0.00
+Giada, Font of Hope
+Flying, vigilance
+Each other Angel you control enters with an additional +1/+1 counter on it for each Angel you already control.
+: Add . Spend this mana only to cast an Angel spell.
+Legendary Creature - Angel
+Giada, Font of Hope (fdc) 4
+1
+$----
+$----
+$----
+Commander
+(CTRL to add secondary)
+Enchantment
+Qty: 5
+Price: $6.95
+Always Watching
+Nontoken creatures you control get +1/+1 and have vigilance.
+Enchantment
+Always Watching (fdc) 10
+1
+Angelic Destiny
+Enchant creature
+Enchanted creature gets +4/+4, has flying and first strike, and is an Angel in addition to its other types.
+When enchanted creature dies, return this card to its owner's hand.
+Enchantment - Aura
+Angelic Destiny (fdc) 14
+1
+Court of Grace
+When this enchantment enters, you become the monarch.
+At the beginning of your upkeep, create a 1/1 white Spirit creature token with flying. If you're the monarch, create a 4/4 white Angel creature token with flying instead.
+Enchantment
+Court of Grace (fdc) 21
+1
+Grasp of Fate
+When this enchantment enters, for each opponent, exile up to one target nonland permanent that player controls until this enchantment leaves the battlefield. (Those permanents return under their owners' control.)
+Enchantment
+Grasp of Fate (fdc) 32
+1
+Search the Premises
+Whenever a creature attacks you or a planeswalker you control, investigate. (Create a Clue token. It's an artifact with ", Sacrifice this token: Draw a card.")
+Enchantment
+Search the Premises (fdc) 44
+1
+$0.49
+$----
+$0.15
+Enchantment
+(CTRL to add secondary)
+Sorcery
+Qty: 7
+Price: $4.05
+Austere Command
+Choose two —
+• Destroy all artifacts.
+• Destroy all enchantments.
+• Destroy all creatures with mana value 3 or less.
+• Destroy all creatures with mana value 4 or greater.
+Sorcery
+Austere Command (fdc) 18
+1
+Cleansing Nova
+Choose one —
+• Destroy all creatures.
+• Destroy all artifacts and enchantments.
+Sorcery
+Cleansing Nova (fdc) 20
+1
+Cut a Deal
+Each opponent draws a card, then you draw a card for each opponent who drew a card this way.
+Sorcery
+Cut a Deal (fdc) 22
+1
+Day of Judgment
+Destroy all creatures.
+Sorcery
+Day of Judgment (fdc) 23
+1
+Defy Death
+Return target creature card from your graveyard to the battlefield. If it's an Angel, put two +1/+1 counters on it.
+Sorcery
+Defy Death (fdc) 25
+1
+Exorcise
+Exile target artifact, enchantment, or creature with power 4 or greater.
+Sorcery
+Exorcise (fdc) 29
+1
+Secret Rendezvous
+You and target opponent each draw three cards.
+Sorcery
+Secret Rendezvous (fdc) 45
+1
+$0.35
+$----
+$0.15
+Sorcery
+(CTRL to add secondary)
+Artifact
+Qty: 11
+Price: $24.01
+Arcane Signet
+: Add one mana of any color in your commander's color identity.
+Artifact
+Arcane Signet (fdc) 245
+1
+Commander's Sphere
+: Add one mana of any color in your commander's color identity.
+Sacrifice this artifact: Draw a card.
+Artifact
+Commander's Sphere (fdc) 250
+1
+Endless Atlas
+, : Draw a card. Activate only if you control three or more lands with the same name.
+Artifact
+Endless Atlas (fdc) 256
+1
+Heraldic Banner
+As this artifact enters, choose a color.
+Creatures you control of the chosen color get +1/+0.
+: Add one mana of the chosen color.
+Artifact
+Heraldic Banner (fdc) 263
+1
+Marble Diamond
+This artifact enters tapped.
+: Add .
+Artifact
+Marble Diamond (fdc) 267
+1
+Mind Stone
+: Add .
+, , Sacrifice this artifact: Draw a card.
+Artifact
+Mind Stone (fdc) 271
+1
+Patchwork Banner
+As this artifact enters, choose a creature type.
+Creatures you control of the chosen type get +1/+1.
+: Add one mana of any color.
+Artifact
+Patchwork Banner (fdc) 279
+1
+Sol Ring
+: Add .
+Artifact
+Sol Ring (fdc) 286
+1
+Swiftfoot Boots
+Equipped creature has hexproof and haste. (It can't be the target of spells or abilities your opponents control. It can attack and  no matter when it came under your control.)
+Equip  (: Attach to target creature you control. Equip only as a sorcery.)
+Artifact - Equipment
+Swiftfoot Boots (fdc) 291
+1
+Tome of Legends
+This artifact enters with a page counter on it.
+Whenever your commander enters or attacks, put a page counter on this artifact.
+, , Remove a page counter from this artifact: Draw a card.
+Artifact - Book
+Tome of Legends (fdc) 293
+1
+Vanquisher's Banner
+As this artifact enters, choose a creature type.
+Creatures you control of the chosen type get +1/+1.
+Whenever you cast a creature spell of the chosen type, draw a card.
+Artifact
+Vanquisher's Banner (fdc) 294
+1
+$7.49
+$3.14
+$2.45
+Artifact
+(CTRL to add secondary)
+Instant
+Qty: 5
+Price: $4.33
+Destroy Evil
+Choose one —
+• Destroy target creature with toughness 4 or greater.
+• Destroy target enchantment.
+Instant
+Destroy Evil (fdc) 26
+1
+Fateful Absence
+Destroy target creature or planeswalker. Its controller investigates. (They create a Clue token. It's an artifact with ", Sacrifice this token: Draw a card.")
+Instant
+Fateful Absence (fdc) 30
+1
+Invoke the Divine
+Destroy target artifact or enchantment. You gain 4 life.
+Instant
+Invoke the Divine (fdc) 36
+1
+Swords to Plowshares
+Exile target creature. Its controller gains life equal to its power.
+Instant
+Swords to Plowshares (fdc) 53
+1
+Valorous Stance
+Choose one —
+• Target creature gains indestructible until end of turn. (Damage and effects that say "destroy" don't destroy it.)
+• Destroy target creature with toughness 4 or greater.
+Instant
+Valorous Stance (fdc) 55
+1
+$0.35
+$----
+$0.15
+Instant
+(CTRL to add secondary)
+Creature
+Qty: 33
+Price: $74.11
+Angel of Finality
+Flying
+When this creature enters, exile target player's graveyard.
+Creature - Angel
+Angel of Finality (fdc) 11
+1
+Angel of the Ruins
+Flying
+When this creature enters, exile up to two target artifacts and/or enchantments.
+Plainscycling  (, Discard this card: Search your library for a Plains card, reveal it, put it into your hand, then shuffle.)
+Creature Artifact - Angel
+Angel of the Ruins (fdc) 12
+1
+Angel of Vitality
+Flying
+If you would gain life, you gain that much life plus 1 instead.
+This creature gets +2/+2 as long as you have 25 or more life.
+Creature - Angel
+Angel of Vitality (fdc) 13
+1
+Angelic Field Marshal
+Flying
+Lieutenant — As long as you control your commander, this creature gets +2/+2 and creatures you control have vigilance.
+Creature - Angel
+Angelic Field Marshal (fdc) 15
+1
+Angelic Sleuth
+Flying
+Whenever another permanent you control leaves the battlefield, if it had counters on it, investigate. (Create a Clue token. It's an artifact with ", Sacrifice this token: Draw a card.")
+Creature - Angel Advisor
+Angelic Sleuth (fdc) 16
+1
+Archangel of Tithes
+Flying
+As long as this creature is untapped, creatures can't attack you or planeswalkers you control unless their controller pays  for each of those creatures.
+As long as this creature is attacking, creatures can't block unless their controller pays  for each of those creatures.
+Creature - Angel
+Archangel of Tithes (fdc) 17
+1
+Bishop of Wings
+Whenever an Angel you control enters, you gain 4 life.
+Whenever an Angel you control dies, create a 1/1 white Spirit creature token with flying.
+Creature - Human Cleric
+Bishop of Wings (fdc) 19
+1
+Dazzling Angel
+Flying
+Whenever another creature you control enters, you gain 1 life.
+Creature - Angel
+Dazzling Angel (fdc) 24
+1
+Emeria Shepherd
+Flying
+Landfall — Whenever a land you control enters, you may return target nonland permanent card from your graveyard to your hand. If that land is a Plains, you may return that nonland permanent card to the battlefield instead.
+Creature - Angel
+Emeria Shepherd (fdc) 27
+1
+Exemplar of Light
+Flying
+Whenever you gain life, put a +1/+1 counter on this creature.
+Whenever you put one or more +1/+1 counters on this creature, draw a card. This ability triggers only once each turn.
+Creature - Angel
+Exemplar of Light (fdc) 28
+1
+Firemane Commando
+Flying
+Whenever you attack with two or more creatures, draw a card.
+Whenever another player attacks with two or more creatures, they draw a card if none of those creatures attacked you.
+Creature - Soldier Angel
+Firemane Commando (fdc) 31
+1
+Herald of Eternal Dawn
+Flash (You may cast this spell any time you could cast an instant.)
+Flying
+You can't lose the game and your opponents can't win the game.
+Creature - Angel
+Herald of Eternal Dawn (fdc) 33
+1
+Herald of War
+Flying
+Whenever this creature attacks, put a +1/+1 counter on it.
+Angel spells and Human spells you cast cost  less to cast for each +1/+1 counter on this creature.
+Creature - Angel
+Herald of War (fdc) 34
+1
+Inspiring Overseer
+Flying
+When this creature enters, you gain 1 life and draw a card.
+Creature - Cleric Angel
+Inspiring Overseer (fdc) 35
+1
+Linvala, the Preserver
+Flying
+When Linvala enters, if an opponent has more life than you, you gain 5 life.
+When Linvala enters, if an opponent controls more creatures than you, create a 3/3 white Angel creature token with flying.
+Legendary Creature - Angel
+Linvala, the Preserver (fdc) 37
+1
+Lyra Dawnbringer
+Flying
+First strike (This creature deals combat damage before creatures without first strike.)
+Lifelink (Damage dealt by this creature also causes you to gain that much life.)
+Other Angels you control get +1/+1 and have lifelink.
+Legendary Creature - Angel
+Lyra Dawnbringer (fdc) 38
+1
+Merchant of Truth
+Flying
+Whenever a nontoken creature you control dies, investigate.
+Clues you control have exalted. (Whenever a creature you control attacks alone, that creature gets +1/+1 until end of turn for each instance of exalted among permanents you control.)
+Creature - Angel Detective
+Merchant of Truth (fdc) 39
+1
+Metallic Mimic
+As this creature enters, choose a creature type.
+This creature is the chosen type in addition to its other types.
+Each other creature you control of the chosen type enters with an additional +1/+1 counter on it.
+Creature Artifact - Shapeshifter
+Metallic Mimic (fdc) 269
+1
+Metropolis Reformer
+Flying, vigilance
+You have hexproof.
+Whenever this creature is dealt damage, you gain that much life.
+Creature - Cleric Angel
+Metropolis Reformer (fdc) 40
+1
+Norn's Choirmaster
+Flying, first strike
+Whenever a commander you control enters or attacks, proliferate. (Choose any number of permanents and/or players, then give each another counter of each kind already there.)
+Creature - Angel Phyrexian
+Norn's Choirmaster (fdc) 41
+1
+Reya Dawnbringer
+Flying
+At the beginning of your upkeep, you may return target creature card from your graveyard to the battlefield.
+Legendary Creature - Angel
+Reya Dawnbringer (fdc) 42
+1
+Righteous Valkyrie
+Flying
+Whenever another Angel or Cleric you control enters, you gain life equal to that creature's toughness.
+As long as you have at least 7 life more than your starting life total, creatures you control get +2/+2.
+Creature - Cleric Angel
+Righteous Valkyrie (fdc) 43
+1
+Segovian Angel
+Flying, vigilance
+Creature - Angel
+Segovian Angel (fdc) 46
+1
+Sephara, Sky's Blade
+You may pay  and tap four untapped creatures you control with flying rather than pay this spell's mana cost.
+Flying, lifelink
+Other creatures you control with flying have indestructible. (Damage and effects that say "destroy" don't destroy them.)
+Legendary Creature - Angel
+Sephara, Sky's Blade (fdc) 47
+1
+Seraph of the Sword
+Flying
+Prevent all combat damage that would be dealt to this creature.
+Creature - Angel
+Seraph of the Sword (fdc) 48
+1
+Serra Avenger
+You can't cast Serra Avenger during your first, second, or third turns of the game.
+Flying, vigilance
+Creature - Angel
+Serra Avenger (fdc) 49
+1
+Speaker of the Heavens
+Vigilance, lifelink (Attacking doesn't cause this creature to tap. Damage dealt by this creature also causes you to gain that much life.)
+: Create a 4/4 white Angel creature token with flying. Activate only if you have at least 7 life more than your starting life total and only as a sorcery.
+Creature - Human Cleric
+Speaker of the Heavens (fdc) 50
+1
+Starnheim Aspirant
+Angel spells you cast cost  less to cast.
+Creature - Human Cleric
+Starnheim Aspirant (fdc) 51
+1
+Sunblast Angel
+Flying
+When this creature enters, destroy all tapped creatures.
+Creature - Angel
+Sunblast Angel (fdc) 52
+1
+Thraben Watcher
+Flying, vigilance
+Other nontoken creatures you control get +1/+1 and have vigilance.
+Creature - Angel
+Thraben Watcher (fdc) 54
+1
+Vanguard Seraph
+Flying
+Whenever you gain life for the first time each turn, surveil 1. (Look at the top card of your library. You may put it into your graveyard.)
+Creature - Warrior Angel
+Vanguard Seraph (fdc) 56
+1
+Wojek Investigator
+Flying, vigilance
+At the beginning of your upkeep, investigate once for each opponent who has more cards in hand than you. (To investigate, create a Clue token. It's an artifact with ", Sacrifice this token: Draw a card.")
+Creature - Angel Detective
+Wojek Investigator (fdc) 57
+1
+Youthful Valkyrie
+Flying
+Whenever another Angel you control enters, put a +1/+1 counter on this creature.
+Creature - Angel
+Youthful Valkyrie (fdc) 58
+1
+$0.35
+$----
+$0.15
+Creature
+(CTRL to add secondary)
+Land
+Qty: 38
+Price: $23.30
+Bonders' Enclave
+: Add .
+, : Draw a card. Activate only if you control a creature with power 4 or greater.
+Land
+Bonders' Enclave (fdc) 297
+1
+Plains
+(: Add .)
+Basic Land - Plains
+Plains (fdn) 272
+32
+Radiant Fountain
+When this land enters, you gain 2 life.
+: Add .
+Land
+Radiant Fountain (fdc) 308
+1
+Secluded Steppe
+This land enters tapped.
+: Add .
+Cycling  (, Discard this card: Draw a card.)
+Land
+Secluded Steppe (fdc) 312
+1
+Seraph Sanctuary
+When this land enters, you gain 1 life.
+Whenever an Angel you control enters, you gain 1 life.
+: Add .
+Land
+Seraph Sanctuary (fdc) 313
+1
+Temple of the False God
+: Add . Activate only if you control five or more lands.
+Land
+Temple of the False God (fdc) 315
+1
+War Room
+: Add .
+, , Pay life equal to the number of colors in your commanders' color identity: Draw a card.
+Land
+War Room (fdc) 317
+1
+$4.99
+$2.54
+$1.22
+Land
+(CTRL to add secondary)
+Condensed view
+Pin
+Deck Info
+Deck size: 100
+Est cost: $136.75
+Color Cost & Production
+Cost
+100%
+Prod
+81%
+Cost
+0%
+Prod
+19%
+Avg Mana Value: 3.53
+Total Mana Value: 219.00
+4
+15
+16
+13
+6
+3
+4
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Quantity of
+Categories
+Artifact
+11
+Commander
+1
+Creature
+33
+Enchantment
+5
+Instant
+5
+Land
+38
+Sorcery
+7
+Please consider supporting our Patreon to remove ads
+Deck stats
+Optimize basics
+Pin above
+Cost
+Production
+Cost
+100%
+80 pips - 50 cards
+Production
+81%
+39 mana - 39 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 4 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 4 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 4 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 4 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+19%
+9 mana - 7 cards
+Avg Mana Value: 3.53
+Total Mana Value: 219.00
+4
+15
+16
+13
+6
+3
+4
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Mana curve by
+Color
+White Spells
+3
+8
+13
+13
+5
+3
+4
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Blue Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Black Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Red Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Green Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Colorless Spells
+1
+7
+3
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Probability of draw
+At least
+card(s) by
+Categories
+having drawn
+card(s)
+Categories
+Qty
+Odds
+Artifact
+11
+57%
+Creature
+33
+95%
+Enchantment
+5
+31%
+Instant
+5
+31%
+Land
+38
+97%
+Sorcery
+7
+41%
+Quantity of
+Categories
+11
+1
+33
+5
+5
+38
+7
+Artifact
+Commander
+Creature
+Enchantment
+Instant
+Land
+Sorcery
+Focused
+Selected
+Full deck
+Group by
+Categories
+Sort by
+Alphabet
+Click charts to focus on cards
+Expand section
+Deck extras (0)
+Description
+
+Hope arrives in full force with Giada and her ability to strengthen any Angels you cast. Play a whole host of Angels, reap the divine benefits, and ascend to victory!
+
+APPS
+FAQ
+CONTACT
+SUPPORT
+Privacy Policy
+Terms of Service
+Magic: The Gathering is a Trademark of Wizards of the Coast, Inc. and Hasbro, Inc. Archidekt is unaffiliated.
+Comments and deck descriptions are user submitted and do not represent the views of Archidekt.
+Current card prices are provided by TCG Player, Card Kingdom, Cardmarket and Cardhoarder
+Additional data from Scryfall and EDHREC
+
+Space Cow Media ©2026
+
+Build Id - d85da51
+
+Auto
+New Category
+Maybeboard
+Sideboard
+Pinned Cards
+
+Calling All Angels - Foundations Commander • (Mono-White Commander deck) • Archidekt

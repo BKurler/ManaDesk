@@ -1,0 +1,344 @@
+Home
+Login
+Premium
+Help
+Forum
+Cards & Decks
+
+WRENSLEIGH's profile
+MTG COLLECTION
+Inventory
+Tradelist
+Wishlist
+MTG DECKS (342)
+Challenge Decks
+Commander 2026
+Commander Archive
+Deck Ideas
+Secret Lair Decks
+Standard
+2021 Starters
+2022 Starters
+Planechase Anthology
+sta
+Earth Shakers
+sta
+Up and Away
+2023 Starters
+2025 Starters
+2026 Starters
+Wren's Built Deck
+Avatar Standard
+Hobbit Standard
+oth
+0. Wren's Inventory
+com
+Sea Deck
+com
+The Wilds
+Zeph's Built Decks
+com
+Loot
+com
+Solve for X
+com
+Ur-Bird
+wrensleigh's Power Hungry
+
+Type:  Built Deck
+Format (legal 👍) comCommander
+Commander Bracket
+ [1️⃣] Info
+Approx. Value: $86.65 Buy
+
+ 0 Likes  0 Comments
+	Avg. CMC 3.65
+	Card Color Breakdown
+	Card Type Breakdown
+
+
+
+Reality Fracture
+releases on October 02, 2026!
+
+Preorder now on CardKingdom Preorder now on TcgPlayer
+ Main Deck - 100 cards, 83 distinct
+Sort by: Name
+:
+Asc
+	Name 	Ed.	Price	Type	Cost
+Rarity	Color
+Commander
+1	Prossh, Skyraider of Kher		$0.81
+Legendary Creature - Dragon
+
+Creature (30)
+1	Brooding Saurian		$0.38
+Creature - Lizard
+
+1	Capricious Efreet		$0.39
+Creature - Efreet
+
+1	Charnelhoard Wurm		$0.30
+Creature - Wurm
+
+1	Deathbringer Thoctar		$0.69
+Creature - Zombie Beast
+
+1	Deepfire Elemental		$0.15
+Creature - Elemental
+
+1	Elvish Skysweeper		$0.16
+Creature - Elf Warrior
+
+1	Endless Cockroaches		$0.44
+Creature - Insect
+
+1	Endrek Sahr, Master Breeder		$1.67
+Legendary Creature - Human Wizard
+
+1	Fell Shepherd		$0.21
+Creature - Avatar
+
+1	Goblin Sharpshooter		$25.61
+Creature - Goblin
+
+1	Golgari Guildmage		$0.12
+Creature - Elf Shaman
+
+1	Hooded Horror		$0.29
+Creature - Horror
+
+1	Hua Tuo, Honored Physician		$0.62
+Legendary Creature - Human
+
+1	Hunted Troll		$1.15
+Creature - Troll Warrior
+
+1	Inferno Titan		$0.28
+Creature - Giant
+
+1	Jade Mage		$0.30
+Creature - Human Shaman
+
+1	Ophiomancer		$2.49
+Creature - Human Shaman
+
+1	Quagmire Druid		$0.13
+Creature - Zombie Druid
+
+1	Sakura-Tribe Elder		$0.81
+Creature - Snake Shaman
+
+1	Scarland Thrinax		$0.18
+Creature - Lizard
+
+1	Sek'Kuar, Deathkeeper		$0.32
+Legendary Creature - Orc Shaman
+
+1	Shattergang Brothers		$0.40
+Legendary Creature - Goblin Artificer
+
+1	Silklash Spider		$0.71
+Creature - Spider
+
+1	Sprouting Thrinax		$0.16
+Creature - Lizard
+
+1	Stalking Vengeance		$0.54
+Creature - Avatar
+
+1	Stronghold Assassin		$1.14
+Creature - Phyrexian Zombie Assassin
+
+1	Terra Ravager		$0.21
+Creature - Elemental Beast
+
+1	Viscera Seer		$0.45
+Creature - Vampire Wizard
+
+1	Walker of the Grove		$0.25
+Creature - Elemental
+
+1	Wight of Precinct Six		$0.23
+Creature - Zombie
+
+Instant (2)
+1	Jund Charm		$0.26
+Instant
+
+1	Reincarnation		$1.74
+Instant
+
+Sorcery (7)
+1	Dirge of Dread		$0.22
+Sorcery
+
+1	Mass Mutiny		$0.42
+Sorcery
+
+1	Restore		$0.43
+Sorcery
+
+1	Rough // Tumble		$0.43
+Sorcery // Sorcery
+	 //
+1	Spoils of Victory		$1.66
+Sorcery
+
+1	Sudden Demise		$0.32
+Sorcery
+
+1	Tempt with Vengeance		$2.08
+Sorcery
+
+Artifact (8)
+1	Armillary Sphere		$0.23
+Artifact
+
+1	Carnage Altar		$0.22
+Artifact
+
+1	Jar of Eyeballs		$0.24
+Artifact
+
+1	Obelisk of Jund		$0.14
+Artifact
+
+1	Plague Boiler		$0.27
+Artifact
+
+1	Sol Ring		$1.39
+Artifact
+
+1	Spine of Ish Sah		$0.33
+Artifact
+
+1	Swiftfoot Boots		$2.82
+Artifact - Equipment
+
+Enchantment (13)
+1	Blood Rites		$0.11
+Enchantment
+
+1	Curse of Chaos		$0.35
+Enchantment - Aura Curse
+
+1	Curse of Predation		$0.20
+Enchantment - Aura Curse
+
+1	Curse of Shallow Graves		$0.73
+Enchantment - Aura Curse
+
+1	Fecundity		$0.64
+Enchantment
+
+1	Foster		$0.55
+Enchantment
+
+1	Furnace Celebration		$0.07
+Enchantment
+
+1	Goblin Bombardment		$3.93
+Enchantment
+
+1	Night Soil		$0.19
+Enchantment
+
+1	Primal Vigor		$14.75
+Enchantment
+
+1	Tooth and Claw		$0.38
+Enchantment
+
+1	Vile Requiem		$0.28
+Enchantment
+
+1	Widespread Panic		$0.30
+Enchantment
+
+Land (39)
+1	Akoum Refuge		$0.21
+Land
+
+1	Command Tower		$0.46
+Land
+
+1	Evolving Wilds		$0.27
+Land
+
+7	Forest		$0.11
+Basic Land - Forest
+
+1	Golgari Guildgate		$0.36
+Land - Gate
+
+1	Golgari Rot Farm		$0.28
+Land
+
+1	Grim Backwoods		$0.19
+Land
+
+1	Gruul Guildgate		$0.19
+Land - Gate
+
+1	Jund Panorama		$0.46
+Land
+
+1	Kazandu Refuge		$0.22
+Land
+
+1	Khalni Garden		$1.26
+Land
+
+1	Kher Keep		$0.45
+Legendary Land
+
+1	Llanowar Reborn		$0.45
+Land
+
+7	Mountain		$0.14
+Basic Land - Mountain
+
+1	Opal Palace		$0.15
+Land
+
+1	Rakdos Guildgate		$0.29
+Land - Gate
+
+1	Rupture Spire		$0.14
+Land
+
+1	Savage Lands		$0.49
+Land
+
+6	Swamp		$0.13
+Basic Land - Swamp
+
+1	Temple of the False God		$0.38
+Land
+
+1	Terramorphic Expanse		$0.22
+Land
+
+1	Vivid Grove		$0.38
+Land
+
+Sideboard - 0 cards, 0 distinct
+Sort by:
+:
+No cards here. :(
+Scratchpad - 0 cards, 0 distinct
+ Cards in the scratchpad represent cards that you are considering for this deck, but are not actually in the built deck. They do not count towards the in built decks count shown in your inventory. If you are using the Auto Trade feature, they will be still be marked for trade although cards in your main deck and sideboard will not.
+Sort by:
+:
+No cards here. :(
+
+
+Comments
+New Comment
+No comments yet.
+Contact & About
+Terms & Conditions
+Privacy Policy
+Premium

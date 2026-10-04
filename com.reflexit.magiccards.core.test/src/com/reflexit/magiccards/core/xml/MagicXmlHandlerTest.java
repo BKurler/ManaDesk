@@ -11,6 +11,10 @@
  *     Rémi Dutil (2026) - proxy flag round-trip
  *     Rémi Dutil (2026) - removed the <rating> fixtures/assertion (community
  *                         rating is not a concept this app tracks anymore)
+ *     Rémi Dutil (2026) - added init()/resetDb() (see its own header) so
+ *                         this class's tests target a fresh, isolated
+ *                         database instead of silently falling back to
+ *                         whatever stale one happened to exist on disk
  *     Rémi Dutil (2026) - added the <finish>nonfoil</finish> line to the
  *                         toXML() round-trip fixture below - FINISH is a
  *                         real, non-transient MagicCardField now, so it's
@@ -44,9 +48,27 @@ import junit.framework.TestCase;
  */
 public class MagicXmlHandlerTest extends TestCase {
 	private MagicXmlStreamHandler handler;
+	private static boolean reset = true;
+
+	/** Without this, DataManager's first-touch default (FileUtils.
+	 *  getWorkspace() falling back to {@code <user.home>/ManaDesk} when
+	 *  {@code osgi.instance.area} isn't set - i.e. every plain "JUnit Test"
+	 *  launch, not a "JUnit Plug-in Test" one) silently pointed every test
+	 *  here at whatever stale database happened to already exist in that
+	 *  fallback folder from some unrelated past run, never refreshed -
+	 *  instead of a fresh, deterministic one. Same pattern DataManagerTest
+	 *  already uses (its own init()): reset once per class load, not once
+	 *  per test method (TestFileUtils.resetDb() is not cheap). */
+	static void init() {
+		if (reset) {
+			TestFileUtils.resetDb();
+			reset = false;
+		}
+	}
 
 	@Override
 	protected void setUp() throws Exception {
+		init();
 		handler = new MagicXmlStreamHandler();
 	}
 

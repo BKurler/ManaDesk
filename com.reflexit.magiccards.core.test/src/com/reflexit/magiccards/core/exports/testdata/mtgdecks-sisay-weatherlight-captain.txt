@@ -1,0 +1,319 @@
+HOME  MTG COMMANDER  SISAY, WEATHERLIGHT CAPTAIN
+SHOW PRICES FOR
+ MTGO
+ ARENA
+ PAPER
+ COMMANDER META
+ COMMANDER TOURNAMENTS
+ COMMANDER DECKLISTS
+ COMMANDER STAPLES
+SISAY, WEATHERLIGHT CAPTAIN DECK, BY サカイ ヒロエツ
+ COMMANDER DECKSSISAY, WEATHERLIGHT CAPTAIN サカイ ヒロエツ COMMANDER RUMBLE2026/09/22 (NAGOYA, JAPAN)
+Sisay, Weatherlight Captain. Builder: サカイ ヒロエツ — MTG 1st — Commander Rumble2026/09/22 (Nagoya, Japan) [16 Players] — 22-Sep-2026
+ SUGGEST ARCHETYPE  VISUAL VIEW
+ DECK VIEW
+ ARENA EXPORT
+ TOOLS & DOWNLOAD
+ BUY: $4803—263.01 TIX
+ COMMENTS
+ You must login or register to see the price based on your collection
+MAINDECK (99)
+ Creature [37]
+
+1  Birds of Paradise 	$11.99
+
+1  Noble Hierarch 	$12.99
+
+1  Bloom Tender 	$18.99
+
+1  Avacyn's Pilgrim 	$0.79
+
+1  Deathrite Shaman 	$6.99
+
+1  Sakashima the Impostor 	$6.99
+
+1  Derevi, Empyrial Tactician 	$1.29
+
+1  Selvala, Heart of the Wilds 	$6.99
+
+1  Lavinia, Azorius Renegade 	$1.29
+
+1  Faeburrow Elder 	$0.99
+
+1  Kinnan, Bonder Prodigy 	$16.99
+
+1  Emiel the Blessed 	$13.99
+
+1  Esika, God of the Tree  	$22.99
+
+1  Ragavan, Nimble Pilferer 	$47.99
+
+1  Ignoble Hierarch 	$1.79
+
+1  Gluntch, the Bestower 	$0.79
+
+1  Ertai Resurrected 	$0.99
+
+1  Gwenna, Eyes of Gaea 	$8.99
+
+1  Jirina, Dauntless General 	$1.29
+
+1  Ioreth of the Healing House 	$0.59
+
+1  Orcish Bowmasters 	$59.99
+
+1  Lotho, Corrupt Shirriff 	$12.99
+
+1  Ruby, Daring Tracker 	$0.35
+
+1  Kutzil, Malamet Exemplar 	$2.99
+
+1  Basim Ibn Ishaq 	$4.99
+
+1  Mockingbird 	$4.99
+
+1  Enduring Vitality 	$19.99
+
+1  Marvin, Murderous Mimic 	$5.49
+
+1  Deadpool, Trading Card 	$17.99
+
+1  Tataru Taru 	$10.99
+
+1  Wan Shi Tong, Librarian 	$54.99
+
+1  The Duke, Rebel Sentry 	$0.69
+
+1  The Cabbage Merchant 	$42.99
+
+1  Tam, Mindful First-Year 	$0.79
+
+1  The Wondrous Wasp 	$2.29
+
+1  Shang-Chi, Master of Kung Fu 	$14.99
+
+1  King T'Challa  	$11.99
+ Artifact [6]
+
+1  Mox Amber 	$109.99
+
+1  Sol Ring 	$1.99
+
+1  Chrome Mox 	$199.99
+
+1  Relic of Legends 	$1.49
+
+1  Agatha's Soul Cauldron 	$49.99
+
+1  Loki's Scepter 	$5.49
+ Instant [17]
+
+1  Force of Will 	$69.99
+
+1  Dispel 	$0.69
+
+1  Vampiric Tutor 	$57.99
+
+1  Worldly Tutor 	$34.99
+
+1  Swords to Plowshares 	$1.79
+
+1  Silence 	$11.99
+
+1  Mindbreak Trap 	$9.99
+
+1  Mental Misstep 	$8.49
+
+1  Orim's Chant 	$7.49
+
+1  Swan Song 	$16.99
+
+1  Flusterstorm 	$7.49
+
+1  Fierce Guardianship 	$79.99
+
+1  Deadly Rollick 	$34.99
+
+1  Deflecting Swat 	$94.99
+
+1  An Offer You Can't Refuse 	$5.99
+
+1  Into the Flood Maw 	$3.99
+
+1  Redirect Lightning 	$20.99
+ Sorcery [1]
+
+1  Demonic Tutor 	$49.99
+ Enchantment [5]
+
+1  Mystic Remora 	$14.99
+
+1  Rhystic Study 	$69.99
+
+1  Touch the Spirit Realm 	$1.49
+
+1  Flowering of the White Tree 	$13.99
+
+1  Gleaming Splendor 	$39.99
+ Planeswalker [2]
+
+1  Teferi, Time Raveler 	$5.49
+
+1  Tyvar, Jubilant Brawler 	$4.99
+ Land [31]
+
+1  City of Brass 	$15.99
+
+1  Forbidden Orchard 	$13.99
+
+1  Exotic Orchard 	$0.49
+
+1  Mana Confluence 	$42.99
+
+1  Bloodstained Mire 	$24.99
+
+1  Flooded Strand 	$22.99
+
+1  Polluted Delta 	$27.99
+
+1  Windswept Heath 	$16.99
+
+1  Wooded Foothills 	$27.99
+
+1  Bayou 	$249.99
+
+1  Plateau 	$199.99
+
+1  Savannah 	$249.99
+
+1  Scrubland 	$299.99
+
+1  Taiga 	$199.99
+
+1  Tropical Island 	$299.99
+
+1  Tundra 	$279.99
+
+1  Underground Sea 	$329.99
+
+1  Volcanic Island 	$329.99
+
+1  Arid Mesa 	$42.99
+
+1  Marsh Flats 	$37.99
+
+1  Misty Rainforest 	$44.99
+
+1  Scalding Tarn 	$47.99
+
+1  Verdant Catacombs 	$37.99
+
+1  Gaea's Cradle 	$1,899.99
+
+1  Gemstone Caverns 	$74.99
+
+1  Command Tower 	$0.49
+
+1  Boseiju, Who Endures 	$64.99
+
+1  Otawara, Soaring City 	$39.99
+
+1  Mount Doom 	$11.99
+
+1  Talon Gates of Madara 	$42.99
+
+1  Starting Town 	$17.99
+Sideboard [1]
+
+1  Sisay, Weatherlight Captain 	$2.49
+$263.01 TIX
+@CARDHOARDER
+$6.58 / WEEK
+@CARDHOARDER
+$4,850.24
+@TCGPLAYER
+$4,730.06
+@CARDKINGDOM
+
+Last update: 2026-09-22 11:52:35
+
+
+Mtg decks
+ MTGDecks.net
+Calle Pintor Espinosa 21
+Córdoba, 14004
+Spain
+
+
+
+
+Competitive Formats
+Standard Decks
+Pioneer Decks
+Modern Decks
+Pauper Decks
+
+Arena exclusive formats
+Alchemy Decks
+Pioneer Decks
+Historic Decks
+Timeless Decks
+Brawl Decks
+Historic-Brawl Decks
+Commander Formats
+Commander Decks
+Duel-Commander Decks
+Real Commander decks
+
+Eternal & Old School
+Legacy Decks
+Vintage Decks
+Premodern Decks
+Canadian Highlander
+Old School Decks
+Classic-Legacy Decks
+
+Content & Prices
+MTGDecks Articles
+Best deckbuilders
+MTG Editions
+
+Terms & Privacy
+Privacy & Cookies policy
+Submission guidelines
+Terms of service
+FAQ
+
+Contact & Collaborate
+Contact Form
+Email Us
+Submit an event
+Make a donation
+
+Partner sites
+Inkdecks.com - Lorcana decks
+
+Mtgdecks.net ©2009-2026. This site provides accurate and independent information on more than 500.000 Magic the Gathering Decks, tournaments and magic singles prices. This material is provided "as is", with absolutely no warranty expressed or implied. Data sources include Tcgplayer, Mtgtop8, Mtgmelee, TopDeck, Wizards of the Coast, The Gatherer and many others. To view content sources and attributions, please refer to each tournament info.
+
+facebook twitter DMCA.com Protection Status
+
+The information presented on this site about Magic: The Gathering, both literal and graphical, is copyrighted by Wizards of the Coast. This website is not produced, endorsed, supported, or affiliated with Wizards of the Coast.
+
+mtg decks
+ LOGIN
+Standard
+Pioneer
+Historic
+Modern
+Legacy
+Pauper
+Commander
+ More
+
+
+Les informations de votre appareil peuvent être utilisées pour personnaliser votre expérience publicitaire. /
+Information from your device can be used to personalize your ad experience.
+
+Ne vendez pas ou ne partagez pas mes informations personnelles / Do not sell or share my personal information
+Terms of Content Use
+A RAPTIVE PARTNER SITE

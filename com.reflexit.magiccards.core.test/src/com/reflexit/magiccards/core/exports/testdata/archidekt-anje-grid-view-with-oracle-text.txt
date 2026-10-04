@@ -1,0 +1,1314 @@
+ArchidektArchidekt
+Decks
+Community
+Collection
+Register
+Login
+Deck sandbox
+Random commander
+Card search
+Decks links
+Community links
+Register
+Log in
+Site theme
+System theme
+Card controls on left
+Hide toolbar on scroll
+Anje, Maid of Dishonor
+659 views
+23 hrs ago
+0
+Commander
+Legal
+Est Bracket: Optimized (4)
+Size: 100
+Est cost: $185.01
+Salt sum: 6.02
+Vampires
+Lifegain
+Blood
+Budget
+ZachTama avatar
+ZachTama
+Clone deck
+More
+Playtester
+Add card
+Card search
+View as
+Grid
+Group by
+Categories
+Sort by
+Alphabet
+Price sources
+Local filter
+
+Choose your preferred layout. You can mix and match options using the View as & Group by drop-downs above.
+
+stacked view
+text with static card view
+text view
+grid view
+Commander
+Qty: 1
+Price: $1.49
+Anje, Maid of Dishonor
+Whenever Anje and/or one or more other Vampires you control enter, create a Blood token. This ability triggers only once each turn. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+, Sacrifice another creature or a Blood token: Each opponent loses 2 life and you gain 2 life.
+Legendary Creature - Vampire
+Anje, Maid of Dishonor (vow) 309
+1
+$1.49
+$0.53
+$0.35
+Commander
+(CTRL to add secondary)
+Blood
+Qty: 14
+Price: $6.40
+Arterial Alchemy
+When this enchantment enters, create a Blood token for each opponent you have. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Blood tokens you control are Equipment in addition to their other types and have "Equipped creature gets +2/+0" and equip .
+Enchantment
+Arterial Alchemy (voc) 23
+1
+$0.69
+$0.36
+$0.28
+Belligerent Guest
+Trample (This creature can deal excess combat damage to the player or planeswalker it's attacking.)
+Whenever this creature deals combat damage to a player, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Creature - Vampire
+Belligerent Guest (vow) 301
+1
+$0.35
+$0.21
+$0.15
+Blood Petal Celebrant
+This creature has first strike as long as it's attacking.
+When this creature dies, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Creature - Vampire
+Blood Petal Celebrant (vow) 303
+1
+$0.35
+$0.23
+$0.15
+Bloodcrazed Socialite
+Menace
+When this creature enters, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Whenever this creature attacks, you may sacrifice a Blood token. If you do, it gets +2/+2 until end of turn.
+Creature - Vampire
+Bloodcrazed Socialite (vow) 288
+1
+$0.35
+$0.18
+$0.15
+Bloodtithe Harvester
+When this creature enters, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+, Sacrifice this creature: Target creature gets -X/-X until end of turn, where X is twice the number of Blood tokens you control. Activate only as a sorcery.
+Creature - Vampire
+Bloodtithe Harvester (vow) 310
+1
+$0.35
+$0.27
+$0.15
+Ceremonial Knife
+Equipped creature gets +1/+0 and has "Whenever this creature deals combat damage, create a Blood token." (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Equip  (: Attach to target creature you control. Equip only as a sorcery.)
+Artifact - Equipment
+Ceremonial Knife (vow) 254
+1
+$0.35
+$0.22
+$0.15
+Falkenrath Celebrants
+Menace (This creature can't be blocked except by two or more creatures.)
+When this creature enters, create two Blood tokens. (They're artifacts with ", , Discard a card, Sacrifice this token: Draw a card.")
+Creature - Vampire
+Falkenrath Celebrants (vow) 306
+1
+$0.35
+$0.28
+$0.15
+Glass-Cast Heart
+Whenever one or more Vampires you control attack, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+, , Pay 1 life: Create a 1/1 white and black Vampire creature token with lifelink.
+, , Sacrifice this artifact and thirteen Blood tokens: Each opponent loses 13 life and you gain 13 life.
+Artifact
+Glass-Cast Heart (voc) 18
+1
+$0.49
+$0.39
+$0.25
+Gluttonous Guest
+When this creature enters, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Whenever you sacrifice a Blood token, you gain 1 life.
+Creature - Vampire
+Gluttonous Guest (vow) 292
+1
+$0.35
+$0.26
+$0.15
+Kamber, the Plunderer
+Partner with Laurine, the Diversion (When this creature enters, target player may put Laurine into their hand from their library, then shuffle.)
+Lifelink
+Whenever a creature an opponent controls dies, you gain 1 life and create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Legendary Creature - Vampire Rogue
+Kamber, the Plunderer (voc) 19
+1
+$0.49
+$0.36
+$0.20
+Olivia's Attendants
+Menace
+Whenever this creature deals damage, create that many Blood tokens. (They're artifacts with ", , Discard a card, Sacrifice this token: Draw a card.")
+: This creature deals 1 damage to any target.
+Creature - Vampire
+Olivia's Attendants (vow) 172
+1
+$0.59
+$0.39
+$0.15
+Sanguine Statuette
+When this artifact enters, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Whenever you sacrifice a Blood token, you may have this artifact become a 3/3 Vampire artifact creature with haste until end of turn.
+Artifact
+Sanguine Statuette (vow) 177
+1
+$0.35
+$0.26
+$0.15
+Vampire's Kiss
+Target player loses 2 life and you gain 2 life. Create two Blood tokens. (They're artifacts with ", , Discard a card, Sacrifice this token: Draw a card.")
+Sorcery
+Vampire's Kiss (vow) 136
+1
+$0.35
+$0.33
+$0.15
+Voldaren Epicure
+When this creature enters, it deals 1 damage to each opponent. Create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Creature - Vampire
+Voldaren Epicure (vow) 308
+1
+$0.99
+$0.31
+$0.15
+Blood
+(CTRL to add secondary)
+Copy
+Qty: 1
+Price: $10.99
+Molten Echoes
+As this enchantment enters, choose a creature type.
+Whenever a nontoken creature you control of the chosen type enters, create a token that's a copy of that creature. That token gains haste. Exile it at the beginning of the next end step.
+Enchantment
+Molten Echoes (voc) 148
+1
+$10.99
+$8.45
+$8.85
+Copy
+(CTRL to add secondary)
+Counters
+Qty: 4
+Price: $13.82
+Blade of the Bloodchief
+Whenever a creature dies, put a +1/+1 counter on equipped creature. If equipped creature is a Vampire, put two +1/+1 counters on it instead.
+Equip
+Artifact - Equipment
+Blade of the Bloodchief (lcc) 300
+1
+$8.49
+$7.33
+$6.57
+Cordial Vampire
+Whenever this creature or another creature dies, put a +1/+1 counter on each Vampire you control.
+Creature - Vampire
+Cordial Vampire (voc) 125
+1
+$3.99
+$3.43
+$1.07
+Necropolis Regent
+Flying
+Whenever a creature you control deals combat damage to a player, put that many +1/+1 counters on it.
+Creature - Vampire
+Necropolis Regent (voc) 132
+1
+$0.99
+$0.59
+$0.28
+Rakish Heir
+Whenever a Vampire you control deals combat damage to a player, put a +1/+1 counter on it.
+Creature - Vampire
+Rakish Heir (voc) 149
+1
+$0.35
+$0.36
+$0.20
+Counters
+(CTRL to add secondary)
+Discard
+Qty: 1
+Price: $0.39
+Arterial Flow
+Each opponent discards two cards. If you control a Vampire, each opponent loses 2 life and you gain 2 life.
+Sorcery
+Arterial Flow (rix) 62
+1
+$0.39
+$0.34
+$0.23
+Discard
+(CTRL to add secondary)
+Drain
+Qty: 11
+Price: $62.81
+Blood Artist
+Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
+Creature - Vampire
+Blood Artist (voc) 119
+1
+$4.49
+$3.89
+$2.86
+Creeping Bloodsucker
+At the beginning of your upkeep, this creature deals 1 damage to each opponent. You gain life equal to the damage dealt this way.
+Creature - Vampire
+Creeping Bloodsucker (j22) 21
+1
+$8.99
+$5.19
+$4.68
+Falkenrath Noble
+Flying
+Whenever this creature or another creature dies, target player loses 1 life and you gain 1 life.
+Creature - Vampire Noble
+Falkenrath Noble (voc) 128
+1
+$0.35
+$0.36
+$0.19
+Kalastria Highborn
+Whenever this creature or another Vampire you control dies, you may pay . If you do, target player loses 2 life and you gain 2 life.
+Creature - Vampire Shaman
+Kalastria Highborn (plst) WWK-59
+1
+$4.99
+$5.28
+$2.44
+Malakir Bloodwitch
+Flying, protection from white
+When this creature enters, each opponent loses life equal to the number of Vampires you control. You gain life equal to the life lost this way.
+Creature - Vampire Shaman
+Malakir Bloodwitch (voc) 131
+1
+$5.49
+$4.43
+$2.91
+Sanctum Seeker
+Whenever a Vampire you control attacks, each opponent loses 1 life and you gain 1 life.
+Creature - Knight Vampire
+Sanctum Seeker (voc) 136
+1
+$0.69
+$1.04
+$0.28
+Sanguine Bond
+Whenever you gain life, target opponent loses that much life.
+Enchantment
+Sanguine Bond (tsr) 330
+1
+$8.49
+$6.03
+$5.15
+Sorin, Imperious Bloodlord
++1: Target creature you control gains deathtouch and lifelink until end of turn. If it's a Vampire, put a +1/+1 counter on it.
++1: You may sacrifice a Vampire. When you do, Sorin deals 3 damage to any target and you gain 3 life.
+−3: You may put a Vampire creature card from your hand onto the battlefield.
+Legendary Planeswalker - Sorin
+Sorin, Imperious Bloodlord (sld) 1244
+1
+$11.99
+$9.02
+$7.78
+Vampire Sovereign
+Flying
+When this creature enters, target opponent loses 3 life and you gain 3 life.
+Creature - Vampire Noble
+Vampire Sovereign (m19) 125
+1
+$0.35
+$0.12
+$0.15
+Vindictive Vampire
+Whenever another creature you control dies, this creature deals 1 damage to each opponent and you gain 1 life.
+Creature - Vampire
+Vindictive Vampire (rvr) 330
+1
+$0.99
+$0.46
+$0.57
+Vito, Thorn of the Dusk Rose
+Whenever you gain life, target opponent loses that much life.
+: Creatures you control gain lifelink until end of turn.
+Legendary Creature - Vampire Cleric
+Vito, Thorn of the Dusk Rose (pm21) 127★
+1
+$15.99
+$10.63
+$9.28
+Drain
+(CTRL to add secondary)
+Draw
+Qty: 4
+Price: $2.62
+Ancient Craving
+You draw three cards and you lose 3 life.
+Sorcery
+Ancient Craving (voc) 117
+1
+$0.79
+$0.34
+$0.15
+Pointed Discussion
+You draw two cards, lose 2 life, then create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Sorcery
+Pointed Discussion (vow) 126
+1
+$0.35
+$0.31
+$0.15
+Read the Bones
+Scry 2, then draw two cards. You lose 2 life. (To scry 2, look at the top two cards of your library, then put any number of them on the bottom and the rest on top in any order.)
+Sorcery
+Read the Bones (cmm) 182
+1
+$0.49
+$0.35
+$0.15
+Sign in Blood
+Target player draws two cards and loses 2 life.
+Sorcery
+Sign in Blood (m13) 110
+1
+$0.99
+$0.38
+$0.15
+Draw
+(CTRL to add secondary)
+Evasion
+Qty: 1
+Price: $0.35
+Blood Hypnotist
+This creature can't block.
+Whenever you sacrifice one or more Blood tokens, target creature can't block this turn. This ability triggers only once each turn.
+Creature - Vampire
+Blood Hypnotist (vow) 145
+1
+$0.35
+$0.21
+$0.15
+Evasion
+(CTRL to add secondary)
+Flying/Reach
+Qty: 2
+Price: $1.68
+Strefan, Maurer Progenitor
+Flying
+At the beginning of your end step, create a Blood token for each player who lost life this turn.
+Whenever Strefan attacks, you may sacrifice two Blood tokens. If you do, you may put a Vampire card from your hand onto the battlefield tapped and attacking. It gains indestructible until end of turn.
+Legendary Creature - Vampire Noble
+Strefan, Maurer Progenitor (voc) 2
+1
+$0.99
+$0.53
+$0.52
+Voldaren Bloodcaster
+Flying
+Whenever this creature or another nontoken creature you control dies, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Whenever you create a Blood token, if you control five or more Blood tokens, transform this creature.
+Creature - Wizard Vampire
+Voldaren Bloodcaster // Bloodbat Summoner (inr) 138Voldaren Bloodcaster // Bloodbat Summoner (inr) 138
+1
+$0.69
+$0.35
+$0.15
+Flying/Reach
+(CTRL to add secondary)
+Land
+Qty: 37
+Price: $34.09
+Akoum Refuge
+This land enters tapped.
+When this land enters, you gain 1 life.
+: Add  or .
+Land
+Akoum Refuge (c19) 226
+1
+$0.39
+$0.34
+$0.15
+Bloodfell Caves
+This land enters tapped.
+When this land enters, you gain 1 life.
+: Add  or .
+Land
+Bloodfell Caves (mom) 267
+1
+$0.35
+$0.28
+$0.15
+Bonders' Enclave
+: Add .
+, : Draw a card. Activate only if you control a creature with power 4 or greater.
+Land
+Bonders' Enclave (cmm) 988
+1
+$1.29
+$1.38
+$0.72
+Command Tower
+: Add one mana of any color in your commander's color identity.
+Land
+Command Tower (onc) 151
+1
+$0.69
+$0.40
+$0.26
+Evolving Wilds
+, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
+Land
+Evolving Wilds (fdn) 262
+1
+$0.35
+$0.28
+$0.15
+Foreboding Ruins
+As this land enters, you may reveal a Swamp or Mountain card from your hand. If you don't, this land enters tapped.
+: Add  or .
+Land
+Foreboding Ruins (voc) 174
+1
+$1.29
+$0.38
+$0.25
+Geier Reach Sanitarium
+: Add .
+, : Each player draws a card, then discards a card.
+Legendary Land
+Geier Reach Sanitarium (emn) 203
+1
+$5.49
+$3.59
+$1.89
+Mountain
+(: Add .)
+Basic Land - Mountain
+Mountain (tdm) 283
+8
+$0.49
+$0.17
+$0.15
+Myriad Landscape
+This land enters tapped.
+: Add .
+, , Sacrifice this land: Search your library for up to two basic land cards that share a land type, put them onto the battlefield tapped, then shuffle.
+Land
+Myriad Landscape (onc) 159
+1
+$0.59
+$0.37
+$0.26
+Path of Ancestry
+This land enters tapped.
+: Add one mana of any color in your commander's color identity. When that mana is spent to cast a creature spell that shares a creature type with your commander, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+Land
+Path of Ancestry (voc) 177
+1
+$0.35
+$0.31
+$0.15
+Rakdos Carnarium
+This land enters tapped.
+When this land enters, return a land you control to its owner's hand.
+: Add .
+Land
+Rakdos Carnarium (voc) 180
+1
+$0.59
+$0.40
+$0.26
+Reliquary Tower
+You have no maximum hand size.
+: Add .
+Land
+Reliquary Tower (m13) 227
+1
+$7.49
+$4.49
+$3.63
+Rogue's Passage
+: Add .
+, : Target creature can't be blocked this turn.
+Land
+Rogue's Passage (cmr) 489
+1
+$1.29
+$0.61
+$0.48
+Scavenger Grounds
+: Add .
+, , Sacrifice a Desert: Exile all graveyards.
+Land - Desert
+Scavenger Grounds (cmm) 1027
+1
+$0.69
+$0.46
+$0.33
+Shadowblood Ridge
+, : Add .
+Land
+Shadowblood Ridge (voc) 181
+1
+$0.79
+$0.35
+$0.26
+Smoldering Marsh
+(: Add  or .)
+This land enters tapped unless you control two or more basic lands.
+Land - Swamp Mountain
+Smoldering Marsh (voc) 183
+1
+$0.69
+$0.40
+$0.15
+Swamp
+(: Add .)
+Basic Land - Swamp
+Swamp (tdm) 282
+8
+$0.49
+$0.21
+$0.15
+Temple of Malice
+This land enters tapped.
+When this land enters, scry 1. (Look at the top card of your library. You may put that card on the bottom.)
+: Add  or .
+Land
+Temple of Malice (voc) 186
+1
+$0.59
+$0.38
+$0.25
+Temple of the False God
+: Add . Activate only if you control five or more lands.
+Land
+Temple of the False God (cmm) 1046
+1
+$0.35
+$0.34
+$0.19
+Terramorphic Expanse
+, Sacrifice this land: Search your library for a basic land card, put it onto the battlefield tapped, then shuffle.
+Land
+Terramorphic Expanse (m11) 229
+1
+$0.35
+$0.26
+$0.15
+Unclaimed Territory
+As this land enters, choose a creature type.
+: Add .
+: Add one mana of any color. Spend this mana only to cast a creature spell of the chosen type.
+Land
+Unclaimed Territory (voc) 188
+1
+$0.35
+$0.34
+$0.25
+Voldaren Estate
+: Add .
+, Pay 1 life: Add one mana of any color. Spend this mana only to cast a Vampire spell.
+, : Create a Blood token. This ability costs  less to activate for each Vampire you control. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Land
+Voldaren Estate (lcc) 369
+1
+$0.49
+$0.28
+$0.15
+Witch's Cottage
+(: Add .)
+This land enters tapped unless you control three or more other Swamps.
+When this land enters untapped, you may put target creature card from your graveyard on top of your library.
+Land - Swamp
+Witch's Cottage (eld) 249
+1
+$1.79
+$1.08
+$0.50
+Land
+(CTRL to add secondary)
+Lifegain
+Qty: 3
+Price: $8.87
+Blood Tribute
+Kicker—Tap an untapped Vampire you control. (You may tap a Vampire you control in addition to any other costs as you cast this spell.)
+Target opponent loses half their life, rounded up. If this spell was kicked, you gain life equal to the life lost this way.
+Sorcery
+Blood Tribute (zen) 81
+1
+$6.49
+$5.45
+$2.95
+Sangromancer
+Flying
+Whenever a creature an opponent controls dies, you may gain 3 life.
+Whenever an opponent discards a card, you may gain 3 life.
+Creature - Vampire Shaman
+Sangromancer (c16) 116
+1
+$1.99
+$1.23
+$0.96
+Vampire Nighthawk
+Flying
+Deathtouch (Any amount of damage this deals to a creature is enough to destroy it.)
+Lifelink (Damage dealt by this creature also causes you to gain that much life.)
+Creature - Vampire Shaman
+Vampire Nighthawk (voc) 140
+1
+$0.39
+$0.38
+$0.15
+Lifegain
+(CTRL to add secondary)
+Protection
+Qty: 1
+Price: $5.99
+Lightning Greaves
+Equipped creature has haste and shroud. (It can't be the target of spells or abilities.)
+Equip
+Artifact - Equipment
+Lightning Greaves (cmm) 398
+1
+$5.99
+$5.00
+$4.07
+Protection
+(CTRL to add secondary)
+Ramp
+Qty: 7
+Price: $20.29
+Arcane Signet
+: Add one mana of any color in your commander's color identity.
+Artifact
+Arcane Signet (blc) 127
+1
+$0.99
+$0.87
+$0.52
+Charcoal Diamond
+This artifact enters tapped.
+: Add .
+Artifact
+Charcoal Diamond (voc) 162
+1
+$0.99
+$0.45
+$0.40
+Commander's Sphere
+: Add one mana of any color in your commander's color identity.
+Sacrifice this artifact: Draw a card.
+Artifact
+Commander's Sphere (c16) 248
+1
+$0.35
+$0.19
+$0.15
+Fire Diamond
+This artifact enters tapped.
+: Add .
+Artifact
+Fire Diamond (voc) 164
+1
+$0.99
+$1.23
+$0.15
+Nirkana Revenant
+Whenever you tap a Swamp for mana, add an additional .
+: This creature gets +1/+1 until end of turn.
+Creature - Vampire Shade
+Nirkana Revenant (voc) 134
+1
+$9.49
+$6.43
+$5.66
+Rakdos Signet
+, : Add .
+Artifact
+Rakdos Signet (voc) 166
+1
+$3.99
+$1.58
+$1.38
+Sol Ring
+: Add .
+Artifact
+Sol Ring (voc) 168
+1
+$3.49
+$2.03
+$1.54
+Ramp
+(CTRL to add secondary)
+Recursion
+Qty: 1
+Price: $2.99
+Blood Fountain
+When this artifact enters, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+, , Sacrifice this artifact: Return up to two target creature cards from your graveyard to your hand.
+Artifact
+Blood Fountain (vow) 95
+1
+$2.99
+$1.68
+$0.86
+Recursion
+(CTRL to add secondary)
+Removal
+Qty: 9
+Price: $8.33
+Anowon, the Ruin Sage
+At the beginning of your upkeep, each player sacrifices a non-Vampire creature of their choice.
+Legendary Creature - Vampire Shaman
+Anowon, the Ruin Sage (voc) 118
+1
+$2.49
+$2.50
+$1.02
+Butcher of Malakir
+Flying
+Whenever this creature or another creature you control dies, each opponent sacrifices a creature of their choice.
+Creature - Vampire Warrior
+Butcher of Malakir (voc) 123
+1
+$0.79
+$0.35
+$0.26
+Feast of Blood
+Cast this spell only if you control two or more Vampires.
+Destroy target creature. You gain 4 life.
+Sorcery
+Feast of Blood (j22) 118
+1
+$0.39
+$0.28
+$0.15
+Lacerate Flesh
+Lacerate Flesh deals 4 damage to target creature. Create a number of Blood tokens equal to the amount of excess damage dealt to that creature this way. (They're artifacts with ", , Discard a card, Sacrifice this token: Draw a card.")
+Sorcery
+Lacerate Flesh (vow) 166
+1
+$0.35
+$0.20
+$0.15
+Markov Enforcer
+Whenever this creature or another Vampire you control enters, this creature fights up to one target creature an opponent controls.
+Whenever a creature dealt damage by this creature this turn dies, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Creature - Vampire Soldier
+Markov Enforcer (voc) 26
+1
+$0.49
+$0.36
+$0.19
+Olivia's Wrath
+Each non-Vampire creature gets -X/-X until end of turn, where X is the number of Vampires you control.
+Sorcery
+Olivia's Wrath (voc) 20
+1
+$1.29
+$0.46
+$0.39
+Patron of the Vein
+Flying
+When this creature enters, destroy target creature an opponent controls.
+Whenever a creature an opponent controls dies, exile it and put a +1/+1 counter on each Vampire you control.
+Creature - Vampire Shaman
+Patron of the Vein (voc) 135
+1
+$0.69
+$0.38
+$0.21
+Vampires' Vengeance
+Vampires' Vengeance deals 2 damage to each non-Vampire creature. Create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Instant
+Vampires' Vengeance (vow) 180
+1
+$0.35
+$0.35
+$0.15
+Vengeant Vampire
+Lifelink
+When this creature dies, destroy target creature an opponent controls and you gain 4 life.
+Creature - Vampire
+Vengeant Vampire (g18) GP3
+1
+$1.49
+$0.65
+$0.34
+Removal
+(CTRL to add secondary)
+Tokens
+Qty: 1
+Price: $9.99
+Bloodline Keeper
+Flying
+: Create a 2/2 black Vampire creature token with flying.
+: Transform this creature. Activate only if you control five or more Vampires.
+Creature - Vampire
+Bloodline Keeper // Lord of Lineage (inr) 461Bloodline Keeper // Lord of Lineage (inr) 461
+1
+$9.99
+$4.74
+$4.68
+Tokens
+(CTRL to add secondary)
+Tutor
+Qty: 1
+Price: $1.99
+Diabolic Tutor
+Search your library for a card, put that card into your hand, then shuffle.
+Sorcery
+Diabolic Tutor (m14) 95
+1
+$1.99
+$1.48
+$0.67
+Tutor
+(CTRL to add secondary)
+Typal
+Qty: 1
+Price: $4.49
+Captivating Vampire
+Other Vampire creatures you control get +1/+1.
+Tap five untapped Vampires you control: Gain control of target creature. It becomes a Vampire in addition to its other types.
+Creature - Vampire
+Captivating Vampire (m11) 87
+1
+$4.49
+$2.61
+$2.40
+Typal
+(CTRL to add secondary)
+Maybeboard
+Qty: 5
+Price: $4.17
+Blood Feud
+Target creature fights another target creature. (Each deals damage equal to its power to the other.)
+Sorcery
+Blood Feud (j25) 130
+1
+$0.35
+$0.18
+$0.15
+Falkenrath Forebear
+Flying
+This creature can't block.
+Whenever this creature deals combat damage to a player, create a Blood token.
+, Sacrifice two Blood tokens: Return this card from your graveyard to the battlefield.
+Creature - Vampire
+Falkenrath Forebear (vow) 111
+1
+$0.49
+$0.36
+$0.15
+Ivora, Insatiable Heir
+Trample
+When Ivora enters and whenever it deals combat damage to a player, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Whenever you discard a card, put a +1/+1 counter on Ivora.
+Legendary Creature - Vampire Warrior
+Ivora, Insatiable Heir (j25) 50
+1
+$1.49
+$0.45
+$0.23
+Restless Bloodseeker
+At the beginning of your end step, if you gained life this turn, create a Blood token. (It's an artifact with ", , Discard a card, Sacrifice this token: Draw a card.")
+Sacrifice two Blood tokens: Transform this creature. Activate only as a sorcery.
+Creature - Vampire
+Restless Bloodseeker // Bloodsoaked Reveler (vow) 295Restless Bloodseeker // Bloodsoaked Reveler (vow) 295
+1
+$0.35
+$0.24
+$0.15
+Stromkirk Captain
+First strike
+Other Vampire creatures you control get +1/+1 and have first strike.
+Creature - Vampire Soldier
+Stromkirk Captain (voc) 157
+1
+$1.49
+$1.45
+$0.41
+Maybeboard
+(CTRL to add secondary)
+Condensed view
+Unpin
+Deck Info
+Deck size: 100
+Est cost: $185.01
+Color Cost & Production
+Cost
+77%
+Prod
+42%
+Cost
+23%
+Prod
+38%
+Cost
+0%
+Prod
+20%
+Avg Mana Value: 3.40
+Total Mana Value: 214.00
+5
+16
+15
+12
+7
+7
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Quantity of
+Categories
+Blood
+24
+Commander
+1
+Copy
+1
+Counters
+6
+Discard
+1
+Drain
+18
+Draw
+9
+Evasion
+2
+Flying/Reach
+11
+Land
+37
+Lifegain
+23
+Protection
+2
+Pump
+3
+Ramp
+10
+Recursion
+2
+Removal
+13
+Theft
+1
+Tokens
+3
+Tutor
+1
+Typal
+18
+Deck stats
+Optimize basics
+Unpin above
+Cost
+Production
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 6 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 6 cards
+Cost
+77%
+62 pips - 41 cards
+Production
+42%
+25 mana - 25 cards
+Cost
+23%
+19 pips - 16 cards
+Production
+38%
+23 mana - 23 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+0%
+0 mana - 6 cards
+Cost
+0%
+0 pips - 0 cards
+Production
+20%
+12 mana - 10 cards
+Avg Mana Value: 3.40
+Total Mana Value: 214.00
+5
+16
+15
+12
+7
+7
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Mana curve by
+Color
+White Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Blue Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Black Spells
+1
+9
+9
+11
+5
+5
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Red Spells
+1
+3
+5
+3
+2
+2
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Green Spells
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Colorless Spells
+3
+5
+1
+0
+1
+2
+3
+4
+5
+6
+7
+8+
+Probability of draw
+At least
+card(s) by
+Categories
+having drawn
+card(s)
+Categories
+Qty
+Odds
+Blood
+23
+85%
+Copy
+1
+7%
+Counters
+6
+36%
+Discard
+1
+7%
+Drain
+17
+74%
+Draw
+9
+50%
+Evasion
+2
+14%
+Flying/Reach
+11
+57%
+Land
+37
+97%
+Lifegain
+22
+84%
+Protection
+2
+14%
+Pump
+3
+20%
+Ramp
+10
+54%
+Recursion
+2
+14%
+Removal
+13
+64%
+Theft
+1
+7%
+Tokens
+3
+20%
+Tutor
+1
+7%
+Typal
+17
+74%
+Quantity of
+Categories
+Blood
+24
+Commander
+1
+Copy
+1
+Counters
+6
+Discard
+1
+Drain
+18
+Draw
+9
+Evasion
+2
+Flying/Reach
+11
+Land
+37
+Lifegain
+23
+Protection
+2
+Pump
+3
+Ramp
+10
+Recursion
+2
+Removal
+13
+Theft
+1
+Tokens
+3
+Tutor
+1
+Typal
+18
+Focused
+Selected
+Full deck
+Group by
+Categories
+Sort by
+Alphabet
+Click charts to focus on cards
+Deck Tokens & Extras (4)
+Tokens (4)
+Extras (0)
+Blood
+, , Discard a card, Sacrifice this token: Draw a card.
+Artifact Token - Blood
+Blood (tinr) 21
+Copy
+(This token can be used to represent a token that's a copy of a permanent.)
+Token
+Copy (tmsc) 1
+Vampire
+Lifelink
+Creature Token - Vampire
+Vampire (tlcc) 14
+Vampire
+Flying
+Creature Token - Vampire
+Vampire (tinr) 8
+Description
+
+This deck has no description
+
+Pin above
+Aa

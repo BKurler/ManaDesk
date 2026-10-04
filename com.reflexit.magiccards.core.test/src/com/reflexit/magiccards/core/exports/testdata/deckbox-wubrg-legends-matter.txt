@@ -1,0 +1,615 @@
+Home
+Login
+Premium
+Help
+Forum
+Cards & Decks
+
+DEVON KRYNICKI's profile
+MTG COLLECTION
+Inventory
+Tradelist
+Wishlist
+MTG DECKS (94)
+Built
+Gauntlet
+com
+Bant - Wall/Gates
+com
+Dimir - Clash
+com
+Esper - Life Gain
+com
+Izzet - Pinger w/Tokens
+com
+Jund - Henzie Blitz
+com
+Mardu - Saucy Terra
+com
+Bant - Counter Blitz
+com
+Bant - Group Hug
+com
+Black - Discard
+com
+Blue - Wizard/Draw
+com
+Dimir - Ninja (Bleach)
+com
+Dimir - Rogue Theft
+com
+Esper - Cavalry Charge
+com
+Golgari - Elf Ball
+com
+Green - Uber Elves
+com
+Grixis - Theft
+com
+Gruul - Dungeons & Dragons
+com
+Gruul - Enchantress Stompy
+oat
+Gruul - Xenagos
+com
+Izzet - Draconically Enraged
+com
+Jeskai - Flurry
+com
+Jeskai - Riders of Rohan
+com
+Jund - Blight
+com
+Jund - Toxic Squirrel
+com
+Naya - Limit Break
+com
+Naya - Wolf/Elf
+com
+Orzhov - Recursive Clerics
+com
+Rakdos - Discard/Reanimate
+com
+Red - Budget Speed
+com
+Selesnya - CEDH
+com
+Selesnya - Hatsune Miku
+com
+White - Token Swarm
+com
+WUBRG - Legends Matter
+Disbanded
+In Progress
+com
+Abzan - Rats
+com
+Boros - Orcs/Landfall
+com
+Colorless - Lego Mayhem
+com
+Golgari - Brainless
+Set Collections
+com
+Bant - Epic/No Spells
+com
+Blue - Gogo Gadget Godzilla
+com
+Green - Aura/Voltron
+com
+Mardu - Mutate
+com
+Red - Sac Fest
+com
+White - Control?
+Devon Krynicki's WUBRG - Legends Matter
+
+Type:  Built Deck
+Format (legal 👍) comCommander
+Commander Bracket
+ [1️⃣] Info
+Approx. Value: $307.16 Buy
+
+ 0 Likes  0 Comments
+	Avg. CMC 4.1
+	Card Color Breakdown
+	Card Type Breakdown
+
+
+
+Reality Fracture
+releases on October 02, 2026!
+
+Preorder now on CardKingdom Preorder now on TcgPlayer
+ Main Deck - 100 cards, 100 distinct
+Sort by: Name
+:
+Asc
+	Name 	Ed.	Price	Type	Cost
+Rarity	Color
+Commander
+1	Ramos, Dragon Engine		$0.42
+Legendary Artifact Creature - Dragon
+
+Creature (32)
+1	Aragorn, the Uniter		$8.23
+Legendary Creature - Human Noble
+
+1	Archelos, Lagoon Mystic		$0.30
+Legendary Creature - Turtle Shaman
+
+1	Atla Palani, Nest Tender		$1.98
+Legendary Creature - Human Shaman
+
+1	Birds of Paradise		$12.09
+Creature - Bird
+
+1	Chromanticore		$0.57
+Enchantment Creature - Manticore
+
+1	Chulane, Teller of Tales		$6.23
+Legendary Creature - Human Druid
+
+1	Faeburrow Elder		$0.63
+Creature - Treefolk Druid
+
+1	Fallaji Wayfarer		$3.54
+Creature - Human Scout
+
+1	Garth One-Eye		$0.39
+Legendary Creature - Human Wizard
+
+1	General Ferrous Rokiric		$0.48
+Legendary Creature - Human Soldier
+
+1	Glint-Eye Nephilim		$0.21
+Creature - Nephilim
+
+1	Helga, Skittish Seer		$5.33
+Legendary Creature - Frog Druid
+
+1	Hero of Precinct One		$0.24
+Creature - Human Warrior
+
+1	Illuna, Apex of Wishes		$0.50
+Legendary Creature - Beast Elemental Dinosaur
+
+1	Jenson Carthalion, Druid Exile		$1.86
+Legendary Creature - Human Druid
+
+1	Jhoira, Weatherlight Captain		$0.41
+Legendary Creature - Human Artificer
+
+1	Jodah, the Unifier		$3.19
+Legendary Creature - Human Wizard
+
+1	Knight of New Alara		$0.58
+Creature - Human Knight
+
+1	Maelstrom Archangel		$1.23
+Creature - Angel
+
+1	Marchesa, the Black Rose		$1.61
+Legendary Creature - Human Wizard
+
+1	O-Kagachi, Vengeful Kami		$1.45
+Legendary Creature - Dragon Spirit
+
+1	Omnath, Locus of All		$0.75
+Legendary Creature - Phyrexian Elemental
+
+1	Rienne, Angel of Rebirth		$0.64
+Legendary Creature - Angel
+
+1	Scion of Draco		$3.43
+Artifact Creature - Dragon
+
+1	Shanid, Sleepers' Scourge		$4.67
+Legendary Creature - Human Knight
+
+1	Sisay, Weatherlight Captain		$2.42
+Legendary Creature - Human Soldier
+
+1	Solemn Simulacrum		$0.33
+Artifact Creature - Golem
+
+1	Surrak Dragonclaw		$3.39
+Legendary Creature - Human Warrior
+
+1	Two-Headed Hellkite		$8.11
+Creature - Dragon
+
+1	Xyris, the Writhing Storm		$2.11
+Legendary Creature - Snake Leviathan
+
+1	Yidris, Maelstrom Wielder		$9.37
+Legendary Creature - Ogre Wizard
+
+1	Zaxara, the Exemplary		$1.99
+Legendary Creature - Nightmare Hydra
+
+Instant (6)
+1	Abzan Charm		$0.27
+Instant
+
+1	Beast Within		$0.97
+Instant
+
+1	Brokers Charm		$0.59
+Instant
+
+1	Shadow Prophecy		$0.25
+Instant
+
+1	Sultai Charm		$0.33
+Instant
+
+1	Void Rend		$0.54
+Instant
+
+Sorcery (8)
+1	Bring to Light		$0.33
+Sorcery
+
+1	Duneblast		$0.26
+Sorcery
+
+1	Farseek		$1.10
+Sorcery
+
+1	Iridian Maelstrom		$0.45
+Sorcery
+
+1	Merciless Eviction		$0.53
+Sorcery
+
+1	Painful Truths		$0.70
+Sorcery
+
+1	Primevals' Glorious Rebirth		$1.42
+Legendary Sorcery
+
+1	Skyshroud Claim		$2.85
+Sorcery
+
+Artifact (7)
+1	Arcane Signet		$0.57
+Artifact
+
+1	Chromatic Lantern		$1.54
+Artifact
+
+1	Fellwar Stone		$1.15
+Artifact
+
+1	Heroes' Podium		$0.60
+Legendary Artifact
+
+1	Obsidian Obelisk		$0.60
+Artifact
+
+1	Sunbird Standard // Sunbird Effigy		$0.24
+Artifact // Artifact Creature - Bird Construct
+
+1	Timeless Lotus		$11.95
+Legendary Artifact
+
+Enchantment (7)
+1	Case of the Shattered Pact		$0.30
+Enchantment - Case
+
+1	Genju of the Realm		$3.45
+Legendary Enchantment - Aura
+
+1	Leyline Binding
+	$0.61
+Enchantment
+
+1	Leyline of the Guildpact		$4.69
+Enchantment
+
+1	Mana Cannons		$0.96
+Enchantment
+
+1	Spelunking		$3.59
+Enchantment
+
+1	The Kami War // O-Kagachi Made Manifest		$3.57
+Enchantment - Saga // Enchantment Creature - Dragon Spirit
+
+Land (39)
+1	Bad River		$1.52
+Land
+
+1	Canopy Vista		$0.38
+Land - Forest Plains
+
+1	Cascading Cataracts		$2.01
+Land
+
+1	Cinder Glade		$0.29
+Land - Mountain Forest
+
+1	Command Tower		$0.39
+Land
+
+1	Crystal Quarry		$1.44
+Land
+
+1	Evolving Wilds		$0.18
+Land
+
+1	Exotic Orchard		$0.27
+Land
+
+1	Flooded Strand		$15.29
+Land
+
+1	Forest		$0.13
+Basic Land - Forest
+
+1	Forest		$0.17
+Basic Land - Forest
+
+1	Forest		$4.38
+Basic Land - Forest
+
+1	Frontier Bivouac		$0.38
+Land
+
+1	Grasslands		$0.41
+Land
+
+1	Indatha Triome		$17.55
+Land - Plains Swamp Forest
+
+1	Island		$3.40
+Basic Land - Island
+
+1	Island		$0.27
+Basic Land - Island
+
+1	Jetmir's Garden		$16.41
+Land - Mountain Forest Plains
+
+1	Krosan Verge		$0.27
+Land
+
+1	Mountain		$2.28
+Basic Land - Mountain
+
+1	Mountain		$0.22
+Basic Land - Mountain
+
+1	Mountain Valley		$0.37
+Land
+
+1	Plains		$6.30
+Basic Land - Plains
+
+1	Plains		$0.22
+Basic Land - Plains
+
+1	Prairie Stream		$0.31
+Land - Plains Island
+
+1	Raffine's Tower		$13.91
+Land - Plains Island Swamp
+
+1	Raugrin Triome		$14.43
+Land - Island Mountain Plains
+
+1	Rocky Tar Pit		$0.33
+Land
+
+1	Savage Lands		$0.40
+Land
+
+1	Savai Triome		$19.53
+Land - Mountain Plains Swamp
+
+1	Seaside Citadel		$0.37
+Land
+
+1	Smoldering Marsh		$0.30
+Land - Swamp Mountain
+
+1	Sunken Hollow		$0.38
+Land - Island Swamp
+
+1	Swamp		$2.83
+Basic Land - Swamp
+
+1	Swamp		$0.21
+Basic Land - Swamp
+
+1	Terramorphic Expanse		$0.17
+Land
+
+1	The World Tree		$6.82
+Land
+
+1	Xander's Lounge		$13.67
+Land - Island Swamp Mountain
+
+1	Zagoth Triome		$19.86
+Land - Swamp Forest Island
+
+Sideboard - 15 cards, 9 distinct
+Sort by:
+:
+	Name 	Ed.	Price	Type	Cost
+Rarity	Color
+Creature (1)
+1	Jegantha, the Wellspring		$0.36
+Legendary Creature - Elemental Elk
+
+Token (14)
+1	Companion		$0.19
+Token
+
+2	Golem		$0.33
+Token Artifact Creature - Golem
+
+1	Human		$0.20
+Token Creature - Human
+
+3	Human // Snake		$0.30
+Token
+
+2	Human Soldier		$0.30
+Token Creature - Human Soldier
+
+2	Kavu // Beast		$0.38
+Token
+
+2	Snake // Egg		$0.41
+Token
+
+1	Snake // Hydra		$1.53
+Token
+
+Scratchpad - 41 cards, 40 distinct
+ Cards in the scratchpad represent cards that you are considering for this deck, but are not actually in the built deck. They do not count towards the in built decks count shown in your inventory. If you are using the Auto Trade feature, they will be still be marked for trade although cards in your main deck and sideboard will not.
+Sort by:
+:
+	Name 	Ed.	Price	Type	Cost
+Rarity	Color
+Battle (1)
+1	Invasion of Alara // Awaken the Maelstrom		$0.38
+Battle - Siege // Sorcery
+
+Creature (12)
+1	Atraxa, Grand Unifier		$18.67
+Legendary Creature - Phyrexian Angel
+
+1	Atraxa, Praetors' Voice		$24.99
+Legendary Creature - Phyrexian Angel Horror
+
+1	Baleful Strix		$6.65
+Artifact Creature - Bird
+
+1	Bloom Tender		$13.47
+Creature - Elf Druid
+
+1	Coiling Oracle		$0.24
+Creature - Snake Elf Druid
+
+1	Fusion Elemental		$0.24
+Creature - Elemental
+
+1	Hajar, Loyal Bodyguard		$1.05
+Legendary Creature - Human Soldier
+
+1	Loot, the Pathfinder		$0.42
+Legendary Creature - Beast Noble
+
+1	Maelstrom Wanderer		$0.38
+Legendary Creature - Elemental
+
+1	Moonveil Regent
+	$0.55
+Creature - Dragon
+
+1	Nethroi, Apex of Death		$2.40
+Legendary Creature - Cat Nightmare Beast
+
+1	Primeval Spawn		$0.46
+Creature - Avatar
+
+Instant (3)
+1	Obscura Charm		$0.24
+Instant
+
+1	Sylvan Reclamation		$0.38
+Instant
+
+1	Unite the Coalition		$0.96
+Instant
+
+Sorcery (7)
+1	Cultivate		$0.91
+Sorcery
+
+1	Explore		$1.54
+Sorcery
+
+1	Explosive Vegetation		$0.36
+Sorcery
+
+1	Kodama's Reach		$2.77
+Sorcery - Arcane
+
+1	Lavalanche		$0.17
+Sorcery
+
+1	Migration Path		$2.12
+Sorcery
+
+1	Ruinous Ultimatum		$0.41
+Sorcery
+
+Artifact (8)
+1	Ancient Cornucopia		$4.23
+Artifact
+
+1	Chromatic Orrery		$33.90
+Legendary Artifact
+
+1	Door to Nothingness		$0.62
+Artifact
+
+1	Infinite Guideline Station		$0.34
+Legendary Artifact - Spacecraft
+
+1	Jodah's Codex		$0.29
+Artifact - Book
+
+1	Luxior, Giada's Gift		$5.13
+Legendary Artifact - Equipment
+
+1	Prismatic Geoscope		$1.86
+Artifact
+
+1	Tome of the Guildpact		$0.67
+Artifact - Book
+
+Enchantment (5)
+1	Annie Joins Up		$3.64
+Legendary Enchantment
+
+1	Elemental Bond		$5.13
+Enchantment
+
+1	Maelstrom Nexus		$2.12
+Enchantment
+
+1	Spirit of Resistance		$20.77
+Enchantment
+
+1	Widespread Thieving		$0.30
+Enchantment
+
+Planeswalker (2)
+1	Dihada, Binder of Wills		$1.64
+Legendary Planeswalker - Dihada
+
+1	Jared Carthalion		$0.78
+Legendary Planeswalker - Jared
+
+Token (3)
+1	Golem		$5.92
+Token Artifact Creature - Golem
+
+2	Kavu // Angel		$1.19
+Token
+
+
+
+Comments
+New Comment
+No comments yet.
+Contact & About
+Terms & Conditions
+Privacy Policy
+Premium

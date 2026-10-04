@@ -12,6 +12,18 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - added relocateTo(File): getModelRoot() is a
+ *                         lazily-initialized, process-wide singleton locked
+ *                         in by whichever caller reaches it first in a given
+ *                         JVM, so a "JUnit Plug-in Test" suite where some
+ *                         earlier test class touches DataManager before a
+ *                         later one gets to set ma.magiccards.area has no
+ *                         way to redirect root afterward - reset(File) can't
+ *                         be used for this against a real, populated
+ *                         database since it deletes dir first. relocateTo()
+ *                         does the same root-swap + store reload as reset()
+ *                         but without the deletion, safe to point at an
+ *                         existing directory.
  */
 
 package com.reflexit.magiccards.core;
@@ -202,6 +214,34 @@ public class DataManager {
 
 	public void reset() {
 		reset(getRootDir());
+	}
+
+	/**
+	 * Like {@link #reset(File)}, but never deletes anything under {@code dir} -
+	 * for pointing at an existing, real database (e.g. a developer's own
+	 * runtime workspace) rather than a disposable, test-owned directory that is
+	 * safe to wipe and rebuild. {@link #getModelRoot()} is a lazily-initialized,
+	 * process-wide singleton: whichever caller reaches it FIRST in a given JVM
+	 * locks in whatever {@code FileUtils.getMagicCardsDir()} resolved to at that
+	 * moment, and nothing after that first call can change it just by setting
+	 * {@code ma.magiccards.area} later - that property is only consulted on the
+	 * very first access. This forces root back onto {@code dir} regardless of
+	 * who won that race (a plugin's own eager startup load, an unrelated test
+	 * that happened to run first in the same suite, ...), without touching
+	 * anything on disk.
+	 */
+	public void relocateTo(File dir) {
+		synchronized (this) {
+			System.setProperty("ma.magiccards.area", dir.getAbsolutePath());
+			if (root == null) {
+				root = ModelRoot.getInstance(dir);
+				return;
+			}
+			root.resetRoot(dir);
+		}
+		((DbMultiFileCardStore) (getCardHandler().getMagicDBStore())).reload();
+		((AbstractFilteredCardStore) (getCardHandler().getLibraryFilteredStore())).reload();
+		reconcile();
 	}
 
 	public File getRootDir() {

@@ -1,0 +1,214 @@
+AetherHub.com
+Decks
+Metagame
+Collection
+Tourney
+Database
+Apps
+Modern - Boros Aggro
+2nd MTGO Challenge 32 28/09/26 by woopdeloop
+ 16
+ 27
+ 24
+ 15
+ 0
+ 21
+7
+2
+43
+21
+ TCGplayer $1,066
+Cardmarket €591
+ Cardhoarder 167 Tix
+ Share
+ Visual
+ CMC
+ Compact
+ DeckHub View
+ Export
+ Compare
+$
+Main 60 cards (18 distinct)
+Creature (24)
+
+4 Ajani, Nacatl Pariah // Ajani, Nacatl Avenger
+			$9.68
+
+4 Guide of Souls
+			$3.43
+
+4 Ragavan, Nimble Pilferer
+			$49.00
+
+4 Seasoned Pyromancer
+			$7.00
+
+4 Voice of Victory
+			$21.89
+
+4 Ocelot Pride
+			$44.70
+Instant, Sorcery, Enchantment, Artifact (15)
+
+4 Galvanic Discharge
+			$0.30
+
+4 Goblin Bombardment
+			$4.87
+
+4 Lightning Bolt
+			$4.14
+
+3 Blood Moon
+			$9.10
+Land (21)
+
+1 Arena of Glory
+			$8.76
+
+1 Mountain
+			$0.22
+
+4 Marsh Flats
+			$33.00
+
+1 Elegant Parlor
+			$10.34
+
+4 Flooded Strand
+			$16.17
+
+4 Arid Mesa
+			$34.87
+
+4 Sacred Foundry
+			$11.50
+
+2 Plains
+			$0.23
+Side 13 cards (5 distinct)
+2 Containment Priest
+			$0.64
+
+3 Obsidian Charmaw
+			$1.79
+
+2 Meltdown
+			$0.38
+
+4 High Noon
+			$5.69
+
+2 The Legend of Roku
+			$13.59
+
+
+Meta deck card breakdown - 173 decks, 6.16% of meta
+Creatures
+Fear of Missing Out 1x in 0%
+Screaming Nemesis 1x in 0%
+Reckless Pyrosurfer 1x in 2%
+Phelia, Exuberant Shepherd 1x in 2%
+Witch Enchanter 1x in 8%
+Haliya, Guided by Light 1x in 15%
+Boromir, Warden of the Tower 1x in 17%
+Solitude 1x in 18%
+Voice of Victory 3x in 22%
+Seasoned Pyromancer 3x in 44%
+Ranger-Captain of Eos 2x in 46%
+Ragavan, Nimble Pilferer 4x in 91%
+Ajani, Nacatl Pariah 4x in 100%
+Guide of Souls 4x in 100%
+Ocelot Pride 4x in 100%
+Instant, Sorcery
+March of Otherworldly Light 1x in 1%
+Dismember 1x in 1%
+Redirect Lightning 1x in 1%
+Orim's Chant 1x in 1%
+Erode 1x in 1%
+Mana Tithe 1x in 5%
+Scout for Survivors 1x in 5%
+Prismatic Ending 1x in 7%
+Lightning Bolt 1x in 36%
+Thraben Charm 2x in 76%
+Galvanic Discharge 4x in 99%
+Enchantment, Artifact
+Vexing Bauble 1x in 1%
+Fable of the Mirror-Breaker 1x in 3%
+The Legend of Roku 1x in 27%
+Static Prison 1x in 40%
+Blood Moon 1x in 54%
+Goblin Bombardment 3x in 74%
+Planeswalkers
+Lands
+Snow-Covered Plains 1x in 1%
+Bloodstained Mire 1x in 1%
+Abandoned Air Temple 1x in 1%
+Sokenzan, Crucible of Defiance 1x in 1%
+Windswept Heath 1x in 2%
+Sunbillow Verge 1x in 2%
+Snow-Covered Mountain 1x in 3%
+Sunbaked Canyon 1x in 3%
+Cori Mountain Monastery 1x in 3%
+Flooded Strand 3x in 39%
+Marsh Flats 3x in 46%
+Dalkovan Encampment 1x in 56%
+Arena of Glory 1x in 72%
+Sacred Foundry 3x in 80%
+Elegant Parlor 2x in 82%
+Arid Mesa 4x in 100%
+Sideboard
+Practiced Offense 1x in 0%
+Dawn's Truce 1x in 1%
+Ghost Vacuum 1x in 1%
+Molten Rain 1x in 1%
+Grafdigger's Cage 1x in 1%
+Hallowed Moonlight 1x in 1%
+Ranger-Captain of Eos 1x in 1%
+Path to Exile 1x in 1%
+Containment Priest 1x in 2%
+Boromir, Warden of the Tower 1x in 2%
+Sanctifier en-Vec 1x in 2%
+March of Otherworldly Light 1x in 2%
+Deafening Silence 1x in 5%
+Shatterstorm 1x in 5%
+Prismatic Ending 1x in 6%
+Soul-Guide Lantern 1x in 6%
+Drannith Magistrate 1x in 6%
+Meltdown 1x in 8%
+Clarion Conqueror 1x in 10%
+Damping Sphere 1x in 14%
+Orim's Chant 1x in 16%
+Rest in Peace 1x in 28%
+Vexing Bauble 1x in 32%
+Obsidian Charmaw 2x in 32%
+Surgical Extraction 1x in 37%
+The Legend of Roku 1x in 40%
+Celestial Purge 1x in 40%
+Blood Moon 1x in 53%
+High Noon 2x in 62%
+Wrath of the Skies 2x in 76%
+Comments
+Login to comment
+
+0 comments
+
+Mana Curve
+Color Breakdown
+ Boros Aggro deck variations
+2nd MTGO Challenge 32 28/09/26
+
+woopdeloop
+78 Participants
+
+Help
+Contact Us
+Privacy Policy
+Terms and Conditions
+Premium Account
+Documentation
+Donate
+Merchandise
+
+All original content on this page is ©2026 AetherHub.com and may not be used or reproduced without consent. Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC. © Wizards. All rights reserved. AetherHub.com is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. Magic the Gathering and its respective properties are copyright Wizards of the Coast.
+CCPA: Opt out of personal information sales

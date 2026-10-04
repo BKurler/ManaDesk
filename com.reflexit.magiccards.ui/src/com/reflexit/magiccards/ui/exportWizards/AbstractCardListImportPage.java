@@ -9,6 +9,120 @@
  *                         destination flow is its own concrete page:
  *                         NewDeckPage / NewCollectionPage (create) and
  *                         ImportIntoDeckPage / ImportIntoCollectionPage (existing).
+ *     Rémi Dutil (2026) - added a 4th "Website" source: radio + read-only
+ *                         preview + "Browse Website..." button, opening
+ *                         BrowseWebsiteDialog (a real, navigable embedded
+ *                         browser the user logs into/navigates themselves).
+ *                         Its captured page text is played back exactly like
+ *                         Clipboard text - readSource() does no re-fetch (the
+ *                         dialog is already closed) and autoDetectFormat()
+ *                         reuses the same content-sniffing
+ *                         ReportType.autoDetectType(String, ...) overload, so
+ *                         FreeformImportDelegate and friends need no changes.
+ *     Rémi Dutil (2026) - the Website address field is now editable (not a
+ *                         read-only preview) and does NOT open the browse
+ *                         dialog on click - only the button does; the field
+ *                         is meant to be typed/pasted into directly, and
+ *                         Browse Website... now navigates straight to
+ *                         whatever address is in it.
+ *     Rémi Dutil (2026) - debug trace: autoDetectFormat()'s BROWSER case logs
+ *                         the sniffed text length and the format it detected
+ *                         (see also DeckTextExtractor/BrowseWebsiteDialog's
+ *                         own traces) - needed after a report that a real
+ *                         site's page was still "importing everything".
+ *     Rémi Dutil (2026) - "Also create a Sideboard/Extra" (NewDeckPage) only
+ *                         ever took effect via createEmptyExtras(), called
+ *                         from createEmptyElement()'s Empty-mode Finish path
+ *                         - completely ignored for an actual import
+ *                         (Website/Clipboard/File), even though the imported
+ *                         text's own "Sideboard" cards would still land in a
+ *                         sideboard location automatically (see
+ *                         ImportUtils.updateLocation/createDecks) - just
+ *                         without the checkbox ever having created it
+ *                         explicitly, or its "virtual" flag being consistent.
+ *                         Added wantSideboard()/wantExtra() (read on the UI
+ *                         thread by performImport(), same as wantVirtual())
+ *                         and createImportExtras(), called right after
+ *                         createNewDeck() in importRunnable() - so the
+ *                         checkbox now has the same effect whether the deck
+ *                         is created empty or from an import.
+ *     Rémi Dutil (2026) - real use turned up two problems with the "Found N
+ *                         record(s)..." status: (1) autoDetectFormat()
+ *                         skipped its whole re-parse whenever the newly
+ *                         detected format was UNCHANGED from before (the
+ *                         common case re-importing from a Website, since the
+ *                         same site keeps detecting as the same format every
+ *                         time) - the wizard kept showing the PREVIOUS
+ *                         parse's stale counts (often "Found 0 record(s)")
+ *                         even though the import had actually worked; now
+ *                         always re-parses once a format is detected, and
+ *                         refreshes the displayed status AFTER the re-parse
+ *                         instead of before it. (2) the status itself moved
+ *                         out of the wizard's title-area banner (setMessage())
+ *                         into a new statusLabel below the Options group -
+ *                         reads more naturally right next to the format it
+ *                         describes, and fills what had been unexplained
+ *                         blank space reserved by the framework's Options
+ *                         group layout. The banner now shows a static
+ *                         description instead, reserved for validation
+ *                         errors (setErrorMessage()).
+ *     Rémi Dutil (2026) - added onSideboardDetected() (called from
+ *                         openBrowseWebsiteDialog() once a page is browsed,
+ *                         with whether the captured text includes a
+ *                         Sideboard section - a real one or, per
+ *                         DeckTextExtractor's own new Commander handling, a
+ *                         Commander deck's commander card) and
+ *                         gateSideboardOnImport(). Real sideboard-tagged
+ *                         cards had always survived import regardless of
+ *                         "Also create a Sideboard" - that checkbox only
+ *                         ever controlled whether an EMPTY sideboard
+ *                         sibling got pre-created - but per an explicit
+ *                         request, NewDeckPage now auto-checks it on
+ *                         detection AND actually gates the import on it
+ *                         (unchecking it now excludes those cards, not just
+ *                         the empty sibling) - gateSideboardOnImport()
+ *                         defaults false so every OTHER page (import into
+ *                         an existing deck, a collection - none of which
+ *                         have a live "Also create a Sideboard" checkbox at
+ *                         all) keeps importing sideboard cards exactly as
+ *                         before; wantSideboard()'s own default (false) on
+ *                         those pages reflects "no such concept here", not
+ *                         a real choice to drop cards, and must never be
+ *                         read as gating import on its own.
+ *     Rémi Dutil (2026) - added onDeckMetaDetected() (called from
+ *                         openBrowseWebsiteDialog(), mirroring
+ *                         onSideboardDetected() above) with the page's own
+ *                         best-effort extracted deck title/format (see
+ *                         DeckTextExtractor#detectDeckMeta()). Only
+ *                         NewDeckPage overrides it, same reasoning as
+ *                         onSideboardDetected() - every other page has
+ *                         neither a Name field to fill nor a Default Format
+ *                         combo to update, so the default (nothing) is
+ *                         correct there.
+ *     Rémi Dutil (2026) - added wantFormat() (same shape as wantSideboard()/
+ *                         wantExtra() - read on the UI thread by
+ *                         performImport(), applied via createNewDeck()'s new
+ *                         defaultFormat parameter for both the Empty-mode
+ *                         and import-mode creation paths) so NewDeckPage's
+ *                         new Default Format combo actually takes effect on
+ *                         the created deck, not just sit there unused.
+ *     Rémi Dutil (2026) - defaultPrompt()'s status now reads "Total N
+ *                         (unique M) card(s) found" instead of "Found N
+ *                         record(s)" - matches the "Total N (unique M)"
+ *                         phrasing used everywhere else in ManaDesk; "record"
+ *                         also undercounted what the user actually expects
+ *                         to see, since each row already represents one
+ *                         unique card with its own quantity, not one row per
+ *                         physical copy.
+ *     Rémi Dutil (2026) - dropped defaultPrompt()'s trailing "Press
+ *                         'Example...' to see the expected layout, or Next
+ *                         to preview." - redundant once the status line
+ *                         itself already shows the real recognized count,
+ *                         per an explicit request.
+ *     Rémi Dutil (2026) - hasSideboardMarker() moved to DeckTextExtractor#
+ *                         hasSideboardSection() (public) so
+ *                         BrowseWebsiteDialog can share it for a live
+ *                         "Sideboard detected" indicator too.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -63,6 +177,7 @@ import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.forms.events.HyperlinkAdapter;
@@ -72,6 +187,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.exports.DeckTextExtractor;
 import com.reflexit.magiccards.core.exports.IImportDelegate;
 import com.reflexit.magiccards.core.exports.ImportData;
 import com.reflexit.magiccards.core.exports.ImportError;
@@ -84,6 +200,7 @@ import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
@@ -95,6 +212,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.ParseGathererOracle;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.dialogs.BrowseWebsiteDialog;
 import com.reflexit.magiccards.ui.dialogs.EditTextDialog;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
@@ -126,7 +244,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private boolean newVirtualChoice;
 	private boolean newReadOnlyChoice;
 	private boolean newUnsortedChoice;
+	private boolean newSideboardChoice;
+	private boolean newExtraChoice;
 	private String newNameChoice;
+	private String newFormatChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
 	private MagicToolkit toolkit;
@@ -142,6 +263,17 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private Text urlText;
 	private String urlName = "";
 	private Text clipboardPreviewText;
+	protected Button websiteRadio;
+	private Button browseWebsiteButton;
+	/** editable: paste/type a URL, or filled in with the page last imported from */
+	private Text websiteText;
+	/** full document.body.innerText, captured when BrowseWebsiteDialog's OK fires */
+	private String capturedWebsiteText;
+	/** browser.getUrl() at the same moment - for the preview field and diagnostics */
+	private String capturedWebsiteUrl;
+	/** shows defaultPrompt()'s dynamic "Found N record(s)..." status - below the
+	 *  Options group, not the wizard's title-area banner (see defaultPrompt()) */
+	private Label statusLabel;
 
 	protected AbstractCardListImportPage(final String pageName, final IStructuredSelection selection) {
 		super(pageName);
@@ -189,6 +321,87 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 
 	protected boolean wantUnsorted() {
 		return false;
+	}
+
+	/** Whether a brand-new deck should also get an empty Sideboard sibling -
+	 *  read on the UI thread before the background import job runs (see
+	 *  {@link #wantVirtual()}). Only NewDeckPage (which has that checkbox)
+	 *  overrides this. */
+	protected boolean wantSideboard() {
+		return false;
+	}
+
+	/** Whether a brand-new deck should also get an empty Extra sibling - see
+	 *  {@link #wantSideboard()}. */
+	protected boolean wantExtra() {
+		return false;
+	}
+
+	/** A brand-new deck's own Default Format ("Standard", "Modern", ...) - the
+	 *  format the Legality tab validates it against by default - or {@code
+	 *  null} to leave it unset. Read on the UI thread before the background
+	 *  import job runs (see {@link #wantVirtual()}). Only NewDeckPage (which
+	 *  has the combo) overrides this; every other page (a collection has no
+	 *  notion of legality) leaves it null. */
+	protected String wantFormat() {
+		return null;
+	}
+
+	/** Whether {@link #wantSideboard()} being false should actually EXCLUDE
+	 *  the imported text's own sideboard-tagged cards (see importRunnable())
+	 *  instead of importing them regardless, as every page does by default.
+	 *  Only NewDeckPage (the only page with a live, user-facing "Also create
+	 *  a Sideboard" checkbox the user can deliberately uncheck) overrides
+	 *  this true - {@link #wantSideboard()}'s own default (false) on every
+	 *  OTHER page (importing into an existing deck, a collection) reflects
+	 *  "this page has no such concept", not a real choice to drop cards, and
+	 *  must never be read that way. */
+	protected boolean gateSideboardOnImport() {
+		return false;
+	}
+
+	/** Called after browsing a page (see openBrowseWebsiteDialog()) with
+	 *  whether the captured/extracted text includes a Sideboard section - a
+	 *  real one, or (see DeckTextExtractor's own Commander handling) a
+	 *  Commander deck's own commander card, which by MTG convention belongs
+	 *  in the sideboard pile. Only NewDeckPage (which has the checkbox)
+	 *  overrides this, to auto-CHECK "Also create a Sideboard" - never auto-
+	 *  unchecks it, so re-browsing to a page with no sideboard never
+	 *  silently undoes a choice the user may have made deliberately; per the
+	 *  user's own explicit request, unchecking it afterward is how they opt
+	 *  out of importing sideboard cards at all (see gateSideboardOnImport()).
+	 *  Default: nothing. */
+	protected void onSideboardDetected(boolean hasSideboard) {
+		// NewDeckPage overrides
+	}
+
+	/** Called after browsing a page (see openBrowseWebsiteDialog()) with the
+	 *  page's own best-effort extracted deck title/format (see
+	 *  BrowseWebsiteDialog#getCapturedTitle()/getCapturedFormat(), backed by
+	 *  DeckTextExtractor#detectDeckMeta()) - either may be {@code null} if
+	 *  nothing plausible was found. Only NewDeckPage (which has a Name field
+	 *  and a Default Format combo) overrides this, to fill the Name field
+	 *  when it's still empty and update the Default Format combo when a
+	 *  format was actually found (never resets it back to "Standard" on a
+	 *  miss - a miss means "couldn't tell", not "this deck is Standard").
+	 *  Default: nothing. */
+	protected void onDeckMetaDetected(String title, String format) {
+		// NewDeckPage overrides
+	}
+
+	/** Called right after a brand-new element is created during an import (as
+	 *  opposed to {@link #createEmptyElement()}'s Empty-mode path, which
+	 *  creates its own Sideboard/Extra siblings directly) - lets "New ..."
+	 *  pages also create them for an IMPORTED deck, so "Also create a
+	 *  Sideboard/Extra" isn't silently ignored just because Contents was
+	 *  Website/Clipboard/File instead of Empty. Runs on the background
+	 *  import job's thread, like {@link #createNewDeck} itself - takes the
+	 *  CACHED choices (wantSideboard()/wantExtra()/wantVirtual() were read
+	 *  on the UI thread by {@link #performImport}), never the live
+	 *  checkboxes directly. Default: nothing. */
+	protected void createImportExtras(CollectionsContainer parent, boolean wantSideboard, boolean wantExtra,
+			boolean virtual) {
+		// concrete pages (NewDeckPage) override
 	}
 
 	/** Name for a new element: the concrete "New ..." page overrides to prefer its
@@ -273,7 +486,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			newVirtualChoice = wantVirtual();
 			newReadOnlyChoice = wantReadOnly();
 			newUnsortedChoice = wantUnsorted();
+			newSideboardChoice = wantSideboard();
+			newExtraChoice = wantExtra();
 			newNameChoice = getNewElementName();
+			newFormatChoice = wantFormat();
 			final boolean dbImport = false;
 			try {
 				IRunnableWithProgress work = new IRunnableWithProgress() {
@@ -508,7 +724,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted, boolean readOnly,
-			CollectionsContainer resource) {
+			String defaultFormat, CollectionsContainer resource) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
 		while (resource.contains(newloc) && attempts-- > 0) {
@@ -518,11 +734,15 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			throw new IllegalArgumentException("Cannot generate deck name");
 		CardCollection created = new CardCollection(newloc.getBaseFileName(), resource, isDeck, virtual, unsorted);
 		created.persistInitialSettings(isDeck, virtual, unsorted);
-		if (readOnly) {
+		if (readOnly || (defaultFormat != null && !defaultFormat.isEmpty())) {
 			try {
 				IStorageInfo si = created.getStorageInfo();
-				if (si != null)
-					si.setReadOnly(true);
+				if (si != null) {
+					if (readOnly)
+						si.setReadOnly(true);
+					if (defaultFormat != null && !defaultFormat.isEmpty())
+						si.setDefaultFormat(defaultFormat);
+				}
 			} catch (RuntimeException ignore) {
 				// non-fatal - fixable via Edit Properties
 			}
@@ -564,6 +784,16 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			importData.setProperty(inputChoice.name(), urlName);
 			if (!urlName.isEmpty()) {
 				text = WebUtils.openUrlText(new URL(urlName));
+				importData.setText(text);
+			}
+			break;
+		case BROWSER:
+			// no re-fetch: BrowseWebsiteDialog is already closed by the time this
+			// runs, so there is no live page left to re-read - just play back the
+			// text captured at the moment the user clicked "Import this page"
+			importData.setProperty(inputChoice.name(), capturedWebsiteUrl);
+			if (capturedWebsiteText != null && !capturedWebsiteText.isEmpty()) {
+				text = capturedWebsiteText;
 				importData.setText(text);
 			}
 			break;
@@ -617,6 +847,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	public void createControl(final Composite parent) {
 		toolkit = MagicToolkit.getInstance();
 		setTitle(getTitleText());
+		setMessage("Select the source and format below, then Next to preview.");
 		initializeDialogUnits(parent);
 		Composite composite = new Composite(parent, SWT.NULL);
 		composite.setLayout(new GridLayout());
@@ -626,6 +857,13 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		createDestinationGroup(composite);
 		createResourcesGroup(composite);
 		createOptionsGroup(composite);
+		// below Options, not the wizard's title-area banner above - reads more
+		// naturally right next to the format it describes, and this is also
+		// where a report that was previously blank space (reserved by the
+		// framework's Options group layout for content this page never used)
+		// turned out to be
+		statusLabel = new Label(composite, SWT.WRAP);
+		statusLabel.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		restoreWidgetValues();
 		updateWidgetEnablements();
 		defaultPrompt();
@@ -634,6 +872,19 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, MagicUIActivator.PLUGIN_ID + ".export");
 	}
 
+	/** Shows the dynamic "You have selected '&lt;format&gt;'... Total N
+	 *  (unique M) card(s) found..." status in {@link #statusLabel}, below the
+	 *  Options group - moved out of the wizard's title-area banner
+	 *  (setMessage()), which is now a static description set once in
+	 *  createControl() and otherwise reserved for validation errors
+	 *  (setErrorMessage()). The "Total N (unique M)" phrasing matches every
+	 *  other card count shown elsewhere in ManaDesk (deck/collection views,
+	 *  BrowseWebsiteDialog's own live count) - each {@code toImport} entry is
+	 *  already one row PER UNIQUE CARD with its own {@code getCount()}
+	 *  quantity, not one row per physical copy, so a bare "N record(s)" read
+	 *  as a much smaller, unfamiliar number (e.g. a 100-card deck with a
+	 *  21-copy Island showing "79 record(s)") instead of the total physical
+	 *  card count the user actually expects to recognize. */
 	private void defaultPrompt() {
 		if (reportType == null)
 			reportType = ImportExportFactory.TEXT_DECK_CLASSIC;
@@ -642,10 +893,17 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			mess += "Warning: cannot parse data (" + importData.getError().getMessage() + "). ";
 		} else {
 			int errcount = importData.getErrorCount();
-			mess += "Found " + importData.size() + " record(s) and " + errcount + " error(s).";
+			int unique = importData.size();
+			int total = 0;
+			for (ICard card : importData.getList())
+				if (card instanceof MagicCardPhysical)
+					total += ((MagicCardPhysical) card).getCount();
+			mess += "Total " + total + " (unique " + unique + ") card(s) found, " + errcount + " error(s).";
 		}
-		mess += " Press 'Example...' to see the expected layout, or Next to preview.";
-		setMessage(mess);
+		if (statusLabel != null && !statusLabel.isDisposed()) {
+			statusLabel.setText(mess);
+			statusLabel.getParent().layout();
+		}
 	}
 
 	@Override
@@ -669,8 +927,11 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				// ignore
 			}
 		}
-		// only File and Clipboard have UI - an old "URL" setting would NPE later
-		if (inputChoice != ImportSource.FILE && inputChoice != ImportSource.TEXT)
+		// only File, Clipboard and Website have UI - an old "URL" setting would
+		// NPE later. A restored BROWSER choice with nothing captured yet is
+		// harmless: validateSourceGroup() blocks Next until the user browses again.
+		if (inputChoice != ImportSource.FILE && inputChoice != ImportSource.TEXT
+				&& inputChoice != ImportSource.BROWSER)
 			inputChoice = ImportSource.TEXT;
 		setInputChoice(inputChoice);
 		// restore options
@@ -691,6 +952,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			fileRadio.setSelection(inputChoice == ImportSource.FILE);
 		if (clipboardRadio != null)
 			clipboardRadio.setSelection(inputChoice == ImportSource.TEXT);
+		if (websiteRadio != null)
+			websiteRadio.setSelection(inputChoice == ImportSource.BROWSER);
 	}
 
 	private void selectReportType(final ReportType type) {
@@ -727,6 +990,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			return (urlName == null || urlName.isEmpty()) ? "URL (none)" : "URL \"" + urlName + "\"";
 		case TEXT:
 			return "clipboard";
+		case BROWSER:
+			return (capturedWebsiteUrl == null || capturedWebsiteUrl.isEmpty()) ? "website (none captured)"
+					: "website \"" + capturedWebsiteUrl + "\"";
 		default:
 			return "input";
 		}
@@ -782,6 +1048,32 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			}
 		});
 		browseButton.setLayoutData(buttFc.create());
+
+		// website control: radio + an editable address field (paste/type a URL
+		// here, or it fills in with the page last imported from) + a Browse
+		// Website... button that opens BrowseWebsiteDialog - a real, navigable
+		// embedded browser - already navigated to whatever URL is in the field
+		// above, if any. Clicking the field itself does NOT open the dialog
+		// (unlike the Clipboard preview above) - it is meant to be typed/pasted
+		// into directly, so a click-triggered popup would fight the user.
+		websiteRadio = toolkit.createButton(fileSelectionArea, "Website", SWT.RADIO,
+				(e) -> onInputChoice(e, ImportSource.BROWSER));
+		websiteRadio.setLayoutData(GridDataFactory.fillDefaults().create());
+		websiteText = toolkit.createText(fileSelectionArea, "", SWT.BORDER);
+		websiteText.setToolTipText(
+				"The deck's page address - paste or type it here, then press Browse Website... to load it automatically");
+		websiteText.addModifyListener((e) -> {
+			if (inputChoice != ImportSource.BROWSER) {
+				setInputChoice(ImportSource.BROWSER);
+			}
+			onInputChoice(null, ImportSource.BROWSER);
+		});
+		websiteText.setLayoutData(textBoxFc.create());
+		browseWebsiteButton = toolkit.createButton(fileSelectionArea, "Browse Website...", SWT.PUSH,
+				(e) -> openBrowseWebsiteDialog());
+		browseWebsiteButton.setToolTipText("Open the address above in an embedded browser, so you can navigate, "
+				+ "log in if needed, and import the deck once you can see it");
+		browseWebsiteButton.setLayoutData(buttFc.create());
 		// editor controls
 		// inputRadio = toolkit.createButton(fileSelectionArea, "Editor",
 		// SWT.RADIO,
@@ -820,6 +1112,19 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		String cl = getClipboardText();
 		String clipped = cl.length() > 80 ? cl.subSequence(0, 80) + "..." : cl;
 		return clipped;
+	}
+
+	private void openBrowseWebsiteDialog() {
+		BrowseWebsiteDialog dialog = new BrowseWebsiteDialog(getShell(), websiteText.getText().trim());
+		if (dialog.open() == Window.OK) {
+			capturedWebsiteText = dialog.getCapturedText();
+			capturedWebsiteUrl = dialog.getCapturedUrl();
+			websiteText.setText(capturedWebsiteUrl == null ? "" : capturedWebsiteUrl);
+			setInputChoice(ImportSource.BROWSER);
+			onInputChoice(null, inputChoice);
+			onSideboardDetected(DeckTextExtractor.hasSideboardSection(capturedWebsiteText));
+			onDeckMetaDetected(dialog.getCapturedTitle(), dialog.getCapturedFormat());
+		}
 	}
 
 	public void onInputChoice(SelectionEvent event, ImportSource choice) {
@@ -869,18 +1174,40 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 						break;
 					}
 					break;
+				case BROWSER:
+					// content-sniffing overload, same as TEXT above - NOT the URL
+					// overload (regex-matched, only wired to ScryFallImportDelegate,
+					// and does its own re-fetch): the page is already captured.
+					if (capturedWebsiteText != null && !capturedWebsiteText.isEmpty()) {
+						type = ReportType.autoDetectType(capturedWebsiteText, types);
+						MagicLogger.log("AbstractCardListImportPage: Website source, " + capturedWebsiteText.length()
+								+ " char(s) sniffed -> detected format "
+								+ (type == null ? "none" : type.getLabel()));
+					}
+					break;
 				default:
 					break;
 				}
-				if (type == null || type == reportType)
+				if (type == null)
 					return Status.OK_STATUS;
-				ReportType type2 = type;
-				Display.getDefault().syncExec(() -> {
-					selectReportType(type2);
-					updatePageCompletion();
-				});
-				// re-parse with the detected format so the preview matches
+				if (type != reportType) {
+					ReportType type2 = type;
+					Display.getDefault().syncExec(() -> selectReportType(type2));
+				}
+				// re-parse so the preview reflects the newly detected/captured
+				// content - even when the detected format is UNCHANGED from
+				// before (the common case re-importing from a Website: the
+				// same site usually keeps detecting as the same format every
+				// time), the underlying text just changed and must still be
+				// re-parsed, or the wizard is left showing the PREVIOUS
+				// parse's stale "Found 0 record(s)" message - previously this
+				// whole re-parse was skipped whenever the type didn't change
 				performImport(true);
+				// refresh the displayed message AFTER the re-parse actually
+				// updated importData - previously this ran BEFORE performImport(true)
+				// (inside the same syncExec as selectReportType above), so it
+				// always showed the PREVIOUS parse's counts, never the new one
+				Display.getDefault().syncExec(() -> updatePageCompletion());
 				return Status.OK_STATUS;
 			}
 		}.schedule();
@@ -1014,6 +1341,13 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				return false;
 			}
 		}
+		if (inputChoice == ImportSource.BROWSER) {
+			if (capturedWebsiteText == null || capturedWebsiteText.trim().isEmpty()) {
+				setErrorMessage("No page captured yet - click Browse Website... and press Import this page");
+				return false;
+			}
+			return true;
+		}
 		return true;
 	}
 
@@ -1039,6 +1373,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			clipboardPreviewText.setEnabled(notEmpty && inputChoice == ImportSource.TEXT);
 		if (editButton != null && !editButton.isDisposed())
 			editButton.setEnabled(notEmpty && inputChoice == ImportSource.TEXT);
+		if (websiteText != null && !websiteText.isDisposed())
+			websiteText.setEnabled(notEmpty && inputChoice == ImportSource.BROWSER);
+		if (browseWebsiteButton != null && !browseWebsiteButton.isDisposed())
+			browseWebsiteButton.setEnabled(notEmpty && inputChoice == ImportSource.BROWSER);
 	}
 
 	public ReportType getReportType() {
@@ -1089,8 +1427,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 						ImportUtils.resolve(importData.getList());
 						if (element instanceof CollectionsContainer) {
 							// newNameChoice was captured on the UI thread by performImport()
+							CollectionsContainer newParent = (CollectionsContainer) element;
 							createNewDeck(newNameChoice != null ? newNameChoice : getSourceBasedName(), isDeckTarget(),
-									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, (CollectionsContainer) element);
+									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newFormatChoice, newParent);
+							createImportExtras(newParent, newSideboardChoice, newExtraChoice, newVirtualChoice);
 						}
 						if (!(element instanceof CardCollection)) {
 							throw new IllegalArgumentException("Cannot import into " + element);
@@ -1098,6 +1438,23 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 						Location location = getSelectedLocation();
 						importData.setLocation(location);
 						ImportUtils.updateLocation(result, location);
+						// the imported text's own sideboard-tagged cards
+						// (a real Sideboard section, or - see
+						// DeckTextExtractor's own Commander handling - a
+						// Commander deck's commander card) otherwise always
+						// survive regardless of "Also create a Sideboard",
+						// which by itself only controls whether an EMPTY
+						// sideboard sibling gets pre-created (see
+						// wantSideboard()'s own header). Per an explicit
+						// request: on a page where that checkbox is a real,
+						// user-facing choice (gateSideboardOnImport()),
+						// unchecking it (after DeckTextExtractor auto-
+						// checked it on detection - see onSideboardDetected)
+						// is how the user opts out of the sideboard/
+						// commander entirely, importing just the main deck.
+						if (gateSideboardOnImport() && !newSideboardChoice)
+							result.removeIf(
+									c -> c instanceof MagicCardPhysical && ((MagicCardPhysical) c).isSideboard());
 						submon.worked(10);
 					}
 					if (fixErrors(result, dbImport, submon.split(20))) {
