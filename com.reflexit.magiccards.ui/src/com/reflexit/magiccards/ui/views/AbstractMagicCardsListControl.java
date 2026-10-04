@@ -49,6 +49,14 @@
  *                         is wrapped in its own try/catch - a failure there
  *                         must never skip setInput() itself (that briefly
  *                         broke Collector's very first load at app startup)
+ *     Rémi Dutil (2026) - RESTORE_SELECTION_AT_STARTUP (off): the selected card
+ *                         of each deck/collection tab is no longer saved on
+ *                         close nor re-selected at startup (code kept behind
+ *                         the flag); traceState() debug helper;
+ *                         revealSelection() - scrolls the selected row back
+ *                         into view (only when off-screen) on focus return;
+ *                         setFocusOnList() + the table's keyboard cursor moved
+ *                         onto the selected row, so the keyboard works at once.
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -215,6 +223,11 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	 *  Location across app restarts - keyed per Location so every open tab
 	 *  remembers its own last selection independently. */
 	private static final String LAST_SELECTED_CARD_PREF_PREFIX = "lastSelectedCard@";
+	/** Re-select, at app startup, the card each deck/collection tab had selected
+	 *  when the app closed (persisted on close). Off: not really needed, and the
+	 *  restored selection + reveal fought with the user's first actions. Gates
+	 *  both the save ({@link #persistLastSelection(ISelection)}) and the restore. */
+	private static final boolean RESTORE_SELECTION_AT_STARTUP = false;
 	/** Flip to {@code true} for a console trace of the persisted-selection
 	 *  save/restore path specifically (independent of {@link #DEBUG}, which is
 	 *  far noisier - this covers a handful of lines across a whole app close +
@@ -1743,7 +1756,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			// once" flag must not be consumed by that first, empty pass, or the
 			// real one never gets a chance. Only give up once the store actually
 			// had leaves to check a match against.
-			if (!initialSelectionAttempted) {
+			if (RESTORE_SELECTION_AT_STARTUP && !initialSelectionAttempted) {
 				if (getSelection().isEmpty()) {
 					boolean restored = restorePersistedInitialSelection(location);
 					boolean hasLeaves = !currentLeaves().isEmpty();
@@ -1795,6 +1808,101 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		Control c = viewer == null ? null : viewer.getControl();
 		if (c != null && !c.isDisposed())
 			c.redraw();
+	}
+
+	/**
+	 * Bring the current selection (if any) back into view - called when the
+	 * owning view gets the focus back. Never changes the selection, and does not
+	 * scroll at all when the selected row is already visible.
+	 */
+	public void revealSelection() {
+		ISelection sel = getSelection();
+		if (!(sel instanceof IStructuredSelection) || sel.isEmpty())
+			return;
+		Object first = ((IStructuredSelection) sel).getFirstElement();
+		Control c = viewer == null ? null : viewer.getControl();
+		if (c == null || c.isDisposed())
+			return;
+		if (c instanceof Table) {
+			Table t = (Table) c;
+			java.util.List<Object> leaves = flatLeaves();
+			int idx = leaves.indexOf(first);
+			if (idx < 0) {
+				Object key = stableKey(first);
+				for (int i = 0; i < leaves.size() && key != null; i++)
+					if (key.equals(stableKey(leaves.get(i)))) {
+						idx = i;
+						break;
+					}
+			}
+			trace("revealSelection " + shortSel(sel) + " idx=" + idx + " topIndex=" + t.getTopIndex());
+			scrollRowIntoView(idx, t.getTopIndex()); // keeps the current top when already visible
+			moveKeyboardCursorToSelection(t);
+			return;
+		}
+		// tree / split viewer (its card pane is not the flat leaf list)
+		Viewer jface = viewer.getViewer();
+		if (jface instanceof org.eclipse.jface.viewers.StructuredViewer) {
+			trace("revealSelection " + shortSel(sel) + " via " + jface.getClass().getSimpleName());
+			try {
+				((org.eclipse.jface.viewers.StructuredViewer) jface).reveal(first);
+			} catch (Exception e) {
+				MagicUIActivator.log(e);
+			}
+		}
+		Control list = listControl();
+		if (list instanceof Table && !list.isDisposed())
+			moveKeyboardCursorToSelection((Table) list);
+	}
+
+	/**
+	 * Give the keyboard focus to the card list itself (not the view's outer
+	 * composite, which would hand it to its first focusable child - e.g. the
+	 * quick filter box), so the arrow keys etc. work right away when the view
+	 * becomes active.
+	 *
+	 * @return {@code true} when the list took the focus
+	 */
+	public boolean setFocusOnList() {
+		Control list = listControl();
+		if (list == null || list.isDisposed())
+			return false;
+		boolean ok = list.setFocus();
+		trace("setFocusOnList " + list.getClass().getSimpleName() + " -> " + ok);
+		return ok;
+	}
+
+	/** The widget showing the cards: the viewer's own control, or for a split
+	 *  viewer its card pane. */
+	private Control listControl() {
+		if (viewer == null)
+			return null;
+		Viewer v = viewer.getViewer();
+		Control c = v != null ? v.getControl() : null;
+		return c != null ? c : viewer.getControl();
+	}
+
+	/**
+	 * Put the table's keyboard cursor (focus item) on the selected row - a
+	 * selection set from code can leave it on another row, so the first arrow
+	 * key would jump from there. Only when the table has the focus;
+	 * re-applying the same indices changes nothing else (no selection event).
+	 */
+	private void moveKeyboardCursorToSelection(Table t) {
+		if (!t.isFocusControl())
+			return;
+		int[] indices = t.getSelectionIndices();
+		if (indices.length == 0)
+			return;
+		t.setSelection(indices); // SWT moves the focus item to the first index
+	}
+
+	/** Debug ({@link #DEBUG}): one line with the live selection, first visible
+	 *  row and row count - for callers bracketing an action (e.g. a dialog). */
+	public void traceState(String where) {
+		if (DEBUG)
+			trace(where + ": selection=" + shortSel(getSelection()) + " topIndex=" + savedTopIndex()
+					+ " tableItemCount=" + tableItemCount());
 	}
 
 	/** Current first visible row of the underlying table, or -1 if not a table. */
@@ -1892,6 +2000,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	private void persistLastSelection(ISelection sel) {
+		if (!RESTORE_SELECTION_AT_STARTUP)
+			return; // nothing reads it back - don't write (and flush) prefs on every close
 		IFilteredCardStore store = getFilteredStore();
 		Location location = store == null ? null : store.getLocation();
 		if (location == null || location.getName() == null || location.getName().isEmpty()) {

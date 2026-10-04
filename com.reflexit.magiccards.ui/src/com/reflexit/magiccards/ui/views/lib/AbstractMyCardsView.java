@@ -32,6 +32,9 @@
  *                         filter dialog's OK/Apply actually refresh this
  *                         view - see CardFilterDialog#performApply()'s own
  *                         comment
+ *     Rémi Dutil (2026) - splitMoveToDeck: debug probe (traceState) of the
+ *                         list's selection / scroll before and after the
+ *                         Split dialog, behind DEBUG (off).
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -229,7 +232,15 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 				if (pile == null)
 					return;
 				int count = pile.getCount();
+				IViewPage page = getActivePage();
+				AbstractMagicCardsListControl control = page instanceof AbstractMagicCardsListControl
+						? (AbstractMagicCardsListControl) page : null;
+				trace("splitMoveToDeck id=" + id + " pile=" + pile + " count=" + count);
+				if (control != null)
+					control.traceState("splitMove before dialog");
 				int move = SplitDialog.askMoveCount(getShell(), count);
+				if (control != null)
+					control.traceState("splitMove after dialog (move=" + move + ")");
 				if (move <= 0 || move >= count)
 					return;
 				List<IMagicCard> toMove = DM.splitCards(Collections.singletonList((IMagicCard) pile), move);

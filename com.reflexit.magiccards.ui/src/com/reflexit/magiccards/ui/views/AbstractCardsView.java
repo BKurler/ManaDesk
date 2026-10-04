@@ -7,6 +7,12 @@
  *                         refresh this view - see CardFilterDialog#
  *                         performApply()'s own comment for why that wasn't
  *                         happening on its own
+ *     Rémi Dutil (2026) - setFocus(): the view coming back to the focus
+ *                         brings its current selection (if any) back into
+ *                         view (revealSelectionLater(), deferred one event),
+ *                         and the keyboard focus goes to the card list itself
+ *                         with its cursor on the selected row - the keyboard
+ *                         works right away, no extra click needed.
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -274,7 +280,37 @@ public abstract class AbstractCardsView extends ViewPart implements IShowInTarge
 	 */
 	@Override
 	public void setFocus() {
-		getControl().setFocus();
+		Object list = getFocusListControl();
+		// the card list itself, so the keyboard works right away (the part's
+		// composite would give the focus to its first child, e.g. the filter box)
+		if (!(list instanceof AbstractMagicCardsListControl)
+				|| !((AbstractMagicCardsListControl) list).setFocusOnList())
+			getControl().setFocus();
+		revealSelectionLater(list);
+	}
+
+	/** The list whose selection is brought back into view when this view gets
+	 *  the focus (see {@link #revealSelectionLater}); {@code null} = none. */
+	protected Object getFocusListControl() {
+		return null;
+	}
+
+	/**
+	 * The view came back to the focus: make its current selection (if any)
+	 * visible again. Deferred one event so that when the focus comes from a
+	 * click on a row, that click's own selection is in place first - otherwise
+	 * the list would scroll to the OLD selection right under the mouse.
+	 */
+	protected void revealSelectionLater(Object listControl) {
+		if (!(listControl instanceof AbstractMagicCardsListControl))
+			return;
+		Control c = getControl();
+		if (c == null || c.isDisposed())
+			return;
+		c.getDisplay().asyncExec(() -> {
+			if (!c.isDisposed())
+				((AbstractMagicCardsListControl) listControl).revealSelection();
+		});
 	}
 
 	protected Control getControl() {
