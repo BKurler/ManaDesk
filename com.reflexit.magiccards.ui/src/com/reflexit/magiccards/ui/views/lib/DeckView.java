@@ -10,6 +10,9 @@
  *                         filter dialog's OK/Apply actually refresh this
  *                         view - see CardFilterDialog#performApply()'s own
  *                         comment
+ *     Rémi Dutil (2026) - "Materialize..." removed from the view menu (the
+ *                         MaterializeAction and DataManager.materialize()
+ *                         backend are kept, to be re-enabled later).
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -362,7 +365,9 @@ public class DeckView extends AbstractMyCardsView {
 		manager.add(this.extra);
 		if (deck != null && deck.getLocation().isExtra())
 			manager.add(this.fillExtra);
-		manager.add(this.materialize);
+		// "Materialize..." removed from the menu - the action and
+		// DataManager.materialize() are kept; re-add it here to bring it back:
+		// manager.add(this.materialize);
 	}
 
 	@Override
