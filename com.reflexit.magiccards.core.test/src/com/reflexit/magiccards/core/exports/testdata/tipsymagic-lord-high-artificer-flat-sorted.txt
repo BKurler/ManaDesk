@@ -1,0 +1,108 @@
+Tipsy Magic
+Tipsy Magic
+Lord High Artificer (Copy)
+by
+Ronin
+7
+0
+ View Only
+Supporter Supporter
+Save
+Deck
+Info
+Tags
+ManaMind
+Synergy
+Combos
+Results
+Flat Sorted View
+81 entries
+Card	Section	Type	Rarity	MV	Color	Price ↓	Qty
+Urza's Saga	Main Deck	Enchantment Land — Urza's Saga	Rare	0	C	$90.38	1
+Simulacrum Synthesizer	Main Deck	Artifact	Mythic	3	U	$68.27	1
+Rhystic Study	Main Deck	Enchantment	Rare	3	U	$67.41	1
+Fierce Guardianship	Main Deck	Instant	Rare	3	U	$64.85	1
+Force of Negation	Main Deck	Instant	Rare	3	U	$52.62	1
+Otawara, Soaring City	Main Deck	Legendary Land	Rare	0	C	$26.58	1
+Tezzeret the Seeker	Main Deck	Legendary Planeswalker — Tezzeret	Mythic	5	U	$25.64	1
+Unwinding Clock	Main Deck	Artifact	Rare	4	C	$20.78	1
+Mystical Tutor	Main Deck	Instant	Rare	1	U	$17.72	1
+Arcum Dagsson	Sideboard	Legendary Creature — Human Artificer	Rare	4	U	$16.78	1
+Urza, Lord High Artificer	Commander	Legendary Creature — Human Artificer	Mythic	4	U	$15.63	1
+Omnath, Locus of the Void	Main Deck	Legendary Creature — Elemental	Rare	7	C	$13.76	1
+Wurmcoil Engine	Main Deck	Artifact Creature — Phyrexian Wurm	Mythic	6	C	$10.77	1
+Swan Song	Main Deck	Instant	Rare	1	U	$10.07	1
+Fabricate	Main Deck	Sorcery	Uncommon	3	U	$8.56	1
+Mental Misstep	Main Deck	Instant	Uncommon	1	U	$8.40	1
+Conjurer's Closet	Main Deck	Artifact	Rare	5	C	$5.05	1
+Snap	Main Deck	Instant	Common	2	U	$4.97	1
+Academy Ruins	Main Deck	Legendary Land	Rare	0	C	$4.79	1
+Phantasmal Image	Main Deck	Creature — Illusion	Rare	2	U	$4.77	1
+Desynchronization	Main Deck	Instant	Rare	4	U	$4.55	1
+Spellbook	Main Deck	Artifact — Book	Uncommon	0	C	$4.54	1
+Arcbound Crusher	Main Deck	Artifact Creature — Juggernaut	Uncommon	4	C	$4.09	1
+Counterspell	Main Deck	Instant	Common	2	U	$3.82	1
+Mirrormade	Main Deck	Enchantment	Rare	3	U	$3.51	1
+Narset's Reversal	Main Deck	Instant	Rare	2	U	$3.18	1
+An Offer You Can't Refuse	Main Deck	Instant	Uncommon	1	U	$3.07	1
+Mishra's Bauble	Main Deck	Artifact	Uncommon	0	C	$2.94	1
+Thoughtcast	Main Deck	Sorcery	Common	5	U	$2.80	1
+Muddle the Mixture	Main Deck	Instant	Uncommon	2	U	$2.73	1
+Deadeye Navigator	Main Deck	Creature — Spirit	Rare	6	U	$2.67	1
+Padeem, Consul of Innovation	Main Deck	Legendary Creature — Vedalken Artificer	Uncommon	4	U	$2.62	1
+Phyrexian Metamorph	Main Deck	Artifact Creature — Phyrexian Shapeshifter	Rare	4	U	$2.29	1
+Pongify	Main Deck	Instant	Uncommon	1	U	$2.03	1
+Metalwork Colossus	Main Deck	Artifact Creature — Construct	Rare	11	C	$1.91	1
+Manifold Key	Main Deck	Artifact	Uncommon	1	C	$1.85	1
+Research Thief	Main Deck	Artifact Creature — Moonfolk Wizard	Rare	5	U	$1.85	1
+Sol Ring	Main Deck	Artifact	Uncommon	1	C	$1.80	1
+Arcane Denial	Main Deck	Instant	Common	2	U	$1.72	1
+Cyberdrive Awakener	Main Deck	Artifact Creature — Construct	Rare	6	U	$1.65	1
+Welding Jar	Main Deck	Artifact	Common	0	C	$1.59	1
+Darksteel Citadel	Main Deck	Artifact Land	Uncommon	0	C	$1.49	1
+Ghostly Flicker	Main Deck	Instant	Common	3	U	$1.43	1
+Mystic Reflection	Main Deck	Instant	Rare	2	U	$1.42	1
+Broodstar	Main Deck	Creature — Beast	Rare	10	U	$1.29	1
+Retrofitter Foundry	Main Deck	Artifact	Rare	1	C	$1.28	1
+Secluded Starforge	Main Deck	Land	Rare	0	C	$1.25	1
+Arcane Signet	Main Deck	Artifact	Common	2	C	$1.18	1
+Seat of the Synod	Main Deck	Artifact Land	Common	0	C	$1.01	1
+Tormod's Crypt	Main Deck	Artifact	Uncommon	0	C	$0.72	1
+Preordain	Main Deck	Sorcery	Common	1	U	$0.71	1
+Etherium Sculptor	Main Deck	Artifact Creature — Vedalken Artificer	Common	2	U	$0.70	1
+Hide on the Ceiling	Main Deck	Instant	Rare	1	U	$0.61	1
+Tezzeret, Betrayer of Flesh	Main Deck	Legendary Planeswalker — Tezzeret	Mythic	4	U	$0.52	1
+Blustersquall	Main Deck	Instant	Uncommon	1	U	$0.42	1
+Buried Ruin	Main Deck	Land	Uncommon	0	C	$0.41	1
+Foundry Inspector	Main Deck	Artifact Creature — Construct	Common	3	C	$0.41	1
+Dramatic Reversal	Main Deck	Instant	Common	2	U	$0.39	1
+Steel Hellkite	Main Deck	Artifact Creature — Dragon	Rare	6	C	$0.38	1
+Tomb of the Spirit Dragon	Main Deck	Land	Uncommon	0	C	$0.38	1
+Imprisoned in the Moon	Main Deck	Enchantment — Aura	Common	3	U	$0.36	1
+Thopter Spy Network	Main Deck	Enchantment	Rare	4	U	$0.36	1
+Ornithopter	Main Deck	Artifact Creature — Thopter	Common	0	C	$0.35	1
+Soul-Guide Lantern	Main Deck	Artifact	Uncommon	1	C	$0.35	1
+Kappa Cannoneer	Main Deck	Artifact Creature — Turtle Warrior	Rare	6	U	$0.34	1
+Everflowing Chalice	Main Deck	Artifact	Uncommon	0	C	$0.33	1
+Thought Monitor	Main Deck	Artifact Creature — Construct	Rare	7	U	$0.33	1
+Sai, Master Thopterist	Main Deck	Legendary Creature — Human Artificer	Rare	3	U	$0.30	1
+Vapor Snag	Main Deck	Instant	Common	1	U	$0.30	1
+Voyage's End	Main Deck	Instant	Common	2	U	$0.28	1
+Void Snare	Main Deck	Sorcery	Common	1	U	$0.26	1
+Boomerang	Main Deck	Instant	Common	2	U	$0.23	1
+Chrome Host Seedshark	Main Deck	Creature — Phyrexian Shark	Rare	3	U	$0.23	1
+Unsummon	Main Deck	Instant	Common	1	U	$0.22	1
+Spire Golem	Main Deck	Artifact Creature — Golem	Common	6	C	$0.18	1
+Echoing Truth	Main Deck	Instant	Common	2	U	$0.17	1
+Island	Main Deck	Basic Land — Island	Common	0	C	$0.09	21
+Mechtitan Core	Main Deck	Artifact — Vehicle	Rare	2	C	$0.00	1
+Mishra's Workshop	Main Deck	Land	Mythic	0	C	$0.00	1
+Ravenform	Main Deck	Sorcery	Common	3	U	$0.00	1
+Whispersilk Cloak	Main Deck	Artifact — Equipment	Common	3	C	$0.00	1
+Get in Touch
+tipsymagicsite@tipsymagic.com
+YouTube Channel
+
+Need help with deck building or have questions? We're here to help!
+
+© 2026 Tipsy Magic. Not affiliated with Wizards of the Coast. Magic: The Gathering and related trademarks are property of Wizards of the Coast.

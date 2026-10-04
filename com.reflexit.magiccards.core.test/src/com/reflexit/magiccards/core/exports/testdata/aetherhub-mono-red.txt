@@ -1,0 +1,188 @@
+AetherHub.com
+Decks
+Metagame
+Collection
+Tourney
+Database
+Apps
+Historic - Mono Red
+2.91% of meta  1.68% change the past week
+ 57
+ 33
+ 3
+ 0
+ 24
+31
+13
+18
+0
+ TCGplayer $140
+Cardmarket €107
+ Cardhoarder 7 Tix
+ Share
+ Visual
+ CMC
+ Compact
+ DeckHub View
+ Export
+ Compare
+$
+Main 60 cards (14 distinct)
+Creature (33)
+
+3 General Kreat, the Boltbringer
+			$7.49
+
+1 Rundvelt Hordemaster
+			$2.93
+
+3 Muxus, Goblin Grandee
+			$12.69
+
+4 Goblin Chieftain
+			$6.73
+
+4 Goblin Warchief
+			$1.44
+
+4 Skirk Prospector
+			$0.35
+
+2 Krenko, Mob Boss
+			$3.00
+
+3 Goblin Instigator
+			$0.90
+
+3 Goblin Matron
+			$0.40
+
+2 Goblin Chainwhirler
+			$0.68
+
+3 Hobgoblin Bandit Lord
+			$4.59
+
+1 Krenko, Mob Boss
+			$3.00
+Instant, Sorcery, Enchantment, Artifact (3)
+
+3 Impact Tremors
+			$3.37
+Land (24)
+
+24 Mountain
+			$0.20
+Side 2 cards (2 distinct)
+1 Krenko, Tin Street Kingpin
+			$3.71
+
+1 Legion Warboss
+			$0.60
+
+
+Meta deck card breakdown - 3 decks, 2.91% of meta
+Creatures
+Conspicuous Snoop 1x in 0%
+Legion Warboss 1x in 0%
+Searslicer Goblin 1x in 0%
+Goblin Chainwhirler 1x in 0%
+Goblin Chieftain 2x in 0%
+Hobgoblin Bandit Lord 2x in 0%
+Goblin Warchief 3x in 0%
+Battle Cry Goblin 3x in 0%
+Squee, Dubious Monarch 1x in 33%
+Rundvelt Hordemaster 1x in 33%
+Wily Goblin 2x in 33%
+Goblin Matron 2x in 33%
+Krenko, Mob Boss 3x in 33%
+Muxus, Goblin Grandee 3x in 33%
+General Kreat, the Boltbringer 3x in 33%
+Goblin Instigator 4x in 67%
+Skirk Prospector 4x in 100%
+Instant, Sorcery
+Lightning Strike 1x in 0%
+Enchantment, Artifact
+Impact Tremors 1x in 0%
+Raid Bombardment 1x in 33%
+Planeswalkers
+Lands
+Castle Embereth 1x in 0%
+Den of the Bugbear 1x in 0%
+Eclipsed Realms 1x in 33%
+Cavern of Souls 1x in 33%
+Sideboard
+Claim the Firstborn 1x in 0%
+Dragon Fodder 1x in 0%
+You See a Pair of Goblins 1x in 0%
+Lightning Strike 1x in 33%
+Bolt Bend 1x in 33%
+Conspicuous Snoop 1x in 33%
+Ember Hauler 1x in 33%
+Raid Bombardment 1x in 33%
+Krenko, Tin Street Kingpin 1x in 33%
+Legion Warboss 1x in 33%
+Comments
+Login to comment
+
+0 comments
+
+Mana Curve
+4
+7
+19
+3
+3
+0
+1
+2
+3
+4
+5
+6
+7+
+Color Breakdown
+57
+ Mono Red deck variations
+64% Win Rate: 20 Wins 11 Losses	25 days ago
+56% Win Rate: 88 Wins 67 Losses	20 days ago
+50% Win Rate: 47 Wins 47 Losses	19 days ago
+ Similar User Decks
+Mono Red
+13 days ago by MTGA-Assistant-Meta	 0
+Goblins
+17 days ago by JamsDown	 0
+Mono Red
+4 days ago by MTGA-Assistant-Meta	 0
+Historic Burn
+22 days ago by Misty	 0
+Mono Red
+9 days ago by MTGA-Assistant-Meta	 0
+Mono Red Lurrus
+14 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+26 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+26 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+29 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+20 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+21 days ago by MTGA-Assistant-Meta	 0
+Mono Red
+23 days ago by MTGA-Assistant-Meta	 0
+Help
+Contact Us
+Privacy Policy
+Terms and Conditions
+Premium Account
+Documentation
+Donate
+Merchandise
+
+magic_turtle1234
+magic_turtle1234
+All original content on this page is ©2026 AetherHub.com and may not be used or reproduced without consent. Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC. © Wizards. All rights reserved. AetherHub.com is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. Magic the Gathering and its respective properties are copyright Wizards of the Coast.
+CCPA: Opt out of personal information sales
+REPORT AD

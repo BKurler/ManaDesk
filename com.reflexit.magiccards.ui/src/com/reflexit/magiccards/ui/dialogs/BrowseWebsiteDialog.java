@@ -96,6 +96,90 @@
  *                         page's worth of text to the Eclipse log. The
  *                         short "no decklist block found" fallback notice
  *                         right below stays - real signal, not noise.
+ *     Rémi Dutil (2026) - a real TappedOut capture showed a Commander card
+ *                         rendered as a pure raster image (the name baked
+ *                         into the artwork), nowhere present as real text at
+ *                         all - document.body.innerText, and so
+ *                         DeckTextExtractor, had genuinely nothing to find
+ *                         for it. okPressed()'s capture now runs
+ *                         CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT instead of a
+ *                         plain innerText read - see that constant's own
+ *                         header for how it substitutes every image with
+ *                         its own alt/title text (standard accessibility
+ *                         practice, genuinely site-agnostic, not a
+ *                         TappedOut-specific scrape) without touching the
+ *                         real, visible page at all.
+ *     Rémi Dutil (2026) - updateCardCount()'s live label now also uses
+ *                         CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT (see that
+ *                         constant's own header) - it previously stayed on
+ *                         a cheaper plain innerText read, which meant the
+ *                         live count could disagree with what "Import this
+ *                         page" actually produced (a real capture: the
+ *                         label read 109/109 while browsing a deck that
+ *                         correctly imported 111 cards, since the
+ *                         commander was only recoverable via the image-alt
+ *                         substitution the live label wasn't using).
+ *     Rémi Dutil (2026) - okPressed() also runs DeckTextExtractor.
+ *                         detectDeckMeta() and exposes the result via
+ *                         getCapturedTitle()/getCapturedFormat() - the New
+ *                         Deck wizard uses these to pre-fill the Name field
+ *                         and Default Format combo when browsing a page to
+ *                         import, best-effort (both are {@code null} when
+ *                         nothing plausible was found).
+ *     Rémi Dutil (2026) - added a second live status line (deckInfoLabel) -
+ *                         "Detected name: ... | Sideboard: Yes/No" - updated
+ *                         on the same 1.5s poll as the card count, so the
+ *                         user sees the title/format pre-fill and the
+ *                         "Also create a Sideboard" auto-check BEFORE
+ *                         clicking "Import this page", not only after. New
+ *                         DeckTextExtractor#hasSideboardSection() factors
+ *                         out AbstractCardListImportPage's own previously-
+ *                         private hasSideboardMarker() check so both this
+ *                         live indicator and the wizard's own post-import
+ *                         detection share one implementation.
+ *     Rémi Dutil (2026) - once a Sideboard is detected, deckInfoLabel also
+ *                         shows the main/sideboard split ("Yes (Main: 100,
+ *                         Sideboard: 15)") instead of just "Yes" - new
+ *                         DeckTextExtractor#countBySection() parses
+ *                         extractDeckSection()'s own "Sideboard"/"Deck"
+ *                         toggle markers to split the total, per an
+ *                         explicit request.
+ *     Rémi Dutil (2026) - "Import this page" is no longer the shell's
+ *                         default button - JFace's own convention would
+ *                         normally make OK the default, but a shell default
+ *                         button fires on Enter from ANY control in the
+ *                         dialog that doesn't consume it itself, including
+ *                         the address bar's own Text - pressing Enter to
+ *                         navigate was ALSO immediately closing/importing
+ *                         the page. "Go" is the default button instead now,
+ *                         and the address bar gets initial keyboard focus,
+ *                         so the dialog opens ready to paste a URL and
+ *                         press Enter to navigate.
+ *     Rémi Dutil (2026) - updateCardCount() also logs DeckTextExtractor#
+ *                         listRecognizedCards() (the actual matched "&lt;qty&gt;
+ *                         &lt;name&gt; (line N)" rows), on the same
+ *                         change-gated log entry as the captured text - a
+ *                         real report ("101 cards" against a known 100-card
+ *                         decklist) could never be reproduced against any
+ *                         real captured text tried by hand, with every
+ *                         real-card database built up to try to mirror it;
+ *                         the only thing genuinely impossible to reproduce
+ *                         outside the running application is the real card
+ *                         database itself. This log now shows exactly which
+ *                         row is the extra/wrong one directly, next time.
+ *     Rémi Dutil (2026) - CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT also substitutes
+ *                         Moxfield's own card-row links now - a real "Dimir
+ *                         Faery" capture (confirmed with a screenshot of the
+ *                         actual card and its own HTML) showed a land
+ *                         displayed as "Barrow-Downs", this printing's own
+ *                         flavor/alternate-art name for the real card Bojuka
+ *                         Bog - not a real Scryfall card name at all (checked
+ *                         directly against the bulk data), so the DB cross-
+ *                         check correctly, silently excluded it, 75 cards
+ *                         read as 74. See that constant's own header for the
+ *                         fix (reads the real name from the row's own link
+ *                         href, e.g. "/cards/xRQDJ-bojuka-bog") and why it's
+ *                         scoped to Moxfield's own hostname/CSS class only.
  *******************************************************************************/
 package com.reflexit.magiccards.ui.dialogs;
 
@@ -133,18 +217,116 @@ import com.reflexit.magiccards.ui.web.WebFavorite;
 import com.reflexit.magiccards.ui.web.WebFavoritesStore;
 
 public class BrowseWebsiteDialog extends TitleAreaDialog {
+	/** document.body.innerText, but with every &lt;img&gt; substituted (in
+	 *  place, preserving its exact position in the text flow) by its own
+	 *  alt/title text - some real sites (TappedOut: a Commander card, seen
+	 *  in a real capture) render a card as a raster image with the name
+	 *  baked into the artwork, nowhere present as real text at all, so no
+	 *  amount of DeckTextExtractor parsing logic can recover it from plain
+	 *  innerText; a card image's alt text is standard accessibility
+	 *  practice and, unlike anything else here, is genuinely site-agnostic -
+	 *  no per-site scraping, matching this whole feature's own design
+	 *  principle (see this class' own header). Works by cloning body's
+	 *  children into a detached wrapper (never the live page - nothing the
+	 *  user sees is touched), replacing each &lt;img&gt; with a text node,
+	 *  then reading THAT wrapper's own innerText - innerText needs real
+	 *  layout to compute correctly, so the wrapper is briefly appended
+	 *  off-screen (fixed position, far off the left edge) rather than left
+	 *  detached, then removed immediately after. Also used by the live
+	 *  card-count polling below (every 1.5s while the dialog is open) -
+	 *  originally kept on a cheaper plain innerText read there instead, to
+	 *  avoid a clone+reflow on every poll, but that meant the live label
+	 *  could quietly disagree with what "Import this page" actually
+	 *  produces (a real TappedOut Commander card was invisible to the
+	 *  cheaper read, undercounting by exactly one) - a label that doesn't
+	 *  match the real import is worse than a slightly heavier poll. An
+	 *  image with no alt/title text at all is left untouched (nothing to
+	 *  substitute); an
+	 *  unrelated image's alt text (a logo, an icon) becomes an ordinary bare
+	 *  line, no different from any other stray page-chrome text already
+	 *  handled by DeckTextExtractor's own DB cross-check. Public: reused
+	 *  as-is by BrowseWebsiteLiveTest (a different bundle) rather
+	 *  than risking the two copies drifting apart.
+	 *
+	 *  <p>Also substitutes Moxfield's own card-row links, for a real,
+	 *  different reason than the image-alt case above: a real capture (a
+	 *  Pauper "Dimir Faery" deck) showed a land displayed as "Barrow-Downs"
+	 *  - not a real Magic card name at all, but this printing's own
+	 *  flavor/alternate-art name (Scryfall's own {@code flavor_name} field)
+	 *  for the real card, Bojuka Bog; the DB cross-check correctly refused
+	 *  to count it (confirmed directly against the real Scryfall bulk data:
+	 *  no card is named "Barrow-Downs"), undercounting the deck by exactly
+	 *  one (75 read as 74). The real name is recoverable, just not from the
+	 *  displayed text: a card row's own link target encodes it, e.g.
+	 *  {@code href="/cards/xRQDJ-bojuka-bog"} (confirmed from a real
+	 *  capture's own HTML, inspected in a browser) - the hash Moxfield
+	 *  assigns this printing, then a dash, then the real card's name in
+	 *  kebab-case. Scoped to Moxfield's own hostname and its own
+	 *  {@code table-deck-row-link} class (unlike the image-alt case, this
+	 *  "/cards/&lt;hash&gt;-&lt;slug&gt;" URL shape is Moxfield's own router
+	 *  convention, not a universal web standard - a different site's
+	 *  unrelated link just happening to look similar must never have its
+	 *  text silently rewritten) - see BrowseWebsiteLiveTest's own
+	 *  dedicated test for this. Only substitutes when the derived name
+	 *  actually differs from what's displayed (a cheap, approximate
+	 *  lowercase/alphanumeric-only compare - good enough to decide "is this
+	 *  worth substituting", not required to be exact, since
+	 *  DeckTextExtractor's own norm() does the real, precise comparison
+	 *  afterward either way), so the overwhelming majority of ordinary,
+	 *  non-flavor-named card rows are left completely untouched. */
+	public static final String CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT = "return (function() {" //
+			+ "if (!document.body) return '';" //
+			+ "var wrapper = document.createElement('div');" //
+			+ "var clone = document.body.cloneNode(true);" //
+			+ "while (clone.firstChild) wrapper.appendChild(clone.firstChild);" //
+			+ "if (location.hostname.indexOf('moxfield.com') !== -1) {" //
+			+ "  var cardLinks = wrapper.querySelectorAll('a.table-deck-row-link[href^=\"/cards/\"]');" //
+			+ "  for (var k = 0; k < cardLinks.length; k++) {" //
+			+ "    var link = cardLinks[k];" //
+			+ "    var slugMatch = (link.getAttribute('href') || '').match(/^\\/cards\\/[^\\/-]+-(.+)$/);" //
+			+ "    if (!slugMatch) continue;" //
+			+ "    var derived = slugMatch[1].split('-').map(function(w) {" //
+			+ "      return w.charAt(0).toUpperCase() + w.slice(1);" //
+			+ "    }).join(' ');" //
+			+ "    var displayed = (link.textContent || '').trim();" //
+			+ "    var normDisplayed = displayed.toLowerCase().replace(/[^a-z0-9]/g, '');" //
+			+ "    var normDerived = derived.toLowerCase().replace(/[^a-z0-9]/g, '');" //
+			+ "    if (normDisplayed && normDerived && normDisplayed !== normDerived) link.textContent = derived;" //
+			+ "  }" //
+			+ "}" //
+			+ "var imgs = wrapper.getElementsByTagName('img');" //
+			+ "for (var i = imgs.length - 1; i >= 0; i--) {" //
+			+ "  var img = imgs[i];" //
+			+ "  var alt = (img.getAttribute('alt') || img.getAttribute('title') || '').trim();" //
+			+ "  if (alt && img.parentNode) img.parentNode.replaceChild(document.createTextNode(alt), img);" //
+			+ "}" //
+			+ "wrapper.style.position = 'fixed';" //
+			+ "wrapper.style.top = '0';" //
+			+ "wrapper.style.left = '-99999px';" //
+			+ "wrapper.style.pointerEvents = 'none';" //
+			+ "document.body.appendChild(wrapper);" //
+			+ "var out = wrapper.innerText;" //
+			+ "document.body.removeChild(wrapper);" //
+			+ "return out;" //
+			+ "})();";
+
 	private final String initialUrl;
 	private Browser browser;
 	private Text addressText;
 	private Combo favoritesCombo;
+	private org.eclipse.swt.widgets.Button goButton;
 	private org.eclipse.swt.widgets.Button backButton;
 	private org.eclipse.swt.widgets.Button forwardButton;
 	private org.eclipse.swt.widgets.Button addFavoriteButton;
 	private org.eclipse.swt.widgets.Button manageFavoritesButton;
 	private Label cardCountLabel;
+	private Label deckInfoLabel;
 	private List<WebFavorite> favorites = new ArrayList<>();
 	private String capturedText;
 	private String capturedUrl;
+	private String capturedTitle;
+	private String capturedFormat;
+	private String lastLoggedCardCountText;
 
 	/** @param initialUrl the address to navigate to as soon as the dialog opens
 	 *  (the wizard page's own address field) - takes priority over the
@@ -187,6 +369,7 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 				navigateTo(startUrl);
 			}
 		}
+		addressText.setFocus();
 
 		return area;
 	}
@@ -242,9 +425,9 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 			}
 		});
 
-		org.eclipse.swt.widgets.Button go = new org.eclipse.swt.widgets.Button(row, SWT.PUSH);
-		go.setText("Go");
-		go.addSelectionListener(new SelectionAdapter() {
+		goButton = new org.eclipse.swt.widgets.Button(row, SWT.PUSH);
+		goButton.setText("Go");
+		goButton.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				navigateTo(addressText.getText());
@@ -336,6 +519,8 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		cardCountLabel = new Label(parent, SWT.NONE);
 		cardCountLabel.setText(browser == null ? "" : "Waiting for the page to load...");
 		cardCountLabel.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
+		deckInfoLabel = new Label(parent, SWT.NONE);
+		deckInfoLabel.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 	}
 
 	private static final int CARD_COUNT_POLL_MS = 1500;
@@ -361,16 +546,39 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 
 	/** Runs the same DeckTextExtractor scan "Import this page" would, and
 	 *  shows the result - a live sanity-check the user can read while
-	 *  browsing, without needing to click Import or read the debug log. */
+	 *  browsing, without needing to click Import or read the debug log. Uses
+	 *  {@link #CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT} - the same capture
+	 *  okPressed() uses - so this count actually matches what "Import this
+	 *  page" would produce (a real TappedOut Commander deck's own card was
+	 *  otherwise invisible to a plain innerText read here, so this label
+	 *  under-counted by exactly one and never agreed with the real import).
+	 *  The clone+reflow this costs on every 1.5s poll was a deliberate
+	 *  simplicity/accuracy tradeoff at first - a live count that quietly
+	 *  disagrees with the actual import is worse than a slightly heavier
+	 *  poll. */
 	private void updateCardCount() {
 		if (browser == null || cardCountLabel == null || cardCountLabel.isDisposed())
 			return;
 		String text;
 		try {
-			Object result = browser.evaluate("return document.body ? document.body.innerText : '';");
+			Object result = browser.evaluate(CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
 			text = (result instanceof String) ? (String) result : "";
 		} catch (Exception e) {
 			text = "";
+		}
+		if (!text.equals(lastLoggedCardCountText)) {
+			lastLoggedCardCountText = text;
+			MagicLogger.log("BrowseWebsiteDialog: [DIAGNOSTIC] captured text (" + text.length() + " chars):\n" + text);
+			// the matched-card LIST, not just the bare count - a real report
+			// ("101 cards" against a known 100-card decklist) could never be
+			// reproduced against any captured text tried by hand outside the
+			// running application (the real card database has tens of
+			// thousands of entries, impossible to fully mirror in a test);
+			// logging exactly which rows matched lets the extra/wrong one be
+			// spotted directly from this log instead.
+			List<String> matchedCards = DeckTextExtractor.listRecognizedCards(text);
+			MagicLogger.log("BrowseWebsiteDialog: [DIAGNOSTIC] " + matchedCards.size() + " matched row(s):\n"
+					+ String.join("\n", matchedCards));
 		}
 		DeckTextExtractor.CardCount count = DeckTextExtractor.countRecognizedCards(text);
 		if (count.unique >= DeckTextExtractor.MIN_MATCHES)
@@ -381,6 +589,20 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 					+ "imported instead");
 		else
 			cardCountLabel.setText("No decklist recognized on this page yet");
+		if (deckInfoLabel != null && !deckInfoLabel.isDisposed()) {
+			DeckTextExtractor.DeckMeta meta = DeckTextExtractor.detectDeckMeta(text);
+			String extracted = DeckTextExtractor.extractDeckSection(text);
+			boolean hasSideboard = DeckTextExtractor.hasSideboardSection(extracted);
+			String sideboardPart;
+			if (hasSideboard) {
+				DeckTextExtractor.SectionCounts bySection = DeckTextExtractor.countBySection(extracted);
+				sideboardPart = "Yes (Main: " + bySection.mainTotal + ", Sideboard: " + bySection.sideboardTotal + ")";
+			} else {
+				sideboardPart = "No";
+			}
+			deckInfoLabel.setText("Detected name: " + (meta.title != null ? meta.title : "(not detected)")
+					+ "   |   Sideboard: " + sideboardPart);
+		}
 	}
 
 	private void navigateTo(String url) {
@@ -456,17 +678,27 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 
 	@Override
 	protected void createButtonsForButtonBar(Composite parent) {
-		createButton(parent, IDialogConstants.OK_ID, "Import this page", true);
+		// "Import this page" is NOT the shell's default button (the final
+		// false, where JFace's own convention would normally pass true for
+		// OK) - this dialog's whole point is browsing/navigating first, and
+		// a shell default button fires on Enter from ANY control in the
+		// dialog that doesn't itself consume it, including the address
+		// bar's own Text - with OK as default, pressing Enter to navigate
+		// was ALSO immediately closing/importing the page instead. "Go" is
+		// set as the default button below instead, once it exists.
+		createButton(parent, IDialogConstants.OK_ID, "Import this page", false);
 		createButton(parent, IDialogConstants.CANCEL_ID, IDialogConstants.CANCEL_LABEL, false);
 		if (browser == null)
 			getButton(IDialogConstants.OK_ID).setEnabled(false);
+		if (goButton != null && !goButton.isDisposed())
+			parent.getShell().setDefaultButton(goButton);
 	}
 
 	@Override
 	protected void okPressed() {
 		Object result;
 		try {
-			result = browser.evaluate("return document.body ? document.body.innerText : '';");
+			result = browser.evaluate(CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
 		} catch (Exception e) {
 			setErrorMessage("Could not read the page's text: " + e.getMessage());
 			return;
@@ -482,12 +714,14 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		// cut the surrounding page chrome (nav, ads, comments, related decks)
 		// down to just the decklist-shaped block - fall back to the whole
 		// page if nothing looks sufficiently deck-shaped, rather than lose it
-		// (DeckTextExtractor itself logs the scan result/preview)
 		String deckSection = DeckTextExtractor.extractDeckSection(text);
 		capturedText = deckSection != null ? deckSection : text;
 		if (deckSection == null)
 			MagicLogger.log("BrowseWebsiteDialog: no decklist block found - importing the full page text ("
 					+ text.length() + " char(s)) as-is");
+		DeckTextExtractor.DeckMeta meta = DeckTextExtractor.detectDeckMeta(text);
+		capturedTitle = meta.title;
+		capturedFormat = meta.format;
 		super.okPressed();
 	}
 
@@ -497,5 +731,22 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 
 	public String getCapturedUrl() {
 		return capturedUrl;
+	}
+
+	/** The page's own deck title, best-effort extracted from the captured
+	 *  text (see {@link DeckTextExtractor#detectDeckMeta}) - {@code null} if
+	 *  nothing plausible was found. Used to pre-fill the wizard's Name field
+	 *  when it's still empty. */
+	public String getCapturedTitle() {
+		return capturedTitle;
+	}
+
+	/** The page's own stated constructed format ("Modern", "Commander", ...),
+	 *  best-effort extracted from the captured text - {@code null} if
+	 *  nothing plausible was found, in which case the wizard's Default
+	 *  Format combo keeps its own "Standard" default rather than being
+	 *  overwritten with a guess. */
+	public String getCapturedFormat() {
+		return capturedFormat;
 	}
 }

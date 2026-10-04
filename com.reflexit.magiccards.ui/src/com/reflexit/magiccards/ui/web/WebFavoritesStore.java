@@ -39,6 +39,9 @@
  *                         out of sync with this list or get duplicated into
  *                         the file, and a future change to this list takes
  *                         effect immediately for every existing workspace.
+ *     Rémi Dutil (2026) - added Tipsy Magic to BUILT_IN_FAVORITES - a real
+ *                         site DeckTextExtractor already supports (see its
+ *                         own "List"/"Flat Sorted View" fixes).
  *******************************************************************************/
 package com.reflexit.magiccards.ui.web;
 
@@ -72,7 +75,8 @@ public class WebFavoritesStore {
 			new WebFavorite("MTGGoldfish", "https://www.mtggoldfish.com/"),
 			new WebFavorite("mtgtop8", "https://mtgtop8.com/"),
 			new WebFavorite("TappedOut", "https://tappedout.net/"),
-			new WebFavorite("TCGplayer", "https://www.tcgplayer.com/")));
+			new WebFavorite("TCGplayer", "https://www.tcgplayer.com/"),
+			new WebFavorite("Tipsy Magic", "https://tipsymagic.com/")));
 
 	/** Whether {@code url} is one of {@link #BUILT_IN_FAVORITES} - the single
 	 *  source of truth WebFavoritesListEditor checks to disable Remove/Edit

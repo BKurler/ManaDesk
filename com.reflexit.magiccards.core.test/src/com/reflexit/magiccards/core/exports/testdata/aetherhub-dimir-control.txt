@@ -1,0 +1,223 @@
+AetherHub.com
+Decks
+Metagame
+Collection
+Tourney
+Database
+Apps
+Standard - Dimir Control (Sep 2026 Mythic)
+ 26
+ 39
+ 7
+ 27
+ 1
+ 25
+ Control
+0
+TCGPlayer $252
+Cardmarket €192
+Cardhoarder 56 Tix
+ Share
+ Visual
+ CMC
+ Compact
+ Gallery
+ Export
+ Tools
+ Simulation
+ Compare
+$
+Main 60 cards (26 distinct)
+Instant, Sorcery, Enchantment, Artifact (27)
+
+2 Bitter Triumph
+			$0.38
+
+4 Consult the Star Charts
+			$5.80
+
+4 Deadly Cover-Up
+			$1.12
+
+1 Duress
+			$0.40
+
+2 Intimidation Campaign
+			$0.24
+
+1 Intimidation Tactics
+			$0.36
+
+4 Requiting Hex
+			$0.65
+
+1 Spell Snare
+			$0.43
+
+2 Stock Up
+			$1.57
+
+1 Strategic Betrayal
+			$0.82
+
+1 The End
+			$0.75
+
+2 Three Steps Ahead
+			$10.00
+
+1 Outrageous Robbery
+			$1.13
+
+1 Spell Pierce
+			$0.40
+Creature (7)
+
+4 Deceit
+			$3.49
+
+3 Oildeep Gearhulk
+			$1.44
+Planeswalker (1)
+
+1 Liliana, Dreadhorde General
+			$8.99
+Land (25)
+
+2 Demolition Field
+			$0.35
+
+1 Fountainport
+			$3.80
+
+4 Gloomlake Verge
+			$10.84
+
+4 Island
+			$0.45
+
+1 Petrified Hamlet
+			$1.83
+
+2 Restless Reef
+			$2.20
+
+4 Swamp
+			$0.46
+
+3 Undercity Sewers
+			$16.91
+
+4 Watery Grave
+			$10.49
+Side 15 cards (8 distinct)
+1 M.O.D.O.K.
+			$7.68
+
+2 Ancient Vendetta
+			$0.27
+
+2 Annul
+			$0.35
+
+2 Day of Black Sun
+			$2.73
+
+3 Duress
+			$0.40
+
+2 Intimidation Tactics
+			$0.36
+
+1 Negate
+			$1.09
+
+2 Strategic Betrayal
+			$0.82
+
+
+Latest Articles
+Top Standard Decks - End of September 2026
+
+26.Sep
+
+Jund Sacrifice Makes Old Hobbits Die Hard
+
+26.Sep
+
+Liliana Wants to Fix All Her Mistakes in Standard
+
+09.Sep
+
+Top Standard Decks - End of August 2026
+
+26.Aug
+
+Mono-Green Landfall Never Really Needed the Cub, Apparently.
+
+22.Aug
+
+MTG Standard Finally Picks Up the Axe
+
+13.Aug
+
+Comments
+Login to comment
+
+0 comments
+
+ MagisterPhaber
+ Follow
+MagisterPhaber
+Last Updated: 25 Sep 2026
+Created: 25 Sep 2026
+141  16  0
+
+Enter The Battlefield Prepared
+With the MTGA Assistant deck tracker
+MTGA Assistant
+Mana Curve
+10
+8
+4
+4
+4
+5
+0
+1
+2
+3
+4
+5
+6
+7+
+Color Breakdown
+26
+39
+Main/Sideboard Rarity Count
+4	17	27	8	0
+
+2	10	2	1	0
+Mana Calculator
+Lands
+ Calculate
+	Symbols	Percentage	Lands
+	26	40.00	10
+	39	60.00	15
+Average Converted Mana Cost: 2.97
+Recommended Lands: 25
+About mana recommendations
+Help
+Contact Us
+Privacy Policy
+Terms and Conditions
+Premium Account
+Documentation
+Donate
+Merchandise
+
+magic_turtle1234
+magic_turtle1234
+All original content on this page is ©2026 AetherHub.com and may not be used or reproduced without consent. Wizards of the Coast, Magic: The Gathering, and their logos are trademarks of Wizards of the Coast LLC. © Wizards. All rights reserved. AetherHub.com is not affiliated with, endorsed, sponsored, or specifically approved by Wizards of the Coast LLC. Magic the Gathering and its respective properties are copyright Wizards of the Coast.
+CCPA: Opt out of personal information sales
+REPORT AD

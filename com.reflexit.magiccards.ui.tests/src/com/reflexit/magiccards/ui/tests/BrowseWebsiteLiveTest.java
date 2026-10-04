@@ -16,14 +16,13 @@
  *                         DeckTextExtractor against today's actual page - the
  *                         whole point being to notice if a site's layout
  *                         changes and silently breaks parsing, which a
- *                         static text fixture can never catch. Deliberately
- *                         NOT added to AllTests.java's @SuiteClasses (needs a
- *                         live network connection, a real display, and can
- *                         take a while - one browser navigation + settle-time
- *                         poll per favorite) - run this one directly (right-
+ *                         static text fixture can never catch. Needs a live
+ *                         network connection, a real display, and can take a
+ *                         while (one browser navigation + settle-time poll
+ *                         per favorite) - also runnable directly (right-
  *                         click > Run As > JUnit Plug-in Test) whenever you
- *                         want to sanity-check the favorites list still
- *                         works, not as part of the normal fast suite.
+ *                         just want to sanity-check the favorites list
+ *                         itself, not the whole suite.
  *                         Deliberately asserts only "still finds a plausible
  *                         decklist" (unique &gt;= MIN_MATCHES), not exact
  *                         counts - unlike a frozen capture, a live page's
@@ -226,11 +225,46 @@
  *                         startup + a persistent profile) that's worth
  *                         paying once for the whole class, not once per
  *                         site.
+ *     Rémi Dutil (2026) - added testTappedOutCommanderRenderedAsImage(): a
+ *                         real capture showed TappedOut renders a Commander
+ *                         card as a pure image, invisible to plain
+ *                         innerText - see BrowseWebsiteDialog's own
+ *                         CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT header for the
+ *                         fix. Deliberately its own separate test, not
+ *                         folded into checkSite()/loadAndCount() (which
+ *                         only ever exercise plain innerText) - proves the
+ *                         image-alt capture specifically, without risking
+ *                         the other 10 sites' shared polling logic.
+ *     Rémi Dutil (2026) - added testMoxfieldFlavorNamedCardLink(): same
+ *                         shape as testTappedOutCommanderRenderedAsImage()
+ *                         above, but for a different real gap - a Pauper
+ *                         "Dimir Faery" deck's own land, Bojuka Bog, is
+ *                         displayed on this printing as "Barrow-Downs" (its
+ *                         own flavor/alternate-art name, not a real Scryfall
+ *                         card name), undercounting the deck by one. See
+ *                         CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT's own header for
+ *                         the fix (reads the real name from the row's own
+ *                         link href instead of its displayed text).
+ *     Rémi Dutil (2026) - renamed from BrowseWebsiteFavoritesLiveTest - by
+ *                         now this class is really a live regression check
+ *                         for DeckTextExtractor's own real-site parsing
+ *                         (same role as DeckTextExtractorTest's frozen
+ *                         captures, just against today's actual page), not
+ *                         a test of the favorites feature itself; it still
+ *                         uses WebFavoritesStore/DEFAULT_FAVORITES purely as
+ *                         its own convenient source of real URLs to check.
+ *     Rémi Dutil (2026) - added to AllTests.java's @SuiteClasses, by explicit
+ *                         request - a normal run of that suite now needs a
+ *                         live network connection and a real display, and
+ *                         takes noticeably longer (one browser navigation +
+ *                         settle-time poll per real site checked).
  *******************************************************************************/
-package com.reflexit.magiccards.ui.web;
+package com.reflexit.magiccards.ui.tests;
 
+import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertTrue;
 
+import java.io.File;
 import java.util.concurrent.atomic.AtomicReference;
 
 import org.eclipse.swt.SWT;
@@ -247,8 +281,9 @@ import org.junit.Test;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.exports.DeckTextExtractor;
+import com.reflexit.magiccards.ui.dialogs.BrowseWebsiteDialog;
 
-public class BrowseWebsiteFavoritesLiveTest {
+public class BrowseWebsiteLiveTest {
 	/** FileUtils.getMagicCardsDir() falls back to {@code <user.home>/ManaDesk}
 	 *  whenever the running OSGi instance has no osgi.instance.area set - a
 	 *  PDE "JUnit Plug-in Test" launch doesn't always set that the way a full
@@ -334,7 +369,7 @@ public class BrowseWebsiteFavoritesLiveTest {
 	 *  direct System.out.println.) */
 	private static void trace(String message) {
 		System.out.println(
-				"[" + (System.nanoTime() - startNanos) / 1_000_000L + "ms] BrowseWebsiteFavoritesLiveTest: " + message);
+				"[" + (System.nanoTime() - startNanos) / 1_000_000L + "ms] BrowseWebsiteLiveTest: " + message);
 	}
 
 	/** Shared across every per-site @Test method below - one Display/Shell/
@@ -360,8 +395,22 @@ public class BrowseWebsiteFavoritesLiveTest {
 	public static void setUpOnce() throws Exception {
 		startNanos = System.nanoTime();
 
-		if (System.getProperty("ma.magiccards.area") == null)
-			System.setProperty("ma.magiccards.area", DEFAULT_MAGICCARDS_DIR);
+		// Just setting the system property here is not enough when this class
+		// runs as part of a larger suite (AllTests, where it's last in the
+		// @SuiteClasses list): DataManager.getModelRoot() is a lazily-
+		// initialized, process-wide singleton, locked in by whichever caller -
+		// an earlier test class in the same suite, or the Activator's own
+		// eager "Loading database" startup thread - reaches it FIRST in this
+		// JVM, using whatever ma.magiccards.area resolved to at THAT moment;
+		// setting the property afterward here has no effect on an
+		// already-resolved root. DataManager.relocateTo() forces root back
+		// onto the right directory regardless of who won that race, without
+		// deleting anything under it (unlike DataManager.reset(), which is
+		// built for a disposable test-owned temp dir and would wipe out this
+		// real, populated database).
+		String explicit = System.getProperty("ma.magiccards.area");
+		File magicCardsDir = explicit != null ? new File(explicit) : new File(DEFAULT_MAGICCARDS_DIR);
+		DataManager.getInstance().relocateTo(magicCardsDir);
 		trace("card database directory: " + FileUtils.getMagicCardsDir());
 
 		// org.eclipse.swt.browser.Edge's own DATA_DIR_PROP/BROWSER_ARGS_PROP
@@ -526,6 +575,97 @@ public class BrowseWebsiteFavoritesLiveTest {
 	@Test
 	public void testMtggoldfish() throws InterruptedException {
 		checkSite("MTGGoldfish", "https://www.mtggoldfish.com/archetype/standard-mono-green-landfall-woe#paper");
+	}
+
+	/** Deliberately separate from {@link #checkSite}/{@link #loadAndCount} -
+	 *  a real TappedOut capture (godsmack) showed a Commander card ("Xenagos,
+	 *  God of Revels") rendered as a pure raster image, nowhere present as
+	 *  real text at all - document.body.innerText (what every other test
+	 *  here checks) genuinely has nothing to find for it, so a normal
+	 *  checkSite() run legitimately still passes (the other ~20 real cards
+	 *  in this deck are ordinary text and clear MIN_MATCHES on their own),
+	 *  without ever proving the commander itself is recoverable. This
+	 *  instead does one settle-wait via the normal (cheap) polling, then a
+	 *  SEPARATE, one-shot read using BrowseWebsiteDialog's own
+	 *  CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT (a heavier DOM-clone + image-alt-
+	 *  substitution capture, deliberately not used for polling - see that
+	 *  constant's own header), asserting the commander's name is now
+	 *  present. */
+	@Test
+	public void testTappedOutCommanderRenderedAsImage() throws InterruptedException {
+		String url = "https://tappedout.net/mtg-decks/17-02-26-godsmack/";
+		trace("=== TappedOut - godsmack (Commander rendered as an image) ===");
+		DeckTextExtractor.CardCount plain = loadAndCount(display, browser, url);
+		trace("  plain innerText RESULT: total=" + plain.total + " unique=" + plain.unique);
+		assertTrue("expected the rest of the deck (ordinary text, not image-rendered) to still be recognized via "
+				+ "plain innerText (need >= " + DeckTextExtractor.MIN_MATCHES + ")",
+				plain.unique >= DeckTextExtractor.MIN_MATCHES);
+
+		AtomicReference<String> textRef = new AtomicReference<>();
+		display.syncExec(() -> {
+			try {
+				Object result = browser.evaluate(BrowseWebsiteDialog.CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
+				textRef.set((result instanceof String) ? (String) result : "");
+			} catch (Exception e) {
+				textRef.set("");
+			}
+		});
+		String text = textRef.get();
+		DeckTextExtractor.CardCount withAlt = DeckTextExtractor.countRecognizedCards(text);
+		boolean commanderRecovered = text.toLowerCase(java.util.Locale.ROOT).contains("xenagos");
+		trace("  image-alt-substituted RESULT: total=" + withAlt.total + " unique=" + withAlt.unique
+				+ ", 'Xenagos' present: " + commanderRecovered);
+		assertTrue("expected the commander (Xenagos, God of Revels - rendered as a pure image on this page) to be "
+				+ "recoverable via its alt/title text", commanderRecovered);
+	}
+
+	/** Same shape as {@link #testTappedOutCommanderRenderedAsImage()} above,
+	 *  for the other real gap {@link
+	 *  BrowseWebsiteDialog#CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT}
+	 *  fixes: a real "Dimir Faery" Pauper deck's own land, Bojuka Bog, is
+	 *  displayed on this printing by its own flavor/alternate-art name,
+	 *  "Barrow-Downs" - not a real Scryfall card name at all, so plain
+	 *  innerText reads it correctly but DeckTextExtractor's own DB cross-
+	 *  check correctly refuses to count it. Deliberately does NOT assert an
+	 *  exact total/unique count on either read, even though the underlying
+	 *  bug is "one card short" - a real run showed plain.total read 84, not
+	 *  the expected 74: this page's own "Hypergeometric Calculator" widget
+	 *  re-displays a handful of the same cards with their own separate
+	 *  quantities, and loadAndCount()'s own "best (highest unique) result
+	 *  seen across polls" strategy (needed for OTHER sites that render
+	 *  partial content before settling) can latch onto an early, inflated
+	 *  poll instead of the page's final, settled state. Same reasoning as
+	 *  checkSite()'s own header: a live page is asserted on "still finds a
+	 *  plausible decklist" terms, not exact counts, for exactly this
+	 *  reason - content presence (which name shows up where) is what
+	 *  actually proves this specific fix, and is immune to that noise. */
+	@Test
+	public void testMoxfieldFlavorNamedCardLink() throws InterruptedException {
+		String url = "https://moxfield.com/decks/Et6dkeR3mE6SzAUleCGfmw";
+		trace("=== Moxfield - Dimir Faery (a land with its own flavor/alternate-art name) ===");
+		DeckTextExtractor.CardCount plain = loadAndCount(display, browser, url);
+		trace("  plain innerText RESULT: total=" + plain.total + " unique=" + plain.unique);
+		assertTrue("expected a plausible decklist to still be found via plain innerText (need >= "
+				+ DeckTextExtractor.MIN_MATCHES + ")", plain.unique >= DeckTextExtractor.MIN_MATCHES);
+
+		AtomicReference<String> textRef = new AtomicReference<>();
+		display.syncExec(() -> {
+			try {
+				Object result = browser.evaluate(BrowseWebsiteDialog.CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
+				textRef.set((result instanceof String) ? (String) result : "");
+			} catch (Exception e) {
+				textRef.set("");
+			}
+		});
+		String text = textRef.get();
+		DeckTextExtractor.CardCount withLinkNames = DeckTextExtractor.countRecognizedCards(text);
+		boolean realNameRecovered = text.contains("Bojuka Bog");
+		boolean flavorNameGone = !text.contains("Barrow-Downs");
+		trace("  card-row-link-substituted RESULT: total=" + withLinkNames.total + " unique=" + withLinkNames.unique
+				+ ", 'Bojuka Bog' present: " + realNameRecovered + ", 'Barrow-Downs' gone: " + flavorNameGone);
+		assertTrue("expected the real card name (Bojuka Bog) to be recoverable from the card row's own link href",
+				realNameRecovered);
+		assertTrue("expected the flavor name (Barrow-Downs) to no longer be the only text present", flavorNameGone);
 	}
 
 	/** Navigates {@code browser} to {@code url} and polls its rendered

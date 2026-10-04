@@ -26,6 +26,15 @@
  *                         sideboard sibling), so a user who genuinely
  *                         doesn't want the sideboard/commander can still opt
  *                         out.
+ *     Rémi Dutil (2026) - added a "Default Format:" combo (defaults to
+ *                         Standard, like EditDeckPropertiesDialog's own) -
+ *                         wantFormat() feeds it into the created deck's
+ *                         IStorageInfo (see AbstractCardListImportPage's own
+ *                         header). onDeckMetaDetected() also updates it from
+ *                         a browsed page's own stated format when one was
+ *                         found (DeckTextExtractor#detectDeckMeta()) -
+ *                         "in doubt, leave Standard" per an explicit
+ *                         request, so a miss never touches the combo.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -33,8 +42,11 @@ import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Button;
+import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Group;
+import org.eclipse.swt.widgets.Label;
 
+import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -45,6 +57,7 @@ import com.reflexit.magiccards.ui.utils.WaitUtils;
 public class NewDeckPage extends AbstractCreateElementPage {
 	private Button createSideboard;
 	private Button createExtra;
+	private Combo formatCombo;
 
 	public NewDeckPage(String pageName, IStructuredSelection selection) {
 		super(pageName, selection);
@@ -78,6 +91,38 @@ public class NewDeckPage extends AbstractCreateElementPage {
 		createExtra = new Button(group, SWT.CHECK);
 		createExtra.setText("Also create an Extra list (tokens, emblems, markers)");
 		createExtra.setLayoutData(GridDataFactory.fillDefaults().span(3, 1).create());
+
+		Label formatLabel = new Label(group, SWT.NONE);
+		formatLabel.setText("Default Format:");
+		formatCombo = new Combo(group, SWT.READ_ONLY);
+		for (Format f : Format.getFormats())
+			formatCombo.add(f.name());
+		formatCombo.setText(Format.STANDARD.name());
+		formatCombo.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).span(2, 1).create());
+	}
+
+	/** The format the Legality tab will validate the new deck against by
+	 *  default - "Standard" unless the user changed it, or
+	 *  {@link #onDeckMetaDetected} updated it from a browsed page's own
+	 *  stated format. */
+	@Override
+	protected String wantFormat() {
+		return formatCombo != null && !formatCombo.isDisposed() ? formatCombo.getText() : null;
+	}
+
+	/** Also updates the Default Format combo when a browsed page states one
+	 *  (see DeckTextExtractor#detectDeckMeta()) - unlike the Name field
+	 *  (only filled when empty), this overwrites the combo's current
+	 *  selection every time a format IS detected: the combo always shows
+	 *  SOME value (defaults to "Standard"), so "only if empty" doesn't
+	 *  apply the way it does for Name - the detected format is a more
+	 *  informed guess than a default nobody chose. A miss (format == null)
+	 *  leaves it exactly as-is, never resets it back to "Standard". */
+	@Override
+	protected void onDeckMetaDetected(String title, String format) {
+		super.onDeckMetaDetected(title, format);
+		if (format != null && formatCombo != null && !formatCombo.isDisposed() && formatCombo.indexOf(format) >= 0)
+			formatCombo.setText(format);
 	}
 
 	@Override

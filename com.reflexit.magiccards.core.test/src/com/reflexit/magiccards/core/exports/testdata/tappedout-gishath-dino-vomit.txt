@@ -1,0 +1,235 @@
+Deck Builder
+MTG Cards
+Events
+Draft Sim
+Cubes
+Forums
+Rules Q&A
+Community
+Log in
+Fast Gishath Dino-Vomit
+
+Commander / EDH Bracket 3 Dinosaurs RGW (Naya)
+
+crowfather1307
+
+ Upvote
+2
+Playtest
+v1
+Similar Deck Space
+Card Recommendations
+ Card Kingdom
+$2.9K
+ TCGPlayer
+$1.6K - 1.8K
+
+
+ CardHoarder
+102 TIX
+Compare to
+Image View
+Timeline
+
+Card Odds
+v1
+Draw hand
+
+ Add to folder
+ Copy
+Download / Export / Embed Code
+Type
+Subtype
+Rarity
+Color
+Latest set
+Specified set
+Board
+Converted cost
+Keyword
+TCG Player Avg Price
+TCG Player High Price
+TCG Player Low Price
+TCG Player Market Price
+Chaos Cards Price
+Card Kingdom Price
+Cardhoarder Price
+Custom
+Type
+Type
+Subtype
+Rarity
+Name
+Quantity
+Converted cost
+TCG Player Avg Price
+TCG Player High Price
+TCG Player Low Price
+TCG Player Market Price
+Chaos Cards Price
+Card Kingdom Price
+Cardhoarder Price
+Name
+Creature (44)
+1x Apex Altisaur
+1x Birds of Paradise
+1x Bloom Tender
+1x Bonehoard Dracosaur
+1x Bronzebeak Foragers
+1x Curious Altisaur
+1x Delighted Halfling
+1x Earthshaker Dreadmaw
+1x Etali, Primal Conqueror  Flip
+1x Etali, Primal Storm
+1x Faeburrow Elder
+1x Fanatic of Rhonas
+1x Ghalta and Mavren
+1x Ghalta, Primal Hunger
+1x Ghalta, Stampede Tyrant
+1x Goring Ceratops
+1x Hunting Velociraptor
+1x Ilysian Caryatid
+1x Kinjalli's Caller
+1x Kinjalli's Sunwing
+1x Kogla and Yidaro
+1x Marauding Raptor
+1x Pantlaza, Sun-Favored
+1x Polyraptor
+1x Quartzwood Crasher
+1x Regal Behemoth
+1x Regisaur Alpha
+1x Roaming Throne
+1x Scion of Calamity
+1x Selvala, Heart of the Wilds
+1x Shaman of Forgotten Ways
+1x Silverclad Ferocidons
+1x Somberwald Sage
+1x Temple Altisaur
+1x The Tarrasque
+1x Topiary Stomper
+1x Trapjaw Tyrant
+1x Trumpeting Carnosaur
+1x Vaultborn Tyrant
+1x Verdant Sun's Avatar
+1x Wakening Sun's Avatar
+1x Wayward Swordtooth
+1x Whisperer of the Wilds
+1x Zacama, Primal Calamity
+Land (37)
+1x Arid Mesa
+1x Battlefield Forge
+1x Boseiju, Who Endures
+1x Bountiful Promenade
+1x Brushland
+1x Castle Garenbrig
+1x Cavern of Souls
+1x Clifftop Retreat
+1x Command Tower
+1x Commercial District
+1x Elegant Parlor
+1x Evendo, Waking Haven
+1x Exotic Orchard
+1x Forest
+1x Hushwood Verge
+1x Jetmir's Garden
+1x Karplusan Forest
+1x Krosan Verge
+1x Lush Portico
+1x Mountain
+1x Overgrown Farmland
+1x Plateau
+1x Rockfall Vale
+1x Rootbound Crag
+1x Sacred Foundry
+1x Savannah
+1x Spectator Seating
+1x Spire Garden
+1x Stomping Ground
+1x Sunbillow Verge
+1x Sunhome, Fortress of the Legion
+1x Sunpetal Grove
+1x Taiga
+1x Temple Garden
+1x Thornspire Verge
+1x Windswept Heath
+1x Wooded Foothills
+Commander (1)
+Commander: Gishath, Sun's Avatar
+Enchantment (12)
+1x Aura ShardsGC
+1x Elemental Bond
+1x Garruk's Uprising
+1x Guardian Project
+1x Overgrowth
+1x Pandemonium
+1x Rhythm of the Wild
+1x Shadow in the Warp
+1x Sylvan Library
+1x Utopia Sprawl
+1x Warstorm Surge
+1x Wild Growth
+Artifact (5)
+1x Herald's Horn
+1x Herd Heirloom
+1x Sol Ring
+1x The Great Henge
+1x Urza's Incubator
+Sorcery (1)
+1x Primal Surge
+Sideboard
+Creature (6)
+1x Arbor Elf
+1x Atzocan Seer
+1x Knight of the Stampede
+1x Otepec Huntmaster
+1x Ripjaw Raptor
+1x Wrathful Raptors
+Enchantment (3)
+1x Descendants' Path
+1x Lurking Predators
+1x Mirari's Wake
+Land (1)
+1x Sundown Pass
+Artifact (1)
+1x Monster Manual
+
+A faster gishath deck. Pretty consistently hits gishath on 5, not uncommon for turn 4. Combined with other dinosaur vomit mechanics as back up. Primal surge serves as the finisher.
+
+Updates
+Comments
+Please login to comment
+Card costs (outer) Land mana (inner)
+CreatureCreature
+LandLand
+EnchantmentEnchantment
+ArtifactArtifact
+SorcerySorcery
+Converted mana cost
+Mana-curve
+
+Date added	1 month
+Last updated	1 week
+Legality
+
+This deck is Commander / EDH legal.
+
+
+Rarity (main - side)
+
+19 - 1 Mythic Rares
+
+62 - 6 Rares
+
+10 - 2 Uncommons
+
+7 - 2 Commons
+
+
+Cards	100
+Avg. CMC	4.62
+Tokens	City's Blessing, Copy Clone, Dinosaur 3/1 R, Dinosaur 3/3 G, Dinosaur Beast X/X G, Dinosaur X/X G, Fanatic of Rhonas 4/4 B, On an Adventure, The Monarch, Treasure, Vampire 1/1 W
+Views	218
+
+Magic the Gathering, FNM is TM and copyright Wizards of the Coast, Inc, a subsidiary of Hasbro, Inc. All rights reserved. This site is unaffiliated. Articles and comments are user-submitted and do not represent official endorsements of this site.
+
+This site © 2026 TappedOut.net, LLC Contact | Feeds | Help | Terms of Use | Privacy statement | DMCA requests | Discord Server | TappedOut.js Blog Widget

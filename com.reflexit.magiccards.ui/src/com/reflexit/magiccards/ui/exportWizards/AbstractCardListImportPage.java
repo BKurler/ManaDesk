@@ -89,6 +89,40 @@
  *                         those pages reflects "no such concept here", not
  *                         a real choice to drop cards, and must never be
  *                         read as gating import on its own.
+ *     Rémi Dutil (2026) - added onDeckMetaDetected() (called from
+ *                         openBrowseWebsiteDialog(), mirroring
+ *                         onSideboardDetected() above) with the page's own
+ *                         best-effort extracted deck title/format (see
+ *                         DeckTextExtractor#detectDeckMeta()). Only
+ *                         NewDeckPage overrides it, same reasoning as
+ *                         onSideboardDetected() - every other page has
+ *                         neither a Name field to fill nor a Default Format
+ *                         combo to update, so the default (nothing) is
+ *                         correct there.
+ *     Rémi Dutil (2026) - added wantFormat() (same shape as wantSideboard()/
+ *                         wantExtra() - read on the UI thread by
+ *                         performImport(), applied via createNewDeck()'s new
+ *                         defaultFormat parameter for both the Empty-mode
+ *                         and import-mode creation paths) so NewDeckPage's
+ *                         new Default Format combo actually takes effect on
+ *                         the created deck, not just sit there unused.
+ *     Rémi Dutil (2026) - defaultPrompt()'s status now reads "Total N
+ *                         (unique M) card(s) found" instead of "Found N
+ *                         record(s)" - matches the "Total N (unique M)"
+ *                         phrasing used everywhere else in ManaDesk; "record"
+ *                         also undercounted what the user actually expects
+ *                         to see, since each row already represents one
+ *                         unique card with its own quantity, not one row per
+ *                         physical copy.
+ *     Rémi Dutil (2026) - dropped defaultPrompt()'s trailing "Press
+ *                         'Example...' to see the expected layout, or Next
+ *                         to preview." - redundant once the status line
+ *                         itself already shows the real recognized count,
+ *                         per an explicit request.
+ *     Rémi Dutil (2026) - hasSideboardMarker() moved to DeckTextExtractor#
+ *                         hasSideboardSection() (public) so
+ *                         BrowseWebsiteDialog can share it for a live
+ *                         "Sideboard detected" indicator too.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -153,6 +187,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.exports.DeckTextExtractor;
 import com.reflexit.magiccards.core.exports.IImportDelegate;
 import com.reflexit.magiccards.core.exports.ImportData;
 import com.reflexit.magiccards.core.exports.ImportError;
@@ -165,6 +200,7 @@ import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
@@ -211,6 +247,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private boolean newSideboardChoice;
 	private boolean newExtraChoice;
 	private String newNameChoice;
+	private String newFormatChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
 	private MagicToolkit toolkit;
@@ -300,6 +337,16 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		return false;
 	}
 
+	/** A brand-new deck's own Default Format ("Standard", "Modern", ...) - the
+	 *  format the Legality tab validates it against by default - or {@code
+	 *  null} to leave it unset. Read on the UI thread before the background
+	 *  import job runs (see {@link #wantVirtual()}). Only NewDeckPage (which
+	 *  has the combo) overrides this; every other page (a collection has no
+	 *  notion of legality) leaves it null. */
+	protected String wantFormat() {
+		return null;
+	}
+
 	/** Whether {@link #wantSideboard()} being false should actually EXCLUDE
 	 *  the imported text's own sideboard-tagged cards (see importRunnable())
 	 *  instead of importing them regardless, as every page does by default.
@@ -325,6 +372,20 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	 *  out of importing sideboard cards at all (see gateSideboardOnImport()).
 	 *  Default: nothing. */
 	protected void onSideboardDetected(boolean hasSideboard) {
+		// NewDeckPage overrides
+	}
+
+	/** Called after browsing a page (see openBrowseWebsiteDialog()) with the
+	 *  page's own best-effort extracted deck title/format (see
+	 *  BrowseWebsiteDialog#getCapturedTitle()/getCapturedFormat(), backed by
+	 *  DeckTextExtractor#detectDeckMeta()) - either may be {@code null} if
+	 *  nothing plausible was found. Only NewDeckPage (which has a Name field
+	 *  and a Default Format combo) overrides this, to fill the Name field
+	 *  when it's still empty and update the Default Format combo when a
+	 *  format was actually found (never resets it back to "Standard" on a
+	 *  miss - a miss means "couldn't tell", not "this deck is Standard").
+	 *  Default: nothing. */
+	protected void onDeckMetaDetected(String title, String format) {
 		// NewDeckPage overrides
 	}
 
@@ -428,6 +489,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			newSideboardChoice = wantSideboard();
 			newExtraChoice = wantExtra();
 			newNameChoice = getNewElementName();
+			newFormatChoice = wantFormat();
 			final boolean dbImport = false;
 			try {
 				IRunnableWithProgress work = new IRunnableWithProgress() {
@@ -662,7 +724,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted, boolean readOnly,
-			CollectionsContainer resource) {
+			String defaultFormat, CollectionsContainer resource) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
 		while (resource.contains(newloc) && attempts-- > 0) {
@@ -672,11 +734,15 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			throw new IllegalArgumentException("Cannot generate deck name");
 		CardCollection created = new CardCollection(newloc.getBaseFileName(), resource, isDeck, virtual, unsorted);
 		created.persistInitialSettings(isDeck, virtual, unsorted);
-		if (readOnly) {
+		if (readOnly || (defaultFormat != null && !defaultFormat.isEmpty())) {
 			try {
 				IStorageInfo si = created.getStorageInfo();
-				if (si != null)
-					si.setReadOnly(true);
+				if (si != null) {
+					if (readOnly)
+						si.setReadOnly(true);
+					if (defaultFormat != null && !defaultFormat.isEmpty())
+						si.setDefaultFormat(defaultFormat);
+				}
 			} catch (RuntimeException ignore) {
 				// non-fatal - fixable via Edit Properties
 			}
@@ -806,11 +872,19 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, MagicUIActivator.PLUGIN_ID + ".export");
 	}
 
-	/** Shows the dynamic "You have selected '&lt;format&gt;'... Found N
-	 *  record(s)..." status in {@link #statusLabel}, below the Options group -
-	 *  moved out of the wizard's title-area banner (setMessage()), which is
-	 *  now a static description set once in createControl() and otherwise
-	 *  reserved for validation errors (setErrorMessage()). */
+	/** Shows the dynamic "You have selected '&lt;format&gt;'... Total N
+	 *  (unique M) card(s) found..." status in {@link #statusLabel}, below the
+	 *  Options group - moved out of the wizard's title-area banner
+	 *  (setMessage()), which is now a static description set once in
+	 *  createControl() and otherwise reserved for validation errors
+	 *  (setErrorMessage()). The "Total N (unique M)" phrasing matches every
+	 *  other card count shown elsewhere in ManaDesk (deck/collection views,
+	 *  BrowseWebsiteDialog's own live count) - each {@code toImport} entry is
+	 *  already one row PER UNIQUE CARD with its own {@code getCount()}
+	 *  quantity, not one row per physical copy, so a bare "N record(s)" read
+	 *  as a much smaller, unfamiliar number (e.g. a 100-card deck with a
+	 *  21-copy Island showing "79 record(s)") instead of the total physical
+	 *  card count the user actually expects to recognize. */
 	private void defaultPrompt() {
 		if (reportType == null)
 			reportType = ImportExportFactory.TEXT_DECK_CLASSIC;
@@ -819,9 +893,13 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			mess += "Warning: cannot parse data (" + importData.getError().getMessage() + "). ";
 		} else {
 			int errcount = importData.getErrorCount();
-			mess += "Found " + importData.size() + " record(s) and " + errcount + " error(s).";
+			int unique = importData.size();
+			int total = 0;
+			for (ICard card : importData.getList())
+				if (card instanceof MagicCardPhysical)
+					total += ((MagicCardPhysical) card).getCount();
+			mess += "Total " + total + " (unique " + unique + ") card(s) found, " + errcount + " error(s).";
 		}
-		mess += " Press 'Example...' to see the expected layout, or Next to preview.";
 		if (statusLabel != null && !statusLabel.isDisposed()) {
 			statusLabel.setText(mess);
 			statusLabel.getParent().layout();
@@ -1044,22 +1122,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			websiteText.setText(capturedWebsiteUrl == null ? "" : capturedWebsiteUrl);
 			setInputChoice(ImportSource.BROWSER);
 			onInputChoice(null, inputChoice);
-			onSideboardDetected(hasSideboardMarker(capturedWebsiteText));
+			onSideboardDetected(DeckTextExtractor.hasSideboardSection(capturedWebsiteText));
+			onDeckMetaDetected(dialog.getCapturedTitle(), dialog.getCapturedFormat());
 		}
-	}
-
-	/** Whether {@code text} (DeckTextExtractor.extractDeckSection()'s own
-	 *  output) includes a Sideboard section - a real one, normalized to the
-	 *  literal line "Sideboard", or (since DeckTextExtractor's Commander
-	 *  handling reuses the exact same marker) a Commander deck's own
-	 *  commander card. */
-	private static boolean hasSideboardMarker(String text) {
-		if (text == null)
-			return false;
-		for (String line : text.split("\r?\n"))
-			if (line.trim().equals("Sideboard"))
-				return true;
-		return false;
 	}
 
 	public void onInputChoice(SelectionEvent event, ImportSource choice) {
@@ -1364,7 +1429,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 							// newNameChoice was captured on the UI thread by performImport()
 							CollectionsContainer newParent = (CollectionsContainer) element;
 							createNewDeck(newNameChoice != null ? newNameChoice : getSourceBasedName(), isDeckTarget(),
-									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newParent);
+									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newFormatChoice, newParent);
 							createImportExtras(newParent, newSideboardChoice, newExtraChoice, newVirtualChoice);
 						}
 						if (!(element instanceof CardCollection)) {

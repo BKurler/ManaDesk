@@ -1,0 +1,338 @@
+ArchidektArchidekt
+Decks
+Community
+Collection
+Register
+Login
+Deck sandbox
+Random commander
+Card search
+Decks links
+Community links
+Register
+Log in
+Site theme
+System theme
+Card controls on left
+Hide toolbar on scroll
+Anje, Maid of Dishonor
+632 views
+62 secs ago
+0
+Commander
+Legal
+Est Bracket: Optimized (4)
+Size: 100
+Est cost: $185.36
+Salt sum: 24.79
+Vampires
+Lifegain
+Blood
+Budget
+ZachTama avatar
+ZachTama
+Clone deck
+More
+Playtester
+Add card
+Card search
+View as
+Text
+Group by
+Categories
+Sort by
+Alphabet
+Price sources
+Local filter
+
+Choose your preferred layout. You can mix and match options using the View as & Group by drop-downs above.
+
+stacked view
+text with static card view
+text view
+grid view
+Commander
+Qty: 1
+Price: $1.49
+1
+Anje, Maid of Dishonor
+Commander
+(CTRL to add secondary)
+Blood
+Qty: 13
+Price: $6.05
+1
+Arterial Alchemy
+1
+Belligerent Guest
+1
+Blood Petal Celebrant
+1
+Bloodcrazed Socialite
+1
+Bloodtithe Harvester
+1
+Ceremonial Knife
+1
+Falkenrath Celebrants
+1
+Glass-Cast Heart
+1
+Gluttonous Guest
+1
+Kamber, the Plunderer
+1
+Olivia's Attendants
+1
+Sanguine Statuette
+1
+Voldaren Epicure
+Blood
+(CTRL to add secondary)
+Copy
+Qty: 1
+Price: $10.99
+1
+Molten Echoes
+Copy
+(CTRL to add secondary)
+Counters
+Qty: 4
+Price: $13.82
+1
+Blade of the Bloodchief
+1
+Cordial Vampire
+1
+Necropolis Regent
+1
+Rakish Heir
+Counters
+(CTRL to add secondary)
+Discard
+Qty: 1
+Price: $0.39
+1
+Arterial Flow
+Discard
+(CTRL to add secondary)
+Drain
+Qty: 11
+Price: $62.81
+1
+Blood Artist
+1
+Creeping Bloodsucker
+1
+Falkenrath Noble
+1
+Kalastria Highborn
+1
+Malakir Bloodwitch
+1
+Sanctum Seeker
+1
+Sanguine Bond
+1
+Sorin, Imperious Bloodlord
+1
+Vampire Sovereign
+1
+Vindictive Vampire
+1
+Vito, Thorn of the Dusk Rose
+Drain
+(CTRL to add secondary)
+Draw
+Qty: 5
+Price: $2.97
+1
+Ancient Craving
+1
+Pointed Discussion
+1
+Read the Bones
+1
+Sign in Blood
+1
+Vampire's Kiss
+Draw
+(CTRL to add secondary)
+Evasion
+Qty: 1
+Price: $0.35
+1
+Blood Hypnotist
+Evasion
+(CTRL to add secondary)
+Flying/Reach
+Qty: 2
+Price: $1.68
+1
+Strefan, Maurer Progenitor
+1
+Voldaren Bloodcaster // Bloodbat Summoner
+/
+Flying/Reach
+(CTRL to add secondary)
+Land
+Qty: 37
+Price: $34.09
+1
+Akoum Refuge
+1
+Bloodfell Caves
+1
+Bonders' Enclave
+1
+Command Tower
+1
+Evolving Wilds
+1
+Foreboding Ruins
+1
+Geier Reach Sanitarium
+8
+Mountain
+1
+Myriad Landscape
+1
+Path of Ancestry
+1
+Rakdos Carnarium
+1
+Reliquary Tower
+1
+Rogue's Passage
+1
+Scavenger Grounds
+1
+Shadowblood Ridge
+1
+Smoldering Marsh
+8
+Swamp
+1
+Temple of Malice
+1
+Temple of the False God
+1
+Terramorphic Expanse
+1
+Unclaimed Territory
+1
+Voldaren Estate
+1
+Witch's Cottage
+Land
+(CTRL to add secondary)
+Lifegain
+Qty: 3
+Price: $8.87
+1
+Blood Tribute
+1
+Sangromancer
+1
+Vampire Nighthawk
+Lifegain
+(CTRL to add secondary)
+Protection
+Qty: 1
+Price: $5.99
+1
+Lightning Greaves
+Protection
+(CTRL to add secondary)
+Ramp
+Qty: 7
+Price: $20.29
+1
+Arcane Signet
+1
+Charcoal Diamond
+1
+Commander's Sphere
+1
+Fire Diamond
+1
+Nirkana Revenant
+1
+Rakdos Signet
+1
+Sol Ring
+Ramp
+(CTRL to add secondary)
+Recursion
+Qty: 1
+Price: $2.99
+1
+Blood Fountain
+Recursion
+(CTRL to add secondary)
+Removal
+Qty: 9
+Price: $8.33
+1
+Anowon, the Ruin Sage
+1
+Butcher of Malakir
+1
+Feast of Blood
+1
+Lacerate Flesh
+1
+Markov Enforcer
+1
+Olivia's Wrath
+1
+Patron of the Vein
+1
+Vampires' Vengeance
+1
+Vengeant Vampire
+Removal
+(CTRL to add secondary)
+Tokens
+Qty: 1
+Price: $9.99
+1
+Bloodline Keeper // Lord of Lineage
+/
+Tokens
+(CTRL to add secondary)
+Tutor
+Qty: 1
+Price: $1.99
+1
+Diabolic Tutor
+Tutor
+(CTRL to add secondary)
+Typal
+Qty: 1
+Price: $4.49
+1
+Captivating Vampire
+Typal
+(CTRL to add secondary)
+Maybeboard
+Qty: 5
+Price: $4.17
+1
+Blood Feud
+1
+Falkenrath Forebear
+1
+Ivora, Insatiable Heir
+1
+Restless Bloodseeker // Bloodsoaked Reveler
+/
+1
+Stromkirk Captain
+Maybeboard
+(CTRL to add secondary)
+Condensed view
+Pin
+Deck Info
+Deck size: 100
+Est cost: $185.36

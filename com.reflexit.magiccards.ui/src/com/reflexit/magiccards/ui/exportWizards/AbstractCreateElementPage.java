@@ -9,6 +9,17 @@
  *     Rémi Dutil (2026) - restoreWidgetValues() also re-asserts Empty over a
  *                         restored Website radio, same as it already does for
  *                         Clipboard/File (see that method's own comment)
+ *     Rémi Dutil (2026) - onDeckMetaDetected() fills the Name field with the
+ *                         browsed page's own best-effort extracted deck
+ *                         title, only when the field is still empty.
+ *     Rémi Dutil (2026) - onDeckMetaDetected() now also overwrites a name
+ *                         it auto-filled itself on an earlier browse (re-
+ *                         browsing to a different page should update the
+ *                         suggestion too) - only a name the user personally
+ *                         typed (nameEditedByUser, tracked via nameText's
+ *                         own ModifyListener, guarded against the
+ *                         programmatic setText() by settingNameProgrammatically)
+ *                         is left alone.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -47,6 +58,17 @@ import com.reflexit.magiccards.ui.utils.StatusDots;
  */
 public abstract class AbstractCreateElementPage extends AbstractCardListImportPage {
 	private Text nameText;
+	/** Whether the user has personally typed into {@link #nameText} - as
+	 *  opposed to it being empty, or holding a value {@link
+	 *  #onDeckMetaDetected} itself put there from an earlier browse. Only
+	 *  true once a modify event fires while {@link
+	 *  #settingNameProgrammatically} is false. */
+	private boolean nameEditedByUser = false;
+	/** Guards {@link #nameText}'s own ModifyListener while {@link
+	 *  #onDeckMetaDetected} sets its text itself, so that programmatic
+	 *  update is never mistaken for the user typing (which would otherwise
+	 *  permanently lock out any FURTHER auto-fill from a later browse). */
+	private boolean settingNameProgrammatically = false;
 	private Button emptyRadio;
 	private Text whereText;
 	protected Button newVirtual;
@@ -135,6 +157,29 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 		return n.isEmpty() ? super.getNewElementName() : n;
 	}
 
+	/** Fills the Name field with the page's own best-effort extracted deck
+	 *  title (see DeckTextExtractor#detectDeckMeta()) after browsing a page
+	 *  to import - but only when the user hasn't personally typed into the
+	 *  field themselves ({@link #nameEditedByUser}): empty, or still
+	 *  holding whatever a PREVIOUS browse auto-filled it with, are both
+	 *  fair game to update (re-browsing to a different page should update
+	 *  the suggested name too) - only a real user edit is left alone.
+	 *  {@code title} may be {@code null} (nothing plausible found), in
+	 *  which case nothing changes - shared by NewDeckPage/NewCollectionPage
+	 *  since both have this same Name field; NewDeckPage additionally
+	 *  handles the format half of detectDeckMeta()'s result. */
+	@Override
+	protected void onDeckMetaDetected(String title, String format) {
+		if (title == null || nameText == null || nameText.isDisposed() || nameEditedByUser)
+			return;
+		settingNameProgrammatically = true;
+		try {
+			nameText.setText(title);
+		} finally {
+			settingNameProgrammatically = false;
+		}
+	}
+
 	@Override
 	public IWizardPage getNextPage() {
 		// "Empty" creates the element straight from Finish - no card-list preview
@@ -156,7 +201,11 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 		nameText = new Text(group, SWT.BORDER);
 		nameText.setMessage("name of the new " + type);
 		nameText.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).span(2, 1).create());
-		nameText.addModifyListener(e -> updatePageCompletion());
+		nameText.addModifyListener(e -> {
+			if (!settingNameProgrammatically)
+				nameEditedByUser = true;
+			updatePageCompletion();
+		});
 
 		new Label(group, SWT.NONE).setText("In:");
 		whereText = new Text(group, SWT.BORDER);
@@ -345,7 +394,7 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	@Override
 	public void createEmptyElement() {
 		createNewDeck(getNewElementName(), isDeckTarget(), wantVirtual(), wantUnsorted(), wantReadOnly(),
-				parentContainer);
+				wantFormat(), parentContainer);
 		createEmptyExtras(parentContainer);
 	}
 

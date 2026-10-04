@@ -1,0 +1,141 @@
+TCG Player Market Price
+Chaos Cards Price
+Card Kingdom Price
+Cardhoarder Price
+Name
+Land (35)
+1x Alchemist's Refuge
+1x Barkchannel Pathway  Flip
+1x Breeding Pool
+1x Castle Garenbrig
+1x Clearwater Pathway  Flip
+1x Command Tower
+1x Darkbore Pathway  Flip
+1x Deathcap Glade
+1x Dreamroot Cascade
+1x Drowned Catacomb
+1x Exotic Orchard
+1x Foreboding Landscape
+1x Forest
+1x Gaea's CradleGC
+1x Hinterland Harbor
+1x Island
+1x Karn's Bastion
+1x Mana Confluence
+1x Misty Rainforest
+1x Morphic Pool
+1x Overgrown Tomb
+1x Polluted Delta
+1x Reflecting Poolfoil
+1x Rejuvenating Springs
+1x Reliquary Tower
+1x Shipwreck Marsh
+1x Snow-Covered Forest
+1x Snow-Covered Island
+1x Snow-Covered Swamp
+1x Swamp
+1x Undergrowth Stadium
+1x Verdant Catacombs
+1x Watery Grave
+1x Woodland Cemetery
+1x Zagoth Triome
+Creature (18)
+1x Altered Ego
+1x Bloom Tender
+1x Bristly Bill, Spine Sower
+1x Corpsejack Menace
+1x Gadwick, the Wizened
+1x Gwenna, Eyes of Gaea
+1x Hooded Hydra
+1x Hydroid Krasis
+1x Kalonian Hydra
+1x Lifeblood Hydra
+1x Neverwinter Hydra
+1x Nyxborn Hydra
+1x Selvala, Heart of the Wilds
+1x Steelbane Hydra
+1x The Goose Mother
+1x Troyan, Gutsy Explorer
+1x Vastwood Hydra
+1x Voracious Hydra
+Enchantment (12)
+1x Branching Evolution
+1x Doubling Season
+1x Garruk's Uprising
+1x Growing Rites of Itlimoc  Flip
+1x Innkeeper's Talent
+1x Pemmin's Aura
+1x Primeval Bounty
+1x Retribution of the Ancients
+1x Simic Ascendancy
+1x Stocking the Pantry
+1x Unbound Flourishing
+1x Unnatural Growth
+Instant (8)
+1x Assassin's Trophy
+1x Beast Within
+1x Blue Sun's Zenith
+1x Cyclonic RiftGC
+1x Erebos's Intervention
+1x Pull from Tomorrow
+1x Repulsive Mutation
+1x Stroke of Genius
+Commander (1)
+Commander: Zaxara, the Exemplary
+Sorcery (16)
+1x Black Sun's Zenith
+1x Curse of the Swine
+1x Demonic TutorGC
+1x Diabolic Intent
+1x Doomsday Confluence
+1x Exsanguinate
+1x Fangs of Kalonia
+1x Farseek
+1x Finale of Revelation
+1x Nature's Lore
+1x Open Into Wonder
+1x Stargaze
+1x Three Visits
+1x Torment of Hailfire
+1x Villainous Wealth
+1x Wildest Dreams
+Artifact (10)
+1x Arcane Signet
+1x Astral Cornucopia
+1x Elementalist's Palette
+1x Fractal Harness
+1x Lightning Greaves
+1x Sequence Engine
+1x Sol Ring
+1x Strionic Resonator
+1x The Ozolith
+1x Thought Vessel
+
+We're laying down the framework for a Zaxara, the Exemplary EDH/Commander deck focusing on  spells!
+
+THE 10 CORE CARDS
+THE FIRST 10 X SPELLS
+THE NEXT 10 X SPELLS
+THE LAST 10 X SPELLS
+THE FINAL 24 SPELLS
+LANDS (35) & HONORABLE MENTIONS
+GAME-PLAY RESULTS & EXPERIENCES
+GAME #1
+GAME #2
+GAME #3
+GAME #4
+Game #5
+GAME #6
+GAME #7
+GAME #8
+GAME #9
+FINAL OBSERVATIONS & REVIEWING AREAS OF FOCUS
+REVIEW OF COMPLETED DECK & PLAY-TESTING
+UP & UP SERIES #1
+UP & UP SERIES #2
+DECK TECH
+UP & UP SERIES #3
+COMMANDER BAN LIST ANNOUNCEMENT 9/23/24
+UP & UP SERIES #4
+UP & UP SERIES #5
+UP & UP SERIES #6
