@@ -7,6 +7,8 @@
  *                         runs - the page's own LIVE widget selection is already
  *                         unreliable (reset with no SelectionChangedEvent) by the
  *                         time its own dispose() runs
+ *     Rémi Dutil (2026) - getFocusListControl(): the active page's selection is
+ *                         revealed when the view gets the focus back.
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -94,6 +96,11 @@ public abstract class AbstractGroupPageCardsView extends AbstractCardsView {
 	@Override
 	protected void activate() {
 		pageGroup.activate();
+	}
+
+	@Override
+	protected Object getFocusListControl() {
+		return pageGroup == null ? null : getActivePage();
 	}
 
 	protected synchronized IViewPage getActivePage() {

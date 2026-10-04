@@ -1,3 +1,10 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setFocus(): reveals the current selection (if any)
+ *                         when the view gets the focus back, and gives the
+ *                         keyboard focus to the card list itself.
+ */
 package com.reflexit.magiccards.ui.views;
 
 import java.io.IOException;
@@ -83,7 +90,11 @@ public abstract class AbstractSingleControlCardsView extends AbstractCardsView {
 
 	@Override
 	public void setFocus() {
-		getMagicControl().getControl().setFocus();
+		Object list = getMagicControl();
+		if (!(list instanceof AbstractMagicCardsListControl)
+				|| !((AbstractMagicCardsListControl) list).setFocusOnList())
+			getMagicControl().getControl().setFocus();
+		revealSelectionLater(list);
 	}
 
 	@Override
