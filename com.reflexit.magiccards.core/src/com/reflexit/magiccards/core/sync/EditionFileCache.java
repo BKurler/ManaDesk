@@ -27,6 +27,9 @@
  *                         is how it went unnoticed. Restored to black
  *                         (0x000000), matching the comment and every other
  *                         Common-rarity set symbol Scryfall itself renders.
+ *     Rémi Dutil (2026) - ensureSetSymbolExists(): no stack trace when the
+ *                         web is not accessible (no icon for now, retried
+ *                         later).
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -92,7 +95,8 @@ public class EditionFileCache {
 			return localFile;
 
 		} catch (Exception e) {
-			e.printStackTrace();
+			if (!WebUtils.isWebUnavailable(e)) // no web: just no icon for now, retried later
+				e.printStackTrace();
 			return null;
 		}
 	}

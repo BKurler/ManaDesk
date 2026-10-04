@@ -14,6 +14,13 @@
  *                         cards already in the local DB; nothing did that
  *                         automatically before, it relied on the user
  *                         noticing and clicking Update Card Database
+ *     Rémi Dutil (2026) - "Work Offline" checks removed: background checks
+ *                         stay silent with no web, an explicit "Check for
+ *                         card updates" says the web is not accessible, the
+ *                         first-run prompt explains the web is not accessible
+ *                         when the card file cannot be downloaded, repair /
+ *                         parser-version prompts are skipped when there is
+ *                         nothing to rebuild from.
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -51,11 +58,6 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		if (WebUtils.isWorkOffline()) {
-			Display.getDefault().asyncExec(() -> MessageDialog.openInformation(MagicUIActivator.getShell(),
-					"Work Offline", "Online updates are disabled. Turn off 'Work Offline' first."));
-			return null;
-		}
 		doCheckForCardUpdates(true);
 		return null;
 	}
@@ -68,7 +70,7 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 		new Job("Preparing card database") {
 			@Override
 			protected IStatus run(IProgressMonitor imonitor) {
-				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
+				if (MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
 					return Status.OK_STATUS;
 				try {
 					if (ScryfallBulkCache.isRemoteBulkNewer()) {
@@ -80,7 +82,8 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 					}
 				} catch (Exception e) {
 					System.err.println("[ScryfallBulk] startup: pre-download failed (" + e.getMessage() + ")");
-					MagicUIActivator.log(e);
+					if (!WebUtils.isWebUnavailable(e)) // no web: silently try again next startup
+						MagicUIActivator.log(e);
 				}
 				return Status.OK_STATUS;
 			}
@@ -91,7 +94,7 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 	 * Startup integrity check (there is no bundled card database any more):
 	 * <ul>
 	 * <li>no card database at all → prompt the user to download it from Scryfall
-	 * (or, offline, point them at <em>Import Card Database from File…</em>);</li>
+	 * (or, with no web, point them at <em>Import Card Database from File…</em>);</li>
 	 * <li>a database that has lost most of its set files → repair it in the
 	 * background.</li>
 	 * </ul>
@@ -116,7 +119,8 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 				// integrity: a healthy update recorded how many set files it wrote;
 				// if a big chunk have gone missing since, quietly rebuild.
 				int good = UpdateDbHandler.lastGoodSetCount();
-				if (good > 20 && db.loadedSetCount() < good - 10 && !WebUtils.isWorkOffline()) {
+				if (good > 20 && db.loadedSetCount() < good - 10
+						&& (ScryfallBulkCache.hasLocalBulk() || ScryfallBulkCache.isReachable())) {
 					asyncInfo("Some card data is missing - updating the card database in the background.");
 					UpdateDbHandler.performUpdate();
 					return Status.OK_STATUS;
@@ -150,15 +154,15 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 						return Status.OK_STATUS;
 					lastEmptyPrompt = System.currentTimeMillis();
 				}
-				final boolean offline = WebUtils.isWorkOffline();
-				final boolean canDownload = !offline || ScryfallBulkCache.hasLocalBulk();
-				final long mb = (offline || !canDownload) ? -1 : ScryfallBulkCache.remoteBulkSizeMB();
+				final boolean haveBulk = ScryfallBulkCache.hasLocalBulk();
+				final long mb = haveBulk ? -1 : ScryfallBulkCache.remoteBulkSizeMB();
+				final boolean canDownload = haveBulk || mb > 0;
 				Display.getDefault().asyncExec(() -> {
 					if (!canDownload) {
 						MessageDialog.openInformation(MagicUIActivator.getShell(), "Card Database",
-								"ManaDesk has no card database yet.\n\n"
-										+ "Connect to the internet and it will offer to download it, "
-										+ "or use File ▸ Import Card Database from File…");
+								"ManaDesk has no card database yet, and the web is not accessible right now "
+										+ "to download it.\n\nCheck your internet connection and use "
+										+ "Update Card Database, or use File ▸ Import Card Database from File…");
 						return;
 					}
 					String size = mb > 0 ? " (about " + mb + " MB)" : "";
@@ -194,8 +198,8 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 			return;
 		if (UpdateDbHandler.isRunning())
 			return;
-		if (WebUtils.isWorkOffline() && !ScryfallBulkCache.hasLocalBulk())
-			return; // nothing to re-parse from yet - same guard performUpdate() itself uses
+		if (!ScryfallBulkCache.hasLocalBulk() && !ScryfallBulkCache.isReachable())
+			return; // nothing to re-parse from and no web - ask again next startup
 		Display.getDefault().asyncExec(() -> {
 			if (UpdateDbHandler.isRunning())
 				return;
@@ -215,7 +219,7 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 		new Job("Checking for card updates...") {
 			@Override
 			public IStatus run(IProgressMonitor imonitor) {
-				if (WebUtils.isWorkOffline() || MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
+				if (MagicUIActivator.TRACE_TESTING || MagicUIActivator.isJunitRunning())
 					return Status.OK_STATUS;
 				try {
 					ParseScryFallSets sets = new ParseScryFallSets();
@@ -241,7 +245,13 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 					if (yes[0])
 						UpdateDbHandler.performUpdate();
 				} catch (Exception e) {
-					MagicUIActivator.log(e); // move on if set-list loading fails
+					if (!WebUtils.isWebUnavailable(e))
+						MagicUIActivator.log(e); // move on if set-list loading fails
+					else if (verbose) // asked for explicitly: say why nothing happened
+						Display.getDefault().asyncExec(() -> MessageDialog.openInformation(
+								MagicUIActivator.getShell(), "Card Updates",
+								"The web is not accessible right now - cannot check for new cards.\n\n"
+										+ "Check your internet connection and try again later."));
 				}
 				return Status.OK_STATUS;
 			}

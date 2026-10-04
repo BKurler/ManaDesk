@@ -40,6 +40,15 @@
  *                         this covers the manual "Update Card Database"
  *                         command, the startup checks, and the "new sets
  *                         available" prompt alike.
+ *     Rémi Dutil (2026) - "Work Offline" removed: with no local card file and
+ *                         no web, a friendly "web is not accessible" message
+ *                         up front (before the backup); a no-web failure
+ *                         mid-update shows the same message instead of the
+ *                         raw exception. The manual "Update Card Database"
+ *                         (performUpdate(true)) requires the web - it no
+ *                         longer silently re-parses the same local card file;
+ *                         repair / parser refresh / file import still rebuild
+ *                         from the local file with no web.
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -83,6 +92,10 @@ public class UpdateDbHandler extends AbstractHandler {
 	private static final Object LOCK = new Object();
 	private static volatile boolean running;
 
+	static final String WEB_NOT_ACCESSIBLE = "The web is not accessible right now, so the card database "
+			+ "cannot be downloaded from Scryfall.\n\nCheck your internet connection and try again later, "
+			+ "or use File ▸ Import Card Database from File…";
+
 	/** How many {@code <DB>/*.xml} files a healthy update produced, so a later
 	 *  startup can tell "database never downloaded" / "half the sets vanished"
 	 *  from a normal load. 0 = unknown. */
@@ -108,12 +121,25 @@ public class UpdateDbHandler extends AbstractHandler {
 
 	@Override
 	public Object execute(ExecutionEvent event) throws ExecutionException {
-		performUpdate();
+		// asked for explicitly: with no web there is nothing new to get - re-parsing
+		// the same local card file would only pretend to update
+		performUpdate(true);
 		return null;
 	}
 
-	/** Schedule the update job (no-op if one is already running). */
+	/** Schedule the update job (no-op if one is already running). With no web,
+	 *  rebuilds from the already downloaded / imported card file - what a repair,
+	 *  a parser-version refresh, an empty DB or a file import needs. */
 	public static void performUpdate() {
+		performUpdate(false);
+	}
+
+	/**
+	 * @param requireWeb {@code true}: when Scryfall cannot be reached, say the web
+	 *        is not accessible instead of rebuilding from the local card file
+	 *        (unless a user-imported file is waiting to be parsed)
+	 */
+	public static void performUpdate(final boolean requireWeb) {
 		synchronized (LOCK) {
 			if (running)
 				return;
@@ -123,11 +149,13 @@ public class UpdateDbHandler extends AbstractHandler {
 			@Override
 			public IStatus run(IProgressMonitor pm) {
 				try {
-					// offline is fine only if a bulk file was already downloaded /
-					// imported - then we can still rebuild the DB from it.
-					if (WebUtils.isWorkOffline() && !ScryfallBulkCache.hasLocalBulk()) {
-						asyncInfo("You are working offline and no card file has been downloaded yet.\n"
-								+ "Turn off 'Work Offline', or use File ▸ Import Card Database from File…");
+					// no web is fine if a bulk file was already downloaded / imported -
+					// the DB is then rebuilt from it; otherwise say so up front,
+					// before backing anything up
+					boolean canUseLocal = requireWeb ? ScryfallBulkCache.isLocalImportPending()
+							: ScryfallBulkCache.hasLocalBulk();
+					if (!canUseLocal && !ScryfallBulkCache.isReachable()) {
+						asyncInfo(WEB_NOT_ACCESSIBLE);
 						return Status.OK_STATUS;
 					}
 					pm.beginTask("Updating card database", 100);
@@ -171,6 +199,10 @@ public class UpdateDbHandler extends AbstractHandler {
 				} catch (InterruptedException e) {
 					return Status.CANCEL_STATUS;
 				} catch (Exception e) {
+					if (WebUtils.isWebUnavailable(e)) {
+						asyncInfo(WEB_NOT_ACCESSIBLE);
+						return Status.OK_STATUS;
+					}
 					MagicUIActivator.log(e);
 					asyncInfo("Could not update the card database:\n" + e.getMessage());
 					return Status.OK_STATUS; // error already shown

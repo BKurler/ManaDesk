@@ -1,3 +1,14 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - "Work Offline" replaced by the debug-only
+ *                         setSimulateWebDown(); no-hang policy: 8s connect
+ *                         timeout, no retry on connection-level failures, a
+ *                         host that failed is skipped for 60s
+ *                         (checkWebAccess()); new isReachable() quick
+ *                         connect-only probe and isWebUnavailable() error
+ *                         classification.
+ */
 package com.reflexit.magiccards.core.sync;
 
 import java.io.BufferedReader;
@@ -5,13 +16,18 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
 import java.io.UnsupportedEncodingException;
+import java.net.ConnectException;
 import java.net.HttpURLConnection;
+import java.net.NoRouteToHostException;
+import java.net.SocketTimeoutException;
 import java.net.URL;
 import java.net.URLConnection;
 import java.net.URLDecoder;
+import java.net.UnknownHostException;
 import java.security.cert.X509Certificate;
 import java.util.LinkedHashMap;
 import java.util.Map;
+import java.util.concurrent.ConcurrentHashMap;
 
 import javax.net.ssl.HttpsURLConnection;
 import javax.net.ssl.SSLContext;
@@ -20,17 +36,113 @@ import javax.net.ssl.X509TrustManager;
 
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
-import com.reflexit.magiccards.core.OfflineException;
+import com.reflexit.magiccards.core.WebUnavailableException;
 
+/**
+ * All web access goes through here. The web may be unreachable at any time and
+ * callers must cope quietly, so a connection failure never "hangs": the connect
+ * timeout is short, a connection-level failure is not retried, and a host that
+ * just failed is skipped (instant {@link WebUnavailableException}) for
+ * {@link #HOST_DOWN_MS} instead of making every card image / set icon wait for
+ * its own timeout.
+ */
 public class WebUtils {
-	private static boolean workOffline = false;
+	/** Testing only (debug launches): every web access fails as if the network
+	 *  were down - see the "Simulate web not working" preference. */
+	private static volatile boolean simulateWebDown = false;
 
-	public static boolean isWorkOffline() {
-		return workOffline;
+	private static final int CONNECT_TIMEOUT_MS = 8 * 1000;
+	private static final int READ_TIMEOUT_MS = 30 * 1000;
+	/** How long a host that failed to connect is considered down. */
+	private static final long HOST_DOWN_MS = 60 * 1000L;
+	private static final Map<String, Long> downHosts = new ConcurrentHashMap<>();
+
+	public static boolean isSimulateWebDown() {
+		return simulateWebDown;
 	}
 
-	public static void setWorkOffline(boolean workOffline) {
-		WebUtils.workOffline = workOffline;
+	public static void setSimulateWebDown(boolean simulate) {
+		simulateWebDown = simulate;
+		downHosts.clear();
+	}
+
+	/**
+	 * Fail fast, without touching the network, when {@code url} is a web URL
+	 * that is known not to be reachable right now (simulated outage, or its host
+	 * failed to connect less than {@link #HOST_DOWN_MS} ago). Non-web URLs
+	 * ({@code file:}, {@code jar:}, ...) always pass.
+	 */
+	public static void checkWebAccess(URL url) throws WebUnavailableException {
+		if (!isWebUrl(url))
+			return;
+		String host = url.getHost();
+		if (simulateWebDown)
+			throw new WebUnavailableException(host);
+		Long until = downHosts.get(host);
+		if (until != null) {
+			if (System.currentTimeMillis() < until)
+				throw new WebUnavailableException(host);
+			downHosts.remove(host);
+		}
+	}
+
+	/**
+	 * Quick probe (connect timeout only, no retry, no request sent): can
+	 * {@code url}'s server be connected to at all? A slow or unhappy server still
+	 * counts as reachable. Blocking - never call it from the UI thread.
+	 */
+	public static boolean isReachable(URL url) {
+		if (!isWebUrl(url))
+			return true;
+		try {
+			checkWebAccess(url);
+			URLConnection con = url.openConnection();
+			con.setConnectTimeout(CONNECT_TIMEOUT_MS);
+			con.setReadTimeout(CONNECT_TIMEOUT_MS);
+			con.connect(); // TCP (+ TLS handshake for https)
+			if (con instanceof HttpURLConnection)
+				((HttpURLConnection) con).disconnect();
+			return true;
+		} catch (IOException e) {
+			if (isWebUnavailable(e)) {
+				markHostDown(url, e);
+				return false;
+			}
+			return true; // connected, something else went wrong - let the real request report it
+		}
+	}
+
+	/**
+	 * {@code true} when {@code e} (or one of its causes) means "the web / host
+	 * cannot be reached" rather than a real error: callers use it to stay silent
+	 * or show a friendly "web not accessible" message instead of a stack trace.
+	 */
+	public static boolean isWebUnavailable(Throwable e) {
+		for (Throwable t = e; t != null; t = t.getCause()) {
+			if (t instanceof WebUnavailableException || t instanceof UnknownHostException
+					|| t instanceof ConnectException || t instanceof NoRouteToHostException
+					|| t instanceof SocketTimeoutException)
+				return true;
+			if (t.getCause() == t)
+				break;
+		}
+		return false;
+	}
+
+	private static boolean isWebUrl(URL url) {
+		if (url == null)
+			return false;
+		String p = url.getProtocol();
+		return "http".equalsIgnoreCase(p) || "https".equalsIgnoreCase(p);
+	}
+
+	private static void markHostDown(URL url, IOException e) {
+		if (e instanceof WebUnavailableException)
+			return; // already known / simulated
+		String host = url.getHost();
+		if (downHosts.put(host, System.currentTimeMillis() + HOST_DOWN_MS) == null)
+			MagicLogger.log("Web not accessible (" + host + "): " + e + " - skipping it for "
+					+ HOST_DOWN_MS / 1000 + "s");
 	}
 
 	private static TrustManager[] trustedCerts = new TrustManager[] {
@@ -52,7 +164,8 @@ public class WebUtils {
 
 	/**
 	 * Open the specified URL. Works with HTTPS as well.<br/>
-	 * Do nothing if working offline only mode is enabled.<br/>
+	 * Fails fast with {@link WebUnavailableException} when the host cannot be
+	 * reached (see {@link #checkWebAccess(URL)}).<br/>
 	 * <br/>
 	 * HTTPS warning: Just to open and be able to read the content of resulting response. This implementation
 	 * accept every server certificates therefore, as an example, it is not save against
@@ -62,7 +175,6 @@ public class WebUtils {
 	 *            Requested URL.
 	 * @return response of request with the specified URL as an open stream.
 	 * @throws IOException
-	 * @see {@link #isWorkOffline(boolean)}, {@link #setWorkOffline(boolean)}
 	 */
 	public static InputStream openUrl(URL url) throws IOException {
 		return openUrl(url, 3);
@@ -72,10 +184,7 @@ public class WebUtils {
 		IOException rt = null;
 		// 3 attempts
 		for (int i = 0; i < maxAttempts; i++) {
-			// Don't do anything if offline only working is enabled.
-			if (WebUtils.isWorkOffline()) {
-				throw new OfflineException();
-			}
+			checkWebAccess(url);
 			try {
 				URLConnection openConnection = url.openConnection();
 				// Checking if it is a HttpsURLConnection first and HttpURLConnection next.
@@ -123,6 +232,11 @@ public class WebUtils {
 				InputStream openStream = openConnection.getInputStream();
 				return openStream;
 			} catch (IOException e) {
+				if (isWebUnavailable(e)) {
+					// unreachable: retrying would only multiply the wait
+					markHostDown(url, e);
+					throw e instanceof WebUnavailableException ? e : new WebUnavailableException(url.getHost(), e);
+				}
 				MagicLogger.log("Connection error on url " + url + ": " + e.getMessage() + ". Attempt " + i);
 				rt = e;
 				continue;
@@ -174,8 +288,8 @@ public class WebUtils {
 				"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0");
 		connection.setRequestProperty("Accept-Charset", FileUtils.UTF8);
 		connection.setRequestProperty("Accept-Language", "en_US");
-		connection.setConnectTimeout(60 * 1000);
-		connection.setReadTimeout(60 * 1000);
+		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
+		connection.setReadTimeout(READ_TIMEOUT_MS);
 	}
 
 	public static Map<String, String> splitQuery(URL url) throws UnsupportedEncodingException {

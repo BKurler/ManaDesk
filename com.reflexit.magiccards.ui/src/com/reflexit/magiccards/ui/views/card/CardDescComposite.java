@@ -4,6 +4,10 @@
  *     Rémi Dutil (2026) - setText() no longer downloads the card image (the
  *                         caller does that on a background thread)
  *     Rémi Dutil (2026) - proxy copies: greyed image + diagonal "Proxy" watermark
+ *     Rémi Dutil (2026) - card image downloaded through WebUtils (fails fast,
+ *                         via a .part file); no web = "image not available"
+ *                         picture, nothing logged; external links no longer
+ *                         blocked by "Work Offline".
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -111,9 +115,6 @@ class CardDescComposite extends Composite {
 							return;
 						}
 						if (location.contains("https:")) {
-							if (WebUtils.isWorkOffline())
-								return;
-
 							if (Desktop.isDesktopSupported()
 									&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 								URI url = new URI(location);
@@ -192,8 +193,15 @@ class CardDescComposite extends Composite {
 			return;
 		}
 
-		try (InputStream in = url.openStream()) {
-			Files.copy(in, Paths.get(path), StandardCopyOption.REPLACE_EXISTING);
+		// through WebUtils: fails fast (no hang) when the web is not accessible
+		// via a .part file, so a connection lost mid-way never leaves a truncated image
+		java.nio.file.Path target = Paths.get(path);
+		java.nio.file.Path part = Paths.get(path + ".part");
+		try (InputStream in = WebUtils.openUrl(url, 1)) {
+			Files.copy(in, part, StandardCopyOption.REPLACE_EXISTING);
+			Files.move(part, target, StandardCopyOption.REPLACE_EXISTING);
+		} finally {
+			Files.deleteIfExists(part);
 		}
 	}
 
@@ -218,6 +226,8 @@ class CardDescComposite extends Composite {
 			downloadCardImage(card, path);
 
 		} catch (Exception e) {
+			if (WebUtils.isWebUnavailable(e))
+				return; // no web: the "image not available" picture is shown instead
 			MagicUIActivator.log("Failed to cache card image for " + card, e);
 		}
 	}
@@ -331,11 +341,13 @@ class CardDescComposite extends Composite {
 	private String getCardDataHtml(IMagicCard card, String links) {
 		StringBuilder sb = new StringBuilder();
 
-		// 1. Card image (local cache or remote URL)
+		// 1. Card image (local cache or remote URL, else "image not available")
 		try {
 			URL imgUrl = CardCache.getImageURL(card);
-			if (imgUrl != null) {
-				String img = "<img src=\"" + imgUrl.toExternalForm() + "\" class=\"cardimage\"/>";
+			String src = imgUrl != null ? imgUrl.toExternalForm() : ImageCreator.getInstance().getCardNotFoundImageURL();
+			if (!src.isEmpty()) {
+				String img = "<img src=\"" + src + "\" class=\"cardimage\""
+						+ ImageCreator.getInstance().getCardNotFoundOnError() + "/>";
 				if (card instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
 						&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) card).isProxy()) {
 					// a proxy copy: fade the art and stamp it diagonally

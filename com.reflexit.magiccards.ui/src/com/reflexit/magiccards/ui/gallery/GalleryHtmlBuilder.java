@@ -8,12 +8,16 @@
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
  *     Rémi Dutil (2026) - proxy copies rendered greyed with a "Proxy" stamp
+ *     Rémi Dutil (2026) - card images fall back to the "image not available"
+ *                         picture (onerror + NOT_FOUND) when neither cached
+ *                         nor downloadable.
  *******************************************************************************/
 
 package com.reflexit.magiccards.ui.gallery;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
+import com.reflexit.magiccards.ui.utils.ImageCreator;
 
 public final class GalleryHtmlBuilder {
 
@@ -68,8 +72,10 @@ public final class GalleryHtmlBuilder {
 				url = safe(u.toString());
 			}
 		} catch (Exception e) {
-			// ignore: fallback to empty URL
+			// ignore: fallback to the "not available" picture
 		}
+		if (url.isEmpty()) // neither cached nor downloadable (e.g. no web)
+			url = safe(ImageCreator.getInstance().getCardNotFoundImageURL());
 
 		// Resolve count
 		int count = (card instanceof IMagicCardPhysical) ? ((IMagicCardPhysical) card).getCount() : 0;
@@ -80,7 +86,8 @@ public final class GalleryHtmlBuilder {
 		sb.append("<div class='card").append(proxy ? " proxy" : "").append("' data-id='").append(id).append("'>");
 		sb.append("<div class='card-inner'>");
 
-		sb.append("<img src='").append(url).append("' loading='lazy'/>");
+		sb.append("<img src='").append(url).append("' loading='lazy'")
+				.append(ImageCreator.getInstance().getCardNotFoundOnError()).append("/>");
 
 		if (proxy) {
 			sb.append("<div class='proxy-mark'>Proxy</div>");
@@ -129,6 +136,9 @@ public final class GalleryHtmlBuilder {
 		sb.append("<div class='gallery' id='gallery'></div>");
 
 		sb.append("<script>");
+		sb.append("var NOT_FOUND='")
+				.append(ImageCreator.getInstance().getCardNotFoundImageURL().replace("\\", "/").replace("'", "%27"))
+				.append("';");
 
 		// Paging state
 		sb.append("window.totalCards=").append(totalCards).append(";");
@@ -170,7 +180,9 @@ public final class GalleryHtmlBuilder {
 
 		// <img src='...'>
 		sb.append("  var img=document.createElement('img');");
-		sb.append("  img.src=c.image;");
+		// image not cached and not downloadable (e.g. no web) -> "not available"
+		sb.append("  img.onerror=function(){this.onerror=null;if(NOT_FOUND)this.src=NOT_FOUND;};");
+		sb.append("  img.src=c.image||NOT_FOUND;");
 		sb.append("  img.loading='lazy';");
 		sb.append("  inner.appendChild(img);");
 

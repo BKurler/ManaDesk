@@ -775,6 +775,10 @@
  *                         itself (several call sites there, not worth the
  *                         same cross-feature risk the "Blood" fix's
  *                         isFollowedByCommanderMatch() attempt ran into).
+ *     Rémi Dutil (2026) - TRACE_WEB_IMPORT (off): the web-import debug traces
+ *                         (here, BrowseWebsiteDialog, AbstractCardListImportPage)
+ *                         are disabled, not removed - flip it to diagnose a
+ *                         site.
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -860,6 +864,12 @@ public class DeckTextExtractor {
 	 *  {@link #countRecognizedCards}) can also say whether that count is
 	 *  actually enough to be accepted. */
 	public static final int MIN_MATCHES = 6;
+
+	/** Debug traces of the deck import from a website (captured page text,
+	 *  matched rows, rejected scans, detected format) - here, in BrowseWebsiteDialog
+	 *  and AbstractCardListImportPage. Off by default; set to true to diagnose a
+	 *  site that imports wrongly. */
+	public static boolean TRACE_WEB_IMPORT = false;
 	/** How many non-matching lines (section headers, blank lines) a run
 	 *  tolerates in between matches before it is considered over. Raised from
 	 *  the original 2 after two real captures needed more: Moxfield's
@@ -2086,7 +2096,8 @@ public class DeckTextExtractor {
 		Scan scan = pr.scan;
 		boolean dbActive = !normNames().isEmpty();
 		if (scan.count < MIN_MATCHES && !isCorroboratedBySizeLabel(norm, matches, scan)) {
-			MagicLogger.log("DeckTextExtractor: " + lines.length + " line(s) scanned, best run " + scan.count
+			if (TRACE_WEB_IMPORT)
+				MagicLogger.log("DeckTextExtractor: " + lines.length + " line(s) scanned, best run " + scan.count
 					+ " match(es) (need " + MIN_MATCHES + ") - rejected, falling back to the full page. DB cross-check "
 					+ (dbActive ? "active." : "NOT active (database not loaded yet)."));
 			return null;

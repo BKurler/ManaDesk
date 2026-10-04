@@ -1,6 +1,10 @@
 /*
  * Contributors:
  *     Rémi Dutil 2026 - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isDebugLaunch() (Platform.inDevelopmentMode()); the
+ *                         "Simulate web not working" preference replaces
+ *                         "Work Offline" and is only honoured in a debug
+ *                         launch.
  */
  
  package com.reflexit.magiccards.ui;
@@ -94,6 +98,15 @@ public class MagicUIActivator extends AbstractUIPlugin {
 
 	}
 
+	/**
+	 * {@code true} when the app runs from an Eclipse launch configuration (Run or
+	 * Debug from the IDE, PDE passes {@code -dev}) rather than an exported
+	 * product. Gates testing-only features such as "Simulate web not working".
+	 */
+	public static boolean isDebugLaunch() {
+		return Platform.inDevelopmentMode();
+	}
+
 	public static boolean isJunitRunning() {
 		return Boolean.valueOf(System.getProperty("junit.testing"));
 	}
@@ -105,7 +118,9 @@ public class MagicUIActivator extends AbstractUIPlugin {
 		// load core activator to start db init
 		Activator.getDefault();
 		IPreferenceStore globalStore = getPreferenceStore();
-		WebUtils.setWorkOffline(globalStore.getBoolean(PreferenceConstants.WORK_OFFLINE));
+		// testing switch only - never honoured outside a debug launch, so a stale
+		// value can never leave a user's app cut off from the web
+		WebUtils.setSimulateWebDown(isDebugLaunch() && globalStore.getBoolean(PreferenceConstants.SIMULATE_WEB_DOWN));
 		DataManager.getInstance().setOwnCopyEnabled(globalStore.getBoolean(PreferenceConstants.OWNED_COPY));
 		CurrencyConvertor.setCurrency(globalStore.getString(PreferenceConstants.CURRENCY));
 		PriceProviderManager.getInstance().sync(globalStore);

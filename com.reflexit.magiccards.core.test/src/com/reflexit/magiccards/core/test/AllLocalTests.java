@@ -12,6 +12,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - added WebUtilsTest.
  */
 
 package com.reflexit.magiccards.core.test;
@@ -54,6 +55,7 @@ import com.reflexit.magiccards.core.model.storage.MultiFileCollectionStoreTest;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtilsTest;
 import com.reflexit.magiccards.core.sync.AccessoryExtractorTest;
 import com.reflexit.magiccards.core.sync.ScryfallBulkSplitTest;
+import com.reflexit.magiccards.core.sync.WebUtilsTest;
 import com.reflexit.magiccards.core.model.utils.SearchStringTokenizerTest;
 import com.reflexit.magiccards.core.xml.MagicXmlHandlerTest;
 
@@ -96,6 +98,7 @@ public class AllLocalTests {
 		suite.addTest(new JUnit4TestAdapter(PlayingDeckTest.class));
 		suite.addTest(new JUnit4TestAdapter(ScryfallBulkSplitTest.class));
 		suite.addTest(new JUnit4TestAdapter(AccessoryExtractorTest.class));
+		suite.addTest(new JUnit4TestAdapter(WebUtilsTest.class));
 		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
 		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.LocationExtraTest.class));
 		// editions

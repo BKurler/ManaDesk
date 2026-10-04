@@ -180,12 +180,26 @@
  *                         fix (reads the real name from the row's own link
  *                         href, e.g. "/cards/xRQDJ-bojuka-bog") and why it's
  *                         scoped to Moxfield's own hostname/CSS class only.
+ *     Rémi Dutil (2026) - navigateTo() first checks (background, short
+ *                         timeout) that the site can be reached; with no web
+ *                         a friendly "web not accessible" page + banner is
+ *                         shown instead of the browser's own error page,
+ *                         "Import this page" is disabled, Reload retries.
+ *     Rémi Dutil (2026) - the [DIAGNOSTIC] / "no decklist block" traces are
+ *                         disabled (kept, behind DeckTextExtractor.
+ *                         TRACE_WEB_IMPORT).
  *******************************************************************************/
 package com.reflexit.magiccards.ui.dialogs;
 
+import java.net.MalformedURLException;
+import java.net.URL;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.eclipse.core.runtime.IProgressMonitor;
+import org.eclipse.core.runtime.IStatus;
+import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.InputDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
@@ -202,9 +216,11 @@ import org.eclipse.swt.browser.ProgressAdapter;
 import org.eclipse.swt.browser.ProgressEvent;
 import org.eclipse.swt.events.SelectionAdapter;
 import org.eclipse.swt.events.SelectionEvent;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
@@ -212,6 +228,7 @@ import org.eclipse.ui.dialogs.PreferencesUtil;
 
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.exports.DeckTextExtractor;
+import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.preferences.WebFavoritesPreferencePage;
 import com.reflexit.magiccards.ui.web.WebFavorite;
 import com.reflexit.magiccards.ui.web.WebFavoritesStore;
@@ -327,6 +344,12 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 	private String capturedTitle;
 	private String capturedFormat;
 	private String lastLoggedCardCountText;
+	/** the address last asked for (Reload retries it after a web failure) */
+	private String requestedUrl;
+	private boolean webErrorShown;
+
+	public static final String WEB_NOT_ACCESSIBLE = "The web is not accessible right now. "
+			+ "Check your internet connection and try again.";
 
 	/** @param initialUrl the address to navigate to as soon as the dialog opens
 	 *  (the wizard page's own address field) - takes priority over the
@@ -409,7 +432,11 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		reload.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
-				if (browser != null)
+				if (browser == null)
+					return;
+				if (webErrorShown && requestedUrl != null)
+					navigateTo(requestedUrl); // retry the page that could not be reached
+				else
 					browser.refresh();
 			}
 		});
@@ -449,7 +476,9 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 			browser.addLocationListener(new LocationAdapter() {
 				@Override
 				public void changed(LocationEvent event) {
-					if (event.top && addressText != null && !addressText.isDisposed())
+					// about:blank = the "web not accessible" page: keep the address the user asked for
+					if (event.top && addressText != null && !addressText.isDisposed()
+							&& !"about:blank".equals(event.location))
 						addressText.setText(event.location);
 					if (backButton != null && !backButton.isDisposed())
 						backButton.setEnabled(browser.isBackEnabled());
@@ -566,7 +595,7 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		} catch (Exception e) {
 			text = "";
 		}
-		if (!text.equals(lastLoggedCardCountText)) {
+		if (DeckTextExtractor.TRACE_WEB_IMPORT && !text.equals(lastLoggedCardCountText)) {
 			lastLoggedCardCountText = text;
 			MagicLogger.log("BrowseWebsiteDialog: [DIAGNOSTIC] captured text (" + text.length() + " chars):\n" + text);
 			// the matched-card LIST, not just the bare count - a real report
@@ -605,6 +634,10 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		}
 	}
 
+	/** Checks (in the background, short timeout) that the site can be reached
+	 *  before navigating - with no web the browser would otherwise sit on its
+	 *  own cryptic error page; a friendly message is shown instead and Reload /
+	 *  Go retries. */
 	private void navigateTo(String url) {
 		if (browser == null || url == null)
 			return;
@@ -613,7 +646,63 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 			return;
 		if (!trimmed.contains("://"))
 			trimmed = "https://" + trimmed;
-		browser.setUrl(trimmed);
+		final String target = trimmed;
+		requestedUrl = target;
+		final URL u;
+		try {
+			u = new URL(target);
+		} catch (MalformedURLException e) {
+			browser.setUrl(target); // let the browser report it
+			return;
+		}
+		final Display display = browser.getDisplay();
+		Job check = new Job("Checking web access") {
+			@Override
+			protected IStatus run(IProgressMonitor monitor) {
+				final boolean reachable = WebUtils.isReachable(u);
+				if (!display.isDisposed())
+					display.asyncExec(() -> {
+						if (browser == null || browser.isDisposed() || !target.equals(requestedUrl))
+							return; // dialog closed, or the user went elsewhere meanwhile
+						if (reachable) {
+							setWebErrorShown(false, null);
+							browser.setUrl(target);
+						} else {
+							setWebErrorShown(true, u.getHost());
+						}
+					});
+				return Status.OK_STATUS;
+			}
+		};
+		check.setSystem(true);
+		check.schedule();
+	}
+
+	/** Shows (or clears) the "web not accessible" page + banner; "Import this
+	 *  page" is disabled while it is up - there is no deck to import from it. */
+	private void setWebErrorShown(boolean shown, String host) {
+		webErrorShown = shown;
+		Button ok = getButton(IDialogConstants.OK_ID);
+		if (ok != null && !ok.isDisposed())
+			ok.setEnabled(!shown);
+		if (!shown) {
+			setErrorMessage(null);
+			return;
+		}
+		setErrorMessage(WEB_NOT_ACCESSIBLE);
+		browser.setText("<html><body style=\"font-family:'Segoe UI',sans-serif;color:#444;"
+				+ "text-align:center;padding-top:80px\">"
+				+ "<h2>The web is not accessible</h2>"
+				+ "<p>ManaDesk could not reach <b>" + escapeHtml(host) + "</b>.</p>"
+				+ "<p>Check your internet connection, then click <b>Reload</b> to try again.</p>"
+				+ "<p style=\"color:#888\">You can still import a deck list from a file or the clipboard.</p>"
+				+ "</body></html>");
+	}
+
+	private static String escapeHtml(String s) {
+		if (s == null)
+			return "";
+		return s.replace("&", "&amp;").replace("<", "&lt;").replace(">", "&gt;").replace("\"", "&quot;");
 	}
 
 	private void refreshFavorites() {
@@ -716,7 +805,7 @@ public class BrowseWebsiteDialog extends TitleAreaDialog {
 		// page if nothing looks sufficiently deck-shaped, rather than lose it
 		String deckSection = DeckTextExtractor.extractDeckSection(text);
 		capturedText = deckSection != null ? deckSection : text;
-		if (deckSection == null)
+		if (deckSection == null && DeckTextExtractor.TRACE_WEB_IMPORT)
 			MagicLogger.log("BrowseWebsiteDialog: no decklist block found - importing the full page text ("
 					+ text.length() + " char(s)) as-is");
 		DeckTextExtractor.DeckMeta meta = DeckTextExtractor.detectDeckMeta(text);

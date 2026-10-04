@@ -6,6 +6,8 @@
  *     Rémi Dutil (2026) - also react to selections from ProxierView (not an
  *                         AbstractCardsView - it's a multi-deck pivot grid,
  *                         not a single filtered card list)
+ *     Rémi Dutil (2026) - removed the "Work Offline" reference from the
+ *                         commented-out open action.
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -312,7 +314,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 		/*
 		 * !!! RD this.open = new Action("Open card in browser", SWT.NONE) { { setImageDescriptor(MagicUIActivator.getImageDescriptor( "icons/clcl16/discovery.gif")); }
 		 * 
-		 * @Override public void run() { try { if (panel.getCard() == null) return; String url = getUrl(); if (WebUtils.isWorkOffline()) return; IWebBrowser browser = getBrowser(); browser.openURL(new URL(url)); } catch (Exception e) { MessageDialog.openError(getControl().getShell(), "Error", "Well that kind of failed... " + e.getMessage()); MagicUIActivator.log(e); } } };
+		 * @Override public void run() { try { if (panel.getCard() == null) return; String url = getUrl(); IWebBrowser browser = getBrowser(); browser.openURL(new URL(url)); } catch (Exception e) { MessageDialog.openError(getControl().getShell(), "Error", "Well that kind of failed... " + e.getMessage()); MagicUIActivator.log(e); } } };
 		 * 
 		 * edit = new Action("Edit...") { { setImageDescriptor(MagicUIActivator.getImageDescriptor( "icons/clcl16/edit.png")); }
 		 * 

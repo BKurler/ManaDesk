@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - no "Work Offline" check; no web shows "the web is
+ *                         not accessible right now".
  *******************************************************************************/
 package com.reflexit.magiccards.ui.views.card;
 
@@ -62,7 +64,7 @@ public class RulingsView extends ViewPart {
 					if (loc.startsWith("http")) {
 						event.doit = false;
 						try {
-							if (!WebUtils.isWorkOffline() && Desktop.isDesktopSupported()
+							if (Desktop.isDesktopSupported()
 									&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
 								Desktop.getDesktop().browse(new URI(loc));
 						} catch (Exception e) {
@@ -90,10 +92,6 @@ public class RulingsView extends ViewPart {
 		this.currentUrl = rulingsUrl;
 		final String header = "<h3>Rulings" + (cardName == null || cardName.isEmpty() ? "" : " &ndash; " + cardName)
 				+ "</h3>";
-		if (WebUtils.isWorkOffline()) {
-			render(header + "<p>Rulings are not available while working offline.</p>");
-			return;
-		}
 		render(header + "<p><i>Loading&hellip;</i></p>");
 		final Display display = browser.getDisplay();
 		new Job("Loading rulings") {
@@ -103,8 +101,12 @@ public class RulingsView extends ViewPart {
 				try {
 					body = ScryfallRulings.fetchAsHtml(rulingsUrl);
 				} catch (Exception e) {
-					MagicUIActivator.log(e);
-					body = "<p>Could not load rulings.</p>";
+					if (WebUtils.isWebUnavailable(e)) {
+						body = "<p>Rulings are not available: the web is not accessible right now.</p>";
+					} else {
+						MagicUIActivator.log(e);
+						body = "<p>Could not load rulings.</p>";
+					}
 				}
 				final String html = header + body;
 				if (!display.isDisposed())
