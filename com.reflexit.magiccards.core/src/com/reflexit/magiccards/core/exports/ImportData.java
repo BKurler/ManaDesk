@@ -19,6 +19,10 @@
  *                         applyFixedOwnership(). A file-virtual card going
  *                         into a non-virtual list is also marked Proxy; both
  *                         kinds of change are counted for the preview warning
+ *     Rémi Dutil (2026) - declareLanguage(): a non-English language the file
+ *                         gives for a card that is imported as English (the
+ *                         card database only has English printings), for the
+ *                         preview's warning / yellow Language cell
  */
 package com.reflexit.magiccards.core.exports;
 
@@ -47,6 +51,8 @@ public class ImportData {
 	private int forcedVirtual = 0;
 	/** Copies the file said were virtual, imported as Own + Proxy (non-virtual target). */
 	private int forcedOwnProxy = 0;
+	/** card -&gt; the non-English language the file gave it (imported as English) */
+	private final IdentityHashMap<Object, String> declaredLanguage = new IdentityHashMap<>();
 	private ImportSource importSource;
 	private LinkedHashMap<String, Object> props = new LinkedHashMap<>();
 	/** what the file declared for each card (before resolution swaps the base): [name,set,collnum,id,gathererId,tcgId] */
@@ -144,6 +150,7 @@ public class ImportData {
 		error = null;
 		forcedVirtual = 0;
 		forcedOwnProxy = 0;
+		declaredLanguage.clear();
 	}
 
 	/** Snapshot what the file said about this card, before resolution rewrites its base. */
@@ -213,6 +220,27 @@ public class ImportData {
 			forcedVirtual += card.getCount();
 		}
 		card.setOwn(own);
+	}
+
+	/** The file gives {@code card} the non-English {@code language}, but it is imported as English. */
+	public void declareLanguage(Object card, String language) {
+		if (card != null && language != null && !language.trim().isEmpty() && !"English".equalsIgnoreCase(language))
+			declaredLanguage.put(card, language);
+	}
+
+	/** {@code card} is in its file language after all - stop reporting it. */
+	public void clearDeclaredLanguage(Object card) {
+		declaredLanguage.remove(card);
+	}
+
+	/** The non-English language the file gave {@code card}, or {@code null}. */
+	public String getDeclaredLanguage(Object card) {
+		return declaredLanguage.get(card);
+	}
+
+	/** Cards whose language from the file was replaced by English. */
+	public java.util.Collection<Object> getLanguageOverridden() {
+		return declaredLanguage.keySet();
 	}
 
 	/** Copies the file marked Own that are imported as virtual. */

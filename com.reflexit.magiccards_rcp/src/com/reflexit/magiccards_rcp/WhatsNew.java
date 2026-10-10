@@ -21,6 +21,7 @@
  *                         the list, and the "Main" collection
  *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
  *     Rémi Dutil (2026) - "Report a bug or request a feature" entry
+ *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -155,6 +156,9 @@ final class WhatsNew {
 			new Feature(1, MAJOR, IMPORT, "Import from a website", "Moxfield, Archidekt, TappedOut, MTGGoldfish, TCGplayer"
 					+ " and more - or any card list from the clipboard or a file, with a preview to fix unknown"
 					+ " cards.", null),
+			new Feature(1, MAJOR, IMPORT, "ManaBox", "Scan your cards with the ManaBox app, export them to CSV,"
+					+ " and import them into a collection - each card with its exact printing, finish, condition"
+					+ " and language. Decks and collections can also be exported for ManaBox.", null),
 			new Feature(1, MINOR, IMPORT, "Export", "Several decks at once, in one file or one per deck, a printable"
 					+ " sideboard list, and export formats you can edit with a live preview.", null),
 			new Feature(1, MAJOR, DATABASE, "Card database from Scryfall", "Downloaded on first start (or imported from a"

@@ -40,6 +40,10 @@
  *                         marked Proxy that way
  *     Rémi Dutil (2026) - the set list follows the "List sets by release
  *                         date" preference (SetListOrder)
+ *     Rémi Dutil (2026) - the Special column is shown whenever an imported
+ *                         card has tags (ManaBox's Misprint/Altered/Signed)
+ *     Rémi Dutil (2026) - a language the file gives that is replaced by
+ *                         English: yellow Language cell + a warning
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -78,6 +82,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.exports.ImportData;
 import com.reflexit.magiccards.core.exports.ImportSource;
+import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.model.CollectorNumber;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -98,6 +103,7 @@ import com.reflexit.magiccards.ui.views.columns.CountColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
 import com.reflexit.magiccards.ui.views.columns.GroupColumn;
 import com.reflexit.magiccards.ui.views.columns.IdColumn;
+import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
 import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 import com.reflexit.magiccards.ui.views.columns.OwnershipColumn;
 import com.reflexit.magiccards.ui.views.columns.ProxyColumn;
@@ -158,6 +164,7 @@ public class DeckImportPreviewPage extends WizardPage {
 		startingPage.performImport(true);
 		resolveByExternalIds();
 		autoCompleteUnique();
+		ImportUtils.applyDeclaredLanguages(importData); // after the id-based binding above
 		checkConsistency();
 		computeErrors();
 		safeSetText(importData.getText());
@@ -348,6 +355,17 @@ public class DeckImportPreviewPage extends WizardPage {
 			sb.append("Warning: ").append(toOwn).append(" card(s) marked virtual in the file will be imported as Own,")
 					.append(" because the destination is not virtual. They are marked Proxy - untick Proxy for the")
 					.append(" genuine ones.");
+		java.util.Collection<Object> langs = importData.getLanguageOverridden();
+		if (!langs.isEmpty()) {
+			java.util.Set<String> names = new java.util.TreeSet<>();
+			for (Object c : langs)
+				names.add(importData.getDeclaredLanguage(c));
+			if (sb.length() > 0)
+				sb.append("\n");
+			sb.append("Warning: ").append(langs.size()).append(" card(s) are in another language in the file (")
+					.append(String.join(", ", names)).append(") - they are imported as English, the card")
+					.append(" database only has English printings (shown in yellow).");
+		}
 		int toVirtual = importData.getForcedVirtual();
 		if (toVirtual > 0) {
 			if (sb.length() > 0)
@@ -656,6 +674,14 @@ public class DeckImportPreviewPage extends WizardPage {
 
 	private final java.util.Map<Object, java.util.Set<ICardField>> autoFilled = new java.util.IdentityHashMap<>();
 	private Color greenBg;
+
+	private Color yellowBg;
+
+	private Color yellow() {
+		if (yellowBg == null || yellowBg.isDisposed())
+			yellowBg = new Color(Display.getDefault(), 255, 242, 168); // soft "warning" yellow
+		return yellowBg;
+	}
 
 	private Color green() {
 		if (greenBg == null || greenBg.isDisposed())
@@ -1307,6 +1333,18 @@ public class DeckImportPreviewPage extends WizardPage {
 	 * review and fix them. Database-derived data (cost, price, power, ...) is
 	 * never a column here even though the resolved card carries it.
 	 */
+	private boolean hasSpecialTags() {
+		if (importData == null || importData.getList() == null)
+			return false;
+		for (Object o : importData.getList())
+			if (o instanceof MagicCardPhysical) {
+				String sp = ((MagicCardPhysical) o).getSpecial();
+				if (sp != null && !sp.trim().isEmpty())
+					return true;
+			}
+		return false;
+	}
+
 	public void updateColumns(ICardField[] fields) {
 		ColumnCollection colls = viewer.getColumnsCollection();
 		java.util.LinkedHashSet<ICardField> cols = new java.util.LinkedHashSet<>();
@@ -1322,6 +1360,10 @@ public class DeckImportPreviewPage extends WizardPage {
 		// Proxy - show the column so the user can review / untick them
 		if (importData != null && importData.getForcedOwnProxy() > 0)
 			cols.add(MagicCardField.PROXY);
+		// Special tags can come from other columns (ManaBox's Misprint /
+		// Altered / Signed) - show them whenever an imported card has some
+		if (hasSpecialTags())
+			cols.add(MagicCardField.SPECIAL);
 		if (fields != null)
 			for (ICardField field : fields)
 				if (field != null)
@@ -1535,6 +1577,29 @@ public class DeckImportPreviewPage extends WizardPage {
 				@Override
 				protected boolean canEditElement(Object element) {
 					return false;
+				}
+			};
+		}
+
+		/** A card whose language in the file was replaced by English: English
+		 *  on a yellow background, the file's language in the tooltip. */
+		@Override
+		protected AbstractColumn createLanguageColumn() {
+			return new LanguageColumn() {
+				@Override
+				public Color getBackground(Object element) {
+					if (importData != null && importData.getDeclaredLanguage(element) != null)
+						return yellow();
+					return super.getBackground(element);
+				}
+
+				@Override
+				public String getToolTipText(Object element) {
+					String declared = importData == null ? null : importData.getDeclaredLanguage(element);
+					if (declared != null)
+						return declared + " in the file - imported as English (the card database only has"
+								+ " English printings)";
+					return super.getToolTipText(element);
 				}
 			};
 		}

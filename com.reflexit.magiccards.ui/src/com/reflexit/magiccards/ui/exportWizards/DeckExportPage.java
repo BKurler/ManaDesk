@@ -11,6 +11,9 @@
  *                         Export on an actual deck/collection selection
  *                         silently discarded it in favour of whatever was
  *                         exported last time
+ *     Rémi Dutil (2026) - preview jobs never overlap (PREVIEW_RULE): two at once
+ *                         shared the format's export delegate and mixed their
+ *                         output (header lost, a row cut in the middle)
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -32,6 +35,7 @@ import java.util.Set;
 import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
+import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogSettings;
 import org.eclipse.jface.operation.IRunnableContext;
@@ -113,6 +117,23 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private StringButtonFieldEditor collection;
 	private Text previewText;
 	private Job previewJob;
+	/**
+	 * Previews never overlap: they share each format's single export delegate,
+	 * and a cancelled preview keeps running until it ends - an overlapping one
+	 * would re-init that delegate (output stream, header flag) under it and mix
+	 * the two outputs (a missing header, a row cut in the middle).
+	 */
+	private static final ISchedulingRule PREVIEW_RULE = new ISchedulingRule() {
+		@Override
+		public boolean contains(ISchedulingRule rule) {
+			return rule == this;
+		}
+
+		@Override
+		public boolean isConflicting(ISchedulingRule rule) {
+			return rule == this;
+		}
+	};
 	private StringButtonFieldEditor columnsChoice;
 
 	/** The selected main-deck elements (never sideboard/extra), or empty. */
@@ -829,6 +850,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 				return Status.OK_STATUS;
 			}
 		};
+		previewJob.setRule(PREVIEW_RULE); // waits for a cancelled one still running
 		previewJob.schedule();
 	}
 

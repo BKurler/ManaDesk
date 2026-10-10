@@ -12,6 +12,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - applyDeclaredLanguages(): a card the file gives in
+ *                         another language is bound to that language's
+ *                         printing when the card database has it (same set)
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -48,6 +51,7 @@ import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.LocationPath;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IDbCardStore;
 import com.reflexit.magiccards.core.model.storage.IStorage;
 import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
@@ -63,6 +67,68 @@ public class ImportUtils {
 		worker.init(result);
 		worker.run(monitor);
 		return result;
+	}
+
+	/**
+	 * For each card whose file language differs from its printing's
+	 * ({@link ImportData#declareLanguage}): bind it to the printing of the same
+	 * card, same set, in that language when the card database has one (the same
+	 * collector number preferred), and stop reporting it. A card already in
+	 * that language is not reported either. What is left is really imported in
+	 * another language than the file's (shown in the preview). Run after
+	 * resolution; running it again changes nothing.
+	 */
+	public static void applyDeclaredLanguages(ImportData data) {
+		if (data == null || data.getLanguageOverridden().isEmpty())
+			return;
+		IDbCardStore<IMagicCard> db = DataManager.getInstance().getMagicDBStore();
+		for (Object o : new ArrayList<>(data.getLanguageOverridden())) {
+			if (!(o instanceof MagicCardPhysical))
+				continue;
+			MagicCardPhysical card = (MagicCardPhysical) o;
+			String lang = data.getDeclaredLanguage(card);
+			if (sameLanguage(lang, card.getLanguage())) {
+				data.clearDeclaredLanguage(card); // already that printing
+				continue;
+			}
+			Collection<IMagicCard> candidates = db == null || card.getName() == null ? null
+					: db.getCandidates(card.getName());
+			MagicCard localized = findLocalizedPrinting(card, lang, candidates);
+			if (localized != null) {
+				card.setMagicCard(localized);
+				data.clearDeclaredLanguage(card);
+			}
+		}
+	}
+
+	/**
+	 * The printing of {@code card} in {@code lang} among {@code candidates}:
+	 * same set, same collector number preferred; {@code null} when there is
+	 * none.
+	 */
+	static MagicCard findLocalizedPrinting(IMagicCard card, String lang, Collection<IMagicCard> candidates) {
+		if (candidates == null || lang == null)
+			return null;
+		MagicCard sameSet = null;
+		for (IMagicCard c : candidates) {
+			if (!(c instanceof MagicCard) || !sameLanguage(lang, c.getLanguage()))
+				continue;
+			if (card.getSet() == null || !card.getSet().equals(c.getSet()))
+				continue;
+			String num = card.getCollectorId();
+			if (num != null && num.equals(c.getCollectorId()))
+				return (MagicCard) c;
+			if (sameSet == null)
+				sameSet = (MagicCard) c;
+		}
+		return sameSet;
+	}
+
+	/** English is stored as no language. */
+	private static boolean sameLanguage(String a, String b) {
+		String x = a == null || a.isEmpty() ? "English" : a;
+		String y = b == null || b.isEmpty() ? "English" : b;
+		return x.equalsIgnoreCase(y);
 	}
 
 	public static void resolve(List<? extends ICard> list) {

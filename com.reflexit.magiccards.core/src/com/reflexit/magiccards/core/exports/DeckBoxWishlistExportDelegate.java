@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - the header row follows "Generate header row"
+ */
 package com.reflexit.magiccards.core.exports;
 
 import com.reflexit.magiccards.core.model.MagicCardField;
@@ -6,6 +10,8 @@ import com.reflexit.magiccards.core.model.abs.ICardField;
 public class DeckBoxWishlistExportDelegate extends DeckBoxExportDelegate {
 	@Override
 	public void printHeader() {
+		if (!header) // "Generate header row" unchecked
+			return;
 		stream.println("Count,Name,Foil,Textless,Promo,Signed,Edition,Condition,Language,Card Number");
 	}
 

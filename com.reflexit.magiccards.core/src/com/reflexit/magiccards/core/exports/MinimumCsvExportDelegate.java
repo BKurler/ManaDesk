@@ -19,6 +19,7 @@
  *                         instead, so it's special-cased the same way LANG
  *                         already is, to match what the app's own Finish
  *                         column actually displays
+ *     Rémi Dutil (2026) - the header row follows "Generate header row"
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -43,6 +44,8 @@ public class MinimumCsvExportDelegate extends CsvExportDelegate {
 
 	@Override
 	public void printHeader() {
+		if (!header) // "Generate header row" unchecked
+			return;
 		stream.println((multiDeck ? "LOCATION," : "")
 				+ "NAME,SET,COUNT,SPECIAL,COMMENT,LANG,COLLNUM,GATHERERID,ID,OWNERSHIP,CONDITION,FINISH,PROXY");
 	}

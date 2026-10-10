@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isApplication(): the format of another application
+ *                         (DeckBox, ManaBox, Wagic...), for the format lists' order
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -23,6 +25,8 @@ public class ReportType {
 	private String label;
 	private Properties properties;
 	private boolean custom;
+	/** The format of another application (plugin.xml "application" attribute). */
+	private boolean application;
 	Object exportWorker;
 	Object importWorker;
 	public static final String EXT_PROP = "ext";
@@ -87,6 +91,14 @@ public class ReportType {
 
 	public boolean isCustom() {
 		return custom;
+	}
+
+	public void setApplication(boolean b) {
+		this.application = b;
+	}
+
+	public boolean isApplication() {
+		return application;
 	}
 
 	public File getFile() {

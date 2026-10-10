@@ -57,6 +57,8 @@
  *                         already fine - they fully override getText()
  *                         themselves and call get()/getString() directly,
  *                         never going through this shortcut at all.
+ *     Rémi Dutil (2026) - createLanguageColumn() factory (the import preview
+ *                         colors overridden languages)
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -137,7 +139,7 @@ public class MagicColumnCollection extends ColumnCollection {
 			columns.add(specialColumn);
 			columns.add(new ForTradeCountColumn());
 		}
-		columns.add(new LanguageColumn());
+		columns.add(createLanguageColumn());
 		columns.add(new TextColumn());
 		columns.add(new LegalityColumn());
 		if (myCards) {
@@ -265,6 +267,10 @@ public class MagicColumnCollection extends ColumnCollection {
 
 	protected AbstractColumn createConditionColumn() {
 		return new ConditionColumn();
+	}
+
+	protected AbstractColumn createLanguageColumn() {
+		return new LanguageColumn();
 	}
 
 	protected AbstractColumn createFinishColumn() {

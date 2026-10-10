@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - "misprint" and "altered" tags (ManaBox import)
+ */
 package com.reflexit.magiccards.core.model;
 
 import java.util.Arrays;
@@ -22,7 +26,7 @@ public class SpecialTags {
 		usedTags = new HashSet<String>();
 		conditions.addAll(Arrays.asList(new String[] { "mint", "nearmint", "played", "poor", "good" }));
 		usedTags.addAll(Arrays.asList(new String[] { "foil", "premium", "promo", "online", "signed",
-				"textless",
+				"textless", "misprint", "altered",
 				"wishlist", "fortrade" }));
 		usedTags.addAll(conditions);
 	}
