@@ -1,0 +1,17 @@
+name: Feature request
+description: An idea to make ManaDesk better
+labels: ["enhancement"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What would you like?
+      description: Describe the feature, and what it would help you do.
+    validations:
+      required: true
+  - type: textarea
+    id: system
+    attributes:
+      label: System information
+      description: Filled in by ManaDesk (Help > Report a Bug or Request a Feature...).
+      render: text

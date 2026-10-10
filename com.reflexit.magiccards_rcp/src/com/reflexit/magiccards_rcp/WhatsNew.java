@@ -20,6 +20,7 @@
  *     Rémi Dutil (2026) - entries for collection types, ownership following
  *                         the list, and the "Main" collection
  *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
+ *     Rémi Dutil (2026) - "Report a bug or request a feature" entry
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -172,7 +173,9 @@ final class WhatsNew {
 			new Feature(1, MINOR, GENERAL, "Faster startup", "The splash screen shows the real progress, and the"
 					+ " window opens ready to use.", null),
 			new Feature(1, MINOR, GENERAL, "No more Work Offline", "Without internet, ManaDesk keeps working and"
-					+ " quietly skips what needs the web.", null), };
+					+ " quietly skips what needs the web.", null),
+			new Feature(1, MINOR, GENERAL, "Report a bug or request a feature", "From the Help menu: describe it,"
+					+ " and ManaDesk opens the report on GitHub, ready to submit.", null), };
 
 	private WhatsNew() {
 	}
