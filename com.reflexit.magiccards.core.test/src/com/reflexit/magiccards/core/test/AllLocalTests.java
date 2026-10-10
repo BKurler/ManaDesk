@@ -107,6 +107,7 @@ public class AllLocalTests {
 		suite.addTest(new JUnit4TestAdapter(BuyListFormatTest.class));
 		suite.addTestSuite(DeckNeedsTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.nav.CollectionTypeTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.IssueReportTest.class);
 		suite.addTest(new JUnit4TestAdapter(PriceSourcesTest.class));
 		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
 		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.LocationExtraTest.class));

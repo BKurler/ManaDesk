@@ -23,6 +23,8 @@
  *                         class) - this app has exactly one perspective, so
  *                         switching to it was a no-op
  *     Rémi Dutil (2026) - Help > What's New... (WhatsNew), always available
+ *     Rémi Dutil (2026) - Help > Report a Bug or Request a Feature...
+ *                         (ReportIssueDialog - a pre-filled GitHub issue)
  */
 package com.reflexit.magiccards_rcp;
 
@@ -208,6 +210,12 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 			@Override
 			public void run() {
 				WhatsNew.open(window.getShell());
+			}
+		});
+		helpMenu.add(new Action("Report a Bug or Request a Feature...") {
+			@Override
+			public void run() {
+				new ReportIssueDialog(window.getShell()).open();
 			}
 		});
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));

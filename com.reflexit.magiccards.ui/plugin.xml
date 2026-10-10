@@ -281,11 +281,6 @@
             commandId="com.reflexit.magiccards.ui.commands.increaseCount">
       </handler>
       <handler
-            class="com.reflexit.magiccards.ui.commands.SendBugReportHandler"
-            commandId="com.reflexit.magiccards.ui.commands.sendBug">
-
-      </handler>
-      <handler
             class="com.reflexit.magiccards.ui.commands.UpdateDbHandler"
             commandId="com.reflexit.magiccards.ui.commands.updateMagicDb">
       </handler>
@@ -475,13 +470,6 @@
             id="com.reflexit.magiccards.ui.commands.increaseCount"
             name="Increase">
       </command>
-      <!--
-      <command
-            categoryId="com.reflexit.magiccards.ui.commands.category"
-            id="com.reflexit.magiccards.ui.commands.sendBug"
-            name="Send Bug or Feature Request">
-      </command>
-      -->
       <command
             categoryId="com.reflexit.magiccards.ui.commands.category"
             id="com.reflexit.magiccards.ui.commands.updateMagicDb"
@@ -641,16 +629,6 @@
                   id="com.reflexit.magiccards.ui.menus.importCardDb">
             </command>
       </menuContribution>
-      <!--
-      <menuContribution
-            locationURI="menu:help?after=additions">
-            <command
-                  commandId="com.reflexit.magiccards.ui.commands.sendBug"
-                  mnemonic="S"
-                  id="com.reflexit.magiccards.ui.menus.sendBug">
-            </command>
-      </menuContribution>
-     -->
      <menuContribution
             locationURI="popup:org.eclipse.ui.popup.any?after=additions">
          <command

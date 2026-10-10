@@ -1,0 +1,32 @@
+name: Bug report
+description: Something in ManaDesk does not work as expected
+labels: ["bug"]
+body:
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: What did you do, what did you expect, and what happened instead?
+    validations:
+      required: true
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: If you can, the steps that make the problem happen.
+      placeholder: |
+        1. Open ...
+        2. Click ...
+        3. ...
+  - type: textarea
+    id: system
+    attributes:
+      label: System information
+      description: Filled in by ManaDesk (Help > Report a Bug or Request a Feature...).
+      render: text
+  - type: textarea
+    id: logs
+    attributes:
+      label: Recent errors from the log
+      description: Filled in by ManaDesk when available.
+      render: text
