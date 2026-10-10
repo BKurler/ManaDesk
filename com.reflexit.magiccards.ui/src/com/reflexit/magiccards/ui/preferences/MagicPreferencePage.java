@@ -41,6 +41,9 @@
  *     Rémi Dutil (2026) - "Card prices from:" TCGplayer (USD) / Cardmarket
  *                         (EUR) - the price provider combo is back, limited
  *                         to the two Scryfall-fed sources.
+ *     Rémi Dutil (2026) - "Allow to copy non-virtual cards" removed: copying
+ *                         is always allowed, the copy follows the
+ *                         destination's default ownership
  */
 
 package com.reflexit.magiccards.ui.preferences;
@@ -61,7 +64,6 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
-import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 
@@ -102,16 +104,6 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		BooleanFieldEditor grid = new BooleanFieldEditor(PreferenceConstants.SHOW_GRID,
 				"Show grid lines in card tables", getFieldEditorParent());
 		addField(grid);
-		// protection
-		BooleanFieldEditor owncopy = new BooleanFieldEditor(PreferenceConstants.OWNED_COPY,
-				"Allow to copy non-virtual cards", getFieldEditorParent()) {
-			@Override
-			protected void fireStateChanged(String property, boolean oldValue, boolean newValue) {
-				super.fireStateChanged(property, oldValue, newValue);
-				DataManager.getInstance().setOwnCopyEnabled(newValue);
-			}
-		};
-		addField(owncopy);
 		// workspace - not a BooleanFieldEditor: it targets a different plugin's
 		// ConfigurationScope preference, not this page's own store - see this
 		// class' own header

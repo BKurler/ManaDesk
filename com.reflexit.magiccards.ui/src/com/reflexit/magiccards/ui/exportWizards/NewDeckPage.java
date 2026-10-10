@@ -35,6 +35,8 @@
  *                         found (DeckTextExtractor#detectDeckMeta()) -
  *                         "in doubt, leave Standard" per an explicit
  *                         request, so a miss never touches the combo.
+ *     Rémi Dutil (2026) - a new deck is always virtual (no more Virtual
+ *                         checkbox); a hint above Name says so.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -73,9 +75,17 @@ public class NewDeckPage extends AbstractCreateElementPage {
 		return ModelRoot.Side.DECK;
 	}
 
+	/** A deck is always virtual - it lists cards, it does not own them. */
 	@Override
-	protected boolean defaultVirtual() {
+	protected boolean wantVirtual() {
 		return true;
+	}
+
+	@Override
+	protected void createLeadingOptions(Group group) {
+		Label hint = new Label(group, SWT.WRAP);
+		hint.setText("A deck is virtual: it lists the cards to play. The cards you own stay in your collections.");
+		hint.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).span(3, 1).hint(300, SWT.DEFAULT).create());
 	}
 
 	@Override

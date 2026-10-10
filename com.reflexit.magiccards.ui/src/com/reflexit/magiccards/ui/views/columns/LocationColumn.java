@@ -1,26 +1,48 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - editing the location is a real move: the picker only
+ *                         lists allowed destinations (no read-only list, no
+ *                         virtual list for an owned card), a virtual card
+ *                         moved into a non-virtual list becomes Own after a
+ *                         confirmation, and it goes through
+ *                         DataManager#moveCards (was DataManager#move, which
+ *                         skipped every rule); the picker shows 20 rows and
+ *                         can hide sideboards / extra lists
+ */
 package com.reflexit.magiccards.ui.views.columns;
 
+import java.util.Collections;
+
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.DialogCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.viewers.Viewer;
+import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
+import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.dialogs.ISelectionValidator;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.LocationPath;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.ui.dialogs.CardNavigatorSelectionDialog;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 
 /**
  * @author Alena
@@ -92,6 +114,24 @@ public class LocationColumn extends GenColumn {
 								DataManager.getInstance().getModelRoot().getMyCardsContainer(), false,
 								"Select location to move card into");
 						d.setInitialSelections(new Object[] { cardElement });
+						d.setVisibleLines(20);
+						d.setFamilyToggle(true);
+						// only the allowed destinations are listed (same rule as
+						// the Move to menu): no read-only list, and an owned card
+						// never goes to a virtual list
+						final boolean own = element instanceof MagicCardPhysical
+								&& ((MagicCardPhysical) element).isOwn();
+						d.setFilters(new ViewerFilter[] { new ViewerFilter() {
+							@Override
+							public boolean select(Viewer v, Object parentElement, Object el) {
+								if (!(el instanceof CardCollection))
+									return true; // folders
+								CardCollection cc = (CardCollection) el;
+								if (cc.isReadOnly())
+									return false;
+								return !(own && cc.isVirtual());
+							}
+						} });
 						d.setValidator(new ISelectionValidator() {
 							@Override
 							public String isValid(Object selection) {
@@ -148,7 +188,28 @@ public class LocationColumn extends GenColumn {
 							loc = Location.createLocation(new LocationPath((String) value));
 						else
 							return;
-						DataManager.getInstance().move(card, loc);
+						if (loc.equals(card.getLocation()))
+							return;
+						// same rules as any move (the picker already hides refused
+						// destinations); a virtual card into a non-virtual list
+						// becomes Own after a confirmation
+						ICardStore<IMagicCard> dest = DataManager.getInstance().getCardStore(loc);
+						if (dest == null)
+							return;
+						Shell shell = viewer.getControl().getShell();
+						String veto = OwnershipRules.moveVeto(card, dest);
+						if (veto != null) {
+							MessageDialog.openInformation(shell, "Cannot Move", veto);
+							return;
+						}
+						if (!OwnershipConfirmation.confirmMove(shell, Collections.singletonList(card), dest))
+							return;
+						try {
+							DataManager.getInstance().moveCards(Collections.<IMagicCard> singletonList(card), dest);
+						} catch (MagicException e) {
+							MessageDialog.openError(shell, "Cannot Move", e.getMessage());
+							return;
+						}
 						// update
 						viewer.update(element, null);
 					}

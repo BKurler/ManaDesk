@@ -7,6 +7,10 @@
  *     Rémi Dutil (2026) - proxy count (tournament-readiness) + cost to replace them
  *     Rémi Dutil (2026) - proxies split into "covered by cards you own (any print)"
  *                         vs "must acquire"; only the latter feeds the cost
+ *     Rémi Dutil (2026) - Type shows the collection type ("Collection (Wishlist/To Print)");
+ *                         the Ownership combo only allows a non-virtual deck
+ *                         to become virtual (collections follow their type);
+ *                         the main collection cannot be made read-only
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -14,6 +18,7 @@ import java.text.DecimalFormat;
 import java.util.List;
 import java.util.Objects;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.window.Window;
@@ -36,10 +41,12 @@ import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -112,9 +119,20 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 			public void widgetSelected(SelectionEvent e) {
 				String value = ownership.getCombo().getText();
 				boolean virtual = value.equals("Virtual");
-				if (storageInfo.isVirtual() != virtual) {
-					storageInfo.setVirtual(virtual);
+				if (storageInfo.isVirtual() == virtual)
+					return;
+				// a collection's ownership follows its type, and a deck can only
+				// go from non-virtual (legacy) to virtual - never back
+				boolean deck = IStorageInfo.DECK_TYPE.equals(storageInfo.getType());
+				if (deck && virtual) {
+					storageInfo.setVirtual(true);
+					return;
 				}
+				ownership.setText(storageInfo.isVirtual() ? "Virtual" : "Own");
+				MessageDialog.openInformation(getArea().getShell(), "Ownership",
+						deck ? "A deck cannot be made non-virtual."
+								: "A collection's ownership follows its type (Standard / For Trade: own, Wishlist/To Print: virtual)."
+										+ " Change the type from Edit Properties.");
 			}
 		});
 		protection = createDynCombo("Protection: ",
@@ -125,6 +143,12 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 			public void widgetSelected(SelectionEvent e) {
 				String value = protection.getCombo().getText();
 				boolean b = value.equals("Read Only");
+				if (b && OwnershipRules.isMainCollection(storageInfo)) {
+					protection.setText("Writable");
+					MessageDialog.openInformation(getArea().getShell(), "Protection",
+							"The main collection is always writable.");
+					return;
+				}
 				if (storageInfo.isReadOnly() != b) {
 					storageInfo.setReadOnly(b);
 				}
@@ -244,6 +268,9 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		totalSideboard.setText(String.valueOf(getCount(sideboardStore)));
 		total.setText(String.valueOf(getCount(mainStore)));
 		prefix = (type != null && type.equals(IStorageInfo.DECK_TYPE)) ? "Deck" : "Collection";
+		CollectionType ctype = storageInfo != null ? storageInfo.getCollectionType() : null;
+		if (ctype != null)
+			prefix += " (" + ctype.getLabel() + ")";
 		if (location.isSideboard()) {
 			prefix = "Sideboard";
 		}

@@ -5,6 +5,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - apply the Proxy field on OK
  *     Rémi Dutil (2026) - apply the Finish field on OK
+ *     Rémi Dutil (2026) - Ownership follows OwnershipRules: only the values
+ *                         matching the cards' deck / collection are offered
+ *                         and applied
  *     Rémi Dutil (2026) - the Finish combo no longer offers "Auto" - always a
  *                         real value
  */
@@ -37,6 +40,7 @@ import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
 public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
@@ -124,7 +128,9 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 		modified = setField(card, store, MagicCardField.COUNT, fieldSet) || modified;
 		modified = setField(card, store, MagicCardField.PRICE, fieldSet) || modified;
 		modified = setField(card, store, MagicCardField.COMMENT, fieldSet) || modified;
-		modified = setField(card, store, MagicCardField.OWNERSHIP, fieldSet) || modified;
+		// ownership only changes towards the card's deck / collection
+		if (OwnershipRules.canSetOwn(card, Boolean.parseBoolean(store.getString(MagicCardField.OWNERSHIP.name()))))
+			modified = setField(card, store, MagicCardField.OWNERSHIP, fieldSet) || modified;
 		String special = card.getSpecial();
 		String especial = store.getString(EditCardsPropertiesDialog.SPECIAL_FIELD);
 		if (!UNCHANGED.equals(especial) && !especial.equals(special)) {
@@ -164,6 +170,15 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 		if (modified && update) {
 			DataManager.getInstance().update(card, fieldSet);
 		}
+	}
+
+	@Override
+	protected boolean allowOwnership(boolean own) {
+		for (MagicCardPhysical card : cards) {
+			if (OwnershipRules.canSetOwn(card, own))
+				return true;
+		}
+		return false;
 	}
 
 	protected boolean setField(MagicCardPhysical card, PreferenceStore store, ICardField field,

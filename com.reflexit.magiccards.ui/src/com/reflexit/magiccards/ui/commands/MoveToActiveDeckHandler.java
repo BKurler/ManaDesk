@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - confirm before virtual cards become Own
+ *                         (OwnershipConfirmation)
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import java.util.List;
@@ -16,6 +21,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.ui.dialogs.CountConfirmationDialog;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -56,6 +62,8 @@ public class MoveToActiveDeckHandler extends AbstractHandler {
 		if (activeDeckHandler != null) {
 			List<IMagicCard> list = iss.toList();
 			try {
+				if (count != 0 && !OwnershipConfirmation.confirmMove(window.getShell(), list, activeDeckHandler))
+					return null;
 				if (count == -1) {
 					DM.moveCards(DataManager.expandGroups(list), activeDeckHandler);
 				} else if (count == 0) {
@@ -63,6 +71,8 @@ public class MoveToActiveDeckHandler extends AbstractHandler {
 						@Override
 						protected void runOperation() {
 							Map<IMagicCard, Integer> map = getCountMap();
+							if (!OwnershipConfirmation.confirmMove(window.getShell(), map.keySet(), activeDeckHandler))
+								return;
 							List<IMagicCard> list = DM.splitCards(map);
 							DM.moveCards(list, activeDeckHandler);
 						};

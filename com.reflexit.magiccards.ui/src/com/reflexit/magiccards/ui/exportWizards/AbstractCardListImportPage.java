@@ -128,6 +128,11 @@
  *                         the raw connection error.
  *     Rémi Dutil (2026) - the Website format-detection trace is disabled
  *                         (kept, behind DeckTextExtractor.TRACE_WEB_IMPORT).
+ *     Rémi Dutil (2026) - importing pins card ownership to the destination
+ *                         deck / collection (ImportData#setOwnershipFixed);
+ *                         createNewDeck() takes the new collection's type.
+ *     Rémi Dutil (2026) - offerWebsiteSource() hook: the collection pages hide
+ *                         the Website source.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -200,6 +205,7 @@ import com.reflexit.magiccards.core.exports.ImportExportFactory;
 import com.reflexit.magiccards.core.exports.ImportSource;
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.exports.ReportType;
+import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -253,6 +259,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private boolean newExtraChoice;
 	private String newNameChoice;
 	private String newFormatChoice;
+	private CollectionType newCollectionTypeChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
 	private MagicToolkit toolkit;
@@ -348,6 +355,12 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	 *  import job runs (see {@link #wantVirtual()}). Only NewDeckPage (which
 	 *  has the combo) overrides this; every other page (a collection has no
 	 *  notion of legality) leaves it null. */
+	/** The type of a new collection (Standard / For Trade / Wishlist/To Print), or
+	 *  {@code null} for a deck. Only NewCollectionPage has a type choice. */
+	protected CollectionType wantCollectionType() {
+		return null;
+	}
+
 	protected String wantFormat() {
 		return null;
 	}
@@ -468,6 +481,12 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		return true;
 	}
 
+	/** Whether the Website source is offered. Collections leave it out:
+	 *  importing a collection from a web page is not a supported case. */
+	protected boolean offerWebsiteSource() {
+		return true;
+	}
+
 	/** Create the element with no cards. Only the "New ..." pages support this
 	 *  (they alone can be in {@link #isEmptyMode()}). */
 	public void createEmptyElement() {
@@ -486,6 +505,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 					? ((CardCollection) element).isVirtual()
 					: wantVirtual();
 			importData.setVirtual(targetVirtual);
+			// the destination decides each card's ownership: Own in a
+			// non-virtual list, virtual otherwise (see ImportData)
+			importData.setOwnershipFixed(true);
 			// cache the widget state now, on the UI thread - importRunnable() runs
 			// on a background job and can't touch SWT widgets
 			newVirtualChoice = wantVirtual();
@@ -495,6 +517,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			newExtraChoice = wantExtra();
 			newNameChoice = getNewElementName();
 			newFormatChoice = wantFormat();
+			newCollectionTypeChoice = wantCollectionType();
 			final boolean dbImport = false;
 			try {
 				IRunnableWithProgress work = new IRunnableWithProgress() {
@@ -729,7 +752,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted, boolean readOnly,
-			String defaultFormat, CollectionsContainer resource) {
+			String defaultFormat, CollectionType collectionType, CollectionsContainer resource) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
 		while (resource.contains(newloc) && attempts-- > 0) {
@@ -738,7 +761,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		if (attempts <= 0)
 			throw new IllegalArgumentException("Cannot generate deck name");
 		CardCollection created = new CardCollection(newloc.getBaseFileName(), resource, isDeck, virtual, unsorted);
-		created.persistInitialSettings(isDeck, virtual, unsorted);
+		if (!isDeck && collectionType != null)
+			created.persistInitialSettings(collectionType, unsorted); // virtual follows the type
+		else
+			created.persistInitialSettings(isDeck, virtual, unsorted);
 		if (readOnly || (defaultFormat != null && !defaultFormat.isEmpty())) {
 			try {
 				IStorageInfo si = created.getStorageInfo();
@@ -942,7 +968,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		// NPE later. A restored BROWSER choice with nothing captured yet is
 		// harmless: validateSourceGroup() blocks Next until the user browses again.
 		if (inputChoice != ImportSource.FILE && inputChoice != ImportSource.TEXT
-				&& inputChoice != ImportSource.BROWSER)
+				&& (inputChoice != ImportSource.BROWSER || !offerWebsiteSource()))
 			inputChoice = ImportSource.TEXT;
 		setInputChoice(inputChoice);
 		// restore options
@@ -1067,6 +1093,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		// above, if any. Clicking the field itself does NOT open the dialog
 		// (unlike the Clipboard preview above) - it is meant to be typed/pasted
 		// into directly, so a click-triggered popup would fight the user.
+		if (!offerWebsiteSource())
+			return;
 		websiteRadio = toolkit.createButton(fileSelectionArea, "Website", SWT.RADIO,
 				(e) -> onInputChoice(e, ImportSource.BROWSER));
 		websiteRadio.setLayoutData(GridDataFactory.fillDefaults().create());
@@ -1441,7 +1469,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 							// newNameChoice was captured on the UI thread by performImport()
 							CollectionsContainer newParent = (CollectionsContainer) element;
 							createNewDeck(newNameChoice != null ? newNameChoice : getSourceBasedName(), isDeckTarget(),
-									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newFormatChoice, newParent);
+									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newFormatChoice,
+									newCollectionTypeChoice, newParent);
 							createImportExtras(newParent, newSideboardChoice, newExtraChoice, newVirtualChoice);
 						}
 						if (!(element instanceof CardCollection)) {
@@ -1450,6 +1479,12 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 						Location location = getSelectedLocation();
 						importData.setLocation(location);
 						ImportUtils.updateLocation(result, location);
+						if (importData.isOwnershipFixed()) {
+							// safety net for formats that bypass importCard()
+							for (IMagicCard c : result)
+								if (c instanceof MagicCardPhysical)
+									importData.applyFixedOwnership((MagicCardPhysical) c);
+						}
 						// the imported text's own sideboard-tagged cards
 						// (a real Sideboard section, or - see
 						// DeckTextExtractor's own Commander handling - a

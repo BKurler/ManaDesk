@@ -121,7 +121,6 @@ public class MagicUIActivator extends AbstractUIPlugin {
 		// testing switch only - never honoured outside a debug launch, so a stale
 		// value can never leave a user's app cut off from the web
 		WebUtils.setSimulateWebDown(isDebugLaunch() && globalStore.getBoolean(PreferenceConstants.SIMULATE_WEB_DOWN));
-		DataManager.getInstance().setOwnCopyEnabled(globalStore.getBoolean(PreferenceConstants.OWNED_COPY));
 		CurrencyConvertor.setCurrency(globalStore.getString(PreferenceConstants.CURRENCY));
 		PriceProviderManager.getInstance().sync(globalStore);
 	}

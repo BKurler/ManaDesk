@@ -30,6 +30,20 @@
  *                         visit. Reuses the same storage DeckLegalityPage2
  *                         already wrote as a side effect of its own combo -
  *                         this just makes it a real, discoverable field
+ *     Rémi Dutil (2026) - collection Type (Standard / For Trade / Wishlist/To Print) radios
+ *                         replace a collection's Virtual checkbox (the type
+ *                         decides it); switching to/from Wishlist is offered only
+ *                         when the cards allow it. A deck's Virtual checkbox
+ *                         is one-way: a non-virtual (legacy) deck can be made
+ *                         virtual, a virtual deck cannot be made non-virtual.
+ *     Rémi Dutil (2026) - only the fields that apply are shown: a collection
+ *                         gets Unsorted (Standard / For Trade only); a deck
+ *                         gets Boxed, Default Format and the Sideboard /
+ *                         Extra checkboxes, which now look like the New Deck
+ *                         page's (no group box, same wording)
+ *     Rémi Dutil (2026) - the main collection is locked: Standard only, never
+ *                         Unsorted or Read Only, name and description not
+ *                         editable (the description explains it)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -37,7 +51,12 @@ package com.reflexit.magiccards.ui.dialogs;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
+import java.util.EnumMap;
+import java.util.Map;
+
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
@@ -51,8 +70,10 @@ import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.legality.Format;
+import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
 import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
@@ -67,7 +88,15 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	private CardCollection deck;
 	private Text nameText;
 	private final boolean deckType;
+	/** The main collection: always a sorted, writable Standard collection,
+	 *  and it cannot be renamed. */
+	private final boolean mainCollection;
+	private static final String MAIN_COLLECTION_DESCRIPTION = "This is the main collection: it is always a sorted,"
+			+ " writable Standard collection, and it cannot be renamed or deleted.";
+	/** Deck only - a collection's virtual flag follows its type. */
 	private Button virtual;
+	/** Collection only - one radio per type. */
+	private final Map<CollectionType, Button> typeRadios = new EnumMap<>(CollectionType.class);
 	private Button unsorted;
 	private Text text;
 	private Button protection;
@@ -86,6 +115,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			throw new NullPointerException();
 		this.info = info;
 		this.deckType = IStorageInfo.DECK_TYPE.equals(info.getType());
+		this.mainCollection = !deckType && OwnershipRules.isMainCollection(info);
 		setShellStyle(getShellStyle() | SWT.RESIZE);
 	}
 
@@ -107,8 +137,9 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		comp.setLayout(layout);
 		int cols = ((GridLayout) comp.getLayout()).numColumns;
 		{
-			// Type leads - it is fixed (a deck stays a deck), so it orients the
-			// rest of the dialog before the editable fields below it
+			// Type leads - a deck stays a deck and a collection stays a
+			// collection, so it orients the rest of the dialog before the
+			// editable fields below it
 			Label label = new Label(comp, SWT.NONE);
 			label.setText("Type:");
 			Label typeLabel = new Label(comp, SWT.NONE);
@@ -117,29 +148,128 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			gd.horizontalSpan = cols - 1;
 			typeLabel.setLayoutData(gd);
 		}
+		if (!deckType)
+			createCollectionTypeField(comp, cols);
 		if (deck != null) {
 			Label nl = new Label(comp, SWT.NONE);
 			nl.setText("Name:");
 			nameText = new Text(comp, SWT.BORDER | SWT.SINGLE);
 			nameText.setText(deck.getName());
+			nameText.setEditable(!mainCollection);
 			GridData ngd = new GridData(GridData.FILL_HORIZONTAL);
 			ngd.horizontalSpan = cols - 1;
 			nameText.setLayoutData(ngd);
 		}
-		virtual = StatusDots.check(comp, StatusDots.VIRTUAL, "Virtual");
-		virtual.setSelection(info.isVirtual());
+		if (deckType)
+			createDeckVirtualField(comp, cols);
 		protection = StatusDots.check(comp, StatusDots.READ_ONLY, "Read Only");
-		protection.setSelection(info.isReadOnly());
-		unsorted = StatusDots.check(comp, StatusDots.UNSORTED, "Unsorted (collections only)");
-		unsorted.setSelection(info.isUnsorted());
-		StatusDots.exclusive(virtual, unsorted);
-		boxed = StatusDots.check(comp, StatusDots.BOXED, "Boxed (physically pulled together)");
-		boxed.setSelection(info.isBoxed());
-		createFormatField(comp, cols);
-		createFamilyGroup(comp);
-		syncForType();
+		protection.setSelection(info.isReadOnly() && !mainCollection);
+		protection.setEnabled(!mainCollection);
+		if (deckType) {
+			// Boxed, Sideboard / Extra and Default Format are deck-only notions
+			boxed = StatusDots.check(comp, StatusDots.BOXED, "Boxed (physically pulled together)");
+			boxed.setSelection(info.isBoxed());
+			createFamilyGroup(comp);
+			createFormatField(comp, cols);
+		} else {
+			// Unsorted (manual card order) is a collection-only notion
+			unsorted = StatusDots.check(comp, StatusDots.UNSORTED,
+					"Unsorted - keep the manual card order and do not merge identical cards");
+			unsorted.setSelection(info.isUnsorted());
+			syncUnsorted();
+		}
 		createTextArea(comp);
 		return comp;
+	}
+
+	/**
+	 * "Collection Type:" - Standard / For Trade / Wishlist/To Print, each with its meaning.
+	 * The type decides the virtual flag, so there is no Virtual checkbox for a
+	 * collection. A type the current cards do not allow (an owned card in a
+	 * would-be Wishlist collection, a virtual card in a would-be Standard one) is
+	 * disabled, with the reason as its tooltip.
+	 */
+	private void createCollectionTypeField(Composite comp, int cols) {
+		Label label = new Label(comp, SWT.NONE);
+		label.setText("Collection Type:");
+		label.setLayoutData(new GridData(SWT.BEGINNING, SWT.BEGINNING, false, false));
+		Composite types = new Composite(comp, SWT.NONE);
+		GridLayout gl = new GridLayout(2, false);
+		gl.marginWidth = 0;
+		gl.marginHeight = 0;
+		types.setLayout(gl);
+		GridData tgd = new GridData(GridData.FILL_HORIZONTAL);
+		tgd.horizontalSpan = cols - 1;
+		types.setLayoutData(tgd);
+		CollectionType current = info.getCollectionType();
+		Iterable<?> cards = deck != null ? deck.getStore() : null;
+		for (CollectionType t : CollectionType.values()) {
+			Button radio = new Button(types, SWT.RADIO);
+			radio.setText(t.getLabel());
+			radio.setSelection(t == current);
+			Label desc = new Label(types, SWT.NONE);
+			desc.setText(t.getDescription());
+			String veto = t == current ? null : OwnershipRules.collectionTypeVeto(cards, t);
+			if (mainCollection && t != CollectionType.STANDARD)
+				veto = "is the main collection, which is always Standard";
+			if (veto != null) {
+				radio.setEnabled(false);
+				desc.setEnabled(false);
+				String tip = "Not available: this collection " + veto + ".";
+				radio.setToolTipText(tip);
+				desc.setToolTipText(tip);
+			}
+			radio.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					syncUnsorted();
+				}
+			});
+			typeRadios.put(t, radio);
+		}
+		Label rules = new Label(comp, SWT.WRAP);
+		rules.setText("Standard and For Trade collections only hold cards you own. A Wishlist/To Print collection is virtual"
+				+ " (cards to buy, proxies to print): set a card to Own once bought or printed, then move it to a"
+				+ " Standard collection. Only Standard and For Trade collections can be Unsorted.");
+		GridData rgd = new GridData(GridData.FILL_HORIZONTAL);
+		rgd.horizontalSpan = cols;
+		rgd.widthHint = 400;
+		rules.setLayoutData(rgd);
+	}
+
+	/** Only a Standard / For Trade collection can be Unsorted (not Wishlist/To Print). */
+	private void syncUnsorted() {
+		if (unsorted == null || unsorted.isDisposed())
+			return;
+		CollectionType t = selectedCollectionType();
+		boolean allowed = !mainCollection && (t == null || !t.isVirtual());
+		if (!allowed)
+			unsorted.setSelection(false);
+		unsorted.setEnabled(allowed);
+	}
+
+	private CollectionType selectedCollectionType() {
+		for (Map.Entry<CollectionType, Button> e : typeRadios.entrySet()) {
+			if (e.getValue().getSelection())
+				return e.getKey();
+		}
+		return info.getCollectionType();
+	}
+
+	/**
+	 * A deck's "Virtual" checkbox - one way only. New decks are always
+	 * virtual and cannot be made non-virtual; an existing non-virtual deck
+	 * keeps that status until the user checks the box.
+	 */
+	private void createDeckVirtualField(Composite comp, int cols) {
+		boolean isVirtual = info.isVirtual();
+		virtual = StatusDots.check(comp, StatusDots.VIRTUAL,
+				isVirtual ? "Virtual (a deck is always virtual)"
+						: "Virtual (check to make this deck virtual - this cannot be undone)");
+		virtual.setSelection(isVirtual);
+		virtual.setEnabled(!isVirtual);
+		virtual.setToolTipText("A deck lists the cards to play; the cards you own stay in your collections."
+				+ " An older non-virtual deck can be made virtual, but no deck can be made non-virtual.");
 	}
 
 	/**
@@ -168,23 +298,6 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		formatCombo.setLayoutData(fgd);
 	}
 
-	private void syncForType() {
-		// Unsorted (manual card order) only makes sense for a collection
-		if (deckType)
-			unsorted.setSelection(false);
-		unsorted.setEnabled(!deckType);
-		// Boxed ("physically pulled together for play") only makes sense for a deck
-		if (!deckType)
-			boxed.setSelection(false);
-		boxed.setEnabled(deckType);
-		// Default Format ("which format to validate legality against") only
-		// makes sense for a deck - a collection has no legality concept
-		if (!deckType)
-			formatCombo.setText(NOT_SET_FORMAT);
-		formatCombo.setEnabled(deckType);
-		syncFamilyForType(deckType);
-	}
-
 	/**
 	 * The "also create the Sideboard / Extra list" checkboxes. Shown only when the
 	 * edited element is known. Each box:
@@ -192,7 +305,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	 * <li>is checked and disabled when that list already exists,</li>
 	 * <li>is unchecked and enabled when the element is a deck and the list is
 	 * missing (checking it creates the list on OK),</li>
-	 * <li>is disabled for a collection (or a sideboard/extra list itself).</li>
+	 * <li>is disabled when the edited deck is itself a sideboard / extra list.</li>
 	 * </ul>
 	 */
 	private void createFamilyGroup(Composite comp) {
@@ -206,36 +319,28 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		sideboardExists = !member && parent != null && parent.contains(loc.toSideboard());
 		extraExists = !member && parent != null && parent.contains(loc.toExtra());
 
-		Group group = new Group(comp, SWT.NONE);
-		group.setText("Sideboard / Extra");
-		GridData ggd = new GridData(GridData.FILL_HORIZONTAL);
-		ggd.horizontalSpan = ((GridLayout) comp.getLayout()).numColumns;
-		group.setLayoutData(ggd);
-		group.setLayout(new GridLayout());
-
-		Label hint = new Label(group, SWT.WRAP);
-		hint.setText("Checking a box below creates that list for this deck (already-existing lists are"
-				+ " shown checked and cannot be unchecked here).");
-		hint.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-
-		createSideboard = new Button(group, SWT.CHECK);
-		createSideboard.setText("Create a Sideboard");
+		// same look and wording as the New Deck page: two plain checkboxes,
+		// set a little apart from the flags above (they create other lists)
+		int cols = ((GridLayout) comp.getLayout()).numColumns;
+		createSideboard = new Button(comp, SWT.CHECK);
+		createSideboard.setText(sideboardExists ? "Sideboard (already created)" : "Also create a Sideboard");
 		createSideboard.setToolTipText(
 				"An empty, editable sideboard list alongside the deck. It never counts towards deck legality.");
-		createSideboard.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
+		GridData sgd = new GridData(GridData.FILL_HORIZONTAL);
+		sgd.horizontalSpan = cols;
+		sgd.verticalIndent = 8;
+		createSideboard.setLayoutData(sgd);
 
-		createExtra = new Button(group, SWT.CHECK);
-		createExtra.setText("Create an Extra list (tokens, emblems, markers)");
+		createExtra = new Button(comp, SWT.CHECK);
+		createExtra.setText(extraExists ? "Extra list (already created)"
+				: "Also create an Extra list (tokens, emblems, markers)");
 		createExtra.setToolTipText(
 				"An editable extra list alongside the deck, pre-filled with the tokens / emblems / markers the deck needs at count 0. It never counts towards deck legality.");
-		createExtra.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-	}
+		GridData egd = new GridData(GridData.FILL_HORIZONTAL);
+		egd.horizontalSpan = cols;
+		createExtra.setLayoutData(egd);
 
-	private void syncFamilyForType(boolean deckType) {
-		if (createSideboard == null)
-			return;
-		Location loc = deck.getLocation();
-		boolean canCreate = deckType && !loc.isSideboard() && !loc.isExtra();
+		boolean canCreate = !member;
 		setFamilyCheck(createSideboard, sideboardExists, canCreate);
 		setFamilyCheck(createExtra, extraExists, canCreate);
 	}
@@ -265,7 +370,13 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		group.setLayout(new GridLayout());
 		text = new Text(group, SWT.WRAP | SWT.BORDER);
 		text.setLayoutData(GridDataFactory.fillDefaults().hint(600, 200).create());
-		text.setText(info.getComment() == null ? "" : info.getComment());
+		if (mainCollection) {
+			// fixed description, not editable
+			text.setText(MAIN_COLLECTION_DESCRIPTION);
+			text.setEditable(false);
+		} else {
+			text.setText(info.getComment() == null ? "" : info.getComment());
+		}
 	}
 
 	@Override
@@ -312,12 +423,25 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		}
 
 		// Apply all editable properties (Type is fixed - a deck stays a deck)
-		info.setComment(text.getText());
-		info.setVirtual(virtual.getSelection());
-		info.setUnsorted(unsorted.getSelection());
-		info.setBoxed(boxed.getSelection());
-		String chosenFormat = formatCombo.getText();
-		info.setDefaultFormat(NOT_SET_FORMAT.equals(chosenFormat) ? null : chosenFormat);
+		if (!mainCollection)
+			info.setComment(text.getText());
+		if (deckType) {
+			// one way: a deck can become virtual, never non-virtual
+			if (virtual.getSelection() && !info.isVirtual())
+				info.setVirtual(true);
+		} else {
+			CollectionType t = selectedCollectionType();
+			if (t != null && t != info.getCollectionType())
+				info.setCollectionType(t); // also sets the virtual flag
+		}
+		if (unsorted != null)
+			info.setUnsorted(unsorted.isEnabled() && unsorted.getSelection());
+		if (boxed != null)
+			info.setBoxed(boxed.getSelection());
+		if (formatCombo != null) {
+			String chosenFormat = formatCombo.getText();
+			info.setDefaultFormat(NOT_SET_FORMAT.equals(chosenFormat) ? null : chosenFormat);
+		}
 
 		// Case 2: enabling read-only → must enable last
 		if (!oldRO && newRO) {

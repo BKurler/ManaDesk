@@ -8,6 +8,12 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - a drop (move or copy) confirms before virtual cards
+ *                         become Own
+ *                         (OwnershipConfirmation)
+ */
 package com.reflexit.magiccards.ui.dnd;
 
 import java.util.Arrays;
@@ -34,6 +40,7 @@ import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 
 /**
  * @author Alena
@@ -64,10 +71,16 @@ public class MagicCardDropAdapter extends ViewerDropAdapter implements DropTarge
 			ICardStore<IMagicCard> sto = dm.getCardStore(targetLocation);
 			if (sto == null)
 				throw new MagicException("Invalid drop target: Cannot open collection " + targetLocation);
-			if (curEvent.detail == DND.DROP_MOVE)
+			if (curEvent.detail == DND.DROP_MOVE) {
+				if (!OwnershipConfirmation.confirmMove(PlatformUI.getWorkbench().getDisplay().getActiveShell(),
+						cards, sto))
+					return false;
 				return dm.moveCards(cards, sto);
-			else
-				return dm.copyCards(cards, sto);
+			}
+			if (!OwnershipConfirmation.confirmCopy(PlatformUI.getWorkbench().getDisplay().getActiveShell(), cards,
+					sto))
+				return false;
+			return dm.copyCards(cards, sto);
 		} catch (MagicException e) {
 			MessageDialog.openError(PlatformUI.getWorkbench().getDisplay().getActiveShell(), "Error",
 					"Cannot perform this operation: " + e.getMessage());

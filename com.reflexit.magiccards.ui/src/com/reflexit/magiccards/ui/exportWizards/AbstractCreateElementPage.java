@@ -20,6 +20,10 @@
  *                         own ModifyListener, guarded against the
  *                         programmatic setText() by settingNameProgrammatically)
  *                         is left alone.
+ *     Rémi Dutil (2026) - no more "Virtual" checkbox: a new deck is always
+ *                         virtual, a new collection's virtual flag follows
+ *                         the collection type chosen FIRST on the page
+ *                         (createLeadingOptions(), above Name).
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -71,7 +75,6 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	private boolean settingNameProgrammatically = false;
 	private Button emptyRadio;
 	private Text whereText;
-	protected Button newVirtual;
 	protected Button newReadOnly;
 
 	protected AbstractCreateElementPage(String pageName, IStructuredSelection selection) {
@@ -103,10 +106,17 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	/** DECK / COLLECTION. */
 	protected abstract ModelRoot.Side side();
 
-	/** Whether a brand-new element of this type is Virtual by default. */
-	protected abstract boolean defaultVirtual();
+	/** Whether the new element is virtual: always for a deck, per the chosen
+	 *  type for a collection. */
+	@Override
+	protected abstract boolean wantVirtual();
 
-	/** Add the type-specific options below Virtual / Read only
+	/** Options shown first, above the Name field (collection: its type). */
+	protected void createLeadingOptions(Group group) {
+		// NewCollectionPage overrides
+	}
+
+	/** Add the type-specific options below Read only
 	 *  (deck: Sideboard / Extra; collection: Unsorted). */
 	protected abstract void createTypeSpecificOptions(Group group);
 
@@ -139,11 +149,6 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	@Override
 	protected boolean isEmptyMode() {
 		return emptyRadio != null && emptyRadio.getSelection();
-	}
-
-	@Override
-	protected boolean wantVirtual() {
-		return newVirtual == null ? defaultVirtual() : newVirtual.getSelection();
 	}
 
 	@Override
@@ -196,6 +201,8 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 		group.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		group.setLayout(new GridLayout(3, false));
 
+		createLeadingOptions(group);
+
 		Label nl = new Label(group, SWT.NONE);
 		nl.setText("Name:");
 		nameText = new Text(group, SWT.BORDER);
@@ -227,9 +234,6 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 			}
 		});
 
-		newVirtual = StatusDots.check(group, StatusDots.VIRTUAL,
-				"Virtual - tracks cards you do not own (affects move / copy / count)");
-		newVirtual.setSelection(defaultVirtual());
 		newReadOnly = StatusDots.check(group, StatusDots.READ_ONLY,
 				"Read only - lock the new " + type + " after it is created");
 		// Breathing room AFTER Read only, before the type-specific options -
@@ -394,7 +398,7 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	@Override
 	public void createEmptyElement() {
 		createNewDeck(getNewElementName(), isDeckTarget(), wantVirtual(), wantUnsorted(), wantReadOnly(),
-				wantFormat(), parentContainer);
+				wantFormat(), wantCollectionType(), parentContainer);
 		createEmptyExtras(parentContainer);
 	}
 

@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - getStoreForKey(): the old main collection id
+ *                         ("Collections/main") still opens the main collection
+ */
 package com.reflexit.magiccards.core.model.xml;
 
 import com.reflexit.magiccards.core.DataManager;
@@ -30,6 +35,11 @@ public class DeckFilteredCardFileStore extends AbstractFilteredCardStore<IMagicC
 		if (coll != null) {
 			return coll.getStore();
 		}
+		// the main collection was renamed main -> Main: a tab or setting saved
+		// with the old id still opens it
+		CardCollection main = DataManager.getInstance().getModelRoot().getDefaultLib();
+		if (main != null && main.getLocation().getPath().equalsIgnoreCase(location.getPath()))
+			return main.getStore();
 		return null;
 	}
 

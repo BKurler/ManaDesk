@@ -9,6 +9,9 @@
  *    Alena Laskavaia - initial API and implementation
  *    Rémi Dutil (2026) - Side (DECK / COLLECTION) helpers: sideOf / containerFor
  *    Rémi Dutil (2026) - move(): carry the sideboard AND the extra list along
+ *    Rémi Dutil (2026) - the main collection is now Collections/Main.xml
+ *                        (shown as "Main"); an existing Collections/main.xml
+ *                        is renamed once, before it is opened
  *                        with the main deck (was sideboard-only)
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.nav;
@@ -58,7 +61,7 @@ public class ModelRoot extends CardOrganizer {
 		this.fLib = new CollectionsContainer("Collections", fMyCards);
 		this.fDecks = new CollectionsContainer("Decks", fMyCards);
 		this.db = new MagicDbContainter(root);
-		this.fLibFile = new CardCollection("main.xml", this.fLib);
+		this.fLibFile = new CardCollection(prepareMainCollectionFile(), this.fLib);
 		refresh();
 	}
 
@@ -137,7 +140,47 @@ public class ModelRoot extends CardOrganizer {
 	public void clear() {
 		getDeckContainer().removeChildren();
 		getCollectionsContainer().removeChildren();
-		this.fLibFile = new CardCollection("main.xml", this.fLib);
+		this.fLibFile = new CardCollection(prepareMainCollectionFile(), this.fLib);
+	}
+
+	/** The main collection's file name, under Collections. */
+	public static final String MAIN_COLLECTION_FILE = "Main.xml";
+	private static final String OLD_MAIN_COLLECTION_FILE = "main.xml";
+
+	/**
+	 * Renames an existing Collections/main.xml (the old name) to
+	 * {@link #MAIN_COLLECTION_FILE}. Goes through a temporary name because on
+	 * Windows a rename that only changes the case is a no-op. Cards inside get
+	 * their location from the file they are loaded from, so nothing else needs
+	 * to change. Returns the file name to use.
+	 */
+	private String prepareMainCollectionFile() {
+		try {
+			File dir = this.fLib.getFile();
+			String[] names = dir == null ? null : dir.list();
+			if (names == null)
+				return MAIN_COLLECTION_FILE;
+			boolean hasOld = false;
+			for (String n : names) {
+				if (n.equals(MAIN_COLLECTION_FILE))
+					return MAIN_COLLECTION_FILE; // already migrated
+				if (n.equals(OLD_MAIN_COLLECTION_FILE))
+					hasOld = true;
+			}
+			if (hasOld) {
+				File old = new File(dir, OLD_MAIN_COLLECTION_FILE);
+				File tmp = new File(dir, OLD_MAIN_COLLECTION_FILE + ".renaming");
+				if (old.renameTo(tmp) && !tmp.renameTo(new File(dir, MAIN_COLLECTION_FILE))) {
+					tmp.renameTo(old); // put it back - keep using the old name
+					return OLD_MAIN_COLLECTION_FILE;
+				}
+				if (!new File(dir, MAIN_COLLECTION_FILE).exists())
+					return OLD_MAIN_COLLECTION_FILE;
+			}
+		} catch (RuntimeException e) {
+			// fall through to the new name
+		}
+		return MAIN_COLLECTION_FILE;
 	}
 
 	/**

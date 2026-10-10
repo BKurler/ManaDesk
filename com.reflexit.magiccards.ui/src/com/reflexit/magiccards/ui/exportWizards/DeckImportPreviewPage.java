@@ -32,6 +32,12 @@
  *                         table now also shows the count when nothing needs
  *                         a row selected, so it stays visible without
  *                         needing to look up at the title area.
+ *     Rémi Dutil (2026) - ownership follows the destination: when the file's
+ *                         Ownership disagrees, the zone below the table warns
+ *                         (Own cards becoming virtual / virtual cards becoming
+ *                         Own + Proxy), and the Proxy column is added (editable
+ *                         here, Ownership stays read-only) when cards were
+ *                         marked Proxy that way
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -51,6 +57,7 @@ import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.ComboBoxCellEditor;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TextCellEditor;
 import org.eclipse.jface.wizard.IWizardPage;
@@ -90,6 +97,7 @@ import com.reflexit.magiccards.ui.views.columns.GroupColumn;
 import com.reflexit.magiccards.ui.views.columns.IdColumn;
 import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 import com.reflexit.magiccards.ui.views.columns.OwnershipColumn;
+import com.reflexit.magiccards.ui.views.columns.ProxyColumn;
 import com.reflexit.magiccards.ui.views.columns.SetColumn;
 import com.reflexit.magiccards.ui.views.columns.StringEditorColumn;
 import com.reflexit.magiccards.ui.widgets.ComboStringEditingSupport;
@@ -319,8 +327,32 @@ public class DeckImportPreviewPage extends WizardPage {
 			msg = n == 0 ? cardCountSummary(false) + " will be imported."
 					: n + " card(s) have errors - select a row for the details. " + cardCountSummary(true)
 							+ " will be imported.";
+			String warn = ownershipWarning();
+			if (warn != null)
+				msg = warn + "\n" + msg;
 		}
 		errorZone.setText(msg);
+	}
+
+	/** The warning for cards whose Ownership in the file was overridden by the
+	 *  destination, or {@code null}. */
+	private String ownershipWarning() {
+		if (importData == null)
+			return null;
+		StringBuilder sb = new StringBuilder();
+		int toOwn = importData.getForcedOwnProxy();
+		if (toOwn > 0)
+			sb.append("Warning: ").append(toOwn).append(" card(s) marked virtual in the file will be imported as Own,")
+					.append(" because the destination is not virtual. They are marked Proxy - untick Proxy for the")
+					.append(" genuine ones.");
+		int toVirtual = importData.getForcedVirtual();
+		if (toVirtual > 0) {
+			if (sb.length() > 0)
+				sb.append("\n");
+			sb.append("Warning: ").append(toVirtual).append(" card(s) marked Own in the file will be imported as")
+					.append(" virtual, because the destination is virtual.");
+		}
+		return sb.length() == 0 ? null : sb.toString();
 	}
 
 	/** Flip to {@code true} for the {@code [import-preview]} resolution trace
@@ -1283,6 +1315,10 @@ public class DeckImportPreviewPage extends WizardPage {
 		// when present, otherwise from the destination's virtual flag - either
 		// way the user should see what each card will end up as.
 		cols.add(MagicCardField.OWNERSHIP);
+		// file-virtual cards imported into a non-virtual list are pre-marked
+		// Proxy - show the column so the user can review / untick them
+		if (importData != null && importData.getForcedOwnProxy() > 0)
+			cols.add(MagicCardField.PROXY);
 		if (fields != null)
 			for (ICardField field : fields)
 				if (field != null)
@@ -1348,7 +1384,7 @@ public class DeckImportPreviewPage extends WizardPage {
 
 		errorZone = new Text(comp, SWT.WRAP | SWT.MULTI | SWT.READ_ONLY | SWT.V_SCROLL | SWT.BORDER);
 		GridData ezd = new GridData(GridData.FILL_HORIZONTAL);
-		ezd.heightHint = errorZone.getLineHeight() * 3;
+		ezd.heightHint = errorZone.getLineHeight() * 5; // room for the ownership warnings
 		errorZone.setLayoutData(ezd);
 		errorZone.setForeground(Display.getDefault().getSystemColor(SWT.COLOR_RED));
 
@@ -1496,6 +1532,42 @@ public class DeckImportPreviewPage extends WizardPage {
 				@Override
 				protected boolean canEditElement(Object element) {
 					return false;
+				}
+			};
+		}
+
+		/** Proxy is editable in the preview (the card is not in any list yet,
+		 *  so the change only touches the row - no DataManager update). */
+		@Override
+		protected AbstractColumn createProxyColumn() {
+			return new ProxyColumn() {
+				@Override
+				public EditingSupport getEditingSupport(final ColumnViewer viewer) {
+					return new EditingSupport(viewer) {
+						@Override
+						protected boolean canEdit(Object element) {
+							return element instanceof MagicCardPhysical;
+						}
+
+						@Override
+						protected CellEditor getCellEditor(Object element) {
+							return new ComboBoxCellEditor((Composite) viewer.getControl(),
+									new String[] { "Genuine", "Proxy" }, SWT.READ_ONLY);
+						}
+
+						@Override
+						protected Object getValue(Object element) {
+							return ((MagicCardPhysical) element).isProxy() ? 1 : 0;
+						}
+
+						@Override
+						protected void setValue(Object element, Object value) {
+							int idx = value instanceof Integer ? ((Integer) value).intValue()
+									: Integer.parseInt(String.valueOf(value));
+							((MagicCardPhysical) element).setProxy(idx == 1);
+							viewer.update(element, null);
+						}
+					};
 				}
 			};
 		}

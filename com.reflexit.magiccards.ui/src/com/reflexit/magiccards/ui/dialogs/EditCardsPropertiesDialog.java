@@ -21,6 +21,9 @@
  *                         non-filter surface uses the abbreviation now; only
  *                         the filter dialog's checkbox group still spells it
  *                         out (CardConditions already did)
+ *     Rémi Dutil (2026) - allowOwnership() hook: the Ownership combo only
+ *                         offers the values an edited card may take (see
+ *                         OwnershipRules)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -290,6 +293,11 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		});
 	}
 
+	/** Whether Own ({@code own}) / Virtual may be chosen in the Ownership combo. */
+	protected boolean allowOwnership(boolean own) {
+		return true;
+	}
+
 	public void createOwnershipFieldEditor(Composite area) {
 		createTextLabel(area, "Ownership");
 		final Combo ownership = new Combo(area, SWT.READ_ONLY);
@@ -298,7 +306,16 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		String defaultString = ovalue;
 		if (!UNCHANGED.equals(ovalue))
 			defaultString = Boolean.valueOf(ovalue) ? OWN_VALUE : VIRTUAL_VALUE;
-		setComboChoices(ownership, new String[] { OWN_VALUE, VIRTUAL_VALUE, UNCHANGED }, defaultString);
+		// only the values some edited card may take are offered - ownership
+		// follows the card's deck / collection (OwnershipRules)
+		java.util.List<String> choiceList = new java.util.ArrayList<>();
+		if (allowOwnership(true))
+			choiceList.add(OWN_VALUE);
+		if (allowOwnership(false))
+			choiceList.add(VIRTUAL_VALUE);
+		choiceList.add(UNCHANGED);
+		String[] choices = choiceList.toArray(new String[choiceList.size()]);
+		setComboChoices(ownership, choices, defaultString);
 		ownership.addSelectionListener(new SelectionAdapter() {
 			@Override
 			public void widgetSelected(SelectionEvent e) {

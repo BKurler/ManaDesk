@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - doInitialize() repairs the main collection: always a
+ *                         sorted, writable Standard collection
+ */
 package com.reflexit.magiccards.core.model.xml;
 
 import java.util.Collection;
@@ -5,9 +10,11 @@ import java.util.Collections;
 import java.util.Set;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.abs.CardList;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.events.CardEvent;
@@ -20,6 +27,7 @@ import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.AbstractCardStoreWithStorage;
 import com.reflexit.magiccards.core.model.storage.CollectionCardStore;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 
 public class LibraryCardStore extends CollectionMultiFileCardStore {
 	private static LibraryCardStore instance;
@@ -42,6 +50,15 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 		}
 		table.setLocation(def.getLocation());
 		super.doInitialize();
+		// the main collection is always a sorted, writable Standard collection
+		AbstractCardStoreWithStorage main = getMultiStore().getStorage(def.getLocation());
+		if (main != null && main.getStorage() instanceof IStorageInfo) {
+			try {
+				OwnershipRules.enforceMainCollection((IStorageInfo) main.getStorage());
+			} catch (RuntimeException e) {
+				MagicLogger.log(e);
+			}
+		}
 		initialized = true;
 		EventListener lis = new EventListener();
 		DataManager.getInstance().getModelRoot().addListener(lis);

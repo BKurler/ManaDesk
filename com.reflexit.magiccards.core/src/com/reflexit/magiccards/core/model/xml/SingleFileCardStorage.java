@@ -10,6 +10,13 @@
  *                         "format" key DeckLegalityPage2 already wrote
  *                         directly via getProperty/setProperty, so existing
  *                         decks' remembered format survives unchanged
+ *     Rémi Dutil (2026) - getCollectionType()/setCollectionType() under the
+ *                         "collectionType" key; the type also sets the
+ *                         virtual flag, and an unset/inconsistent key falls
+ *                         back to the type implied by that flag
+ *     Rémi Dutil (2026) - getName() is always the file name when the location
+ *                         is known (the <name> saved in the file was often
+ *                         empty)
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -20,6 +27,7 @@ import java.util.ArrayList;
 import java.util.Properties;
 
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
@@ -34,6 +42,7 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	private static final transient String READ_ONLY = "readonly";
 	private static final transient String BOXED = "boxed";
 	private static final transient String FORMAT = "format";
+	private static final transient String COLLECTION_TYPE_KEY = "collectionType";
 	protected transient File file;
 	protected Location location;
 	protected String name;
@@ -183,6 +192,22 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 		return getProperty(FORMAT);
 	}
 
+	@Override
+	public CollectionType getCollectionType() {
+		if (DECK_TYPE.equals(getType()))
+			return null;
+		return CollectionType.resolve(getProperty(COLLECTION_TYPE_KEY), isVirtual());
+	}
+
+	@Override
+	public void setCollectionType(CollectionType type) {
+		if (type == null)
+			throw new NullPointerException();
+		accessCheck();
+		setProperty(COLLECTION_TYPE_KEY, type.name());
+		setVirtual(type.isVirtual());
+	}
+
 	public void setName(String name) {
 		throw new UnsupportedOperationException();
 		// doSetName(name);
@@ -321,7 +346,12 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 			this.doSetList(new ArrayList<IMagicCard>());
 		if (getLocation() == null)
 			this.location = Location.valueOf(obj.key);
-		if (obj.name != null)
+		// the name is the file name (what the navigator shows); the copy saved
+		// inside the file is only used when the location is unknown - it is
+		// often empty, and stale after a rename outside the app
+		if (getLocation() != null)
+			this.name = getLocation().getName();
+		else if (obj.name != null)
 			this.name = obj.name;
 		this.comment = obj.comment;
 		this.properties = obj.properties;

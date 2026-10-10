@@ -57,6 +57,8 @@
  *                         into view (only when off-screen) on focus return;
  *                         setFocusOnList() + the table's keyboard cursor moved
  *                         onto the selected row, so the keyboard works at once.
+ *     Rémi Dutil (2026) - confirm before a copy turns virtual cards into
+ *                         owned ones (OwnershipConfirmation)
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -145,6 +147,7 @@ import com.reflexit.magiccards.ui.actions.SortByAction;
 import com.reflexit.magiccards.ui.actions.UnsortAction;
 import com.reflexit.magiccards.ui.actions.ViewAsAction;
 import com.reflexit.magiccards.ui.commands.ShowFilterHandler;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
 import com.reflexit.magiccards.ui.dnd.MagicCardTransfer;
 import com.reflexit.magiccards.ui.preferences.CustomGroupsPreferencePage;
@@ -2450,7 +2453,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		MagicCardTransfer mt = MagicCardTransfer.getInstance();
 		Object contents = mt.fromClipboard();
 		if (contents instanceof Collection) {
-			DM.copyCards(DM.resolve((Collection) contents), getFilteredStore().getCardStore());
+			Collection resolved = DM.resolve((Collection) contents);
+			ICardStore dest = getFilteredStore().getCardStore();
+			if (OwnershipConfirmation.confirmCopy(getControl().getShell(), resolved, dest))
+				DM.copyCards(resolved, dest);
 		} else {
 			Control fc = getControl().getDisplay().getFocusControl();
 			CopySupport.runPaste(fc);

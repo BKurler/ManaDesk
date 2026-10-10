@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - importCard() applies ImportData#isOwnershipFixed()
  */
 package com.reflexit.magiccards.core.exports;
 
@@ -89,6 +90,8 @@ public abstract class AbstractImportDelegate implements ICoreRunnableWithProgres
 	protected void importCard(MagicCardPhysical card) {
 		if (card == null)
 			return;
+		// the destination decides ownership, not the file (see ImportData)
+		importData.applyFixedOwnership(card);
 		if (!card.isMigrated()) {
 			MagicCardPhysical ncard = card.tradeSplit(card.getCount(), card.getForTrade());
 			if (ncard != null) {
