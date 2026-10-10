@@ -18,9 +18,14 @@
  *                         stored ad hoc under the raw "format" property key
  *                         into a proper typed accessor - same key, no
  *                         migration needed
+ *     Rémi Dutil (2026) - getCollectionType()/setCollectionType(): a
+ *                         collection's type (Standard / For Trade / Wishlist/To Print),
+ *                         which also drives its virtual flag
  */
 
 package com.reflexit.magiccards.core.model.storage;
+
+import com.reflexit.magiccards.core.model.CollectionType;
 
 public interface IStorageInfo {
 	public static final String DECK_TYPE = "deck";
@@ -61,4 +66,11 @@ public interface IStorageInfo {
 	public String getDefaultFormat();
 
 	public void setDefaultFormat(String format);
+
+	/** A collection's type - the stored one, or the one implied by its virtual
+	 *  flag (see {@link CollectionType#resolve}). {@code null} for a deck. */
+	public CollectionType getCollectionType();
+
+	/** Sets a collection's type AND its virtual flag to match. */
+	public void setCollectionType(CollectionType type);
 }

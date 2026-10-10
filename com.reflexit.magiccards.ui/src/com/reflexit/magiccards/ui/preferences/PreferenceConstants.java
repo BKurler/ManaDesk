@@ -37,7 +37,6 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String LOCAL_COLUMNS = "columnlayout";
 	public static final String CHECK_FOR_UPDATES = "updates";
 	public static final String CHECK_FOR_CARDS = "cardUpdates";
-	public static final String OWNED_COPY = PREFIX + ".nomycopy";
 	public static final String CURRENCY = PREFIX + ".currency";
 	/** Testing only, shown in debug launches: make every web access fail as if
 	 *  the network were down (see {@code WebUtils#setSimulateWebDown}). */

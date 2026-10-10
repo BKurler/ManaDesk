@@ -1,3 +1,10 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - ownership follows the card's deck / collection
+ *                         (OwnershipRules): only a card whose stored value
+ *                         does not match its list is editable, and only to
+ *                         the matching value; the tooltip says why
+ */
 package com.reflexit.magiccards.ui.views.columns;
 
 import java.util.Collections;
@@ -14,6 +21,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 
 /**
  * @author Alena
@@ -51,10 +59,13 @@ public class OwnershipColumn extends GenColumn {
 
 	@Override
 	public String getToolTipText(Object element) {
-		if (isOwn(element))
-			return "Own (Physical or Online)";
-		else
-			return "Virtual";
+		String text = isOwn(element) ? "Own (Physical or Online)" : "Virtual";
+		if (element instanceof IMagicCardPhysical) {
+			IMagicCardPhysical card = (IMagicCardPhysical) element;
+			if (!OwnershipRules.canSetOwn(card, !card.isOwn()))
+				text += " - " + OwnershipRules.NO_SET_OWNERSHIP;
+		}
+		return text;
 	}
 
 	// @Override
@@ -81,10 +92,11 @@ public class OwnershipColumn extends GenColumn {
 		return new EditingSupport(viewer) {
 			@Override
 			protected boolean canEdit(Object element) {
-				if (element instanceof MagicCardPhysical)
-					return true;
-				else
+				// only a card that does not match its list can change - towards it
+				if (!(element instanceof MagicCardPhysical))
 					return false;
+				MagicCardPhysical card = (MagicCardPhysical) element;
+				return OwnershipRules.canSetOwn(card, !card.isOwn());
 			}
 
 			@Override
@@ -113,11 +125,10 @@ public class OwnershipColumn extends GenColumn {
 				if (element instanceof MagicCardPhysical) {
 					MagicCardPhysical card = (MagicCardPhysical) element;
 					// set
-					String string = value.toString();
-					if (string.equals("0")) {
-						card.setOwn(true);
-					} else
-						card.setOwn(false);
+					boolean own = value.toString().equals("0");
+					if (own == card.isOwn() || !OwnershipRules.canSetOwn(card, own))
+						return;
+					card.setOwn(own);
 					// update
 					Set<MagicCardField> of = Collections.singleton(MagicCardField.OWNERSHIP);
 					DataManager.getInstance().update(card, of);

@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - confirm before a copy turns virtual cards into
+ *                         owned ones (OwnershipConfirmation)
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import org.eclipse.core.commands.AbstractHandler;
@@ -12,6 +17,7 @@ import org.eclipse.ui.handlers.HandlerUtil;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -42,7 +48,8 @@ public class AddToActiveDeckHandler extends AbstractHandler {
 		ICardStore<IMagicCard> activeDeckHandler = dm.getCardHandler().getActiveStore();
 		if (activeDeckHandler != null) {
 			try {
-				dm.copyCards(dm.expandGroups(iss.toList()), activeDeckHandler);
+				if (OwnershipConfirmation.confirmCopy(window.getShell(), iss.toList(), activeDeckHandler))
+					dm.copyCards(dm.expandGroups(iss.toList()), activeDeckHandler);
 			} catch (Exception e) {
 				MessageDialog.openError(window.getShell(), "Error", e.getLocalizedMessage());
 			}

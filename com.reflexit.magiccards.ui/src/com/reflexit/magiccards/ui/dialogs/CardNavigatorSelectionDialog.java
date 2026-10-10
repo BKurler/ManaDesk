@@ -8,25 +8,42 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - setVisibleLines(): taller tree on request;
+ *                         setFamilyToggle(): an "Include sideboards and extra
+ *                         lists" checkbox that shows / hides them (remembered
+ *                         for the session)
+ */
 package com.reflexit.magiccards.ui.dialogs;
 
+import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
+
 
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.ISelectionChangedListener;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.SelectionChangedEvent;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.jface.viewers.ViewerFilter;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
+import org.eclipse.swt.widgets.Tree;
 import org.eclipse.ui.dialogs.ISelectionValidator;
 import org.eclipse.ui.dialogs.SelectionDialog;
 
+import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatiorManager;
 
 /**
@@ -44,6 +61,12 @@ public class CardNavigatorSelectionDialog extends SelectionDialog {
 	// for validating the selection
 	ISelectionValidator validator;
 	private ViewerFilter[] filters;
+	/** Tree height in rows, or 0 for the default fixed height. */
+	private int visibleLines = 0;
+	/** Whether the sideboard / extra checkbox is shown. */
+	private boolean familyToggle = false;
+	/** Last checkbox state, remembered for the session. */
+	private static boolean includeFamily = false;
 
 	/**
 	 * Creates a resource container selection dialog rooted at the given
@@ -99,8 +122,22 @@ public class CardNavigatorSelectionDialog extends SelectionDialog {
 		};
 		this.manager.createContents(area, SWT.NONE);
 		getViewer().addSelectionChangedListener(listener);
+		List<ViewerFilter> all = new ArrayList<>();
 		if (this.filters != null)
-			getViewer().setFilters(this.filters);
+			all.addAll(Arrays.asList(this.filters));
+		if (familyToggle) {
+			all.add(new ViewerFilter() {
+				@Override
+				public boolean select(Viewer v, Object parentElement, Object el) {
+					if (includeFamily || !(el instanceof CardCollection))
+						return true;
+					Location loc = ((CardCollection) el).getLocation();
+					return !loc.isSideboard() && !loc.isExtra();
+				}
+			});
+		}
+		if (!all.isEmpty())
+			getViewer().setFilters(all.toArray(new ViewerFilter[all.size()]));
 		if (this.root != null) {
 			getViewer().setInput(this.root);
 		}
@@ -109,7 +146,22 @@ public class CardNavigatorSelectionDialog extends SelectionDialog {
 		}
 		GridData gd = new GridData(GridData.FILL_BOTH);
 		gd.heightHint = 200;
-		((Composite) getViewer().getControl()).setLayoutData(gd);
+		Control tree = getViewer().getControl();
+		if (visibleLines > 0 && tree instanceof Tree)
+			gd.heightHint = ((Tree) tree).getItemHeight() * visibleLines;
+		((Composite) tree).setLayoutData(gd);
+		if (familyToggle) {
+			final Button family = new Button(area, SWT.CHECK);
+			family.setText("Include sideboards and extra lists");
+			family.setSelection(includeFamily);
+			family.addSelectionListener(new SelectionAdapter() {
+				@Override
+				public void widgetSelected(SelectionEvent e) {
+					includeFamily = family.getSelection();
+					getViewer().refresh();
+				}
+			});
+		}
 		this.statusMessage = new Label(area, SWT.WRAP);
 		this.statusMessage.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
 		this.statusMessage.setText(" \n "); //$NON-NLS-1$
@@ -151,6 +203,16 @@ public class CardNavigatorSelectionDialog extends SelectionDialog {
 	 */
 	public void setValidator(ISelectionValidator validator) {
 		this.validator = validator;
+	}
+
+	/** Make the tree tall enough for {@code lines} rows. */
+	public void setVisibleLines(int lines) {
+		this.visibleLines = lines;
+	}
+
+	/** Show an "Include sideboards and extra lists" checkbox (remembered for the session). */
+	public void setFamilyToggle(boolean show) {
+		this.familyToggle = show;
 	}
 
 	/**

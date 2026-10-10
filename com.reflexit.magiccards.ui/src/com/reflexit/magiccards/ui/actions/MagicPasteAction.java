@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - confirm before a copy turns virtual cards into
+ *                         owned ones (OwnershipConfirmation)
  */
 
 package com.reflexit.magiccards.ui.actions;
@@ -27,6 +29,7 @@ import org.eclipse.ui.actions.ActionFactory;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
 import com.reflexit.magiccards.ui.dnd.MagicCardTransfer;
 import com.reflexit.magiccards.ui.utils.MagicAdapterFactory;
@@ -67,8 +70,11 @@ public class MagicPasteAction extends AbstractMagicAction {
 			ICardStore<IMagicCard> cardStore = getCardStore();
 			if (cardStore == null)
 				MessageDialog.openError(getShell(), "Error", "Cannot figure out where to copy");
-			else
-				DM.copyCards(DM.resolve((Collection) contents), cardStore);
+			else {
+				Collection resolved = DM.resolve((Collection) contents);
+				if (OwnershipConfirmation.confirmCopy(getShell(), resolved, cardStore))
+					DM.copyCards(resolved, cardStore);
+			}
 		} else if (contents == null) {
 			Object retry = readClipboard();
 			if (retry == null) {

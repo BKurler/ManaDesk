@@ -24,6 +24,12 @@
  *                         does the same root-swap + store reload as reset()
  *                         but without the deletion, safe to point at an
  *                         existing directory.
+ *     Rémi Dutil (2026) - strict move / copy (see OwnershipRules): move never
+ *                         owned -> virtual, and a virtual card moved into a
+ *                         non-virtual list becomes Own; copy
+ *                         never owned -> non-virtual (always blocked now, the
+ *                         "Allow to copy non-virtual cards" preference is
+ *                         gone), the copy takes the destination's ownership
  */
 
 package com.reflexit.magiccards.core;
@@ -47,6 +53,7 @@ import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardList;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.Predicate;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
@@ -67,7 +74,6 @@ public class DataManager {
 	private ICardHandler handler;
 	private ModelRoot root;
 	private HashMap<String, IMagicCard> links = new HashMap<>();
-	private boolean owncopy;
 	private Thread initThread;
 	private Object initThreadLock = new Object();
 
@@ -257,14 +263,11 @@ public class DataManager {
 		boolean virtual = store.isVirtual();
 		boolean unsorted = store.isUnsorted();
 		ArrayList<IMagicCard> list = new ArrayList<>(cards.size());
-		boolean ownCopyAllowed = owncopy;
 		for (IMagicCard card : cards) {
-			if (ownCopyAllowed == false && card instanceof MagicCardPhysical && virtual == false
-					&& ((MagicCardPhysical) card).isOwn()) {
-				throw new MagicException(
-						"Cannot copy own cards into non-virtual deck, use move instead - or override this protection in preferences");
-			}
-			// copied cards will have target collection ownership
+			// never owned -> non-virtual (it would be counted twice); every other
+			// copy takes the destination's ownership (see OwnershipRules)
+			if (!virtual && card instanceof MagicCardPhysical && ((MagicCardPhysical) card).isOwn())
+				throw new MagicException(OwnershipRules.NO_COPY_OWNED_TO_OWNED);
 			MagicCardPhysical phi = new MagicCardPhysical(card, to, virtual);
 			list.add(phi);
 		}
@@ -346,10 +349,12 @@ public class DataManager {
 			if (card instanceof MagicCardPhysical) {
 				if (((IMagicCardPhysical) card).isOwn()) {
 					if (virtual)
-						throw new MagicException("Cannot move own cards to virtual collection. Use copy instead.");
+						throw new MagicException(OwnershipRules.NO_MOVE_OWNED_TO_VIRTUAL);
 					phi.setOwn(true);
 				} else {
-					phi.setOwn(false);
+					// virtual into a non-virtual list: it has been bought / printed,
+					// so it becomes Own (the UI confirms before calling this)
+					phi.setOwn(!virtual);
 				}
 			}
 			list.add(phi);
@@ -706,10 +711,6 @@ public class DataManager {
 		if (links.containsKey(id))
 			return (CardGroup) links.get(id);
 		return null;
-	}
-
-	public void setOwnCopyEnabled(boolean newValue) {
-		owncopy = newValue;
 	}
 
 	public boolean waitForInit(int sec) {

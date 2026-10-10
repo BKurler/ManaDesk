@@ -8,6 +8,14 @@
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
  *******************************************************************************/
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - Disband moves only the owned cards to the main
+ *                         collection (a virtual card cannot be moved into a
+ *                         non-virtual list); virtual cards are deleted.
+ *                         The confirmation names the right kind ("collection"
+ *                         / "deck") and its typos are fixed.
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import java.io.File;
@@ -78,10 +86,12 @@ public class DeleteHandler extends AbstractHandler {
 		if (toBeRemoved.size() == 1) {
 			CardElement el = toBeRemoved.get(0);
 			if (sum > 0) {
-				MessageDialog dialog = new MessageDialog(getShell(), "Removal Confirmantion", null, "Deleting "
-						+ el.getName() + " will also PERMANENTY delete " + sum + " non virtual cards from this deck. "
-						+ "You can choose to disband this deck instead, which will move all its cards to the main collection"
-						+ " (then deck will be removed)", MessageDialog.WARNING,
+				String kind = isDeck(el) ? "deck" : "collection";
+				MessageDialog dialog = new MessageDialog(getShell(), "Removal Confirmation", null, "Deleting "
+						+ el.getName() + " will also PERMANENTLY delete " + sum + " owned cards from this " + kind
+						+ ". You can choose to disband this " + kind
+						+ " instead, which will move its owned cards to the main collection (then the " + kind
+						+ " will be removed).", MessageDialog.WARNING,
 						new String[] { "Disband", "Delete", "Cancel" }, 0);
 				int result = dialog.open();
 				performOperation(toBeRemoved, result);
@@ -100,12 +110,11 @@ public class DeleteHandler extends AbstractHandler {
 				}
 				performOperation(toBeRemoved, 1);
 			} else {
-				MessageDialog dialog = new MessageDialog(getShell(), "Removal Confirmantion", null,
-						"You are abount to delete " + toBeRemoved.size() + " deck/collections. "
-								+ "Deleting a deck/collection" + " will also PERMANENTY delete " + sum
-								+ " non virtual cards from it. "
-								+ "You can choose to disband them instead, which will move all their cards to the main collection"
-								+ " (then decks will be removed)",
+				MessageDialog dialog = new MessageDialog(getShell(), "Removal Confirmation", null,
+						"You are about to delete " + toBeRemoved.size() + " decks / collections. "
+								+ "This will also PERMANENTLY delete " + sum + " owned cards from them. "
+								+ "You can choose to disband them instead, which will move their owned cards to the main collection"
+								+ " (then they will be removed).",
 						MessageDialog.WARNING, new String[] { "Disband", "Delete", "Cancel" }, 0);
 				int result = dialog.open();
 				performOperation(toBeRemoved, result);
@@ -151,6 +160,10 @@ public class DeleteHandler extends AbstractHandler {
 		}
 	}
 
+	private static boolean isDeck(CardElement el) {
+		return el instanceof CardCollection && ((CardCollection) el).isDeck();
+	}
+
 	private static int getOwnCount(CardElement el) {
 		int ownCount = 0;
 		if (el instanceof CardCollection) {
@@ -171,10 +184,15 @@ public class DeleteHandler extends AbstractHandler {
 			if (el != root.getDefaultLib()) {
 				ICardStore<IMagicCard> store = ((CardCollection) el).getStore();
 				ArrayList<IMagicCard> cards = new ArrayList<>(store.size());
+				// only owned cards go to the main collection - a virtual card cannot
+				// be moved into a non-virtual list (OwnershipRules), it is deleted
+				// with its deck / collection
 				for (IMagicCard card : store) {
-					cards.add(card);
+					if (card instanceof MagicCardPhysical && ((MagicCardPhysical) card).isOwn())
+						cards.add(card);
 				}
-				DataManager.getInstance().moveCards(cards, root.getDefaultLib().getStore());
+				if (!cards.isEmpty())
+					DataManager.getInstance().moveCards(cards, root.getDefaultLib().getStore());
 			}
 		}
 		remove(el);

@@ -35,6 +35,11 @@
  *     Rémi Dutil (2026) - splitMoveToDeck: debug probe (traceState) of the
  *                         list's selection / scroll before and after the
  *                         Split dialog, behind DEBUG (off).
+ *     Rémi Dutil (2026) - changeSelectedOwnerShip() skips cards whose list
+ *                         does not allow that ownership (OwnershipRules); Copy to greys a
+ *                         non-virtual destination when owned cards are selected;
+ *                         Move / Split & move / Copy to confirm before virtual
+ *                         cards become Own (OwnershipConfirmation)
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -67,6 +72,7 @@ import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.ICardEventListener;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -80,6 +86,7 @@ import com.reflexit.magiccards.ui.actions.DeleteCardAction;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardPhysicalDialog;
 import com.reflexit.magiccards.ui.dialogs.MyCardsFilterDialog;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 import com.reflexit.magiccards.ui.dialogs.SplitDialog;
 import com.reflexit.magiccards.ui.exportWizards.ExportAction;
 import com.reflexit.magiccards.ui.views.AbstractGroupPageCardsView;
@@ -169,8 +176,13 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 				ISelection selection = getSelectionProvider().getSelection();
 				if (selection instanceof IStructuredSelection) {
 					IStructuredSelection sel = (IStructuredSelection) selection;
-					if (!sel.isEmpty()) {
-						DM.copyCards(DM.expandGroups(sel.toList()), fstore.getCardStore());
+					if (!sel.isEmpty()
+							&& OwnershipConfirmation.confirmCopy(getShell(), sel.toList(), fstore.getCardStore())) {
+						try {
+							DM.copyCards(DM.expandGroups(sel.toList()), fstore.getCardStore());
+						} catch (MagicException e) {
+							MessageDialog.openError(getShell(), "Error", e.getMessage());
+						}
 					}
 				}
 			}
@@ -200,6 +212,10 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 						? ((MagicCardPhysical) first).getLocation() : "?")
 						+ " srcStore=" + System.identityHashCode(srcStore) + " size=" + srcStore.size()
 						+ " containsSelected=" + srcStore.contains((com.reflexit.magiccards.core.model.IMagicCard) first));
+
+				ICardStore destStore = DM.getCardHandler().getCardCollectionFilteredStore(id).getCardStore();
+				if (!OwnershipConfirmation.confirmMove(getShell(), sel.toList(), destStore))
+					return;
 
 				// Before the move (which removes these cards from this view) ask
 				// the list control to select the following row afterwards.
@@ -242,6 +258,10 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 				if (control != null)
 					control.traceState("splitMove after dialog (move=" + move + ")");
 				if (move <= 0 || move >= count)
+					return;
+				// split follows the move rule - confirm before splitting
+				ICardStore destStore = DM.getCardHandler().getCardCollectionFilteredStore(id).getCardStore();
+				if (!OwnershipConfirmation.confirmMove(getShell(), Collections.singletonList(pile), destStore))
 					return;
 				List<IMagicCard> toMove = DM.splitCards(Collections.singletonList((IMagicCard) pile), move);
 				if (toMove.isEmpty())
@@ -335,14 +355,15 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 
 	@Override
 	protected String deckDestinationVeto(CardCollection dest, DeckMenuKind kind) {
-		// Ownership must match the destination kind for a move: a virtual
-		// collection only holds not-owned cards, a real one only holds owned
-		// cards. (Copy makes its own copies and enforces its own rules.)
-		if (dest == null || (kind != DeckMenuKind.MOVE && kind != DeckMenuKind.SPLIT_MOVE))
+		// see OwnershipRules: a copy takes the destination's ownership, except
+		// that an owned card is never copied into a non-virtual list
+		if (dest == null)
 			return null;
-		if (dest.isVirtual())
-			return selectionHasOwnership(true) ? "virtual" : null;
-		return selectionHasOwnership(false) ? "not owned" : null;
+		if (kind == DeckMenuKind.COPY)
+			return !dest.isVirtual() && selectionHasOwnership(true) ? "owned" : null;
+		// move / split & move: never owned -> virtual; virtual -> non-virtual is
+		// allowed (the cards become Own, after a confirmation)
+		return dest.isVirtual() && selectionHasOwnership(true) ? "virtual" : null;
 	}
 
 	protected void fillOwnerShipMenu(IMenuManager manager) {
@@ -371,7 +392,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 				Set<MagicCardField> of = Collections.singleton(MagicCardField.OWNERSHIP);
 				for (Iterator iterator = sel.iterator(); iterator.hasNext();) {
 					Object o = iterator.next();
-					if (o instanceof MagicCardPhysical) {
+					if (o instanceof MagicCardPhysical && OwnershipRules.canSetOwn((MagicCardPhysical) o, b)) {
 						((MagicCardPhysical) o).setOwn(b);
 						DM.update((MagicCardPhysical) o, of);
 					}

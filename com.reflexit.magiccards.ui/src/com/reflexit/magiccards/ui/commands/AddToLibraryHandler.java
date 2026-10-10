@@ -1,15 +1,23 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - confirm before a copy turns virtual cards into
+ *                         owned ones (OwnershipConfirmation)
+ */
 package com.reflexit.magiccards.ui.commands;
 
 import org.eclipse.core.commands.AbstractHandler;
 import org.eclipse.core.commands.ExecutionEvent;
 import org.eclipse.core.commands.ExecutionException;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.ISelection;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.handlers.HandlerUtil;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
+import com.reflexit.magiccards.ui.dialogs.OwnershipConfirmation;
 
 /**
  * Our sample handler extends AbstractHandler, an IHandler base class.
@@ -38,7 +46,13 @@ public class AddToLibraryHandler extends AbstractHandler {
 		IStructuredSelection iss = (IStructuredSelection) selection;
 		DataManager dm = DataManager.getInstance();
 		CardCollection defaultLib = dm.getModelRoot().getDefaultLib();
-		dm.copyCards(dm.expandGroups(iss.toList()), defaultLib.getStore());
+		if (!OwnershipConfirmation.confirmCopy(window.getShell(), iss.toList(), defaultLib.getStore()))
+			return null;
+		try {
+			dm.copyCards(dm.expandGroups(iss.toList()), defaultLib.getStore());
+		} catch (MagicException e) {
+			MessageDialog.openError(window.getShell(), "Error", e.getMessage());
+		}
 		return null;
 	}
 }

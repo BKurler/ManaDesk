@@ -156,6 +156,8 @@ public class DataManagerTest extends TestCase {
 
 	@Test
 	public void testCopyCardsVi() {
+		// owned -> non-virtual is always refused (it would be counted twice)
+		card.setOwn(true);
 		setVirtual(false);
 		try {
 			dm.copyCards(Collections.singletonList(card), store2);
@@ -163,6 +165,26 @@ public class DataManagerTest extends TestCase {
 		} catch (MagicException e) {
 			// good
 		}
+	}
+
+	@Test
+	public void testCopyCardsVirOwn() {
+		// virtual -> non-virtual is allowed (bought / printed): the copy is owned
+		card.setOwn(false);
+		setVirtual(false);
+		dm.copyCards(Collections.singletonList(card), store2);
+		assertEquals(1, store2.size());
+		assertTrue(getFirst().isOwn());
+	}
+
+	@Test
+	public void testMoveCardsVirOwn() {
+		// a virtual card moved into a non-virtual list becomes Own (bought / printed)
+		card.setOwn(false);
+		setVirtual(false);
+		dm.moveCards(Collections.singletonList(card), store2);
+		assertEquals(1, store2.size());
+		assertTrue(getFirst().isOwn());
 	}
 
 	//

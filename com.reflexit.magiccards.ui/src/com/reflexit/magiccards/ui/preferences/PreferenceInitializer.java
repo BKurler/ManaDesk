@@ -132,7 +132,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.SHOW_GRID, false);
 		store.setDefault(PreferenceConstants.CHECK_FOR_UPDATES, false); // !!! RD Don't check for update per default
 		store.setDefault(PreferenceConstants.CHECK_FOR_CARDS, false);
-		store.setDefault(PreferenceConstants.OWNED_COPY, false);
 		store.setDefault(PreferenceConstants.CURRENCY, "USD");
 		store.setDefault(PreferenceConstants.SIMULATE_WEB_DOWN, false);
 		// TCGplayer, or Cardmarket for European users

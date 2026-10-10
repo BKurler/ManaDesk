@@ -6,6 +6,8 @@
  *     Rémi Dutil (2026) - getDefaultFormat(): a deck's own default legality
  *                         format, used by the Legality tab - see
  *                         IStorageInfo#getDefaultFormat()
+ *     Rémi Dutil (2026) - getCollectionType() / persistInitialSettings(type):
+ *                         a collection's type (Standard / For Trade / Wishlist/To Print)
  */
 
 package com.reflexit.magiccards.core.model.nav;
@@ -14,6 +16,7 @@ import java.io.File;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
@@ -62,6 +65,22 @@ public class CardCollection extends CardElement {
 			this.deck = deck;
 			this.virtual = virtual;
 			this.unsorted = unsortedEff;
+		} catch (RuntimeException e) {
+			// non-fatal - the user can still fix it via Edit Properties
+		}
+	}
+
+	/**
+	 * {@link #persistInitialSettings(boolean, boolean, boolean)} for a new
+	 * collection of the given type - its virtual flag follows the type.
+	 */
+	public void persistInitialSettings(CollectionType type, boolean unsorted) {
+		// only a Standard / For Trade collection can be unsorted
+		persistInitialSettings(false, type.isVirtual(), unsorted && !type.isVirtual());
+		try {
+			IStorageInfo info = getStorageInfo();
+			if (info != null)
+				info.setCollectionType(type);
 		} catch (RuntimeException e) {
 			// non-fatal - the user can still fix it via Edit Properties
 		}
@@ -164,6 +183,17 @@ public class CardCollection extends CardElement {
 			return info.isVirtual();
 		}
 		return virtual != null ? virtual : true;
+	}
+
+	/** This collection's type (Standard / For Trade / Wishlist/To Print), or {@code null}
+	 *  for a deck - see {@link IStorageInfo#getCollectionType()}. */
+	public CollectionType getCollectionType() {
+		if (isDeck())
+			return null;
+		IStorageInfo info = getStorageInfo();
+		if (info != null)
+			return info.getCollectionType();
+		return CollectionType.resolve(null, isVirtual());
 	}
 
 	public boolean isUnsorted() {

@@ -12,6 +12,13 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - ownershipFixed: importing into a deck / collection
+ *                         pins every card's ownership to the destination (own
+ *                         for a non-virtual list, virtual otherwise), whatever
+ *                         the file's own Ownership column says -
+ *                         applyFixedOwnership(). A file-virtual card going
+ *                         into a non-virtual list is also marked Proxy; both
+ *                         kinds of change are counted for the preview warning
  */
 package com.reflexit.magiccards.core.exports;
 
@@ -34,6 +41,12 @@ public class ImportData {
 	private String text = "";
 	private Location location = Location.createLocation("preview");
 	private boolean virtual = false;
+	/** When true, every imported card takes ownership {@code !virtual} - see the header. */
+	private boolean ownershipFixed = false;
+	/** Copies the file said were Own, imported as virtual (virtual target). */
+	private int forcedVirtual = 0;
+	/** Copies the file said were virtual, imported as Own + Proxy (non-virtual target). */
+	private int forcedOwnProxy = 0;
 	private ImportSource importSource;
 	private LinkedHashMap<String, Object> props = new LinkedHashMap<>();
 	/** what the file declared for each card (before resolution swaps the base): [name,set,collnum,id,gathererId,tcgId] */
@@ -129,6 +142,8 @@ public class ImportData {
 		toImport.clear();
 		declared.clear();
 		error = null;
+		forcedVirtual = 0;
+		forcedOwnProxy = 0;
 	}
 
 	/** Snapshot what the file said about this card, before resolution rewrites its base. */
@@ -168,6 +183,46 @@ public class ImportData {
 
 	public void setVirtual(boolean virtual) {
 		this.virtual = virtual;
+	}
+
+	public boolean isOwnershipFixed() {
+		return ownershipFixed;
+	}
+
+	public void setOwnershipFixed(boolean ownershipFixed) {
+		this.ownershipFixed = ownershipFixed;
+	}
+
+	/**
+	 * When {@link #isOwnershipFixed()}: gives {@code card} the destination's
+	 * ownership. A card the file marked virtual going into a non-virtual list
+	 * becomes Own AND Proxy (the user can untick Proxy in the preview); a card
+	 * the file marked Own going into a virtual list becomes virtual. Both are
+	 * counted for the preview warning.
+	 */
+	public void applyFixedOwnership(MagicCardPhysical card) {
+		if (!ownershipFixed || card == null)
+			return;
+		boolean own = !virtual;
+		if (card.isOwn() == own)
+			return;
+		if (own) {
+			card.setProxy(true);
+			forcedOwnProxy += card.getCount();
+		} else {
+			forcedVirtual += card.getCount();
+		}
+		card.setOwn(own);
+	}
+
+	/** Copies the file marked Own that are imported as virtual. */
+	public int getForcedVirtual() {
+		return forcedVirtual;
+	}
+
+	/** Copies the file marked virtual that are imported as Own + Proxy. */
+	public int getForcedOwnProxy() {
+		return forcedOwnProxy;
 	}
 
 	public Map<String, Object> getProperties() {

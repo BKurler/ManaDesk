@@ -3,6 +3,7 @@
  *     Rémi Dutil (2026) - created for ManaDesk: "Import cards into an existing
  *                         collection" - launched from the Cards Navigator
  *                         right-click.
+ *     Rémi Dutil (2026) - no Website source (offerWebsiteSource())
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -24,5 +25,11 @@ public class ImportIntoCollectionPage extends AbstractImportIntoPage {
 	@Override
 	protected ModelRoot.Side side() {
 		return ModelRoot.Side.COLLECTION;
+	}
+
+	/** No Website source for a collection (see the base class). */
+	@Override
+	protected boolean offerWebsiteSource() {
+		return false;
 	}
 }
