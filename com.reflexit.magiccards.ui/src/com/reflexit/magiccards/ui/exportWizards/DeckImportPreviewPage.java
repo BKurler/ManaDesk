@@ -38,6 +38,8 @@
  *                         Own + Proxy), and the Proxy column is added (editable
  *                         here, Ownership stays read-only) when cards were
  *                         marked Proxy that way
+ *     Rémi Dutil (2026) - the set list follows the "List sets by release
+ *                         date" preference (SetListOrder)
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -85,6 +87,7 @@ import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dnd.CopySupport;
+import com.reflexit.magiccards.ui.utils.SetListOrder;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.IMagicColumnViewer;
 import com.reflexit.magiccards.ui.views.SimpleTableViewer;
@@ -1633,11 +1636,9 @@ public class DeckImportPreviewPage extends WizardPage {
 							MagicCardPhysical card = (MagicCardPhysical) element;
 							java.util.List<String> sets = candidateSets(card.getName(), card.getCollectorId());
 							String cur = card.getSet();
-							if (cur != null && !cur.isEmpty() && !sets.contains(cur)) {
+							if (cur != null && !cur.isEmpty() && !sets.contains(cur))
 								sets.add(cur);
-								sets.sort(String.CASE_INSENSITIVE_ORDER);
-							}
-							return sets.toArray(new String[sets.size()]);
+							return SetListOrder.sortToArray(sets);
 						}
 
 						@Override

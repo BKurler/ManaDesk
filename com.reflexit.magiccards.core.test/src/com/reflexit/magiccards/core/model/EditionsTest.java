@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - testSortSetNames(): alphabetical / release date
  */
 package com.reflexit.magiccards.core.model;
 
@@ -171,6 +172,33 @@ public class EditionsTest extends TestCase {
 			assertNotNull("Bad date " + edition, edition.getReleaseDate());
 			Date now = new Date();
 			assertFalse("Release date in future " + edition, now.before(edition.getReleaseDate()));
+		}
+	}
+
+	public void testSortSetNames() {
+		Collection<String> names = editions.getNames();
+		assertTrue(names.size() > 10);
+		// alphabetical, ignoring case
+		java.util.List<String> alpha = editions.sortSetNames(names, false);
+		assertEquals(names.size(), alpha.size());
+		for (int i = 1; i < alpha.size(); i++)
+			assertTrue(alpha.get(i - 1) + " / " + alpha.get(i),
+					String.CASE_INSENSITIVE_ORDER.compare(alpha.get(i - 1), alpha.get(i)) <= 0);
+		// release date, oldest first; undated sets last
+		java.util.List<String> byDate = editions.sortSetNames(names, true);
+		assertEquals(names.size(), byDate.size());
+		Date prev = null;
+		boolean undated = false;
+		for (String n : byDate) {
+			Date d = editions.getEditionByName(n).getReleaseDate();
+			if (d == null) {
+				undated = true;
+				continue;
+			}
+			assertFalse("dated set after an undated one: " + n, undated);
+			if (prev != null)
+				assertFalse(n + " is older than the set before it", d.before(prev));
+			prev = d;
 		}
 	}
 }
