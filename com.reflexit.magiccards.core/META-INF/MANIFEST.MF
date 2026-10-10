@@ -39,7 +39,9 @@ Export-Package: com.reflexit.magiccards.core;uses:="org.eclipse.core.runtime,
  com.reflexit.magiccards.core.xml,
  gnu.trove,
  gnu.trove.map,
- gnu.trove.map.hash
+ gnu.trove.map.hash,
+ org.json.simple,
+ org.json.simple.parser
 Bundle-ClassPath: .,
  lib/trove-3.0.3.jar,
  lib/json-simple-1.1.1.jar

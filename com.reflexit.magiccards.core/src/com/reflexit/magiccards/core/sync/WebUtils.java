@@ -8,6 +8,11 @@
  *                         (checkWebAccess()); new isReachable() quick
  *                         connect-only probe and isWebUnavailable() error
  *                         classification.
+ *     Rémi Dutil (2026) - openUrl(): HTTP 404 (FileNotFoundException) is not
+ *                         retried nor logged as an error - the caller decides.
+ *     Rémi Dutil (2026) - Scryfall API policy: requests to scryfall.com /
+ *                         scryfall.io send "ManaDesk/<version>" as User-Agent
+ *                         and an Accept header (no more fake browser agent).
  */
 package com.reflexit.magiccards.core.sync;
 
@@ -34,6 +39,7 @@ import javax.net.ssl.SSLContext;
 import javax.net.ssl.TrustManager;
 import javax.net.ssl.X509TrustManager;
 
+import com.reflexit.magiccards.core.Activator;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.WebUnavailableException;
@@ -237,6 +243,12 @@ public class WebUtils {
 					markHostDown(url, e);
 					throw e instanceof WebUnavailableException ? e : new WebUnavailableException(url.getHost(), e);
 				}
+				if (e instanceof java.io.FileNotFoundException) {
+					// HTTP 404: the page is not there - retrying won't change that, and it is
+					// the caller's call whether that is an error (an optional file may be absent)
+					MagicLogger.trace("Not found: " + url);
+					throw e;
+				}
 				MagicLogger.log("Connection error on url " + url + ": " + e.getMessage() + ". Attempt " + i);
 				rt = e;
 				continue;
@@ -284,12 +296,39 @@ public class WebUtils {
 	 * @param connection
 	 */
 	private static void configureConnectionDefaults(URLConnection connection) {
-		connection.setRequestProperty("User-Agent",
-				"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0");
+		if (isScryfall(connection.getURL())) {
+			// Scryfall API rule: an accurate app User-Agent and an Accept header
+			connection.setRequestProperty("User-Agent", userAgent());
+			connection.setRequestProperty("Accept", "application/json;q=0.9,*/*;q=0.8");
+		} else
+			connection.setRequestProperty("User-Agent",
+					"Mozilla/5.0 (X11; Ubuntu; Linux x86_64; rv:40.0) Gecko/20100101 Firefox/40.0");
 		connection.setRequestProperty("Accept-Charset", FileUtils.UTF8);
 		connection.setRequestProperty("Accept-Language", "en_US");
 		connection.setConnectTimeout(CONNECT_TIMEOUT_MS);
 		connection.setReadTimeout(READ_TIMEOUT_MS);
+	}
+
+	/** {@code true} for scryfall.com / scryfall.io and their sub-domains. */
+	static boolean isScryfall(URL url) {
+		String host = url == null || url.getHost() == null ? "" : url.getHost().toLowerCase();
+		return host.equals("scryfall.com") || host.endsWith(".scryfall.com") || host.equals("scryfall.io")
+				|| host.endsWith(".scryfall.io");
+	}
+
+	/** "ManaDesk/&lt;version&gt;" - the app's own name, as Scryfall requires. */
+	public static String userAgent() {
+		String version = null;
+		try {
+			Activator a = Activator.getDefault();
+			if (a != null && a.getBundle() != null) {
+				org.osgi.framework.Version v = a.getBundle().getVersion();
+				version = v.getMajor() + "." + v.getMinor() + "." + v.getMicro();
+			}
+		} catch (RuntimeException | LinkageError e) {
+			// not running in OSGi (unit tests)
+		}
+		return "ManaDesk/" + (version == null ? "dev" : version);
 	}
 
 	public static Map<String, String> splitQuery(URL url) throws UnsupportedEncodingException {

@@ -13,6 +13,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - added WebUtilsTest.
+ *     Rémi Dutil (2026) - added FormatTest (format shapes + Commander color
+ *                         identity rule) - it was never registered.
  */
 
 package com.reflexit.magiccards.core.test;
@@ -56,6 +58,9 @@ import com.reflexit.magiccards.core.model.utils.CardStoreUtilsTest;
 import com.reflexit.magiccards.core.sync.AccessoryExtractorTest;
 import com.reflexit.magiccards.core.sync.ScryfallBulkSplitTest;
 import com.reflexit.magiccards.core.sync.WebUtilsTest;
+import com.reflexit.magiccards.core.exports.BuyListFormatTest;
+import com.reflexit.magiccards.core.model.nav.DeckNeedsTest;
+import com.reflexit.magiccards.core.seller.PriceSourcesTest;
 import com.reflexit.magiccards.core.model.utils.SearchStringTokenizerTest;
 import com.reflexit.magiccards.core.xml.MagicXmlHandlerTest;
 
@@ -99,8 +104,12 @@ public class AllLocalTests {
 		suite.addTest(new JUnit4TestAdapter(ScryfallBulkSplitTest.class));
 		suite.addTest(new JUnit4TestAdapter(AccessoryExtractorTest.class));
 		suite.addTest(new JUnit4TestAdapter(WebUtilsTest.class));
+		suite.addTest(new JUnit4TestAdapter(BuyListFormatTest.class));
+		suite.addTestSuite(DeckNeedsTest.class);
+		suite.addTest(new JUnit4TestAdapter(PriceSourcesTest.class));
 		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
 		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.LocationExtraTest.class));
+		suite.addTestSuite(com.reflexit.magiccards.core.legality.FormatTest.class);
 		// editions
 		suite.addTestSuite(EditionsTest.class);
 		// Perf

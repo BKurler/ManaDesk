@@ -204,6 +204,7 @@
         <setEntry value="org.w3c.dom.svg@default:default"/>
     </setAttribute>
     <setAttribute key="selected_workspace_bundles">
+        <setEntry value="com.manadesk.monetization@default:default"/>
         <setEntry value="com.reflexit.magicassistant.p2@default:default"/>
         <setEntry value="com.reflexit.magiccards.core.nl1@default:false"/>
         <setEntry value="com.reflexit.magiccards.core.test@default:false"/>

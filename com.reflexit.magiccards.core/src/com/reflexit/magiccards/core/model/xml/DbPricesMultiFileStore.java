@@ -5,6 +5,11 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - getDbPriceEtched/setDbPriceEtched (3rd price bucket,
  *                         alongside normal/foil)
+ *     Rémi Dutil (2026) - only the two Scryfall-fed sources (PriceSources:
+ *                         TCGplayer USD, Cardmarket EUR) are registered - the
+ *                         dead web-scraping providers are gone; getSource()
+ *                         reads a given source whatever is selected; an
+ *                         unknown provider name falls back to TCGplayer.
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -24,13 +29,9 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
 import com.reflexit.magiccards.core.model.storage.IDbPriceStore;
 import com.reflexit.magiccards.core.seller.CustomPriceProvider;
-import com.reflexit.magiccards.core.seller.FindMagicCardsPrices;
 import com.reflexit.magiccards.core.seller.IPriceProvider;
 import com.reflexit.magiccards.core.seller.IPriceProviderStore;
-import com.reflexit.magiccards.core.seller.ParseMOTLPrices;
-import com.reflexit.magiccards.core.seller.ParseMagicCardMarketPrices;
-import com.reflexit.magiccards.core.seller.ParseMtgFanaticPrices;
-import com.reflexit.magiccards.core.seller.ParseTcgPlayerPrices;
+import com.reflexit.magiccards.core.seller.PriceSources;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.core.xml.PriceProviderStoreObject;
 
@@ -84,15 +85,25 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 	}
 
 	private DbPricesMultiFileStore() {
-		add(ParseTcgPlayerPrices.create(ParseTcgPlayerPrices.Type.Medium));
-		add(ParseTcgPlayerPrices.create(ParseTcgPlayerPrices.Type.Low));
-		ParseMtgFanaticPrices mtgFanatic = new ParseMtgFanaticPrices();
-		FindMagicCardsPrices findMagicCards = new FindMagicCardsPrices();
-		add(ParseMOTLPrices.getInstance());
-		add(mtgFanatic);
-		add(findMagicCards);
-		add(ParseMagicCardMarketPrices.getInstance());
+		// the two sources filled from the Scryfall bulk file (see PriceSources);
+		// the old web-scraping providers (TCG Player Low, MOTL, MTGFanatic,
+		// FindMagicCards, the old Magic Card Market parser) are long dead
+		for (String name : PriceSources.names())
+			add(PriceSources.create(name));
 		current = getDefaultProvider();
+	}
+
+	/**
+	 * The provider of price source {@code name} ({@link PriceSources}),
+	 * whatever source is currently selected for display.
+	 */
+	public synchronized IPriceProvider getSource(String name) {
+		IPriceProvider p = findProvider(name);
+		if (p == null) {
+			p = PriceSources.create(name);
+			add(p);
+		}
+		return p;
 	}
 
 	private void add(IPriceProvider provider) {
@@ -128,11 +139,8 @@ public class DbPricesMultiFileStore implements IDbPriceStore {
 
 	@Override
 	public synchronized IPriceProviderStore setProviderByName(String name) {
-		IPriceProvider prov = findProvider(name);
-		if (prov == null) {
-			prov = new CustomPriceProvider(name);
-			add(prov);
-		}
+		// an unknown / retired source (an old preference) falls back to TCGplayer
+		IPriceProvider prov = getSource(PriceSources.isKnown(name) ? name : PriceSources.TCGPLAYER);
 		if (current != prov) {
 			current = prov;
 			if (isInitialized())

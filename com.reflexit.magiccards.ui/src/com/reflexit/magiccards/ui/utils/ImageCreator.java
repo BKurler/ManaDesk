@@ -9,6 +9,9 @@
  *                         now, plus
  *                         getCardNotFoundImageURL()/getCardNotFoundOnError()
  *                         for HTML views.
+ *     Rémi Dutil (2026) - setAlphaBlendingForCorners(): radius = width / 20, the
+ *                         real card's own corner, so no more of the image than
+ *                         the card's rounding is cut (Scryfall image rules).
  */
 package com.reflexit.magiccards.ui.utils;
 
@@ -505,7 +508,9 @@ public final class ImageCreator {
 		int w = data.width;
 		int h = data.height;
 
-		int radius = Math.min(w, h) / 12; // old default corner radius
+		// a real card's corner (3.2 mm on 63 mm): only the card's own rounding,
+		// never more of the image (Scryfall: don't crop or clip card images)
+		int radius = Math.min(w, h) / 20;
 
 		for (int y = 0; y < h; y++) {
 			for (int x = 0; x < w; x++) {

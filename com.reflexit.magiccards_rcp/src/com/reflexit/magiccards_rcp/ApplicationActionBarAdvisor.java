@@ -22,6 +22,7 @@
  *                         switch action (and the now-unused OpenPerspectiveAction
  *                         class) - this app has exactly one perspective, so
  *                         switching to it was a no-op
+ *     Rémi Dutil (2026) - Help > What's New... (WhatsNew), always available
  */
 package com.reflexit.magiccards_rcp;
 
@@ -202,6 +203,13 @@ public class ApplicationActionBarAdvisor extends ActionBarAdvisor {
 		helpMenu.add(this.help_contents);
 		helpMenu.add(searchHelpAction);
 		helpMenu.add(dynamicHelpAction);
+		helpMenu.add(new Separator());
+		helpMenu.add(new Action("What's New...") {
+			@Override
+			public void run() {
+				WhatsNew.open(window.getShell());
+			}
+		});
 		helpMenu.add(new GroupMarker(IWorkbenchActionConstants.MB_ADDITIONS));
 		helpMenu.add(this.aboutAction);
 	}

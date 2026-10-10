@@ -59,6 +59,7 @@
 		<module>../com.reflexit.magiccards.ui</module>
 		<module>../com.reflexit.magiccards.ui.chart</module>
 		<module>../com.reflexit.magiccards.ui.graphics</module>
+		<module>../com.manadesk.monetization</module>
 		<module>../com.reflexit.mtgtournament.core</module>
 		<module>../com.reflexit.mtgtournament.ui</module>
 

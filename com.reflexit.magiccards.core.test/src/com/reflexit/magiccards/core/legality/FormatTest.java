@@ -5,10 +5,27 @@
  *                         (adding/removing/reshaping a format) is caught
  *                         here, not just by manually building a deck in the
  *                         running app
+ *     Rémi Dutil (2026) - color identity rule (CommanderFormat.
+ *                         validateColorIdentity): fits / outside / colorless
+ *                         cards / colorless commander / unknown identity /
+ *                         Oathbreaker planeswalker + signature spell /
+ *                         owned copies / message listing.
+ *     Rémi Dutil (2026) - registered in AllLocalTests; counts built-in formats
+ *                         only (other tests add formats on the fly); new
+ *                         testFormatCreatedOnTheFlyStaysOutOfTheChain.
  */
 package com.reflexit.magiccards.core.legality;
 
+import java.util.Arrays;
 import java.util.Collection;
+import java.util.Collections;
+import java.util.List;
+
+import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.MagicCard;
+import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
 
 import junit.framework.TestCase;
 
@@ -27,8 +44,13 @@ public class FormatTest extends TestCase {
 			"Standard Brawl", "Oathbreaker" };
 
 	public void testEveryFormatIsRegistered() {
+		// other tests may add formats on the fly (Format.valueOf): count the built-in ones only
 		Collection<Format> formats = Format.getFormats();
-		assertEquals("Format.getFormats() count", ALL_FORMAT_NAMES.length, formats.size());
+		int builtIn = 0;
+		for (Format f : formats)
+			if (f.ordinal() < 100)
+				builtIn++;
+		assertEquals("built-in formats", ALL_FORMAT_NAMES.length, builtIn);
 		for (String name : ALL_FORMAT_NAMES)
 			assertNotNull("Format \"" + name + "\" must be registered", Format.get(name));
 	}
@@ -199,5 +221,124 @@ public class FormatTest extends TestCase {
 		assertNotNull("Gladiator: any sideboard card is not legal", f.validateSideboardCount(1));
 		assertNull("Gladiator: singleton - 1 copy is legal", f.validateCardCount(1));
 		assertNotNull("Gladiator: singleton - 2 copies is not legal", f.validateCardCount(2));
+	}
+
+	/** A format Scryfall reports that isn't registered is created on the fly - after
+	 *  the built-in ones, never inside the Standard..Vintage legality chain. */
+	public void testFormatCreatedOnTheFlyStaysOutOfTheChain() {
+		Format f = Format.valueOf("Some Future Format");
+		assertTrue("ordinal " + f.ordinal(), f.ordinal() >= 100);
+	}
+
+	// --- color identity (Commander family) --------------------------------
+
+	private static MagicCard card(String name, String identity, String type) {
+		MagicCard c = new MagicCard();
+		c.setName(name);
+		c.setType(type);
+		if (identity != null)
+			c.set(MagicCardField.COLOR_IDENTITY, identity);
+		return c;
+	}
+
+	private static MagicCard card(String name, String identity) {
+		return card(name, identity, "Creature");
+	}
+
+	private static List<IMagicCard> list(IMagicCard... cards) {
+		return Arrays.asList(cards);
+	}
+
+	private static final MagicCard ATRAXA = card("Atraxa", "{W}{U}{B}{G}", "Legendary Creature");
+	private static final MagicCard KARN = card("Karn", "{C}", "Legendary Creature");
+
+	public void testIdentityCardsInsideTheCommanderColorsAreLegal() {
+		assertNull(CommanderFormat.validateColorIdentity(list(ATRAXA),
+				list(card("Swords", "{W}"), card("Counterspell", "{U}"), card("Hybrid", "{W}{B}"))));
+	}
+
+	public void testIdentityCardOutsideIsReportedByName() {
+		String err = CommanderFormat.validateColorIdentity(list(ATRAXA),
+				list(card("Counterspell", "{U}"), card("Lightning Bolt", "{R}")));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Lightning Bolt is outside"));
+		assertTrue(err, err.contains("White, Blue, Black, Green"));
+		assertFalse(err, err.contains("Counterspell"));
+	}
+
+	public void testIdentityColorlessCardsFitAnyCommander() {
+		assertNull(CommanderFormat.validateColorIdentity(list(ATRAXA), list(card("Sol Ring", "{C}"))));
+		assertNull(CommanderFormat.validateColorIdentity(list(KARN), list(card("Sol Ring", "{C}"))));
+	}
+
+	public void testIdentityColorlessCommanderAllowsOnlyColorless() {
+		String err = CommanderFormat.validateColorIdentity(list(KARN), list(card("Forest", "{G}")));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Forest") && err.contains("(colorless)"));
+	}
+
+	public void testIdentityUnknownIsNotChecked() {
+		// a card never synced from Scryfall: no identity, not reported
+		assertNull(CommanderFormat.validateColorIdentity(list(ATRAXA), list(card("Old Card", null))));
+		// no commander identity known: nothing to check against
+		assertNull(CommanderFormat.validateColorIdentity(list(card("Mystery", null)), list(card("Bolt", "{R}"))));
+		assertNull(CommanderFormat.validateColorIdentity(Collections.<IMagicCard> emptyList(),
+				list(card("Bolt", "{R}"))));
+	}
+
+	public void testIdentityPartnersUnion() {
+		// two commanders in the zone: their colors add up
+		assertNull(CommanderFormat.validateColorIdentity(list(card("Red One", "{R}"), card("Blue One", "{U}")),
+				list(card("Izzet Spell", "{U}{R}"))));
+	}
+
+	public void testIdentityOathbreakerPlaneswalkerSetsTheColors() {
+		MagicCard walker = card("Chandra", "{R}", "Legendary Planeswalker - Chandra");
+		// a signature spell outside the planeswalker's colors is reported too
+		String err = CommanderFormat.validateColorIdentity(list(walker, card("Counterspell", "{U}", "Instant")),
+				list(card("Lightning Bolt", "{R}")));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Counterspell"));
+		assertFalse(err, err.contains("Lightning Bolt"));
+		// and it doesn't widen the deck's colors
+		err = CommanderFormat.validateColorIdentity(list(walker, card("Fire Spell", "{R}", "Instant")),
+				list(card("Opt", "{U}")));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Opt"));
+	}
+
+	public void testIdentityOwnedCopiesUseTheirPrintingIdentity() {
+		MagicCardPhysical bolt = new MagicCardPhysical(card("Lightning Bolt", "{R}"), Location.NO_WHERE);
+		MagicCardPhysical opt = new MagicCardPhysical(card("Opt", "{U}"), Location.NO_WHERE);
+		String err = CommanderFormat.validateColorIdentity(list(card("Blue Leader", "{U}")), list(opt, bolt));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Lightning Bolt") && !err.contains("Opt"));
+	}
+
+	public void testIdentityLongListIsShortened() {
+		IMagicCard[] reds = new IMagicCard[8];
+		for (int i = 0; i < reds.length; i++)
+			reds[i] = card("Red " + i, "{R}");
+		String err = CommanderFormat.validateColorIdentity(list(card("Blue Leader", "{U}")), list(reds));
+		assertNotNull(err);
+		assertTrue(err, err.contains("Red 0, Red 1, Red 2, Red 3, Red 4 and 3 more are outside"));
+	}
+
+	public void testIdentityCheckListsTheCardsOutside() {
+		MagicCard opt = card("Opt", "{U}");
+		MagicCard bolt = card("Lightning Bolt", "{R}");
+		CommanderFormat.IdentityCheck check = CommanderFormat.checkColorIdentity(list(card("Blue Leader", "{U}")),
+				list(opt, bolt));
+		assertNotNull(check);
+		assertEquals(1, check.outside.size());
+		assertSame(bolt, check.outside.get(0)); // the card itself - the Legality tab marks it
+		assertEquals("Blue", check.colorNames());
+		assertNull(CommanderFormat.checkColorIdentity(list(card("Mystery", null)), list(bolt)));
+	}
+
+	public void testEveryCommanderFamilyFormatChecksIdentity() {
+		for (String name : new String[] { "Commander", "Duel Commander", "Pauper Commander", "PreDH", "Brawl",
+				"Standard Brawl", "Oathbreaker" })
+			assertTrue(name, Format.get(name) instanceof CommanderFormat);
 	}
 }

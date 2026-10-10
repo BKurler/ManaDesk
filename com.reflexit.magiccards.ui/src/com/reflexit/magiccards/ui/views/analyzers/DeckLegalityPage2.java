@@ -26,11 +26,19 @@
  *                         combo before Default Format existed) keep it as
  *                         their starting default, but a same-session pick no
  *                         longer silently overwrites it
+ *     Rémi Dutil (2026) - commander formats: cards outside the commander's
+ *                         color identity read "Color Identity Invalid" (same
+ *                         pink as the other errors) in the Legality column,
+ *                         with the reason in the Error column; their group
+ *                         (Main Deck) turns pink too; the format combo says so.
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
+import java.util.Collections;
+import java.util.IdentityHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.fieldassist.ControlDecoration;
@@ -53,6 +61,7 @@ import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Label;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.legality.CommanderFormat;
 import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -103,6 +112,11 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 	private CheckControlDecoration totalDeco;
 	private CardStats stats;
 	private CheckControlDecoration maxRepeastDeco;
+	/** Commander formats: the cards outside the commander's color identity (same objects as the tree's). */
+	private final Set<IMagicCard> identityOutside = Collections.newSetFromMap(new IdentityHashMap<>());
+	/** The commander's colors, for the Error column ("Blue, Black, Green"). */
+	private String identityColors = "";
+	private static final String IDENTITY_INVALID = "Color Identity Invalid";
 
 	@Override
 	public void createPageContents(Composite area) {
@@ -235,6 +249,7 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 			String f = storageInfo == null ? null : storageInfo.getDefaultFormat();
 			format = (f != null && f.trim().length() > 0) ? Format.valueOf(f) : DEFAULT_FORMAT;
 		}
+		computeColorIdentity();
 		if (comboLegality != null) {
 			reloadLegalityCombo(comboLegality);
 		}
@@ -276,6 +291,40 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		}
 		totalDeco.updateVisibility();
 		maxRepeastDeco.updateVisibility();
+	}
+
+	/** The commander color identity rule for this deck (main deck vs. its sideboard = commander zone). */
+	private void computeColorIdentity() {
+		identityOutside.clear();
+		identityColors = "";
+		if (getCardStore() == null)
+			return;
+		Location loc = getCardStore().getLocation();
+		ICardStore<IMagicCard> main = DataManager.getInstance().getCardStore(loc.toMainDeck());
+		ICardStore<IMagicCard> zone = DataManager.getInstance().getCardStore(loc.toSideboard());
+		if (main == null || zone == null)
+			return;
+		CommanderFormat.IdentityCheck check = CommanderFormat.checkColorIdentity(zone, main);
+		if (check == null)
+			return;
+		identityOutside.addAll(check.outside);
+		identityColors = check.colorNames();
+	}
+
+	/** A card outside the commander's colors. */
+	private boolean isIdentityInvalid(Object element) {
+		return format instanceof CommanderFormat && identityOutside.contains(element);
+	}
+
+	/** How many cards of this group (e.g. "Main Deck") are outside the commander's colors. */
+	private int identityInvalidIn(Object element) {
+		if (!(format instanceof CommanderFormat) || !(element instanceof CardGroup) || identityOutside.isEmpty())
+			return 0;
+		int n = 0;
+		for (IMagicCard c : ((CardGroup) element).expand())
+			if (identityOutside.contains(c))
+				n++;
+		return n;
 	}
 
 	public void setFStore() {
@@ -355,7 +404,21 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		// columns.add(new SetColumn());
 		columns.add(new LegalityColumn() {
 			@Override
+			public int getColumnWidth() {
+				return 140; // room for "Color Identity Invalid"
+			}
+
+			@Override
+			public String getText(Object element) {
+				if (isIdentityInvalid(element))
+					return IDENTITY_INVALID;
+				return super.getText(element);
+			}
+
+			@Override
 			public Color getBackground(Object element) {
+				if (isIdentityInvalid(element) || identityInvalidIn(element) > 0)
+					return MagicUIActivator.COLOR_PINKINSH; // same as the other errors
 				if (element instanceof IMagicCard) {
 					LegalityMap legalityMap = ((IMagicCard) element).getLegalityMap();
 					Legality legality = legalityMap.get(format);
@@ -385,6 +448,12 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 			public String getText(Object element) {
 				if (element instanceof IMagicCard) {
 					String err = format.validateCardOrGroup((IMagicCard) element);
+					if (err == null && isIdentityInvalid(element))
+						err = "Outside the commander's colors (" + identityColors + ")";
+					int n = err == null ? identityInvalidIn(element) : 0;
+					if (n > 0)
+						err = n + " card" + (n == 1 ? "" : "s") + " outside the commander's colors (" + identityColors
+								+ ")";
 					return err;
 				}
 				return super.getToolTipText(element);
@@ -404,6 +473,9 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 	}
 
 	private String getFormatLabel(Format f, Legality legality) {
+		// the card pool may be legal while the colors are not
+		if (f instanceof CommanderFormat && !identityOutside.isEmpty())
+			return f.name() + " - " + IDENTITY_INVALID;
 		if (legality == Legality.UNKNOWN)
 			return f.name();
 		return f.name() + " - " + legality.getLabel();

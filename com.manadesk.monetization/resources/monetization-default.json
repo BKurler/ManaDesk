@@ -1,0 +1,21 @@
+{
+  "version": 1,
+  "support": {
+    "title": "Support ManaDesk",
+    "message": "ManaDesk is free and open-source, built in spare time. If it is useful to you, you can support its development - thank you!",
+    "links": [
+      {
+        "id": "ko-fi",
+        "label": "Ko-fi",
+        "description": "Buy me a coffee - one-time or monthly (card or PayPal, no account needed)",
+        "url": "https://ko-fi.com/bkurler_manadesk"
+      },
+      {
+        "id": "github-sponsors",
+        "label": "GitHub Sponsors",
+        "description": "Monthly or one-time sponsorship",
+        "url": ""
+      }
+    ]
+  }
+}

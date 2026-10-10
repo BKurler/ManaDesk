@@ -258,6 +258,8 @@
  *                         live network connection and a real display, and
  *                         takes noticeably longer (one browser navigation +
  *                         settle-time poll per real site checked).
+ *     Rémi Dutil (2026) - removed testMoxfieldFlavorNamedCardLink: its Moxfield
+ *                         deck was deleted and no replacement deck is known yet.
  *******************************************************************************/
 package com.reflexit.magiccards.ui.tests;
 
@@ -617,55 +619,6 @@ public class BrowseWebsiteLiveTest {
 				+ ", 'Xenagos' present: " + commanderRecovered);
 		assertTrue("expected the commander (Xenagos, God of Revels - rendered as a pure image on this page) to be "
 				+ "recoverable via its alt/title text", commanderRecovered);
-	}
-
-	/** Same shape as {@link #testTappedOutCommanderRenderedAsImage()} above,
-	 *  for the other real gap {@link
-	 *  BrowseWebsiteDialog#CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT}
-	 *  fixes: a real "Dimir Faery" Pauper deck's own land, Bojuka Bog, is
-	 *  displayed on this printing by its own flavor/alternate-art name,
-	 *  "Barrow-Downs" - not a real Scryfall card name at all, so plain
-	 *  innerText reads it correctly but DeckTextExtractor's own DB cross-
-	 *  check correctly refuses to count it. Deliberately does NOT assert an
-	 *  exact total/unique count on either read, even though the underlying
-	 *  bug is "one card short" - a real run showed plain.total read 84, not
-	 *  the expected 74: this page's own "Hypergeometric Calculator" widget
-	 *  re-displays a handful of the same cards with their own separate
-	 *  quantities, and loadAndCount()'s own "best (highest unique) result
-	 *  seen across polls" strategy (needed for OTHER sites that render
-	 *  partial content before settling) can latch onto an early, inflated
-	 *  poll instead of the page's final, settled state. Same reasoning as
-	 *  checkSite()'s own header: a live page is asserted on "still finds a
-	 *  plausible decklist" terms, not exact counts, for exactly this
-	 *  reason - content presence (which name shows up where) is what
-	 *  actually proves this specific fix, and is immune to that noise. */
-	@Test
-	public void testMoxfieldFlavorNamedCardLink() throws InterruptedException {
-		String url = "https://moxfield.com/decks/Et6dkeR3mE6SzAUleCGfmw";
-		trace("=== Moxfield - Dimir Faery (a land with its own flavor/alternate-art name) ===");
-		DeckTextExtractor.CardCount plain = loadAndCount(display, browser, url);
-		trace("  plain innerText RESULT: total=" + plain.total + " unique=" + plain.unique);
-		assertTrue("expected a plausible decklist to still be found via plain innerText (need >= "
-				+ DeckTextExtractor.MIN_MATCHES + ")", plain.unique >= DeckTextExtractor.MIN_MATCHES);
-
-		AtomicReference<String> textRef = new AtomicReference<>();
-		display.syncExec(() -> {
-			try {
-				Object result = browser.evaluate(BrowseWebsiteDialog.CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
-				textRef.set((result instanceof String) ? (String) result : "");
-			} catch (Exception e) {
-				textRef.set("");
-			}
-		});
-		String text = textRef.get();
-		DeckTextExtractor.CardCount withLinkNames = DeckTextExtractor.countRecognizedCards(text);
-		boolean realNameRecovered = text.contains("Bojuka Bog");
-		boolean flavorNameGone = !text.contains("Barrow-Downs");
-		trace("  card-row-link-substituted RESULT: total=" + withLinkNames.total + " unique=" + withLinkNames.unique
-				+ ", 'Bojuka Bog' present: " + realNameRecovered + ", 'Barrow-Downs' gone: " + flavorNameGone);
-		assertTrue("expected the real card name (Bojuka Bog) to be recoverable from the card row's own link href",
-				realNameRecovered);
-		assertTrue("expected the flavor name (Barrow-Downs) to no longer be the only text present", flavorNameGone);
 	}
 
 	/** Navigates {@code browser} to {@code url} and polls its rendered

@@ -1,3 +1,11 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - sync(): a retired price source saved in the
+ *                         preferences falls back to the default source;
+ *                         the display currency follows the source (Cardmarket
+ *                         EUR, TCGplayer USD).
+ */
 package com.reflexit.magiccards.ui.preferences;
 
 import java.util.Collection;
@@ -33,16 +41,32 @@ public class PriceProviderManager implements IPropertyChangeListener {
 		Object newValue = event.getNewValue();
 		if (property.equals(PreferenceConstants.PRICE_PROVIDER)) {
 			if (newValue != null && !newValue.equals(event.getOldValue())) {
+				useSourceCurrency((String) newValue); // before the reload the switch triggers
 				DataManager.getDBPriceStore().setProviderByName((String) newValue);
 			}
 		}
 	}
 
 	public void sync(IPreferenceStore preferenceStore) {
+		// a source that no longer exists (old TCG Player Low, MOTL, ...): back to the default
+		if (!com.reflexit.magiccards.core.seller.PriceSources.isKnown(getProviderName()))
+			preferenceStore.setToDefault(PreferenceConstants.PRICE_PROVIDER);
 		String providerName = getProviderName();
-		if (providerName != null)
+		if (providerName != null) {
+			useSourceCurrency(providerName);
 			DataManager.getDBPriceStore().setProviderByName(providerName);
+		}
 		preferenceStore.addPropertyChangeListener(this);
+	}
+
+	/**
+	 * Prices are shown in the selected source's own currency (Cardmarket: EUR,
+	 * TCGplayer: USD) - there is no separate currency setting in the UI, and
+	 * showing Cardmarket's euro prices converted to US$ made no sense.
+	 */
+	private static void useSourceCurrency(String sourceName) {
+		com.reflexit.magiccards.core.sync.CurrencyConvertor
+				.setCurrency(com.reflexit.magiccards.core.seller.PriceSources.currencyOf(sourceName));
 	}
 
 	public Collection<IPriceProvider> getProviders() {

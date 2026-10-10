@@ -7,6 +7,10 @@
  *                         legality data. All new ones use ordinal >=
  *                         SAN_ORDINAL so they never enter the Standard..
  *                         Vintage ordinal-order inheritance chain
+ *     Rémi Dutil (2026) - formats created on the fly (valueOf - a format
+ *                         Scryfall reports that isn't registered) start at
+ *                         ordinal 100 instead of 6: they used to land inside
+ *                         that chain and inherit Vintage's legality.
  */
 package com.reflexit.magiccards.core.legality;
 
@@ -32,7 +36,10 @@ public class Format {
 	// !!! RD public static final Format CLASSIC = new ConstructedFormat("Classic", 7);
 	// !!! RD public static final Format FREEFORM = new Format("Freeform", 8);
 	public static final int SAN_ORDINAL = 10;
-	public static int ordcount = 6;
+	/** Ordinal of the next format created on the fly ({@link #valueOf} - a format Scryfall reports that
+	 *  isn't registered below): after every built-in one, never inside the Standard..Vintage
+	 *  legality chain (ordinals below {@link #SAN_ORDINAL}). */
+	public static int ordcount = 100;
 	private final static LinkedHashMap<String, Format> formats = new LinkedHashMap<>();
 	static {
 		add(Format.STANDARD);

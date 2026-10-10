@@ -8,6 +8,13 @@
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
  *     Rémi Dutil (2026) - .proxywrap / .proxymark styles for proxy card art (grey stamp)
+ *     Rémi Dutil (2026) - .proxywrap/.proxymark replaced by .proxybadge +
+ *                         .proxyimage (badge above, dashed frame around): the
+ *                         card image is no longer greyed or stamped (Scryfall
+ *                         image guidelines).
+ *     Rémi Dutil (2026) - card info: .proxybadge replaced by the gallery's
+ *                         .badges/.badge/.proxy-badge, under the image
+ *                         (.cardimagebox holds the image and its badges).
  *******************************************************************************/
 package com.reflexit.magiccards.ui.utils;
 
@@ -221,24 +228,24 @@ public final class SymbolRenderer {
 				+ "img { vertical-align: middle; }"
 
 				// Card image always above text, responsive
-				+ ".cardimage {" + "    display: block;" + "    margin: 0 auto 8px auto;" + "    width: 100%;"
-				+ "    max-width: 600px;" // adjust to your preferred card width
+				// image + its badges row share one centered box (badges left-aligned under the image)
+				+ ".cardimagebox {" + "    max-width: 600px;" + "    margin: 0 auto 8px auto;" + "}"
+				+ ".cardimage {" + "    display: block;" + "    width: 100%;"
 				+ "    height: auto;" + "    border-radius: 4px;" + "}"
 
 				// Text block below image, stable layout
 				+ ".cardtext {" + "    margin-top: 8px;" + "}"
 
-				// Proxy copy: faded / greyed art with a diagonal "Proxy" stamp
-				+ ".proxywrap {" + "    position: relative;" + "    display: block;" + "    margin: 0 auto 8px auto;"
-				+ "    width: 100%;" + "    max-width: 600px;" + "}"
-				+ ".proxywrap .cardimage {" + "    margin: 0;" + "    filter: grayscale(100%);"
-				+ "    opacity: 0.55;" + "}"
-				+ ".proxymark {" + "    position: absolute;" + "    top: 50%;" + "    left: 50%;"
-				+ "    transform: translate(-50%, -50%) rotate(-32deg);" + "    font-size: 44px;"
-				+ "    font-weight: bold;" + "    letter-spacing: 10px;" + "    text-transform: uppercase;"
-				+ "    color: rgba(110, 110, 110, 0.72);" + "    border: 5px solid rgba(110, 110, 110, 0.6);"
-				+ "    border-radius: 8px;" + "    padding: 6px 30px;" + "    white-space: nowrap;"
-				+ "    pointer-events: none;" + "}"
+				// Proxy copy: a dashed frame AROUND the image and a "Proxy" badge
+				// UNDER it, same look as the gallery view - the card image itself is
+				// never altered or covered (Scryfall image guidelines: no stamps,
+				// no desaturation)
+				+ ".badges {" + "    display: flex;" + "    gap: 4px;" + "    margin-top: 8px;" + "}"
+				+ ".badge {" + "    padding: 0 8px;" + "    border-radius: 10px;" + "    font-size: 12px;"
+				+ "    font-weight: bold;" + "    line-height: 18px;" + "    white-space: nowrap;" + "}"
+				+ ".proxy-badge {" + "    background: #d32f2f;" + "    color: #fff;" + "    border: 1px solid #b71c1c;"
+				+ "}"
+				+ ".cardimage.proxyimage {" + "    outline: 3px dashed #d32f2f;" + "    outline-offset: 4px;" + "}"
 
 				+ "</style>" + "</head>" + "<body style='overflow:auto;" + style + "'>" + html + "<script>"
 				+ "window.onload = function() {" + "  var imgs = document.images;"
