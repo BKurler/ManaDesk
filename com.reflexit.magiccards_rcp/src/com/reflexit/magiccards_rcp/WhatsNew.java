@@ -16,6 +16,9 @@
  *                         never pops it up.
  *     Rémi Dutil (2026) - major vs minor: each release lists its "Highlights"
  *                         (bold, more room) before "Also new" (by topic).
+ *     Rémi Dutil (2026) - new views are placed by ViewZones (in their zone)
+ *     Rémi Dutil (2026) - entries for collection types, ownership following
+ *                         the list, and the "Main" collection
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -26,13 +29,6 @@ import org.eclipse.core.runtime.IProgressMonitor;
 import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.Job;
-import org.eclipse.e4.ui.model.application.ui.MElementContainer;
-import org.eclipse.e4.ui.model.application.ui.MUIElement;
-import org.eclipse.e4.ui.model.application.ui.advanced.MPerspective;
-import org.eclipse.e4.ui.model.application.ui.advanced.MPlaceholder;
-import org.eclipse.e4.ui.model.application.ui.basic.MWindow;
-import org.eclipse.e4.ui.workbench.modeling.EModelService;
-import org.eclipse.e4.ui.workbench.modeling.EPartService;
 import org.eclipse.jface.dialogs.Dialog;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.layout.GridDataFactory;
@@ -77,7 +73,6 @@ final class WhatsNew {
 	private static final String[] RELEASES = { "New since ManaDesk 0.9.7" };
 	private static final String SEEN_KEY = "whatsNew.seenVersion";
 
-	private static final String MAGIC_DB_VIEW = "com.reflexit.magiccards.ui.views.MagicDbView";
 	private static final String PROXIER_VIEW = "com.reflexit.magiccards.ui.views.proxier.ProxierView";
 	private static final String BUYER_VIEW = "com.manadesk.monetization.BuyerView";
 
@@ -138,6 +133,9 @@ final class WhatsNew {
 					+ " cards that only touch a color, like a fetch land that finds a Forest.", null),
 			new Feature(1, MAJOR, DECKS, "Decks and collections apart", "Each with its own New Deck / New Collection"
 					+ " wizard; add a deck's sideboard and extra lists from its properties.", null),
+			new Feature(1, MAJOR, DECKS, "Collection types", "Each collection is Standard, For Trade or Wishlist/To"
+					+ " Print. Wishlist/To Print holds the cards to buy or the proxies to print; moving one to a"
+					+ " Standard collection marks it as owned.", null),
 			new Feature(1, MAJOR, DECKS, "Formats and legality", "Pick a deck's format: legality now covers every"
 					+ " format (Brawl, Oathbreaker, Pauper Commander, Old School...), and commander decks are"
 					+ " checked against the commander's color identity.", null),
@@ -146,6 +144,12 @@ final class WhatsNew {
 					+ " (black). Moving or copying cards where they can't go is blocked.", null),
 			new Feature(1, MINOR, DECKS, "Boxed decks", "Mark a built deck as boxed: its cards count as in use,"
 					+ " so the Proxier and Buyer don't count on them for other decks.", null),
+			new Feature(1, MINOR, DECKS, "Ownership follows the list", "A card is owned in a Standard or For Trade"
+					+ " collection and virtual in a deck or a Wishlist/To Print collection - no need to set it card"
+					+ " by card. Imports follow the destination too, and virtual cards imported into a collection"
+					+ " are marked as proxies.", null),
+			new Feature(1, MINOR, DECKS, "Main collection", "Renamed \"Main\"; it is always there, sorted and"
+					+ " writable.", null),
 			new Feature(1, MAJOR, IMPORT, "Import from a website", "Moxfield, Archidekt, TappedOut, MTGGoldfish, TCGplayer"
 					+ " and more - or any card list from the clipboard or a file, with a preview to fix unknown"
 					+ " cards.", null),
@@ -256,35 +260,13 @@ final class WhatsNew {
 	}
 
 	/**
-	 * Adds the view as a tab at the end of the Scryfall Database tab group of the
-	 * current layout, without activating it - unless it is already there. Falls
-	 * back to the platform's own placement when the group cannot be found.
+	 * Adds the view as a tab in its zone (see {@link ViewZones}), without
+	 * activating it.
 	 */
 	private static void addView(IWorkbenchWindow window, String viewId) {
-		IWorkbenchPage page = window.getActivePage();
 		try {
-			if (page.findViewReference(viewId) == null) {
-				EModelService ms = window.getService(EModelService.class);
-				EPartService ps = window.getService(EPartService.class);
-				MWindow mwin = window.getService(MWindow.class);
-				MPerspective persp = ms == null || mwin == null ? null : ms.getActivePerspective(mwin);
-				if (persp != null && ps != null) {
-					List<MPlaceholder> db = ms.findElements(persp, MAGIC_DB_VIEW, MPlaceholder.class, null);
-					if (!db.isEmpty() && db.get(0).getParent() != null) {
-						@SuppressWarnings("unchecked")
-						MElementContainer<MUIElement> stack = (MElementContainer<MUIElement>) (MElementContainer<?>) db
-								.get(0).getParent();
-						MPlaceholder ph = ps.createSharedPart(viewId, false);
-						if (ph != null) {
-							ph.setToBeRendered(true);
-							stack.getChildren().add(ph);
-						}
-					}
-				}
-			}
-			// creates it in its place (the new placeholder, or the platform's
-			// default spot) without taking the focus
-			page.showView(viewId, null, IWorkbenchPage.VIEW_CREATE);
+			ViewZones.apply(window); // gives the view its place in its zone
+			window.getActivePage().showView(viewId, null, IWorkbenchPage.VIEW_CREATE);
 		} catch (Exception e) {
 			Activator.log(e);
 		}

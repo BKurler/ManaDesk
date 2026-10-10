@@ -52,6 +52,9 @@
  *                         not scheduleScanAndPatch()'s asyncExec, which left
  *                         a visible natural-height-then-snap frame) plus
  *                         restoreProxierIcon() on CHANGE_RESET_COMPLETE
+ *     Rémi Dutil (2026) - ViewZones.apply() at startup, after a Reset
+ *                         Perspective and when the perspective is activated:
+ *                         every ManaDesk view opens in its zone
  */
 
 package com.reflexit.magiccards_rcp;
@@ -133,6 +136,8 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 
 		// existing logic: hide selection view
 		IWorkbenchWindow window = PlatformUI.getWorkbench().getActiveWorkbenchWindow();
+		// every ManaDesk view in its zone (decks / side views / main tabs)
+		ViewZones.apply(window);
 		if (window != null) {
 			IWorkbenchPage page = window.getActivePage();
 			if (page != null) {
@@ -148,7 +153,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 				window.addPerspectiveListener(new IPerspectiveListener() {
 					@Override
 					public void perspectiveActivated(IWorkbenchPage activatedPage, IPerspectiveDescriptor perspective) {
-						// not needed
+						ViewZones.apply(activatedPage.getWorkbenchWindow());
 					}
 
 					@Override
@@ -160,6 +165,7 @@ public class ApplicationWorkbenchWindowAdvisor extends WorkbenchWindowAdvisor {
 							// this event fires, and patching them now (before the
 							// first paint) is what removes the visible
 							// natural-height-then-snap-to-28px flicker.
+							ViewZones.apply(changedPage.getWorkbenchWindow());
 							scanAndPatchNow();
 							restoreProxierIcon();
 						}

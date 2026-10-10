@@ -13,6 +13,9 @@
  *                         Proxier (Buyer follows, from the monetization
  *                         plug-in): Scryfall Database, My Cards, Collector,
  *                         Gallery, Proxier, Buyer after Reset Perspective.
+ *     Rémi Dutil (2026) - dropped the duplicate Instances placeholder in
+ *                         "right" (it already has its view there); zones are
+ *                         kept by ViewZones (rcp)
  */
 package com.reflexit.magiccards.ui;
 
@@ -69,7 +72,6 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		right.addView(PrintingsView.ID);
 		right.addView(InstancesView.ID);
 		right.addView(RulingsView.ID);
-		right.addPlaceholder(InstancesView.ID);
 		main.addView(MagicDbView.ID);
 		main.addView(MyCardsView.ID);
 		main.addView(CollectorView.ID);
