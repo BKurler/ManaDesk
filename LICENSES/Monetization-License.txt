@@ -1,0 +1,21 @@
+ManaDesk Monetization Module - License
+
+Copyright (c) 2026 Rémi Dutil
+All rights reserved.
+
+This module (the com.manadesk.monetization plug-in: its source code,
+configuration and resources) is NOT open-source and is NOT covered by the
+Eclipse Public License that applies to the rest of ManaDesk.
+
+Permission is granted to use this module ONLY as part of the ManaDesk
+application as distributed by its author.
+
+Modification, redistribution, or reuse of this module or its contents, in
+whole or in part, is prohibited without the author's written permission.
+In particular, you may NOT replace or alter affiliate identifiers, store or
+advertising URLs, configuration URLs, or donation/support links.
+
+The rest of ManaDesk remains available under the Eclipse Public License
+(EPL-1.0 / EPL-2.0) - see the LICENSE files of the respective plug-ins.
+
+THIS MODULE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND.

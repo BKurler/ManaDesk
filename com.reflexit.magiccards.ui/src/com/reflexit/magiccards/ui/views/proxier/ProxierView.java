@@ -123,14 +123,16 @@
  *                         released set" pick with no guarantee of matching
  *                         anything the decks actually reference - removed as
  *                         dead code along with releaseDateOf()/collNumValue()
+ *     Rémi Dutil (2026) - the pooled calculation (rows, Owned/Boxed/
+ *                         Available/Needed, per-list breakdown, boxed claims)
+ *                         moved to the shared core class DeckNeeds - the Buyer
+ *                         view uses the same one; "To Print" = Row.shortfall().
+ *                         Behaviour unchanged.
  */
 package com.reflexit.magiccards.ui.views.proxier;
 
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.Comparator;
-import java.util.HashMap;
-import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.concurrent.CopyOnWriteArrayList;
@@ -171,6 +173,11 @@ import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
+import com.reflexit.magiccards.core.model.nav.DeckNeeds;
+import com.reflexit.magiccards.core.model.nav.DeckNeeds.ListInfo;
+import com.reflexit.magiccards.core.model.nav.DeckNeeds.ListRef;
+import com.reflexit.magiccards.core.model.nav.DeckNeeds.Row;
+import com.reflexit.magiccards.core.model.nav.DeckNeeds.Split;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorContentProvider;
@@ -223,7 +230,7 @@ public class ProxierView extends ViewPart {
 	/** Whether the grid is filtered to rows where "To Print" is non-zero. */
 	private boolean onlyToPrint;
 	/** The full (unfiltered) row set from the last {@link #rebuildGrid()} - what "Create Collection" reads from. */
-	private final List<ProxyRow> currentRows = new ArrayList<>();
+	private final List<Row> currentRows = new ArrayList<>();
 	/**
 	 * Whether rows are grouped by exact printing (name + set + collector
 	 * number) instead of by name alone. On: Owned/Boxed/Available use the
@@ -241,98 +248,6 @@ public class ProxierView extends ViewPart {
 	 */
 	private final List<CardCollection> deckOrder = new ArrayList<>();
 	private final CopyOnWriteArrayList<ISelectionChangedListener> cardSelectionListeners = new CopyOnWriteArrayList<>();
-
-	/** This deck list's (main/Sideboard/Extra) current state for one card in one row - no cross-list math. */
-	private static final class DeckCardInfo {
-		int real;
-		int proxy;
-		int needed;
-		/** A representative copy from this specific deck list - Set/CollNum in Exact Match mode. */
-		MagicCardPhysical sample;
-
-		int total() {
-			return real + proxy + needed;
-		}
-	}
-
-	/**
-	 * One line of the bottom-right breakdown: a deck, further qualified by
-	 * which of its lists (main / Sideboard / Extra) the card is needed in - a
-	 * card needed in both the main deck and its Sideboard is two separate
-	 * lines, not one merged count.
-	 */
-	private static final class DeckLocation {
-		final CardCollection deck;
-		final String suffix; // "", " (Sideboard)" or " (Extra)"
-
-		DeckLocation(CardCollection deck, String suffix) {
-			this.deck = deck;
-			this.suffix = suffix;
-		}
-
-		String label() {
-			return deck.getName() + suffix;
-		}
-
-		@Override
-		public boolean equals(Object o) {
-			if (!(o instanceof DeckLocation))
-				return false;
-			DeckLocation d = (DeckLocation) o;
-			return deck == d.deck && suffix.equals(d.suffix);
-		}
-
-		@Override
-		public int hashCode() {
-			return System.identityHashCode(deck) * 31 + suffix.hashCode();
-		}
-	}
-
-	/** A Genuine/Proxy split - Owned, Boxed and Available all share this shape and its display format. */
-	private static final class GenuineProxySplit {
-		int genuine;
-		int proxy;
-
-		int total() {
-			return genuine + proxy;
-		}
-	}
-
-	/** One pivot row: a card name and its breakdown by deck list among the checked decks. */
-	private static final class ProxyRow {
-		final String cardName;
-		/** A synthetic proxy-flagged copy - feeds the card info zone with the proxy-style preview and Set/Coll.#. */
-		MagicCardPhysical sample;
-		/** Genuine + proxy copies owned, whole app, every printing of the name. */
-		final GenuineProxySplit owned = new GenuineProxySplit();
-		/**
-		 * Copies of this card claimed by OTHER already-boxed decks - unavailable to
-		 * this batch. Every slot in a boxed deck counts (materialized or still
-		 * virtual): a boxed deck's virtual, non-proxy slot still represents an
-		 * intent to use a real copy there, so it claims real supply the same as an
-		 * already-materialized one would (this is also why this used to read zero
-		 * for an all-virtual deck - counting only materialized copies missed that
-		 * claim entirely).
-		 */
-		final GenuineProxySplit boxed = new GenuineProxySplit();
-		/** Raw total demand across the checked decks - the "Needed" column, not yet netted against stock. */
-		int wanted;
-		/** The actual result - "Proxy to print": max(0, wanted - available.total()). */
-		int needed;
-		final Map<DeckLocation, DeckCardInfo> perDeck = new LinkedHashMap<>();
-
-		ProxyRow(String cardName) {
-			this.cardName = cardName;
-		}
-
-		/** Owned stock not already claimed by another boxed deck - each bucket floored at 0 independently. */
-		GenuineProxySplit available() {
-			GenuineProxySplit a = new GenuineProxySplit();
-			a.genuine = Math.max(0, owned.genuine - boxed.genuine);
-			a.proxy = Math.max(0, owned.proxy - boxed.proxy);
-			return a;
-		}
-	}
 
 	/**
 	 * Publishes the grid's row selection as the underlying card(s), not the
@@ -515,7 +430,7 @@ public class ProxierView extends ViewPart {
 		gridViewer.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
-				return !onlyToPrint || ((ProxyRow) element).needed != 0;
+				return !onlyToPrint || ((Row) element).shortfall() != 0;
 			}
 		});
 
@@ -525,12 +440,12 @@ public class ProxierView extends ViewPart {
 		cardCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return ((ProxyRow) element).cardName;
+				return ((Row) element).cardName;
 			}
 
 			@Override
 			public String getToolTipText(Object element) {
-				return ((ProxyRow) element).cardName;
+				return ((Row) element).cardName;
 			}
 		});
 
@@ -542,7 +457,7 @@ public class ProxierView extends ViewPart {
 		ownedCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return formatSplit(((ProxyRow) element).owned);
+				return formatSplit(((Row) element).owned);
 			}
 		});
 
@@ -554,14 +469,14 @@ public class ProxierView extends ViewPart {
 		boxedCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return formatSplit(((ProxyRow) element).boxed);
+				return formatSplit(((Row) element).boxed);
 			}
 
 			@Override
 			public Color getBackground(Object element) {
 				// Boxed can never legitimately exceed Owned (a claim needs stock to claim
 				// against) - a red background flags the data inconsistency for follow-up
-				ProxyRow row = (ProxyRow) element;
+				Row row = (Row) element;
 				boolean overBoxed = row.boxed.total() > row.owned.total() || row.boxed.genuine > row.owned.genuine
 						|| row.boxed.proxy > row.owned.proxy;
 				return overBoxed ? Display.getDefault().getSystemColor(SWT.COLOR_RED) : null;
@@ -575,7 +490,7 @@ public class ProxierView extends ViewPart {
 		availableCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return formatSplit(((ProxyRow) element).available());
+				return formatSplit(((Row) element).available());
 			}
 		});
 
@@ -586,7 +501,7 @@ public class ProxierView extends ViewPart {
 		neededCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return String.valueOf(((ProxyRow) element).wanted);
+				return String.valueOf(((Row) element).wanted);
 			}
 		});
 
@@ -598,7 +513,7 @@ public class ProxierView extends ViewPart {
 		proxyToPrintCol.setLabelProvider(new ColumnLabelProvider() {
 			@Override
 			public String getText(Object element) {
-				return String.valueOf(((ProxyRow) element).needed);
+				return String.valueOf(((Row) element).shortfall());
 			}
 		});
 
@@ -612,7 +527,7 @@ public class ProxierView extends ViewPart {
 			public String getText(Object element) {
 				if (!exactMatch)
 					return "Any";
-				MagicCardPhysical sample = ((ProxyRow) element).sample;
+				MagicCardPhysical sample = ((Row) element).sample;
 				return sample == null ? "" : String.valueOf(sample.getSet());
 			}
 		});
@@ -627,7 +542,7 @@ public class ProxierView extends ViewPart {
 			public String getText(Object element) {
 				if (!exactMatch)
 					return "Any";
-				MagicCardPhysical sample = ((ProxyRow) element).sample;
+				MagicCardPhysical sample = ((Row) element).sample;
 				return sample == null ? "" : String.valueOf(sample.getCard().getCollNumber());
 			}
 		});
@@ -712,23 +627,23 @@ public class ProxierView extends ViewPart {
 	}
 
 	@SuppressWarnings("unchecked")
-	private static DeckCardInfo entryInfo(Object element) {
-		return ((Map.Entry<DeckLocation, DeckCardInfo>) element).getValue();
+	private static ListInfo entryInfo(Object element) {
+		return ((Map.Entry<ListRef, ListInfo>) element).getValue();
 	}
 
 	@SuppressWarnings("unchecked")
-	private static DeckLocation entryLocation(Object element) {
-		return ((Map.Entry<DeckLocation, DeckCardInfo>) element).getKey();
+	private static ListRef entryLocation(Object element) {
+		return ((Map.Entry<ListRef, ListInfo>) element).getKey();
 	}
 
 	private void updateDeckNeedsTable(IStructuredSelection sel) {
-		if (sel.size() != 1 || !(sel.getFirstElement() instanceof ProxyRow)) {
+		if (sel.size() != 1 || !(sel.getFirstElement() instanceof Row)) {
 			deckNeedsViewer.setInput(Collections.emptyList());
 			return;
 		}
-		ProxyRow row = (ProxyRow) sel.getFirstElement();
-		List<Map.Entry<DeckLocation, DeckCardInfo>> entries = new ArrayList<>();
-		for (Map.Entry<DeckLocation, DeckCardInfo> e : row.perDeck.entrySet()) {
+		Row row = (Row) sel.getFirstElement();
+		List<Map.Entry<ListRef, ListInfo>> entries = new ArrayList<>();
+		for (Map.Entry<ListRef, ListInfo> e : row.perList.entrySet()) {
 			if (e.getValue().total() > 0)
 				entries.add(e);
 		}
@@ -738,13 +653,13 @@ public class ProxierView extends ViewPart {
 	private static ISelection toCardSelection(IStructuredSelection raw) {
 		List<Object> cards = new ArrayList<>();
 		for (Object o : raw.toList()) {
-			if (o instanceof ProxyRow && ((ProxyRow) o).sample != null)
-				cards.add(((ProxyRow) o).sample);
+			if (o instanceof Row && ((Row) o).sample != null)
+				cards.add(proxyPreviewOf(((Row) o).sample)); // always the proxy-style preview
 		}
 		return new StructuredSelection(cards);
 	}
 
-	/** Recomputes the pooled-sums rows for the currently-checked decks, in the grid's priority order. */
+	/** Recomputes the pooled-sums rows for the currently-checked decks (shared calculation: {@link DeckNeeds}). */
 	private void rebuildGrid() {
 		List<CardCollection> checked = new ArrayList<>();
 		for (CardCollection cc : deckOrder) {
@@ -753,114 +668,15 @@ public class ProxierView extends ViewPart {
 		}
 		deckNeedsViewer.setInput(Collections.emptyList()); // the selection (and so the per-deck detail) doesn't survive a rebuild
 
-		Map<String, ProxyRow> rows = new LinkedHashMap<>();
-		for (CardCollection cc : checked) {
-			for (SuffixedCard sc : cardsOfWithSuffix(cc)) {
-				if (!(sc.card instanceof MagicCardPhysical))
-					continue;
-				MagicCardPhysical mcp = (MagicCardPhysical) sc.card;
-				int count = mcp.getCount();
-				if (count <= 0)
-					continue;
-				String key = rowKeyFor(mcp, exactMatch);
-				ProxyRow row = rows.computeIfAbsent(key, k -> new ProxyRow(mcp.getName()));
-				if (row.sample == null) {
-					row.sample = proxyPreviewOf(mcp);
-					if (exactMatch) {
-						// this exact printing's own aggregate - not pooled across other printings
-						row.owned.genuine = mcp.getCard().getGenuineOwnCount();
-						row.owned.proxy = mcp.getCard().getOwnCount() - row.owned.genuine;
-					} else {
-						row.owned.genuine = mcp.getGenuineOwnTotalAll();
-						row.owned.proxy = mcp.getOwnTotalAll() - row.owned.genuine;
-					}
-				}
-				DeckLocation dl = new DeckLocation(cc, sc.suffix);
-				DeckCardInfo info = row.perDeck.computeIfAbsent(dl, k -> new DeckCardInfo());
-				if (info.sample == null)
-					info.sample = mcp;
-				if (mcp.isProxy())
-					info.proxy += count;
-				else if (mcp.isOwn())
-					info.real += count;
-				else
-					info.needed += count;
-				row.wanted += count;
-			}
-		}
-
-		Map<String, GenuineProxySplit> boxedCounts = computeBoxedCounts(exactMatch);
-		for (Map.Entry<String, ProxyRow> e : rows.entrySet()) {
-			ProxyRow row = e.getValue();
-			GenuineProxySplit b = boxedCounts.get(e.getKey());
-			if (b != null) {
-				row.boxed.genuine = b.genuine;
-				row.boxed.proxy = b.proxy;
-			}
-			row.needed = Math.max(0, row.wanted - row.available().total());
-		}
-
-		List<ProxyRow> sorted = new ArrayList<>(rows.values());
-		sorted.sort(Comparator.<ProxyRow, String>comparing(r -> r.cardName, String.CASE_INSENSITIVE_ORDER)
-				.thenComparing(r -> r.sample == null ? "" : String.valueOf(r.sample.getSet())));
+		List<Row> sorted = DeckNeeds.compute(checked, exactMatch);
 		currentRows.clear();
 		currentRows.addAll(sorted);
 		int totalToPrint = 0;
-		for (ProxyRow row : sorted)
-			totalToPrint += row.needed;
+		for (Row row : sorted)
+			totalToPrint += row.shortfall();
 		toPrintHeader.setText("Proxies to print: " + totalToPrint);
 		gridViewer.setInput(sorted);
 		gridTable.getParent().layout(true, true);
-	}
-
-	/**
-	 * The row-grouping key: card name alone when {@code exact} is off (every
-	 * printing pooled into one row - matches Owned/Boxed using
-	 * getOwnTotalAll()/getGenuineOwnTotalAll()); name + set + collector number
-	 * when on (one row per exact printing - matches Owned/Boxed using the
-	 * per-printing getOwnCount()/getGenuineOwnCount()). Boxed counts
-	 * ({@link #computeBoxedCounts}) must use the same key so a boxed deck's
-	 * claim lands on the right row.
-	 */
-	private static String rowKeyFor(MagicCardPhysical mcp, boolean exact) {
-		if (!exact)
-			return mcp.getName();
-		return mcp.getName() + ' ' + mcp.getSet() + ' ' + mcp.getCard().getCollNumber();
-	}
-
-	/**
-	 * How many copies of each row (keyed the same way as {@link #rowKeyFor} -
-	 * by name, or by exact printing when {@code exact}) are claimed by decks
-	 * that are already boxed - genuine (non-proxy-flagged) vs proxy, split the
-	 * same way the Owned column is. Every slot in a boxed deck counts,
-	 * materialized or still virtual: a boxed deck's virtual, non-proxy slot
-	 * still represents an intent to use a real copy there, so it claims real
-	 * supply the same as an already-materialized one would - counting only
-	 * materialized copies (isOwn()) used to read zero for an all-virtual deck,
-	 * which is the common case, since decks default to virtual. One pass over
-	 * every boxed deck app-wide, not just the checked batch - a boxed deck's
-	 * cards are spoken for regardless of what's being planned right now.
-	 */
-	private static Map<String, GenuineProxySplit> computeBoxedCounts(boolean exact) {
-		Map<String, GenuineProxySplit> boxed = new HashMap<>();
-		for (CardCollection cc : DataManager.getInstance().getModelRoot().getDeckContainer().getAllElements()) {
-			if (!cc.isDeck() || !cc.isBoxed())
-				continue;
-			for (IMagicCard card : cardsOf(cc)) {
-				if (!(card instanceof MagicCardPhysical))
-					continue;
-				MagicCardPhysical mcp = (MagicCardPhysical) card;
-				int count = mcp.getCount();
-				if (count <= 0)
-					continue;
-				GenuineProxySplit split = boxed.computeIfAbsent(rowKeyFor(mcp, exact), k -> new GenuineProxySplit());
-				if (mcp.isProxy())
-					split.proxy += count;
-				else
-					split.genuine += count;
-			}
-		}
-		return boxed;
 	}
 
 	/**
@@ -888,12 +704,12 @@ public class ProxierView extends ViewPart {
 	 * nothing to print.
 	 */
 	private void createProxiesCollection() {
-		List<ProxyRow> toPrint = new ArrayList<>();
+		List<Row> toPrint = new ArrayList<>();
 		int totalCopies = 0;
-		for (ProxyRow row : currentRows) {
-			if (row.needed > 0) {
+		for (Row row : currentRows) {
+			if (row.shortfall() > 0) {
 				toPrint.add(row);
-				totalCopies += row.needed;
+				totalCopies += row.shortfall();
 			}
 		}
 		if (toPrint.isEmpty()) {
@@ -918,11 +734,11 @@ public class ProxierView extends ViewPart {
 		Location loc = coll.getLocation();
 
 		List<MagicCardPhysical> toAdd = new ArrayList<>();
-		for (ProxyRow row : toPrint) {
+		for (Row row : toPrint) {
 			if (row.sample == null)
 				continue; // shouldn't happen - a "to print" row always has a contributing sample
 			MagicCardPhysical phi = new MagicCardPhysical(row.sample.getCard(), loc, true);
-			phi.setCount(row.needed);
+			phi.setCount(row.shortfall());
 			phi.setProxy(true);
 			toAdd.add(phi);
 		}
@@ -939,68 +755,12 @@ public class ProxierView extends ViewPart {
 		return candidate;
 	}
 
-	/** One card paired with which of a deck's lists it came from - see {@link #cardsOfWithSuffix}. */
-	private static final class SuffixedCard {
-		final String suffix;
-		final IMagicCard card;
-
-		SuffixedCard(String suffix, IMagicCard card) {
-			this.suffix = suffix;
-			this.card = card;
-		}
-	}
-
-	/** A deck's own cards plus its Sideboard and Extra piles, if it has them - suffix dropped. */
-	private static List<IMagicCard> cardsOf(CardCollection deck) {
-		List<IMagicCard> all = new ArrayList<>();
-		for (SuffixedCard sc : cardsOfWithSuffix(deck))
-			all.add(sc.card);
-		return all;
-	}
-
-	/**
-	 * A deck's own cards plus its Sideboard and Extra piles, if it has them,
-	 * each tagged with which list it came from ("", " (Sideboard)" or
-	 * " (Extra)") - so a card needed in more than one of a deck's lists can be
-	 * reported as separate lines instead of one merged count. Resolved
-	 * directly by {@link Location} via {@code DataManager.getCardStore} - the
-	 * same call {@code AccessoriesPage}/{@code DeckAccessoriesPopulator}
-	 * already use for exactly this - checking the *returned* store for null,
-	 * not a {@code loc.getFile().exists()} pre-check (which was the actual bug
-	 * in an earlier version of this method: it under-reported existing
-	 * sideboards). Not routed through {@code CardElement.getRelatedElements()}
-	 * either - that depends on the sideboard/extra already being loaded as
-	 * children in the in-memory navigator tree, which this view's own tree may
-	 * not have triggered for every deck.
-	 */
-	private static List<SuffixedCard> cardsOfWithSuffix(CardCollection deck) {
-		List<SuffixedCard> all = new ArrayList<>();
-		for (IMagicCard c : deck.getStore().getCards())
-			all.add(new SuffixedCard("", c));
-		Location main = deck.getLocation().toMainDeck();
-		addSuffixed(all, main.toSideboard(), " (Sideboard)");
-		addSuffixed(all, main.toExtra(), " (Extra)");
-		return all;
-	}
-
-	private static void addSuffixed(List<SuffixedCard> all, Location loc, String suffix) {
-		try {
-			ICardStore<IMagicCard> store = DataManager.getInstance().getCardStore(loc);
-			if (store != null)
-				for (IMagicCard c : store.getCards())
-					all.add(new SuffixedCard(suffix, c));
-		} catch (RuntimeException e) {
-			// no sideboard/extra for this deck - same defensive catch
-			// SideboardHelpHtmlExportDelegate uses around this same call
-		}
-	}
-
 	/** Shared "total (genuine/proxy)" display format for the Owned/Boxed/Available columns. */
-	private static String formatSplit(GenuineProxySplit split) {
+	private static String formatSplit(Split split) {
 		return split.total() + " (" + split.genuine + "/" + split.proxy + ")";
 	}
 
-	private static String formatCell(DeckCardInfo info) {
+	private static String formatCell(ListInfo info) {
 		int total = info.total();
 		if (info.proxy == 0 && info.needed == 0)
 			return String.valueOf(total); // all real

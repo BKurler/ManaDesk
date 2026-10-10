@@ -8,6 +8,14 @@
  *                         via a .part file); no web = "image not available"
  *                         picture, nothing logged; external links no longer
  *                         blocked by "Work Offline".
+ *     Rémi Dutil (2026) - proxy copies: "Proxy copy" badge above the image
+ *                         and a dashed frame around it, replacing the greyed
+ *                         image + watermark (Scryfall image guidelines).
+ *     Rémi Dutil (2026) - the "Proxy" badge moved UNDER the image, same look
+ *                         as the gallery view.
+ *     Rémi Dutil (2026) - "Flip" on a physical copy keeps the copy (proxy
+ *                         badge, finish, ...): flipOf() shows a display-only
+ *                         clone on the other face instead of the bare printing.
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -103,6 +111,8 @@ class CardDescComposite extends Composite {
 				@Override
 				public void changing(LocationEvent event) {
 					String location = event.location;
+					if (CardDescView.DEBUG)
+						CardDescView.trace("browser changing to '" + location + "' top=" + event.top + ", shown", card);
 					if (location.equals("about:blank"))
 						return;
 					try {
@@ -130,8 +140,9 @@ class CardDescComposite extends Composite {
 								event.doit = false;
 								ICardStore<IMagicCard> magicDBStore = DataManager.getCardHandler().getMagicDBStore();
 								IMagicCard card2 = magicDBStore.getCard(cardId);
+								CardDescView.trace("flip link id=" + cardId + " -> other face", card2);
 								if (card2 != null) {
-									cardDescView.setSelection(new StructuredSelection(card2));
+									cardDescView.showFlipped(flipOf(card, card2));
 								}
 							}
 						}
@@ -291,6 +302,24 @@ class CardDescComposite extends Composite {
 		return oracle;
 	}
 
+	/**
+	 * The other face to show for {@code shown}. A physical copy keeps being that
+	 * copy (proxy, finish, count, ...): a display-only clone pointing at the
+	 * other face's printing - never added to any store.
+	 */
+	static IMagicCard flipOf(IMagicCard shown, IMagicCard otherFace) {
+		if (shown instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
+				&& otherFace instanceof com.reflexit.magiccards.core.model.MagicCard) {
+			com.reflexit.magiccards.core.model.MagicCardPhysical copy = (com.reflexit.magiccards.core.model.MagicCardPhysical) ((com.reflexit.magiccards.core.model.MagicCardPhysical) shown)
+					.cloneCard();
+			if (copy != null) {
+				copy.setMagicCard((com.reflexit.magiccards.core.model.MagicCard) otherFace);
+				return copy;
+			}
+		}
+		return otherFace;
+	}
+
 	protected String getLinks(IMagicCard card) {
 		String links = "";
 		String flipId = card.getFlipId();
@@ -346,16 +375,17 @@ class CardDescComposite extends Composite {
 			URL imgUrl = CardCache.getImageURL(card);
 			String src = imgUrl != null ? imgUrl.toExternalForm() : ImageCreator.getInstance().getCardNotFoundImageURL();
 			if (!src.isEmpty()) {
-				String img = "<img src=\"" + src + "\" class=\"cardimage\""
-						+ ImageCreator.getInstance().getCardNotFoundOnError() + "/>";
-				if (card instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
-						&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) card).isProxy()) {
-					// a proxy copy: fade the art and stamp it diagonally
-					sb.append("<div class=\"proxywrap\">").append(img)
-							.append("<span class=\"proxymark\">Proxy</span></div>");
-				} else {
-					sb.append(img);
-				}
+				boolean proxy = card instanceof com.reflexit.magiccards.core.model.MagicCardPhysical
+						&& ((com.reflexit.magiccards.core.model.MagicCardPhysical) card).isProxy();
+				// a proxy copy: dashed frame around the image + "Proxy" badge UNDER
+				// it, as in the gallery - the image itself is never altered or
+				// covered (Scryfall guidelines)
+				sb.append("<div class=\"cardimagebox\">");
+				sb.append("<img src=\"").append(src).append("\" class=\"cardimage").append(proxy ? " proxyimage" : "")
+						.append("\"").append(ImageCreator.getInstance().getCardNotFoundOnError()).append("/>");
+				if (proxy)
+					sb.append("<div class=\"badges\"><span class=\"badge proxy-badge\">Proxy</span></div>");
+				sb.append("</div>");
 			}
 		} catch (Exception e) {
 			// ignore, no image available

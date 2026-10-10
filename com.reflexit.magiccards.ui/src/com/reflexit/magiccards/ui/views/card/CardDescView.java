@@ -8,6 +8,17 @@
  *                         not a single filtered card list)
  *     Rémi Dutil (2026) - removed the "Work Offline" reference from the
  *                         commented-out open action.
+ *     Rémi Dutil (2026) - reloads itself when the shown copy is updated in place
+ *                         (Set / CollNum edit: new picture without reselecting);
+ *                         showFlipped() shows the other face without replacing
+ *                         the selected copy.
+ *     Rémi Dutil (2026) - the startup "saved card" restore only fills an empty
+ *                         view - it used to replace the copy a restored deck tab
+ *                         had just selected (a proxy lost its badge). The saved
+ *                         card also remembers its copy (location / proxy /
+ *                         finish) and that copy is shown again at startup,
+ *                         not the bare database printing. DEBUG
+ *                         load trace (who asked, which card, proxy or not).
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -67,6 +78,8 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
+import com.reflexit.magiccards.core.model.events.CardEvent;
+import com.reflexit.magiccards.core.model.events.CardEventUpdate;
 import com.reflexit.magiccards.core.sync.ParseGathererOracle;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardDialog;
@@ -76,6 +89,7 @@ import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;
 import com.reflexit.magiccards.ui.views.MagicDbView;
+import com.reflexit.magiccards.ui.views.lib.LibraryEventListener;
 import com.reflexit.magiccards.ui.views.proxier.ProxierView;
 
 public class CardDescView extends ViewPart implements ISelectionListener, IShowInTarget, IShowInSource {
@@ -83,6 +97,9 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 	private CardDescComposite panel;
 	private Label message;
 	private LoadCardJob loadCardJob;
+	/** The card last selected (not a flipped face) - reloaded when it is updated. */
+	private volatile IMagicCard selectedCard;
+	private final LibraryEventListener eventListener = new LibraryEventListener();
 	// !!! RD private Action actionAsScanned;
 	// !!! RD private boolean asScanned;
 	private Action open;
@@ -219,6 +236,8 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 		hookContextMenu();
 		contributeToActionBars();
 		revealCurrentSelection();
+		eventListener.setEventHandler(this::handleCardEvent);
+		eventListener.init(getViewSite(), null);
 
 		getSite().setSelectionProvider(new ISelectionProvider() {
 			@Override
@@ -376,7 +395,22 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 				IMagicCard card = (IMagicCard) DataManager.getCardHandler().getMagicDBStore().getCard(id);
 				if (card == null)
 					return Status.OK_STATUS;
+				// the saved card was a copy in a deck / collection (e.g. a proxy):
+				// show that copy again, not the bare database printing
+				IMagicCard copy = findSavedCopy(id);
+				trace("saved card restore, copy found", copy);
+				final boolean dbCard = copy == null;
+				if (copy != null)
+					card = copy;
 				final ISelection sel = new StructuredSelection(card);
+				// only fills an EMPTY view: a card already shown (e.g. the proxy
+				// copy a restored deck tab selected) is never replaced by the
+				// saved database printing
+				IMagicCard shown = selectedCard;
+				if (shown != null && shown != IMagicCard.DEFAULT) {
+					trace("saved card NOT restored, already showing", shown);
+					return Status.OK_STATUS;
+				}
 				runLoadJob(sel);
 				Display.getDefault().asyncExec(new Runnable() {
 					@Override
@@ -393,7 +427,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 							return;
 
 						IViewPart dbview = page.findView(MagicDbView.ID);
-						if (dbview != null) {
+						if (dbview != null && dbCard) {
 							dbview.getSite().getSelectionProvider().setSelection(sel);
 						}
 					}
@@ -410,6 +444,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 			cardImage.dispose();
 		}
 		getSite().getPage().removeSelectionListener(this);
+		eventListener.dispose();
 		saveSelection();
 		try {
 			if (browser != null)
@@ -420,12 +455,58 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 		super.dispose();
 	}
 
+	/** Which copy the saved card was: "location|proxy|finish", empty for a database card. */
+	private static final String LAST_SELECTION_COPY = PreferenceConstants.LAST_SELECTION + ".copy";
+
+	/**
+	 * The deck / collection copy saved with the last card: same printing, same
+	 * proxy flag and finish preferred, else any copy of that printing there;
+	 * {@code null} when the saved card was a database card or the copy is gone.
+	 */
+	private static IMagicCard findSavedCopy(String id) {
+		try {
+			String saved = PreferenceInitializer.getGlobalStore().getString(LAST_SELECTION_COPY);
+			if (saved == null || saved.isEmpty())
+				return null;
+			String[] parts = saved.split("\\|", -1);
+			if (parts.length < 3)
+				return null;
+			WaitUtils.waitForLibrary();
+			com.reflexit.magiccards.core.model.storage.ICardStore<IMagicCard> store = DataManager.getInstance()
+					.getCardStore(com.reflexit.magiccards.core.model.Location.valueOf(parts[0]));
+			if (store == null)
+				return null;
+			IMagicCard any = null;
+			for (IMagicCard c : store) {
+				if (!(c instanceof MagicCardPhysical) || !id.equals(c.getCardId()))
+					continue;
+				MagicCardPhysical mcp = (MagicCardPhysical) c;
+				if (String.valueOf(mcp.isProxy()).equals(parts[1]) && String.valueOf(mcp.getFinish()).equals(parts[2]))
+					return mcp;
+				if (any == null)
+					any = mcp;
+			}
+			return any;
+		} catch (RuntimeException e) {
+			return null; // deck / collection gone: the database card is shown
+		}
+	}
+
 	private void saveSelection() {
 		try {
-			if (panel != null && panel.getCard() != null) {
-				IMagicCard firstElement = panel.getCard();
+			// the selected card, not a flipped face (its copy is found again by its own id)
+			IMagicCard firstElement = selectedCard != null && selectedCard != IMagicCard.DEFAULT ? selectedCard
+					: panel != null ? panel.getCard() : null;
+			if (firstElement != null && firstElement != IMagicCard.DEFAULT) {
 				String id = firstElement.getBase().getCardId();
 				PreferenceInitializer.getGlobalStore().setValue(PreferenceConstants.LAST_SELECTION, id);
+				// which copy: "location|proxy|finish" - empty for a database card
+				String copy = "";
+				if (firstElement instanceof MagicCardPhysical) {
+					MagicCardPhysical mcp = (MagicCardPhysical) firstElement;
+					copy = mcp.getLocation() + "|" + mcp.isProxy() + "|" + mcp.getFinish();
+				}
+				PreferenceInitializer.getGlobalStore().setValue(LAST_SELECTION_COPY, copy);
 			}
 		} catch (Exception e) {
 			MagicUIActivator.log(e);
@@ -435,6 +516,8 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	@Override
 	public void selectionChanged(IWorkbenchPart part, ISelection sel) {
+		if (DEBUG && sel != null && !sel.isEmpty())
+			trace("selectionChanged from " + (part == null ? null : part.getClass().getSimpleName()), getCard(sel));
 		if (part instanceof AbstractCardsView || part instanceof ProxierView)
 			runLoadJob(sel);
 	}
@@ -460,8 +543,65 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 	}
 
 	private void runLoadJob(ISelection sel) {
-		final IMagicCard card = getCard(sel);
-		if (panel == null || panel.getCard() == card || sel.isEmpty())
+		if (sel.isEmpty())
+			return;
+		IMagicCard card = getCard(sel);
+		selectedCard = card;
+		loadCard(card, false);
+	}
+
+	/**
+	 * Shows the other face of a flip card without changing what is "selected":
+	 * an update of the selected copy still reloads it.
+	 */
+	void showFlipped(IMagicCard face) {
+		trace("showFlipped", face);
+		loadCard(face, false);
+	}
+
+	/**
+	 * A Set / CollNum (or any) edit of the shown copy changes it in place - same
+	 * object, so the selection does not change: reload it (new picture, text).
+	 */
+	private void handleCardEvent(CardEvent event) {
+		if (event.getType() != CardEvent.UPDATE || !(event instanceof CardEventUpdate))
+			return;
+		final IMagicCard shown = selectedCard;
+		if (shown == null || shown == IMagicCard.DEFAULT)
+			return;
+		boolean concerned = false;
+		for (Object c : ((CardEventUpdate) event).getCardList())
+			if (c == shown) {
+				concerned = true;
+				break;
+			}
+		if (!concerned)
+			return;
+		trace("update event for the selected card", shown);
+		Display.getDefault().asyncExec(() -> {
+			if (panel != null && !panel.isDisposed() && selectedCard == shown)
+				loadCard(shown, true);
+		});
+	}
+
+	/** Card Info load trace (who asked, which card, proxy or not) - keep, flip to diagnose. */
+	static final boolean DEBUG = false;
+
+	static void trace(String what, IMagicCard c) {
+		if (!DEBUG)
+			return;
+		String desc = c == null ? "null"
+				: c.getClass().getSimpleName() + " '" + c.getName() + "' id=" + c.getCardId()
+						+ (c instanceof MagicCardPhysical ? " proxy=" + ((MagicCardPhysical) c).isProxy() : "")
+						+ " @" + System.identityHashCode(c);
+		System.out.println(java.time.LocalTime.now() + " [CardInfo] " + what + ": " + desc + " (thread "
+				+ Thread.currentThread().getName() + ")");
+	}
+
+	private void loadCard(final IMagicCard card, boolean force) {
+		trace("loadCard force=" + force + " shown=" + (panel == null ? "-" : String.valueOf(
+				panel.getCard() == null ? null : System.identityHashCode(panel.getCard()))), card);
+		if (panel == null || (!force && panel.getCard() == card))
 			return;
 		if (loadCardJob != null) {
 			MagicLogger.trace("cancelling " + loadCardJob.jCard);

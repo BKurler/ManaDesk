@@ -39,6 +39,9 @@
  *                         extend AbstractMagicCard, so its own matches() was
  *                         silently bypassing the fix entirely. Sharing one
  *                         implementation means this can't drift again.
+ *     Rémi Dutil (2026) - matching(): the finish is compared too - adding a
+ *                         non-foil copy used to merge into a foil pile of the
+ *                         same printing (and the reverse).
  */
 
 package com.reflexit.magiccards.core.model;
@@ -404,6 +407,8 @@ public class MagicCardPhysical extends AbstractMagicCard implements ICardModifia
 		if (!eqNull(phi1.getCondition(), phi2.getCondition()))
 			return false;
 		if (phi1.isProxy() != phi2.isProxy())
+			return false;
+		if (phi1.getFinish() != phi2.getFinish()) // a foil and a non-foil copy are different piles
 			return false;
 		if (!eqNull(phi1.getPrice(), phi2.getPrice()))
 			return false;

@@ -7,6 +7,14 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - testPricesGoToTheirOwnSource: TCGplayer and
+ *                         Cardmarket prices in separate sources, no price
+ *                         text in the card text.
+ *     Rémi Dutil (2026) - testStoreLinksAreDirectNotScryfallPurchaseUris: the
+ *                         card-text TCGplayer / Cardmarket links come from the
+ *                         product ids, never Scryfall's affiliate URIs.
+ *     Rémi Dutil (2026) - testPricesGoToTheirOwnSource: the price line is back
+ *                         at the top of the card text (TCGplayer $ line, then Cardmarket € line).
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -94,6 +102,71 @@ public class ScryfallBulkSplitTest extends AbstractMagicTest {
 		Assert.assertNotNull(g.get("tst"));
 		Assert.assertEquals("two 'tst' cards", 2, g.get("tst").size());
 		Assert.assertTrue("'oth' not returned", g.get("oth") == null || g.get("oth").isEmpty());
+	}
+
+	@Test
+	public void testPricesGoToTheirOwnSource() throws Exception {
+		// both sources priced / Cardmarket only (a Europe-only printing)
+		String both = cardJson("prc", "Priced Both", "1").replace("\"scryfall_uri\"",
+				"\"prices\":{\"usd\":\"1.50\",\"usd_foil\":\"4.00\",\"eur\":\"1.20\",\"eur_foil\":null},"
+						+ "\"scryfall_uri\"");
+		String euOnly = cardJson("prc", "Euro Only", "2").replace("\"scryfall_uri\"",
+				"\"prices\":{\"usd\":null,\"usd_foil\":null,\"eur\":\"0.80\"},\"scryfall_uri\"");
+		Map<String, List<MagicCard>> g = parse(gzWithLines(both, euOnly), Collections.singleton("prc"));
+		Assert.assertEquals(2, g.get("prc").size());
+
+		com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore store = (com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore) com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore
+				.getInstance();
+		com.reflexit.magiccards.core.seller.IPriceProvider tcg = store
+				.getSource(com.reflexit.magiccards.core.seller.PriceSources.TCGPLAYER);
+		com.reflexit.magiccards.core.seller.IPriceProvider cm = store
+				.getSource(com.reflexit.magiccards.core.seller.PriceSources.CARDMARKET);
+		java.util.Currency usd = java.util.Currency.getInstance("USD");
+		java.util.Currency eur = java.util.Currency.getInstance("EUR");
+
+		Assert.assertEquals(1.50f, tcg.getDbPrice("PricedBoth-prc", usd), 0.001f);
+		Assert.assertEquals(4.00f, tcg.getDbPriceFoil("PricedBoth-prc", usd), 0.001f);
+		Assert.assertEquals(1.20f, cm.getDbPrice("PricedBoth-prc", eur), 0.001f);
+		Assert.assertTrue("no Cardmarket foil price", cm.getDbPriceFoil("PricedBoth-prc", eur) <= 0);
+		// no more EUR-converted-to-USD fallback: a Cardmarket-only card has no TCGplayer price
+		Assert.assertTrue("no TCGplayer price", tcg.getDbPrice("EuroOnly-prc", usd) <= 0);
+		Assert.assertEquals(0.80f, cm.getDbPrice("EuroOnly-prc", eur), 0.001f);
+		// the price line opens the card text: each store in its own currency, no conversion
+		for (MagicCard c : g.get("prc"))
+			if (c.getName().equals("Priced Both"))
+				Assert.assertTrue(c.getText(), c.getText().startsWith("N$ 1.50 F$ 4.00<br>N€ 1.20<br>"));
+			else
+				Assert.assertTrue(c.getText(), c.getText().startsWith("N€ 0.80<br>"));
+	}
+
+	@Test
+	public void testStoreLinksAreDirectNotScryfallPurchaseUris() throws Exception {
+		String scryfallAffiliate = "https://partner.tcgplayer.com/c/4931599/1830156/21018?subId1=api";
+		String both = cardJson("lnk", "Linked Both", "1").replace("\"scryfall_uri\"",
+				"\"tcgplayer_id\":563218,\"cardmarket_id\":790931,\"purchase_uris\":{\"tcgplayer\":\""
+						+ scryfallAffiliate + "\",\"cardmarket\":\"https://www.cardmarket.com/x?referrer=scryfall\"},"
+						+ "\"scryfall_uri\"");
+		String etchedOnly = cardJson("lnk", "Etched Only", "2").replace("\"scryfall_uri\"",
+				"\"tcgplayer_etched_id\":111,\"scryfall_uri\"");
+		String none = cardJson("lnk", "No Ids", "3");
+		Map<String, List<MagicCard>> g = parse(gzWithLines(both, etchedOnly, none), Collections.singleton("lnk"));
+		String bothText = null, etchedText = null, noneText = null;
+		for (MagicCard c : g.get("lnk"))
+			if (c.getName().equals("Linked Both"))
+				bothText = c.getText();
+			else if (c.getName().equals("Etched Only"))
+				etchedText = c.getText();
+			else
+				noneText = c.getText();
+		Assert.assertTrue(bothText, bothText.contains(
+				"<a href=\"https://www.tcgplayer.com/product/563218\">TCGplayer</a>"));
+		Assert.assertTrue(bothText, bothText.contains(
+				"<a href=\"https://www.cardmarket.com/en/Magic/Products?idProduct=790931\">Cardmarket</a>"));
+		Assert.assertFalse("no Scryfall affiliate link", bothText.contains("partner.tcgplayer.com"));
+		Assert.assertFalse("no Scryfall referrer", bothText.contains("referrer=scryfall"));
+		Assert.assertTrue(etchedText, etchedText.contains("https://www.tcgplayer.com/product/111"));
+		Assert.assertFalse(etchedText, etchedText.contains("Cardmarket"));
+		Assert.assertFalse(noneText, noneText.contains("TCGplayer") || noneText.contains("Cardmarket"));
 	}
 
 	@Test

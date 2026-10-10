@@ -49,6 +49,16 @@
  *                         longer silently re-parses the same local card file;
  *                         repair / parser refresh / file import still rebuild
  *                         from the local file with no web.
+ *     Rémi Dutil (2026) - the update-finished message offers "Support
+ *                         ManaDesk..." when the optional monetization plug-in
+ *                         is installed (SupportManaDesk); OK stays the default.
+ *     Rémi Dutil (2026) - the manual update says "already up to date" (and
+ *                         offers Rebuild anyway) when Scryfall has nothing new,
+ *                         instead of re-processing the same card file; the
+ *                         update-finished message's buttons are centred;
+ *                         the "already up to date" question offers Support
+ *                         ManaDesk... too (it is the most frequent message);
+ *                         its default button is No.
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -64,7 +74,12 @@ import org.eclipse.core.runtime.IStatus;
 import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.SubProgressMonitor;
 import org.eclipse.core.runtime.jobs.Job;
+import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
+import org.eclipse.swt.SWT;
+import org.eclipse.swt.layout.GridData;
+import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
 import org.eclipse.ui.IViewPart;
 import org.eclipse.ui.IWorkbenchPage;
@@ -158,6 +173,10 @@ public class UpdateDbHandler extends AbstractHandler {
 						asyncInfo(WEB_NOT_ACCESSIBLE);
 						return Status.OK_STATUS;
 					}
+					// asked for explicitly but nothing new: say so instead of silently
+					// re-processing the same card file (offer to rebuild anyway)
+					if (requireWeb && isAlreadyUpToDate() && !askRebuildAnyway())
+						return Status.OK_STATUS;
 					pm.beginTask("Updating card database", 100);
 					pm.subTask("Backing up your decks and collections…");
 					try {
@@ -192,8 +211,7 @@ public class UpdateDbHandler extends AbstractHandler {
 					}
 					asyncExec(() -> {
 						reloadMagicDbView();
-						MessageDialog.openInformation(MagicUIActivator.getShell(), "Update Card Database",
-								"Card database updated (" + rec + " card records).");
+						showUpdatedMessage("Card database updated (" + rec + " card records).");
 					});
 					return Status.OK_STATUS;
 				} catch (InterruptedException e) {
@@ -234,6 +252,82 @@ public class UpdateDbHandler extends AbstractHandler {
 		Display d = PlatformUI.isWorkbenchRunning() ? PlatformUI.getWorkbench().getDisplay() : Display.getDefault();
 		if (d != null && !d.isDisposed())
 			d.asyncExec(r);
+	}
+
+	/**
+	 * The update-finished message - with a "Support ManaDesk..." button when the
+	 * (optional) support command is installed; OK stays the default button.
+	 */
+	private static void showUpdatedMessage(String msg) {
+		if (!SupportManaDesk.isAvailable()) {
+			centered(MessageDialog.INFORMATION, 0, msg, IDialogConstants.OK_LABEL).open();
+			return;
+		}
+		MessageDialog dialog = centered(MessageDialog.INFORMATION, 0, msg + SUPPORT_LINE, IDialogConstants.OK_LABEL,
+				SupportManaDesk.LABEL);
+		if (dialog.open() == 1)
+			SupportManaDesk.open();
+	}
+
+	private static final String SUPPORT_LINE = "\n\nManaDesk is free. If it is useful to you, you can support its development.";
+
+	/** A message dialog whose buttons are centred; {@code defaultIndex} = the default button. */
+	private static MessageDialog centered(int kind, int defaultIndex, String msg, String... buttons) {
+		return new MessageDialog(MagicUIActivator.getShell(), "Update Card Database", null, msg, kind,
+				defaultIndex, buttons) {
+			@Override
+			protected Control createButtonBar(Composite parent) {
+				Control bar = super.createButtonBar(parent);
+				if (bar.getLayoutData() instanceof GridData)
+					((GridData) bar.getLayoutData()).horizontalAlignment = SWT.CENTER;
+				return bar;
+			}
+		};
+	}
+
+	/**
+	 * Nothing to do: the local card file is Scryfall's current one, the database
+	 * was built from it with this parser version, and no set file is missing.
+	 * (Scryfall republishes its file about once a day.)
+	 */
+	private static boolean isAlreadyUpToDate() {
+		if (ScryfallBulkCache.isLocalImportPending() || !ScryfallBulkCache.hasLocalBulk()
+				|| ScryfallBulkCache.isRemoteBulkNewer())
+			return false;
+		if (lastParserVersion() < ParseScryFallChecklist.PARSER_VERSION)
+			return false;
+		DbMultiFileCardStore db = (DbMultiFileCardStore) DataManager.getInstance().getMagicDBStore();
+		int good = lastGoodSetCount();
+		return !db.isEmpty() && (good == 0 || db.loadedSetCount() >= good - 10);
+	}
+
+	/**
+	 * Yes / No (+ Support ManaDesk..., which opens the support dialog and does
+	 * not rebuild). No is the default: nothing changed, so not rebuilding is
+	 * the safe choice. The most frequent update message, so the support offer is
+	 * shown here too.
+	 *
+	 * @return true to rebuild the (already current) database anyway
+	 */
+	private static boolean askRebuildAnyway() {
+		final boolean[] yes = new boolean[1];
+		Display d = PlatformUI.isWorkbenchRunning() ? PlatformUI.getWorkbench().getDisplay() : Display.getDefault();
+		if (d == null || d.isDisposed())
+			return false;
+		d.syncExec(() -> {
+			String msg = "Your card database is already up to date: Scryfall has not published new card data since "
+					+ "your last update (it does about once a day).\n\nRebuild it anyway?";
+			boolean support = SupportManaDesk.isAvailable();
+			int choice = support
+					? centered(MessageDialog.QUESTION, 1, msg + SUPPORT_LINE, IDialogConstants.YES_LABEL,
+							IDialogConstants.NO_LABEL, SupportManaDesk.LABEL).open()
+					: centered(MessageDialog.QUESTION, 1, msg, IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL)
+							.open();
+			yes[0] = choice == 0;
+			if (support && choice == 2)
+				SupportManaDesk.open();
+		});
+		return yes[0];
 	}
 
 	private static void asyncInfo(String msg) {

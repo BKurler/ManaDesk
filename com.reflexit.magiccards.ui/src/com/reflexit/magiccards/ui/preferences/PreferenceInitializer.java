@@ -77,6 +77,8 @@
  *                         Name (before Card Id/Set) - still the one view
  *                         that doesn't follow the shared order as-is.
  *     Rémi Dutil (2026) - SIMULATE_WEB_DOWN default (replaces WORK_OFFLINE).
+ *     Rémi Dutil (2026) - PRICE_PROVIDER default from the locale: Cardmarket in
+ *                         Europe, TCGplayer elsewhere (PriceSources).
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -133,8 +135,9 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.OWNED_COPY, false);
 		store.setDefault(PreferenceConstants.CURRENCY, "USD");
 		store.setDefault(PreferenceConstants.SIMULATE_WEB_DOWN, false);
+		// TCGplayer, or Cardmarket for European users
 		store.setDefault(PreferenceConstants.PRICE_PROVIDER,
-				PriceProviderManager.getInstance().getDefaultProvider().getName());
+				com.reflexit.magiccards.core.seller.PriceSources.defaultFor(java.util.Locale.getDefault()));
 		store.setDefault(PreferenceConstants.LAST_SELECTION, 205961);
 		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_PROXIES, false);
 		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_FINISHES_SEPARATELY, false);

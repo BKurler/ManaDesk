@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<?eclipse version="3.4"?>
+<!--
+ * Copyright (c) 2026 Rémi Dutil. All rights reserved.
+ * This file is NOT open-source - see LICENSE.txt in this plug-in.
+ * Permission is granted to use this file ONLY as part of the ManaDesk application.
+ * Modification, redistribution, or reuse of this file or its contents is prohibited.
+-->
+<plugin>
+   <!-- "Support ManaDesk..." - other plug-ins only refer to this command id
+        (com.manadesk.monetization.support), never to this plug-in's classes,
+        so ManaDesk still builds and runs without it. -->
+   <extension
+         point="org.eclipse.ui.commands">
+      <command
+            id="com.manadesk.monetization.support"
+            name="Support ManaDesk...">
+      </command>
+   </extension>
+   <extension
+         point="org.eclipse.ui.handlers">
+      <handler
+            class="com.manadesk.monetization.SupportHandler"
+            commandId="com.manadesk.monetization.support">
+      </handler>
+   </extension>
+   <extension
+         point="org.eclipse.ui.menus">
+      <menuContribution
+            locationURI="menu:help?after=additions">
+         <command
+               commandId="com.manadesk.monetization.support"
+               id="com.manadesk.monetization.menus.support"
+               mnemonic="M">
+         </command>
+      </menuContribution>
+   </extension>
+   <!-- Buyer view: what to buy for a batch of decks / collections -->
+   <extension
+         point="org.eclipse.ui.views">
+      <view
+            allowMultiple="false"
+            category="com.reflexit.magiccards"
+            class="com.manadesk.monetization.BuyerView"
+            icon="icons/buyer24.png"
+            id="com.manadesk.monetization.BuyerView"
+            name="Buyer"
+            restorable="true">
+      </view>
+   </extension>
+   <extension
+         point="org.eclipse.ui.perspectiveExtensions">
+      <perspectiveExtension
+            targetID="com.reflexit.magiccards.ui.perspective.magic">
+         <!-- a tab next to the Proxier (after Window > Reset Perspective) -->
+         <view
+               id="com.manadesk.monetization.BuyerView"
+               relationship="stack"
+               relative="com.reflexit.magiccards.ui.views.proxier.ProxierView"
+               visible="true">
+         </view>
+         <viewShortcut
+               id="com.manadesk.monetization.BuyerView">
+         </viewShortcut>
+      </perspectiveExtension>
+   </extension>
+   <!-- refresh the hosted configuration in the background after startup -->
+   <extension
+         point="org.eclipse.ui.startup">
+      <startup
+            class="com.manadesk.monetization.MonetizationStartup">
+      </startup>
+   </extension>
+</plugin>

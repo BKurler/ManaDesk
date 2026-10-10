@@ -11,6 +11,11 @@
  *     Rémi Dutil (2026) - card images fall back to the "image not available"
  *                         picture (onerror + NOT_FOUND) when neither cached
  *                         nor downloadable.
+ *     Rémi Dutil (2026) - Scryfall image guidelines: nothing is drawn on the
+ *                         card image any more - count and "Proxy" become
+ *                         badges in a row UNDER the image, a proxy gets a
+ *                         dashed frame around it (no greyscale/fade), and the
+ *                         selection ring moved outside the image.
  *******************************************************************************/
 
 package com.reflexit.magiccards.ui.gallery;
@@ -89,13 +94,14 @@ public final class GalleryHtmlBuilder {
 		sb.append("<img src='").append(url).append("' loading='lazy'")
 				.append(ImageCreator.getInstance().getCardNotFoundOnError()).append("/>");
 
-		if (proxy) {
-			sb.append("<div class='proxy-mark'>Proxy</div>");
-		}
-		if (count > 1) {
-			sb.append("<div class='count-badge'>x").append(count).append("</div>");
-		}
-
+		sb.append("</div>");
+		// badges go UNDER the image, never on it (Scryfall image guidelines:
+		// no stamps / overlays, don't cover the artist & copyright line)
+		sb.append("<div class='badges'>");
+		if (count > 1)
+			sb.append("<span class='badge count-badge'>x").append(count).append("</span>");
+		if (proxy)
+			sb.append("<span class='badge proxy-badge'>Proxy</span>");
 		sb.append("</div></div>");
 	}
 
@@ -186,24 +192,28 @@ public final class GalleryHtmlBuilder {
 		sb.append("  img.loading='lazy';");
 		sb.append("  inner.appendChild(img);");
 
-		// Proxy stamp
-		sb.append("  if(c.proxy){");
-		sb.append("    var pm=document.createElement('div');");
-		sb.append("    pm.className='proxy-mark';");
-		sb.append("    pm.textContent='Proxy';");
-		sb.append("    inner.appendChild(pm);");
-		sb.append("  }");
 
 		// Count badge (only if count > 1)
+		// Badges row UNDER the image, never on it (Scryfall image guidelines:
+		// no stamps / overlays, don't cover the artist & copyright line)
+		sb.append("  var badges=document.createElement('div');");
+		sb.append("  badges.className='badges';");
 		sb.append("  if(c.count && c.count > 1){");
-		sb.append("    var badge=document.createElement('div');");
-		sb.append("    badge.className='count-badge';");
+		sb.append("    var badge=document.createElement('span');");
+		sb.append("    badge.className='badge count-badge';");
 		sb.append("    badge.textContent='x' + c.count;");
-		sb.append("    inner.appendChild(badge);");
+		sb.append("    badges.appendChild(badge);");
+		sb.append("  }");
+		sb.append("  if(c.proxy){");
+		sb.append("    var pm=document.createElement('span');");
+		sb.append("    pm.className='badge proxy-badge';");
+		sb.append("    pm.textContent='Proxy';");
+		sb.append("    badges.appendChild(pm);");
 		sb.append("  }");
 
 		// Close structure
 		sb.append("  card.appendChild(inner);");
+		sb.append("  card.appendChild(badges);");
 		sb.append("  gallery.appendChild(card);");
 		sb.append(" }");
 		// NB: do NOT call __applySelect() here - it drives its own synchronous
@@ -322,21 +332,27 @@ public final class GalleryHtmlBuilder {
 			+ "  position: relative;" + "  display: inline-block;" + "  margin: 6px;" + "  cursor: pointer;"
 			+ "  vertical-align: top;" + "}" + ".card-inner {" + "  position: relative;" + "  width: 220px;" + "}"
 			+ ".card img {" + "  width: 100%;" + "  border-radius: 4px;" + "  box-shadow: 0 0 4px #000;"
-			+ "  display: block;" + "}" + ".count-badge {" + "  position: absolute;" + "  left: 6px;" + "  bottom: 6px;"
-			+ "  background: rgba(0,0,0,0.75);" + "  color: #fff;" + "  padding: 3px 8px;" + "  border-radius: 10px;"
-			+ "  font-size: 14px;" + "  font-weight: bold;" + "}" + ".group-title {" + "  display: block;"
+			+ "  display: block;" + "}"
+			// badges row UNDER the image - never drawn on the card image itself
+			// (Scryfall image guidelines: no stamps/overlays, keep the artist &
+			// copyright line visible). Always present, fixed height, so every
+			// card in a row has the same height.
+			+ ".badges {" + "  display: flex;" + "  gap: 4px;" + "  height: 20px;" + "  margin-top: 4px;"
+			+ "  align-items: center;" + "}"
+			+ ".badge {" + "  padding: 0 8px;" + "  border-radius: 10px;" + "  font-size: 12px;"
+			+ "  font-weight: bold;" + "  line-height: 18px;" + "  white-space: nowrap;" + "}"
+			+ ".count-badge {" + "  background: #333;" + "  color: #fff;" + "  border: 1px solid #333;" + "}"
+			+ ".proxy-badge {" + "  background: #d32f2f;" + "  color: #fff;" + "  border: 1px solid #b71c1c;" + "}"
+			+ ".group-title {" + "  display: block;"
 			+ "  max-width: 100%;" + "  white-space: normal;" + "  word-break: break-word;" + "  margin-bottom: 4px;"
 			+ "  font-size: 14px;" + "  font-weight: bold;" + "}"
-			// selection indicator drawn INSIDE the image (outline-offset) so it
-			// never changes layout / triggers a scrollbar
-			+ ".card.sel img {" + "  outline: 4px solid #1E90FF;" + "  outline-offset: -4px;" + "}"
-			// proxy copy: fade the art + diagonal "Proxy" stamp
-			+ ".card.proxy img {" + "  filter: grayscale(100%);" + "  opacity: 0.55;" + "}"
-			+ ".proxy-mark {" + "  position: absolute;" + "  top: 50%;" + "  left: 50%;"
-			+ "  transform: translate(-50%, -50%) rotate(-32deg);" + "  font-size: 22px;" + "  font-weight: bold;"
-			+ "  letter-spacing: 4px;" + "  text-transform: uppercase;" + "  color: rgba(110,110,110,0.75);"
-			+ "  border: 3px solid rgba(110,110,110,0.62);" + "  border-radius: 5px;" + "  padding: 2px 12px;"
-			+ "  white-space: nowrap;" + "  pointer-events: none;" + "}";
+			// selection ring drawn OUTSIDE the image (box-shadow spread) - no
+			// layout change / scrollbar, and nothing covers the card
+			+ ".card.sel img {" + "  box-shadow: 0 0 0 4px #1E90FF;" + "}"
+			// proxy copy: a dashed frame AROUND the image (outline-offset keeps it
+			// off the card) + the "Proxy" badge below - the image itself is untouched
+			+ ".card.proxy .card-inner {" + "  outline: 2px dashed #d32f2f;" + "  outline-offset: 3px;"
+			+ "  border-radius: 4px;" + "}";
 
 	// ============================================================
 	// JS

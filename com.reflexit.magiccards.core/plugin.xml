@@ -2,6 +2,7 @@
 <!--
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - "TCGplayer" spelled as the store spells it.
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -238,7 +239,7 @@
             extension="html"
             id="htmlTcgPlayer"
             importDelegate="com.reflexit.magiccards.core.exports.HtmlTableImportDelegate"
-            label="TCGPlayer HTML Table "
+            label="TCGplayer HTML Table "
             xmlFormat="true">
       </deckFormat>
       <deckFormat

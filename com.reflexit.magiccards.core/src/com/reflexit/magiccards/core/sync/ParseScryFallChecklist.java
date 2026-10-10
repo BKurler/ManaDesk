@@ -39,6 +39,21 @@
  *                         UpdateDbHandler/CheckForUpdateDbHandler use it to
  *                         prompt a refresh instead of waiting for the user
  *                         to notice and click Update Card Database
+ *     Rémi Dutil (2026) - prices: TCGplayer (usd*) and Cardmarket (eur*) are
+ *                         two separate sources (PriceSources), each in its
+ *                         own currency, written whether or not the card has
+ *                         a TCGplayer link - no more EUR-as-USD fallback;
+ *                         prices removed from the card text (BuildPrice);
+ *                         PARSER_VERSION 2 (prompts a refresh).
+ *     Rémi Dutil (2026) - card-text store links: direct "TCGplayer" (from
+ *                         tcgplayer_id) and new "Cardmarket" (from
+ *                         cardmarket_id) product pages instead of Scryfall's
+ *                         purchase_uris (Scryfall's own affiliate/referrer
+ *                         links); PARSER_VERSION 3.
+ *     Rémi Dutil (2026) - prices back at the top of the card text
+ *                         (buildPrices): a TCGplayer "N$/F$/E$" line and a
+ *                         Cardmarket "N€/F€/E€" line, each in its own
+ *                         currency, no conversion.
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -82,7 +97,8 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
-import com.reflexit.magiccards.core.seller.CustomPriceProvider;
+import com.reflexit.magiccards.core.seller.IPriceProvider;
+import com.reflexit.magiccards.core.seller.PriceSources;
 import com.reflexit.magiccards.core.sync.ParserHtmlHelper.ILoadCardHander;
 import com.reflexit.magiccards.core.sync.ParserHtmlHelper.OutputHandler;
 
@@ -102,9 +118,64 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	 * file is enough, since parseBulkGrouped() always re-derives every card's
 	 * fields from scratch regardless of whether the raw JSON changed.
 	 */
-	public static final int PARSER_VERSION = 1;
-	CustomPriceProvider priceProvider = new CustomPriceProvider("TCG Player (Medium)");
+	public static final int PARSER_VERSION = 3;
+
+	/** A card's TCGplayer page, from its TCGplayer product id. */
+	public static final String TCGPLAYER_PRODUCT_URL = "https://www.tcgplayer.com/product/";
+	/** A card's Cardmarket page, from its Cardmarket product id ("idProduct"). */
+	public static final String CARDMARKET_PRODUCT_URL = "https://www.cardmarket.com/en/Magic/Products?idProduct=";
+
+	/**
+	 * The "TCGplayer" / "Cardmarket" links of the card text: direct product
+	 * pages, each only when the card has that store's product id.
+	 */
+	static String storeLinks(Object tcgplayerId, Object cardmarketId) {
+		StringBuilder sb = new StringBuilder();
+		if (isId(tcgplayerId))
+			sb.append("   <a href=\"").append(TCGPLAYER_PRODUCT_URL).append(tcgplayerId).append("\">TCGplayer</a>");
+		if (isId(cardmarketId))
+			sb.append("   <a href=\"").append(CARDMARKET_PRODUCT_URL).append(cardmarketId)
+					.append("\">Cardmarket</a>");
+		return sb.toString();
+	}
+
+	/**
+	 * The price lines at the top of the card text: a TCGplayer line in US$ ("N$"
+	 * non-foil, "F$" foil, "E$" etched) then a Cardmarket line in euros ("N€",
+	 * "F€", "E€"), each in its own currency - no conversion, no cross-store
+	 * fallback. A store without any price has no line.
+	 */
+	static String buildPrices(JSONObject prices) {
+		if (prices == null)
+			return "";
+		String tcg = priceParts(prices, "usd", "$");
+		String cm = priceParts(prices, "eur", "€");
+		// one line per store
+		return (tcg.isEmpty() ? "" : tcg + "<br>") + (cm.isEmpty() ? "" : cm + "<br>");
+	}
+
+	private static String priceParts(JSONObject prices, String key, String symbol) {
+		StringBuilder sb = new StringBuilder();
+		String[][] parts = { { key, "N" }, { key + "_foil", "F" }, { key + "_etched", "E" } };
+		for (String[] p : parts) {
+			Object v = prices.get(p[0]);
+			if (v == null || v.toString().trim().isEmpty())
+				continue;
+			if (sb.length() > 0)
+				sb.append(' ');
+			sb.append(p[1]).append(symbol).append(' ').append(v.toString().trim());
+		}
+		return sb.toString();
+	}
+
+	private static boolean isId(Object id) {
+		return id != null && id.toString().matches("\\d+");
+	}
 	DbPricesMultiFileStore priceStore = (DbPricesMultiFileStore) DbPricesMultiFileStore.getInstance();
+	/** The price sources this parse fills - the store's own instances (see PriceSources). */
+	IPriceProvider tcgPrices = priceStore.getSource(PriceSources.TCGPLAYER);
+	IPriceProvider cardmarketPrices = priceStore.getSource(PriceSources.CARDMARKET);
+	private static final Currency EUR = Currency.getInstance("EUR");
 	public static final String BASE_SEARCH_URL = "https://api.scryfall.com/cards/search?";
 	public static final String TEXT_EXPORT_DIR = "/tmp/madatabase";
 	public ICardStore store = DataManager.getInstance().getMagicDBStore();
@@ -403,64 +474,35 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		}
 	}
 
-	private String BuildPrice(JSONObject prices) {
-		String priceStr = "";
-		String foilPriceStr = "";
-		String etchedPriceStr = "";
+	/**
+	 * One source's three prices for a printing ({@code normal} / {@code foil} /
+	 * {@code etched} Scryfall price fields, in {@code cur}). A finish with no
+	 * price is stored as -0.0001 ("known printing, no price"); when the source
+	 * has no price at all for the printing, its entry is removed.
+	 */
+	private static void writePrices(IPriceProvider p, String id, JSONObject prices, String normal, String foil,
+			String etched, Currency cur) {
+		float n = priceOf(prices.get(normal));
+		float f = priceOf(prices.get(foil));
+		float e = priceOf(prices.get(etched));
+		boolean any = n > 0 || f > 0 || e > 0;
+		p.setDbPrice(id, any ? orNone(n) : 0f, cur);
+		p.setDbPriceFoil(id, any ? orNone(f) : 0f, cur);
+		p.setDbPriceEtched(id, any ? orNone(e) : 0f, cur);
+	}
 
-		if (prices == null || prices.size() == 0) {
-			return "";
+	private static float priceOf(Object o) {
+		if (o == null)
+			return 0f;
+		try {
+			return Float.parseFloat(o.toString());
+		} catch (NumberFormatException e) {
+			return 0f;
 		}
+	}
 
-		Object obj = prices.get("usd");
-
-		if (obj != null) {
-			priceStr = "N$ " + obj.toString() + " ";
-		} else {
-
-			// Try EUR price if USD is not available
-			obj = prices.get("eur");
-			if (obj != null) {
-
-				float eur = Float.parseFloat(obj.toString());
-
-				// If EUR exists, convert it to USD
-				if (eur != 0f) {
-					double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-							Currency.getInstance("USD"));
-					priceStr = "NE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
-				}
-			}
-		}
-
-		obj = prices.get("usd_foil");
-		if (obj != null) {
-			foilPriceStr = "F$ " + obj.toString();
-		} else {
-			// Try EUR price if USD is not available
-			obj = prices.get("eur_foil");
-			if (obj != null) {
-
-				float eur = Float.parseFloat(obj.toString());
-
-				// If EUR exists, convert it to USD
-				if (eur != 0f) {
-					double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-							Currency.getInstance("USD"));
-					priceStr = "FE$ " + String.format(Locale.US, "%.2f", (eur * (float) eurToUsd)) + " ";
-				}
-			}
-		}
-
-		obj = prices.get("usd_etched");
-		if (obj != null) {
-			etchedPriceStr = "E$ " + obj.toString();
-		}
-
-		if (!priceStr.isEmpty() || !foilPriceStr.isEmpty() || !etchedPriceStr.isEmpty()) {
-			return priceStr + foilPriceStr + etchedPriceStr + "<br>";
-		}
-		return "";
+	private static float orNone(float v) {
+		return v > 0 ? v : -0.0001f;
 	}
 
 	private void parseRecord(JSONObject elem, ILoadCardHander handler) {
@@ -587,121 +629,21 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		String storySpotlightString = BuildText("StorySpotlight: ", elem.get("story_spotlight").toString());
 		String boosterString = BuildText("Booster: ", elem.get("textless").toString());
 		String promoTypesString = BuildPromos((JSONArray) elem.get("promo_types"));
-		String priceString = "";
 
-		JSONObject purchaseUri = (JSONObject) elem.get("purchase_uris");
-		String tcgUriString = "";
-
-		{
-			if (purchaseUri != null && purchaseUri.size() > 0) {
-				Object tcg = purchaseUri.get("tcgplayer");
-				if (tcg != null) {
-					tcgUriString = "   <a href=\"" + ((String) tcg) + "\">TcgPlayer</a>";
-
-					float price = 0f;
-					float price_foil = 0f;
-					float price_etched = 0f;
-
-					JSONObject prices = (JSONObject) elem.get("prices");
-
-					if (prices != null && prices.size() >= 0) {
-						Object obj = prices.get("usd");
-
-						if (obj != null) {
-							price = Float.parseFloat(obj.toString());
-						}
-
-						if (price == 0f) {
-
-							// Try EUR price if USD is not available
-							obj = prices.get("eur");
-							if (obj != null) {
-
-								float eur = Float.parseFloat(obj.toString());
-
-								// If EUR exists, convert it to USD
-								if (eur != 0f) {
-									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-											Currency.getInstance("USD"));
-									price = eur * (float) eurToUsd;
-								}
-							}
-
-							if (price == 0f) {
-								price = -0.0001f;
-							}
-						}
-
-						obj = prices.get("usd_foil");
-						if (obj != null) {
-							price_foil = Float.parseFloat(obj.toString());
-						}
-
-						if (price_foil == 0f) {
-
-							// Try EUR price if USD is not available
-							obj = prices.get("eur_foil");
-							if (obj != null) {
-
-								float eur_foil = Float.parseFloat(obj.toString());
-
-								// If EUR exists, convert it to USD
-								if (eur_foil != 0f) {
-									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-											Currency.getInstance("USD"));
-									price_foil = eur_foil * (float) eurToUsd;
-								}
-							}
-
-							if (price_foil == 0f) {
-								price_foil = -0.0001f;
-							}
-						}
-
-						// Etched is its own bucket now (used to be folded into the foil
-						// price as a fallback) - MagicCardPhysical.getDbPrice() picks the
-						// bucket by the copy's own Finish.
-						obj = prices.get("usd_etched");
-						if (obj != null) {
-							price_etched = Float.parseFloat(obj.toString());
-						}
-
-						if (price_etched == 0f) {
-
-							// Try EUR price if USD is not available
-							obj = prices.get("eur_etched");
-							if (obj != null) {
-
-								float eur_etched = Float.parseFloat(obj.toString());
-
-								// If EUR exists, convert it to USD
-								if (eur_etched != 0f) {
-									double eurToUsd = CurrencyConvertor.getRate(Currency.getInstance("EUR"),
-											Currency.getInstance("USD"));
-									price_etched = eur_etched * (float) eurToUsd;
-								}
-							}
-
-							if (price_etched == 0f) {
-								price_etched = -0.0001f;
-							}
-						}
-
-						priceStore.setDbPrice(frontCard, price);
-						priceStore.setDbPriceFoil(frontCard, price_foil);
-						priceStore.setDbPriceEtched(frontCard, price_etched);
-						priceProvider.setDbPrice(frontCard.getCardId(), price, CurrencyConvertor.USD);
-						priceProvider.setDbPriceFoil(frontCard.getCardId(), price_foil, CurrencyConvertor.USD);
-						priceProvider.setDbPriceEtched(frontCard.getCardId(), price_etched, CurrencyConvertor.USD);
-
-					}
-				}
-			}
+		// store links built from the product ids - NOT Scryfall's "purchase_uris",
+		// which carry Scryfall's own affiliate / referrer tags
+		String tcgUriString = storeLinks(tcgId != null ? tcgId : tcgEtchedId, elem.get("cardmarket_id"));
+		// prices: each source from its own fields, in its own currency - no
+		// cross-source fallback (a Cardmarket-only card has no TCGplayer price)
+		JSONObject prices = (JSONObject) elem.get("prices");
+		String priceString = buildPrices(prices);
+		if (prices != null) {
+			writePrices(tcgPrices, frontCard.getCardId(), prices, "usd", "usd_foil", "usd_etched",
+					CurrencyConvertor.USD);
+			writePrices(cardmarketPrices, frontCard.getCardId(), prices, "eur", "eur_foil", "eur_etched", EUR);
 		}
 
 		{
-			priceString = BuildPrice((JSONObject) elem.get("prices"));
-
 			legalitiesText = "<br>" + legalitiesString.replace(";", "<br>");
 
 			updateString = "<br>Updated on " + java.time.LocalDateTime.now()
@@ -928,7 +870,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 					+ legalitiesText + updateString;
 
 			frontCard.setText(priceString + frontMultiverseString + cardText);
-			backCard.setText(backMultiverseString + cardText);
+			backCard.setText(priceString + backMultiverseString + cardText);
 
 			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
 			backCard.set(MagicCardField.LEGALITY, frontCard.get(MagicCardField.LEGALITY));
@@ -1011,20 +953,14 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	}
 
 	/**
-	 * Load the locally cached "TCG Player (Medium)" price file into
-	 * {@link #priceProvider} so that generated flat files carry price data. Silent
-	 * no-op when the file is not present.
+	 * Make sure the price sources hold what is already on disk before this
+	 * parse adds to them - a parse limited to a few sets must not save files
+	 * containing only those sets' prices.
 	 */
-	private void loadTcgMediumPrices() {
-		File pricesDir = DataManager.getInstance().getPricesDir();
-		// !!! RD For now, hardcoded
-		File file = new File(pricesDir, "TCG_Player__Medium_.xml");
-		if (!file.exists())
-			return;
-		try (BufferedInputStream st = new BufferedInputStream(new FileInputStream(file),
-				FileUtils.DEFAULT_BUFFER_SIZE)) {
-			priceProvider.loadPrices(st);
-		} catch (IOException e) {
+	private void loadExistingPrices() {
+		try {
+			priceStore.initialize();
+		} catch (RuntimeException e) {
 			MagicLogger.log(e);
 		}
 	}
@@ -1053,7 +989,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		// Rough estimate so the bar moves; the true count is only known at the end.
 		final int estTotal = 130_000;
 		pm.beginTask("Reading Scryfall card data", estTotal);
-		loadTcgMediumPrices();
+		loadExistingPrices();
 		Map<String, List<MagicCard>> result = new HashMap<>();
 		if (onlyLower != null)
 			for (String code : onlyLower)
@@ -1146,14 +1082,17 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		} finally {
 			bucket[0] = null;
 		}
-		int priceCount = priceProvider.getPriceMap().size();
-		try {
-			priceProvider.save();
-			System.err.println("[ScryfallBulk] saved " + priceCount + " prices to "
-					+ com.reflexit.magiccards.core.xml.PricesXmlStreamWriter.getPricesFile(priceProvider));
-		} catch (Exception e) {
-			System.err.println("[ScryfallBulk] FAILED to save " + priceCount + " prices: " + e);
-			MagicLogger.log(e);
+		for (IPriceProvider source : new IPriceProvider[] { tcgPrices, cardmarketPrices }) {
+			int priceCount = source.getPriceMap().size();
+			try {
+				source.save();
+				System.err.println("[ScryfallBulk] saved " + priceCount + " prices to "
+						+ com.reflexit.magiccards.core.xml.PricesXmlStreamWriter.getPricesFile(source));
+			} catch (Exception e) {
+				System.err.println("[ScryfallBulk] FAILED to save " + priceCount + " " + source.getName()
+						+ " prices: " + e);
+				MagicLogger.log(e);
+			}
 		}
 		System.err.println("[ScryfallBulk] parsed " + records + " records in " + (System.currentTimeMillis() - t0)
 				+ " ms, matched " + matched + " printing(s) for "

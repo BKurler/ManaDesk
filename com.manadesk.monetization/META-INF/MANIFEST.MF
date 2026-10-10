@@ -1,0 +1,16 @@
+Manifest-Version: 1.0
+Bundle-ManifestVersion: 2
+Bundle-Name: ManaDesk Monetization
+Bundle-SymbolicName: com.manadesk.monetization;singleton:=true
+Bundle-Version: 0.9.7.qualifier
+Bundle-Activator: com.manadesk.monetization.MonetizationPlugin
+Bundle-Vendor: Rémi Dutil
+Require-Bundle: org.eclipse.ui,
+ org.eclipse.core.runtime,
+ org.eclipse.jface,
+ org.eclipse.swt,
+ com.reflexit.magiccards.core,
+ com.reflexit.magiccards.ui
+Bundle-RequiredExecutionEnvironment: JavaSE-17
+Bundle-ActivationPolicy: lazy
+Export-Package: com.manadesk.monetization

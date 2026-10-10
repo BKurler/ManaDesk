@@ -24,6 +24,12 @@
  *     Rémi Dutil (2026) - registered "Web Favorites" - the "Browse Website..."
  *                         favorites list used by the New Deck/Collection
  *                         wizard's Website import source
+ *     Rémi Dutil (2026) - Gallery tab no longer placed by the perspective
+ *                         extension (it appended it after Proxier): the
+ *                         perspective factory puts it between Collector and
+ *                         Proxier.
+ *     Rémi Dutil (2026) - Help > Take Screenshot and its Ctrl+0 binding disabled
+ *                         (commented out) for now; command and handler kept.
 -->
 <?eclipse version="3.2"?>
 <plugin>
@@ -414,12 +420,14 @@
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+6">
       </key>
+      <!-- Take Screenshot disabled for now (not useful yet) - command and handler kept
       <key
             commandId="com.reflexit.magiccards.ui.commands.takeScreenshotCommand"
             contextId="org.eclipse.ui.contexts.dialogAndWindow"
             schemeId="org.eclipse.ui.defaultAcceleratorConfiguration"
             sequence="M1+0">
       </key>
+      -->
       <!-- Rémi Dutil (2026) - the platform's own default binding for
            org.eclipse.ui.edit.delete (in org.eclipse.ui's own plugin.xml)
            is the exact, unmodified sequence "DEL" - Eclipse key-sequence
@@ -728,6 +736,7 @@
             </command>
                         
       </menuContribution>
+       <!-- Help > Take Screenshot disabled for now (not useful yet) - command and handler kept
        <menuContribution
              locationURI="menu:help?after=additions">
              <command
@@ -736,6 +745,7 @@
                    mnemonic="S">
              </command>
        </menuContribution>
+       -->
   </extension>
 
      <extension
@@ -1014,13 +1024,9 @@ id="org.eclipse.ui.views.ProgressView">
       <perspectiveExtension
             targetID="com.reflexit.magiccards.ui.perspective.magic">
             <showInPart id="com.reflexit.magiccards.ui.gallery.GalleryView"/>
-            <view
-                  id="com.reflexit.magiccards.ui.gallery.GalleryView"
-                  minimized="false"
-                  relationship="stack"
-                  relative="com.reflexit.magiccards.ui.views.MagicDbView"
-                  visible="true">
-            </view>
+            <!-- the Gallery tab itself is placed by PerspectiveFactoryMagic (between
+                 Collector and Proxier); an extension <view> would append it after
+                 Proxier -->
             <viewShortcut
                   id="com.reflexit.magiccards.ui.gallery.GalleryView">
             </viewShortcut>

@@ -13,6 +13,8 @@
  *                         refused connection fails fast with no retry and the
  *                         host is remembered as down, isWebUnavailable()
  *                         classification.
+ *     Rémi Dutil (2026) - scryfallGetsTheAppUserAgent: Scryfall hosts and the
+ *                         "ManaDesk/<version>" User-Agent.
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -42,6 +44,16 @@ public class WebUtilsTest {
 	@After
 	public void tearDown() {
 		WebUtils.setSimulateWebDown(false); // also forgets the hosts marked down
+	}
+
+	@Test
+	public void scryfallGetsTheAppUserAgent() throws Exception {
+		Assert.assertTrue(WebUtils.isScryfall(new URL("https://api.scryfall.com/bulk-data")));
+		Assert.assertTrue(WebUtils.isScryfall(new URL("https://svgs.scryfall.io/sets/m11.svg")));
+		Assert.assertTrue(WebUtils.isScryfall(new URL("https://scryfall.com/")));
+		Assert.assertFalse(WebUtils.isScryfall(new URL("https://notscryfall.com/")));
+		Assert.assertFalse(WebUtils.isScryfall(new URL("https://www.tcgplayer.com/")));
+		Assert.assertTrue(WebUtils.userAgent(), WebUtils.userAgent().matches("ManaDesk/[0-9a-z.]+"));
 	}
 
 	@Test

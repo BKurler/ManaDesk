@@ -38,15 +38,17 @@
  *                         now copes quietly with no web); the same switch
  *                         lives on as "Simulate web not working", shown in
  *                         debug launches only, for testing that behaviour.
+ *     Rémi Dutil (2026) - "Card prices from:" TCGplayer (USD) / Cardmarket
+ *                         (EUR) - the price provider combo is back, limited
+ *                         to the two Scryfall-fed sources.
  */
 
 package com.reflexit.magiccards.ui.preferences;
 
-import java.util.Collection;
-import java.util.Iterator;
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
 import org.eclipse.jface.preference.BooleanFieldEditor;
+import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.jface.util.PropertyChangeEvent;
 import org.eclipse.swt.SWT;
@@ -60,8 +62,6 @@ import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
 import com.reflexit.magiccards.core.DataManager;
-import com.reflexit.magiccards.core.seller.IPriceProvider;
-import com.reflexit.magiccards.core.seller.IPriceProviderStore;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 
@@ -168,13 +168,10 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		 * BooleanFieldEditor(PreferenceConstants.CHECK_FOR_UPDATES,
 		 * "Check for software updates on startup", inetOptions));
 		 */
-		String[][] values = getPriceProviders();
-
-		/*
-		 * !!! RD Not supported for now ComboFieldEditor combo = new
-		 * ComboFieldEditor(PreferenceConstants.PRICE_PROVIDER, "Card Prices Provider",
-		 * values, inetOptions); addField(combo);
-		 */
+		// card prices: TCGplayer (USD) or Cardmarket (EUR), both from the card
+		// database update, shown in the currency setting's currency
+		addField(new ComboFieldEditor(PreferenceConstants.PRICE_PROVIDER, "Card prices from:", getPriceProviders(),
+				inetOptions));
 		createButtons(inetOptions);
 		// selection - a single sentence checkbox, no separate group box: it
 		// only ever held this one field (see this class' own header)
@@ -243,14 +240,13 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		}
 	}
 
+	/** {label, provider name} for the two price sources. */
 	private String[][] getPriceProviders() {
-		PriceProviderManager ppm = PriceProviderManager.getInstance();
-		Collection<IPriceProvider> providers = ppm.getProviders();
-		String[][] res = new String[providers.size()][2];
-		int i = 0;
-		for (Iterator iterator = providers.iterator(); iterator.hasNext(); i++) {
-			IPriceProviderStore prov = (IPriceProviderStore) iterator.next();
-			res[i][0] = res[i][1] = prov.getName();
+		String[] names = com.reflexit.magiccards.core.seller.PriceSources.names();
+		String[][] res = new String[names.length][2];
+		for (int i = 0; i < names.length; i++) {
+			res[i][0] = com.reflexit.magiccards.core.seller.PriceSources.label(names[i]);
+			res[i][1] = names[i];
 		}
 		return res;
 	}

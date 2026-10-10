@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - Scryfall API policy: "ManaDesk/<version>" User-Agent
+ *                         and an Accept header.
  *******************************************************************************/
 
 package com.reflexit.magiccards.core.sync;
@@ -185,7 +187,8 @@ public final class SymbolConverter {
 		try {
 			URL url = new URL(urlStr);
 			HttpURLConnection con = (HttpURLConnection) url.openConnection();
-			con.setRequestProperty("User-Agent", "ManaDesk-Symbol-Generator");
+			con.setRequestProperty("User-Agent", WebUtils.userAgent()); // Scryfall API rule
+			con.setRequestProperty("Accept", "application/json;q=0.9,*/*;q=0.8");
 			con.setConnectTimeout(10000);
 			con.setReadTimeout(10000);
 

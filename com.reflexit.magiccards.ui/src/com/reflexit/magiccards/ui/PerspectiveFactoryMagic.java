@@ -9,6 +9,10 @@
  *     Rémi Dutil (2026) - Proxier view added to "main", alongside MagicDb/
  *                         MyCards/Collector (an occasional planning tool, not
  *                         needed at every startup)
+ *     Rémi Dutil (2026) - Gallery view added to "main" between Collector and
+ *                         Proxier (Buyer follows, from the monetization
+ *                         plug-in): Scryfall Database, My Cards, Collector,
+ *                         Gallery, Proxier, Buyer after Reset Perspective.
  */
 package com.reflexit.magiccards.ui;
 
@@ -29,6 +33,7 @@ import org.eclipse.ui.IWorkbenchWindow;
 import org.eclipse.ui.IWorkbenchWizard;
 import org.eclipse.ui.actions.ActionFactory;
 
+import com.reflexit.magiccards.ui.gallery.GalleryView;
 import com.reflexit.magiccards.ui.views.MagicDbView;
 import com.reflexit.magiccards.ui.views.card.CardDescView;
 import com.reflexit.magiccards.ui.views.card.RulingsView;
@@ -68,6 +73,7 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		main.addView(MagicDbView.ID);
 		main.addView(MyCardsView.ID);
 		main.addView(CollectorView.ID);
+		main.addView(GalleryView.ID);
 		main.addView(ProxierView.ID);
 		main.addPlaceholder("org.eclipse.ui.browser.view");
 		main.addPlaceholder("org.eclipse.ui.browser.view:*");
@@ -80,6 +86,7 @@ public class PerspectiveFactoryMagic implements IPerspectiveFactory {
 		layout.addShowViewShortcut(MagicDbView.ID);
 		layout.addShowViewShortcut(CardsNavigatorView.ID);
 		layout.addShowViewShortcut(MyCardsView.ID);
+		layout.addShowViewShortcut(GalleryView.ID);
 		layout.addShowViewShortcut(ProxierView.ID);
 		layout.addNewWizardShortcut(NewDeckWizard.ID);
 		layout.addNewWizardShortcut(NewCardCollectionWizard.ID);
