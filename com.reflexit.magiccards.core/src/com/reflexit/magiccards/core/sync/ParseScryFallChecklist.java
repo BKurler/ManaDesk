@@ -54,6 +54,7 @@
  *                         (buildPrices): a TCGplayer "N$/F$/E$" line and a
  *                         Cardmarket "N€/F€/E€" line, each in its own
  *                         currency, no conversion.
+ *     Rémi Dutil (2026) - BuildLanguage() uses Languages.fromScryfallCode()
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -92,6 +93,7 @@ import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.Colors;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.Languages;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -237,74 +239,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 	// Convert from Scryfall to MA language string
 	private String BuildLanguage(String Language) {
-		if (Language == null) {
-			return null;
-		}
-
-		String maLanguage = null;
-
-		switch (Language) {
-		case ("en"):
-			maLanguage = "English";
-			break;
-		case ("es"):
-			maLanguage = "Spanish";
-			break;
-		case ("fr"):
-			maLanguage = "French";
-			break;
-		case ("de"):
-			maLanguage = "German";
-			break;
-		case ("it"):
-			maLanguage = "Italian";
-			break;
-		case ("pt"):
-			maLanguage = "Portuguese";
-			break;
-		case ("ja"):
-			maLanguage = "Japanese";
-			break;
-		case ("ko"):
-			maLanguage = "Korean";
-			break;
-		case ("ru"):
-			maLanguage = "Russian";
-			break;
-		case ("zhs"):
-			maLanguage = "Chinese Simplified";
-			break;
-		case ("zht"):
-			maLanguage = "Chinese Traditional";
-			break;
-		case ("he"):
-			maLanguage = "Hebrew";
-			break;
-		case ("la"):
-			maLanguage = "Latin";
-			break;
-		case ("grc"):
-			maLanguage = "Ancient Greek";
-			break;
-		case ("ar"):
-			maLanguage = "Arabic";
-			break;
-		case ("sa"):
-			maLanguage = "Sanskrit";
-			break;
-		case ("ph"):
-			maLanguage = "Phyrexian";
-			break;
-		case ("qya"):
-			maLanguage = "Quenya";
-			break;
-
-		default:
-			// Unknown return null
-			break;
-		}
-
-		return maLanguage;
+		return Languages.fromScryfallCode(Language);
 	}
 
 	private String BuildText(String header, String text) {

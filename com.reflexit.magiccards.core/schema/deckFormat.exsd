@@ -86,6 +86,13 @@
                </documentation>
             </annotation>
          </attribute>
+         <attribute name="application" type="boolean" use="default" value="false">
+            <annotation>
+               <documentation>
+                  true for the format of another application (DeckBox, ManaBox, Wagic...): such formats are listed after ManaDesk's own formats, before the formats added by the user
+               </documentation>
+            </annotation>
+         </attribute>
          <attribute name="exportDelegate" type="string">
             <annotation>
                <documentation>

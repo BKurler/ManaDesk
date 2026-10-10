@@ -12,6 +12,9 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - getExportTypes() order: ManaDesk's own and Print
+ *                         formats first, then other applications' formats,
+ *                         then the formats added by the user
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -23,6 +26,7 @@ import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
+import java.util.List;
 import java.util.Map;
 
 import org.eclipse.core.runtime.IConfigurationElement;
@@ -96,7 +100,9 @@ public class ImportExportFactory {
 		String exp = elp.getAttribute("exportDelegate");
 		String sxml = elp.getAttribute("xmlFormat");
 		boolean xmlFormat = Boolean.valueOf(sxml);
-		createReportType(label, ext, xmlFormat, imp, exp);
+		ReportType rt = createReportType(label, ext, xmlFormat, imp, exp);
+		if (rt != null)
+			rt.setApplication(Boolean.valueOf(elp.getAttribute("application")));
 	}
 
 	public static ReportType createReportType(String label, String fileExtension, boolean xmlFormat, String importClass,
@@ -117,6 +123,12 @@ public class ImportExportFactory {
 		return res;
 	}
 
+	/**
+	 * The export formats, in the order every export list shows them: ManaDesk's
+	 * own and Print formats first (in their registration order), then the
+	 * formats of other applications, then the formats added by the user (both
+	 * alphabetical).
+	 */
 	public static Collection<ReportType> getExportTypes() {
 		ArrayList<ReportType> res = new ArrayList<ReportType>();
 		for (Iterator iterator = types.values().iterator(); iterator.hasNext();) {
@@ -124,7 +136,26 @@ public class ImportExportFactory {
 			if (type.exportWorker != null)
 				res.add(type);
 		}
+		sortForLists(res);
 		return res;
+	}
+
+	/** See {@link #getExportTypes()}; the sort is stable, so group 0 keeps its order. */
+	static void sortForLists(List<ReportType> list) {
+		list.sort((a, b) -> {
+			int ga = listGroup(a), gb = listGroup(b);
+			if (ga != gb)
+				return ga - gb;
+			if (ga == 0)
+				return 0;
+			return String.CASE_INSENSITIVE_ORDER.compare(String.valueOf(a.getLabel()), String.valueOf(b.getLabel()));
+		});
+	}
+
+	private static int listGroup(ReportType t) {
+		if (t.isCustom())
+			return 2;
+		return t.isApplication() ? 1 : 0;
 	}
 
 	public static ReportType createReportType(String label) {

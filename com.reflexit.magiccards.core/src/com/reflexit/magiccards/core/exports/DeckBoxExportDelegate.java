@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - the header row follows "Generate header row"
+ */
 package com.reflexit.magiccards.core.exports;
 
 import java.lang.reflect.InvocationTargetException;
@@ -20,6 +24,8 @@ public class DeckBoxExportDelegate extends CsvExportDelegate {
 	 */
 	@Override
 	public void printHeader() {
+		if (!header) // "Generate header row" unchecked
+			return;
 		stream.println("Count,Tradelist Count,Name,Foil,Textless,Promo,Signed,Edition,Condition,Language,Card Number");
 	}
 

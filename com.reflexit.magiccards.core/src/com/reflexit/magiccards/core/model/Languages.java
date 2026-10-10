@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - fromScryfallCode() / toScryfallCode(): the language
+ *                         codes Scryfall (and ManaBox) use ("en", "zhs"...)
+ */
 package com.reflexit.magiccards.core.model;
 
 import java.util.ArrayList;
@@ -67,6 +72,34 @@ public class Languages implements ISearchableProperty {
 	}
 
 	private LinkedHashMap names;
+
+	/** Scryfall language codes, in Language order. */
+	private static final String[][] SCRYFALL_CODES = { { "en", "English" }, { "es", "Spanish" },
+			{ "fr", "French" }, { "de", "German" }, { "it", "Italian" }, { "pt", "Portuguese" },
+			{ "ja", "Japanese" }, { "ko", "Korean" }, { "ru", "Russian" }, { "zhs", "Chinese Simplified" },
+			{ "zht", "Chinese Traditional" }, { "he", "Hebrew" }, { "la", "Latin" }, { "grc", "Ancient Greek" },
+			{ "ar", "Arabic" }, { "sa", "Sanskrit" }, { "ph", "Phyrexian" }, { "qya", "Quenya" } };
+
+	/** The ManaDesk language name ("English") for a Scryfall code ("en"), or {@code null}. */
+	public static String fromScryfallCode(String code) {
+		if (code == null)
+			return null;
+		String c = code.trim().toLowerCase(Locale.ENGLISH);
+		for (String[] pair : SCRYFALL_CODES)
+			if (pair[0].equals(c))
+				return pair[1];
+		return null;
+	}
+
+	/** The Scryfall code ("en") for a ManaDesk language name ("English"), or {@code null}. */
+	public static String toScryfallCode(String name) {
+		if (name == null)
+			return null;
+		for (String[] pair : SCRYFALL_CODES)
+			if (pair[1].equalsIgnoreCase(name.trim()))
+				return pair[0];
+		return null;
+	}
 
 	public static String[] getLangValues() {
 		Language[] values = Language.values();

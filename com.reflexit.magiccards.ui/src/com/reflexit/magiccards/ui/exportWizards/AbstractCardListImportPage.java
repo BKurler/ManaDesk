@@ -133,6 +133,9 @@
  *                         createNewDeck() takes the new collection's type.
  *     Rémi Dutil (2026) - offerWebsiteSource() hook: the collection pages hide
  *                         the Website source.
+ *     Rémi Dutil (2026) - after resolving, a card the file gives in another
+ *                         language takes that language's printing when the
+ *                         card database has it (ImportUtils.applyDeclaredLanguages)
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -1452,6 +1455,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				ImportUtils.performPreImport(worker, importData, new CoreMonitorAdapter(submon.split(50)));
 				if (!dbImport) {
 					ImportUtils.resolve(importData.getList());
+					ImportUtils.applyDeclaredLanguages(importData);
 				} else {
 					ImportUtils.performPreImportWithDb((Collection<IMagicCard>) importData.getList(), new ArrayList<>(),
 							importData.getFields());
@@ -1465,6 +1469,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 					Collection<IMagicCard> result = (Collection<IMagicCard>) importData.getList();
 					if (resolve) {
 						ImportUtils.resolve(importData.getList());
+						ImportUtils.applyDeclaredLanguages(importData);
 						if (element instanceof CollectionsContainer) {
 							// newNameChoice was captured on the UI thread by performImport()
 							CollectionsContainer newParent = (CollectionsContainer) element;

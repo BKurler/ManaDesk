@@ -50,6 +50,17 @@
             importDelegate="com.reflexit.magiccards.core.exports.ManaDeskCsvSemicolonImportDelegate"
             label="ManaDesk CSV Semicolon">
       </deckFormat>
+      <!-- before the lenient CSV formats (DeckBox, MTG Studio...): a ManaBox file
+           would also parse with them, and on a tie the first registered wins -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.ManaBoxCsvExportDelegate"
+            extension="csv"
+            id="manabox"
+            importDelegate="com.reflexit.magiccards.core.exports.ManaBoxCsvImportDelegate"
+            application="true"
+            label="ManaBox CSV"
+            xmlFormat="false">
+      </deckFormat>
       <!-- forgiving text importer: '# name' comments, 'Sideboard' markers,
            '3 Name', '3x Name (Set)', or any line carrying a Scryfall id -->
       <deckFormat
@@ -132,6 +143,7 @@
             exportDelegate="com.reflexit.magiccards.core.exports.WagicExportDelegate"
             extension="wth"
             id="wth"
+            application="true"
             label="Wagic: The Homebrew"
             xmlFormat="false">
       </deckFormat>
@@ -224,6 +236,7 @@
             extension="csv"
             id="deckbox"
             importDelegate="com.reflexit.magiccards.core.exports.DeckBoxImportDelegate"
+            application="true"
             label="DeckBox Inventory CSV"
             xmlFormat="false">
       </deckFormat>
@@ -232,6 +245,7 @@
             extension="csv"
             id="deckboxW"
             importDelegate="com.reflexit.magiccards.core.exports.DeckBoxWishlistImportDelegate"
+            application="true"
             label="DeckBox Wishlist CSV"
             xmlFormat="false">
       </deckFormat>
