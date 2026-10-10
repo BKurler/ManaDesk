@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - the set list follows the "List sets by release
+ *                         date" preference (SetListOrder)
+ */
 package com.reflexit.magiccards.ui.dialogs;
 
 import java.util.Collection;
@@ -13,6 +18,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 
 import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.ui.utils.SetListOrder;
 
 public class CorrectSetDialog extends TrayDialog {
 	public static final String NEW = "Create New Set";
@@ -36,7 +42,7 @@ public class CorrectSetDialog extends TrayDialog {
 		Label label2 = new Label(area, SWT.NONE);
 		label2.setText("Select set from the list (leave empty to create new set):");
 		combo = new Combo(area, SWT.DROP_DOWN);
-		Collection<String> names1 = Editions.getInstance().getNames();
+		Collection<String> names1 = SetListOrder.sort(Editions.getInstance().getNames());
 		combo.add(NEW);
 		combo.add(SKIP);
 		for (Iterator<String> iterator = names1.iterator(); iterator.hasNext();) {

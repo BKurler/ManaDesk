@@ -79,6 +79,8 @@
  *     Rémi Dutil (2026) - SIMULATE_WEB_DOWN default (replaces WORK_OFFLINE).
  *     Rémi Dutil (2026) - PRICE_PROVIDER default from the locale: Cardmarket in
  *                         Europe, TCGplayer elsewhere (PriceSources).
+ *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
+ *                         release date (oldest first) instead of alphabetically
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -130,6 +132,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.LOAD_EXTRAS, false);
 		store.setDefault(PreferenceConstants.LOAD_PRINTINGS, false);
 		store.setDefault(PreferenceConstants.SHOW_GRID, false);
+		store.setDefault(PreferenceConstants.SETS_BY_RELEASE_DATE, false); // alphabetical
 		store.setDefault(PreferenceConstants.CHECK_FOR_UPDATES, false); // !!! RD Don't check for update per default
 		store.setDefault(PreferenceConstants.CHECK_FOR_CARDS, false);
 		store.setDefault(PreferenceConstants.CURRENCY, "USD");

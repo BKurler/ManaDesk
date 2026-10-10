@@ -44,6 +44,7 @@
  *     Rémi Dutil (2026) - "Allow to copy non-virtual cards" removed: copying
  *                         is always allowed, the copy follows the
  *                         destination's default ownership
+ *     Rémi Dutil (2026) - "List sets by release date" checkbox
  */
 
 package com.reflexit.magiccards.ui.preferences;
@@ -104,6 +105,8 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		BooleanFieldEditor grid = new BooleanFieldEditor(PreferenceConstants.SHOW_GRID,
 				"Show grid lines in card tables", getFieldEditorParent());
 		addField(grid);
+		addField(new BooleanFieldEditor(PreferenceConstants.SETS_BY_RELEASE_DATE,
+				"List sets by release date (oldest first) instead of alphabetically", getFieldEditorParent()));
 		// workspace - not a BooleanFieldEditor: it targets a different plugin's
 		// ConfigurationScope preference, not this page's own store - see this
 		// class' own header

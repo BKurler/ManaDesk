@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - the set list follows the "List sets by release
+ *                         date" preference (SetListOrder)
+ */
 package com.reflexit.magiccards.ui.widgets;
 
 import java.util.Collection;
@@ -15,6 +20,7 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.ui.utils.SetListOrder;
 
 public class EditionTextControl extends Composite {
 	private Text set;
@@ -52,7 +58,7 @@ public class EditionTextControl extends Composite {
 
 	public void updateProposals(IContentProposalProvider contentProposalProvider) {
 		if (contentProposalProvider instanceof SimpleContentProposalProvider) {
-			Collection<String> names = Editions.getInstance().getNames();
+			Collection<String> names = SetListOrder.sort(Editions.getInstance().getNames());
 			String[] setProposals = new String[names.size()];
 			int i = 0;
 			for (String type : names) {

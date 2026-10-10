@@ -3,6 +3,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - the set list follows the "List sets by release
+ *                         date" preference (SetListOrder)
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -37,6 +39,7 @@ import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.ImageCreator;
+import com.reflexit.magiccards.ui.utils.SetListOrder;
 import com.reflexit.magiccards.ui.widgets.ComboStringEditingSupport;
 
 public class SetColumn extends AbstractImageColumn implements Listener {
@@ -179,8 +182,11 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 			CardList list = new CardList(cards);
 			Set<Object> unique = list.getUnique(MagicCardField.SET);
 			unique.add(card.getSet());
-			String sets[] = unique.toArray(new String[unique.size()]);
-			return sets;
+			java.util.List<String> names = new java.util.ArrayList<>();
+			for (Object o : unique)
+				if (o != null)
+					names.add(String.valueOf(o));
+			return SetListOrder.sortToArray(names);
 		}
 
 		@Override

@@ -4,6 +4,8 @@
  *     Rémi Dutil (2026) - COLLECTOR_COUNT_FINISHES_SEPARATELY constant
  *     Rémi Dutil (2026) - WORK_OFFLINE replaced by SIMULATE_WEB_DOWN (testing
  *                         only, debug launches).
+ *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
+ *                         release date (oldest first) instead of alphabetically
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -33,6 +35,8 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String LOAD_PRINTINGS = PREFIX + ".loadPrintings";
 	public static final String PRICE_PROVIDER = PREFIX + ".priceProvider";
 	public static final String SHOW_GRID = PREFIX + ".grid";
+	/** Set drop lists: by release date (oldest first) instead of alphabetically. */
+	public static final String SETS_BY_RELEASE_DATE = PREFIX + ".setsByReleaseDate";
 	public static final String LOCAL_SHOW_QUICKFILTER = "quickfilter";
 	public static final String LOCAL_COLUMNS = "columnlayout";
 	public static final String CHECK_FOR_UPDATES = "updates";

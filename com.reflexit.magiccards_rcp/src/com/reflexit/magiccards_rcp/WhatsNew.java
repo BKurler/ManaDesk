@@ -19,6 +19,7 @@
  *     Rémi Dutil (2026) - new views are placed by ViewZones (in their zone)
  *     Rémi Dutil (2026) - entries for collection types, ownership following
  *                         the list, and the "Main" collection
+ *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -166,6 +167,8 @@ final class WhatsNew {
 			new Feature(1, MINOR, BROWSING, "Rulings", "Shown formatted, in their own view.", null),
 			new Feature(1, MINOR, BROWSING, "Find", "Next / previous, and * as a wildcard in Find and in the name"
 					+ " filter.", null),
+			new Feature(1, MINOR, BROWSING, "Set lists", "Lists of sets are alphabetical, or by release date"
+					+ " (oldest first) if you prefer - see the ManaDesk preferences.", null),
 			new Feature(1, MINOR, GENERAL, "Faster startup", "The splash screen shows the real progress, and the"
 					+ " window opens ready to use.", null),
 			new Feature(1, MINOR, GENERAL, "No more Work Offline", "Without internet, ManaDesk keeps working and"

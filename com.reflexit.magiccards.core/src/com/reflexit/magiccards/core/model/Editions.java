@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - sortSetNames(): set names alphabetically or by
+ *                         release date (oldest first), for the set drop lists
  */
 
 package com.reflexit.magiccards.core.model;
@@ -387,6 +389,27 @@ public class Editions implements ISearchableProperty {
 		}
 
 		return idToName.get(id);
+	}
+
+	/**
+	 * {@code names} sorted for a drop list: alphabetically (ignoring case), or
+	 * by release date, oldest first - a set with no known date goes last, and
+	 * sets released the same day are alphabetical.
+	 */
+	public List<String> sortSetNames(Collection<String> names, boolean byReleaseDate) {
+		List<String> sorted = new ArrayList<>();
+		for (String n : names)
+			if (n != null)
+				sorted.add(n);
+		if (!byReleaseDate) {
+			sorted.sort(String.CASE_INSENSITIVE_ORDER);
+			return sorted;
+		}
+		sorted.sort(Comparator.comparing((String n) -> {
+			Edition ed = getEditionByName(n);
+			return ed == null ? null : ed.getReleaseDate();
+		}, Comparator.nullsLast(Comparator.naturalOrder())).thenComparing(String.CASE_INSENSITIVE_ORDER));
+		return sorted;
 	}
 
 	public Collection<String> getNames() {
