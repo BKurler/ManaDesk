@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Custom export formats</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Custom export formats</h1>
+
+<p>Need a format ManaDesk doesn't have &mdash; for a forum, a printed checklist, another program? Create
+your own. It then appears in every export list, after ManaDesk's formats.</p>
+
+<h2>Managing your formats</h2>
+<p>Open <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; Card Export</span>. The page lists
+the export formats; select one to see an example of its output. Create, edit or remove your own formats
+from there.</p>
+<p class="shot"><img src="../images/card_export_prefs.png" alt="Screenshot: the Card Export preference page"></p>
+
+<h2>Editing a format</h2>
+<p>The <b>Edit Exporter</b> dialog shows a live <b>Preview</b> as you type.</p>
+<p class="shot"><img src="../images/edit_exporter.png" alt="Screenshot: the Edit Exporter dialog with its preview"></p>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Name</td><td>The name shown in the export lists.</td></tr>
+<tr><td>Fields</td><td>The card fields to write, in order (for example <code>COUNT,NAME</code>).</td></tr>
+<tr><td>Method</td><td>How each line is built:
+ <ul>
+ <li><b>C Printf Format</b> &mdash; a pattern such as <code>%d %s</code> (one <code>%</code> per field);</li>
+ <li><b>Java Message Format</b> &mdash; a pattern such as <code>{0} x {1}</code>;</li>
+ <li><b>Separated Fields</b> / <b>Separated with Quotes</b> &mdash; the fields with a separator between them
+ (<code>,</code>, <code>|</code>, a space...).</li>
+ </ul>If the pattern has fewer slots than fields, the missing ones are added at the end.</td></tr>
+<tr><td>Header</td><td>A line written at the top (or between decks). <code>${DECK.NAME}</code> is replaced by the deck's name.
+It follows the export's <i>Generate header row</i> option.</td></tr>
+<tr><td>Sideboard Header</td><td>A line written before the sideboard cards; leave empty for none.</td></tr>
+<tr><td>Footer</td><td>A line written at the end of the file.</td></tr>
+<tr><td>File Extension</td><td>The default extension of the exported file (<code>txt</code>, <code>csv</code>...).</td></tr>
+</table>
+
+<p class="seealso">See also: <a href="export.html">Exporting</a></p>
+</body>
+</html>

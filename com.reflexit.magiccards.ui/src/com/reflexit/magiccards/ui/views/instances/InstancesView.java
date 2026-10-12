@@ -14,6 +14,8 @@
  *     Rémi Dutil (2026) - also react to selections from ProxierView (not an
  *                         AbstractCardsView - it's a multi-deck pivot grid,
  *                         not a single filtered card list)
+ *     Rémi Dutil (2026) - the view follows its column preferences again (the
+ *                         activate() override skipped the preference listeners)
  */
 package com.reflexit.magiccards.ui.views.instances;
 
@@ -227,8 +229,11 @@ public class InstancesView extends AbstractSingleControlCardsView implements ISe
 				// This view manages its store-change listener manually (added
 				// per selection in selectionChanged) and reloads on selection,
 				// so skip the base addListeners()/refresh() - but still let the
-				// control contribute Sort By / Unsort / Properties to the bars.
+				// control contribute Sort By / Unsort / Properties to the bars -
+				// and follow the column preferences (Properties... / Restore
+				// Defaults), which addListeners() used to cover
 				contributeToActionBars();
+				addPreferenceListeners();
 			}
 		};
 	}

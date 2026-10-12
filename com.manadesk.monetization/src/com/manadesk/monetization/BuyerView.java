@@ -45,6 +45,7 @@
  *     Rémi Dutil (2026) - the copy panel scrolls (ScrolledComposite) - in a
  *                  short bottom area the Copy / Open buttons were squeezed
  *                  out of sight.
+ *     Rémi Dutil (2026) - F1 help context (viewbuyer)
  *******************************************************************************/
 package com.manadesk.monetization;
 
@@ -92,6 +93,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 import org.eclipse.ui.plugin.AbstractUIPlugin;
 
@@ -207,6 +209,8 @@ public class BuyerView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		// F1 help (the help plug-in's "viewbuyer" context)
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, "com.reflexit.magiccards.help.viewbuyer");
 		SashForm sash = new SashForm(parent, SWT.HORIZONTAL);
 		createSourceTree(sash);
 		createRightPane(sash);

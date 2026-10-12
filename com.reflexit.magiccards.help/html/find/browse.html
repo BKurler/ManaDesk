@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Browsing the card database</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Browsing the card database</h1>
+
+<p>The <b>Scryfall Database</b> view lists every card printing in the card database: one row per
+printing, so a card reprinted in ten sets has ten rows. It is the place to look for cards, whether you
+own them or not.</p>
+
+<p class="shot"><img src="../images/scryfall_db_view.png" alt="Screenshot: the Scryfall Database view grouped by set"></p>
+
+<p>Everything on this page also works in the other card lists (My Cards, a deck, a collection, the
+Collector...).</p>
+
+<h2>Sorting</h2>
+<ul>
+<li>Click a column header to sort by that column; click again to reverse the order.</li>
+<li><b>Sort By</b> (in the view's toolbar menu) offers the same choices from a menu.</li>
+<li><b>Unsort</b> goes back to the list's own order. In an
+<a href="../collection/unsorted.html">unsorted collection</a>, that is your manual order.</li>
+</ul>
+
+<h2>Grouping</h2>
+<p><b>Group By</b> groups the rows, for example by set, by color, by type or by rarity, and shows the
+groups as a tree. Each group shows its card count and totals. Choose <i>None</i> to go back to a flat
+list.</p>
+<p>To go back to a view's default grouping and sort order, use <b>Restore Defaults</b> on its page in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; View: ...</span>.</p>
+<p>You can define your own grouping combinations in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; Custom Groups</span>; they
+appear in the Group By menu.</p>
+
+<h2>Columns</h2>
+<ul>
+<li>Right-click a column header to hide a column or show another one.</li>
+<li>Drag a header to move a column; drag its edge to resize it. ManaDesk remembers the layout.</li>
+<li>The full column choice for each view is in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; View: ...</span>.</li>
+</ul>
+<p>What each column means: <a href="../reference/columns.html">Columns reference</a>.</p>
+
+<h2>View As</h2>
+<p><b>View As</b> (toolbar menu) changes how the list is shown:</p>
+<table>
+<tr><th>Mode</th><th>What you see</th></tr>
+<tr><td>Table</td><td>A flat list of rows.</td></tr>
+<tr><td>Tree</td><td>The groups as a tree (with Group By).</td></tr>
+<tr><td>Split Table</td><td>The groups on one side, the cards of the selected group on the other.</td></tr>
+<tr><td>Gallery</td><td>The card images (see <a href="gallery.html">The Gallery</a>).</td></tr>
+</table>
+
+<h2>Narrowing the list</h2>
+<p>Type a name in the quick filter bar above the list, use <b>Find...</b>, or open the full filter dialog. See
+<a href="filter.html">Searching and filtering</a>.</p>
+
+<h2>Doing something with a card</h2>
+<ul>
+<li>Click a card to see it in <a href="card_details.html">Card Info</a>, with its rulings, printings and
+your copies.</li>
+<li>Right-click for the actions: <b>Add to</b> a deck or collection, <b>Copy</b>, <b>Show In</b> another view...</li>
+<li>Drag cards onto a deck or collection tab, or onto the Card Navigator, to add them.</li>
+<li>Press <kbd>Insert</kbd> to add the selected cards to your Main collection.</li>
+</ul>
+
+<p>The view's toolbar menu also has <b>Update Card Database</b> (see
+<a href="../database/update.html">Updating the card database</a>).</p>
+
+<p class="seealso">See also: <a href="filter.html">Searching and filtering</a> &middot;
+<a href="../reference/columns.html">Columns reference</a> &middot;
+<a href="../collection/edit_cards.html">Adding and editing cards</a></p>
+</body>
+</html>

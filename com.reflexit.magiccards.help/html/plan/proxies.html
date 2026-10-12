@@ -1,0 +1,62 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Proxies</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Proxies</h1>
+
+<p>A <b>proxy</b> is a stand-in for a card: a printed copy you play with while you don't have (or don't
+want to sleeve) the real one. ManaDesk lets you mark any copy as a proxy, so you always know what is
+genuine and what isn't.</p>
+
+<h2>Marking a copy as a proxy</h2>
+<ul>
+<li>Right-click the card, <b>Edit Card...</b>, and set <b>Proxy</b> to <i>Proxy</i>.</li>
+<li>Or click the cell in the <b>Proxy</b> column (Genuine / Proxy).</li>
+<li>Imports set it too, from a file's proxy column (see <a href="../transfer/import.html">Importing cards</a>).</li>
+</ul>
+<p>A proxy is still a card you <i>own</i>: keep it in a Standard collection, like the genuine ones.</p>
+
+<h2>How to spot them</h2>
+<p>Proxies show a red <b>Proxy</b> badge on the card image (Card Info, Gallery), and <i>Proxy</i> in the Proxy
+column. Use the filter dialog's <b>Proxy</b> group to show only proxies, or only genuine cards.</p>
+<p class="shot"><img src="../images/proxy_badge.png" alt="Screenshot: Card Info with the red Proxy badge"></p>
+
+<h2>Proxies in your numbers</h2>
+<ul>
+<li><b>Collector</b> &mdash; completion % and value leave proxies out, unless you check <b>Count Proxies</b>.</li>
+<li><b>Deck Info tab</b> &mdash; shows how many proxies the deck has, and what replacing them with genuine cards
+would cost.</li>
+<li><b>Buyer</b> &mdash; with <b>Replace Proxies</b>, proxies count as missing, so the buy list includes the genuine
+cards to replace them.</li>
+<li><b>Proxier</b> &mdash; counts the proxies you already own before telling you what to print.</li>
+</ul>
+<p class="shot"><img src="../images/deck_info_proxies.png" alt="Screenshot: Deck Info tab with the proxy count and cost to replace them"></p>
+<p class="shot"><img src="../images/collector_count_proxies.png" alt="Screenshot: Collector view with Count Proxies"></p>
+
+<h2>Planning what to print</h2>
+<p>The <a href="proxier.html">Proxier</a> works out which proxies your decks still need, and can create a
+<b>Wishlist/To Print</b> collection with them, already marked as proxies. When they are printed, move
+them to a Standard collection: they become owned proxies (see
+<a href="wishlist.html">Wishlists and to-print lists</a>).</p>
+
+<h2 id="print">Printing proxies</h2>
+<p>Export the cards (a deck, or your to-print collection) with the <b>Print Proxies HTML Mobile</b> format:
+it makes a page of card images, ready to print from your browser (adjust the print scale to get 9 cards per
+Letter sheet). See
+<a href="../transfer/export.html#proxies">Printing proxies</a>.</p>
+
+<p class="seealso">See also: <a href="proxier.html">Proxier</a> &middot; <a href="buyer.html">Buyer</a>
+&middot; <a href="../collection/collector.html">Collector</a></p>
+</body>
+</html>

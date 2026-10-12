@@ -140,7 +140,7 @@ public final class OwnershipRules {
 					+ " - a Wishlist/To Print collection only holds cards you do not own";
 		if (!to.isVirtual() && virtual > 0)
 			return "contains " + virtual + " virtual card entr" + (virtual == 1 ? "y" : "ies")
-					+ " - set them to Own first (they have been bought)";
+					+ " - move them to a Standard collection once bought";
 		return null;
 	}
 

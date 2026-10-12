@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Wishlists and to-print lists</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Wishlists and to-print lists</h1>
+
+<p>A <b>Wishlist/To Print</b> collection holds cards you don't own yet: cards you want to buy, or proxies
+you plan to print. Its cards are <b>virtual</b>, so they never count as part of your collection until you
+actually get them.</p>
+
+<p class="shot"><img src="../images/wishlist_collection.png" alt="Screenshot: a Wishlist/To Print collection in the Card Navigator"></p>
+
+<h2>Creating one</h2>
+<ul>
+<li>By hand: <span class="menu">File &gt; New &gt; Collection</span>, type <b>Wishlist/To Print</b>
+(see <a href="../collection/create_collection.html">Creating collections and folders</a>).</li>
+<li>From the <a href="buyer.html">Buyer</a>: <b>Create Collection</b> makes a <i>ToBuy</i> collection with the
+cards your decks need.</li>
+<li>From the <a href="proxier.html">Proxier</a>: <b>Create Collection</b> makes a <i>ProxiesToPrint</i>
+collection with the proxies to print.</li>
+<li>From a list: import it into the collection (see <a href="../transfer/import.html">Importing cards</a>);
+the cards are imported as virtual.</li>
+</ul>
+
+<h2>Filling it</h2>
+<p>Add cards from the Scryfall Database as usual (<b>Add to</b>, drag and drop), or <b>copy</b> cards from your
+decks or collections: copies in a Wishlist/To Print collection are always virtual. Owned cards can't be
+<i>moved</i> into it (they would stop being yours) &mdash; copy them instead.</p>
+
+<h2>Bought it? Printed it?</h2>
+<p>When a wished card arrives (or a proxy is printed), <b>move</b> it from the Wishlist/To Print collection
+to a Standard collection: right-click <b>Move to</b>, drag and drop, or Split &amp; move for part of a pile.</p>
+<p>ManaDesk asks to confirm that the cards become Own:</p>
+<p class="shot"><img src="../images/become_own_confirm.png" alt="Screenshot: the Virtual Cards Become Own confirmation"></p>
+<p>That's it: the cards are now part of your collection, and leave the wish list.</p>
+
+<div class="tip">You don't need to set the Own column by hand: ownership always follows the list a card is
+in. See <a href="../collection/concepts.html#ownership">Own and virtual cards</a>.</div>
+
+<p class="seealso">See also: <a href="buyer.html">Buyer</a> &middot; <a href="proxier.html">Proxier</a>
+&middot; <a href="../collection/move_copy.html">Moving, copying and splitting</a></p>
+</body>
+</html>

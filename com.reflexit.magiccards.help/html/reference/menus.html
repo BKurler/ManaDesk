@@ -1,0 +1,80 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Menus and commands</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Menus and commands</h1>
+
+<h2>File</h2>
+<table>
+<tr><th>Item</th><th>Action</th></tr>
+<tr><td>New &gt; Deck / Collection</td><td>Create a deck (<a href="../decks/create_deck.html">Creating a deck</a>) or a collection
+(<a href="../collection/create_collection.html">Creating collections</a>).</td></tr>
+<tr><td>Export...</td><td>Export decks and collections (<a href="../transfer/export.html">Exporting</a>).</td></tr>
+<tr><td>Update Card Database</td><td>Refresh the card data from Scryfall (<a href="../database/update.html">Updating the card database</a>).</td></tr>
+<tr><td>Check for Card Updates...</td><td>Check whether newer card data exists.</td></tr>
+<tr><td>Import Card Database from File...</td><td>Load the card data from a downloaded file (offline).</td></tr>
+<tr><td>Backup</td><td>Back up the workspace (<a href="../data/backup.html">Backups</a>).</td></tr>
+<tr><td>Exit</td><td>Close ManaDesk.</td></tr>
+</table>
+
+<h2>Window</h2>
+<table>
+<tr><th>Item</th><th>Action</th></tr>
+<tr><td>Show View</td><td>Open a view (<a href="views.html">Views</a>).</td></tr>
+<tr><td>Reset Perspective</td><td>Put every view back in its place.</td></tr>
+<tr><td>Preferences</td><td>All the settings (<a href="preferences.html">Preferences</a>).</td></tr>
+</table>
+
+<h2>Help</h2>
+<table>
+<tr><th>Item</th><th>Action</th></tr>
+<tr><td>Help Contents, Search, Dynamic Help</td><td>This help.</td></tr>
+<tr><td>What's New...</td><td>What changed in this version.</td></tr>
+<tr><td>Report a Bug or Request a Feature...</td><td><a href="../support/report.html">Report a bug or request a feature</a>.</td></tr>
+<tr><td>Support ManaDesk...</td><td><a href="../support/support.html">Supporting ManaDesk</a>.</td></tr>
+<tr><td>Check for Software Updates...</td><td><a href="../data/software_update.html">Software updates</a>.</td></tr>
+<tr><td>About ManaDesk</td><td>Version and license.</td></tr>
+</table>
+
+<h2>Card list menu (right-click)</h2>
+<table>
+<tr><th>Item</th><th>Action</th></tr>
+<tr><td>Add to</td><td>(Scryfall Database) Add the cards to a deck or collection.</td></tr>
+<tr><td>Move to, Copy to</td><td>Move or copy the cards (<a href="../collection/move_copy.html">Moving, copying and splitting</a>).</td></tr>
+<tr><td>Split &amp; move to, Split Pile...</td><td>Move or split part of a pile.</td></tr>
+<tr><td>Edit Card...</td><td>Edit the copies (<a href="../collection/edit_cards.html">Adding and editing cards</a>).</td></tr>
+<tr><td>Increase Count, Decrease Count</td><td>One copy more or less.</td></tr>
+<tr><td>Copy, Paste</td><td>Copy the cards as text, or paste a card list.</td></tr>
+<tr><td>Delete</td><td>Remove the cards (with a confirmation).</td></tr>
+<tr><td>Show In</td><td>Show the card in another view.</td></tr>
+</table>
+<p>The view's toolbar menu has <b>Filter...</b>, <b>Group By</b>, <b>Sort By</b>, <b>Unsort</b>, <b>View As</b> and
+<b>Find...</b> (see <a href="../find/browse.html">Browsing</a> and <a href="../find/filter.html">Searching and filtering</a>).</p>
+
+<h2>Keyboard shortcuts</h2>
+<table>
+<tr><th>Keys</th><th>Action</th></tr>
+<tr><td><kbd>F1</kbd></td><td>Help for the current view.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>6</kbd></td><td>Open the filter dialog.</td></tr>
+<tr><td><kbd>+</kbd> (<kbd>=</kbd>, keypad <kbd>+</kbd>)</td><td>Increase the count of the selected cards.</td></tr>
+<tr><td><kbd>-</kbd> (keypad <kbd>-</kbd>)</td><td>Decrease the count.</td></tr>
+<tr><td><kbd>Insert</kbd></td><td>Add the selected cards to the Main collection.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Copy the selected cards to the active deck or collection.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd>, then <kbd>A</kbd> / <kbd>1</kbd>-<kbd>4</kbd> / <kbd>/</kbd></td><td>Move all / that many / ask how many to the active deck or collection.</td></tr>
+<tr><td><kbd>Delete</kbd> (<kbd>Shift</kbd>+<kbd>Delete</kbd>: no confirmation)</td><td>Delete the selected cards.</td></tr>
+</table>
+
+<p class="seealso">See also: <a href="views.html">Views</a> &middot; <a href="preferences.html">Preferences</a></p>
+</body>
+</html>

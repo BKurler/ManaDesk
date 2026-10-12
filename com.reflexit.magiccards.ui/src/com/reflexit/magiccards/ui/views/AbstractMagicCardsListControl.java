@@ -1,6 +1,11 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - addPreferenceListeners() split out of addListeners()
+ *     Rémi Dutil (2026) - getStatusBackground(): a page can color its status line
+ *                         (the Legality tab: red / yellow / green)
+ *     Rémi Dutil (2026) - follows GROUP_FIELD / SORT_ORDER changed from outside
+ *                         the view (Restore Defaults on its preference page)
  *     Rémi Dutil (2026) - updateStatus() runs inline instead of spawning a
  *                         background Job on every selection change
  *     Rémi Dutil (2026) - recache group aggregates on a DB-card UPDATE so grouped
@@ -99,6 +104,7 @@ import org.eclipse.jface.viewers.Viewer;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
+import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
@@ -183,6 +189,9 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	protected Action actionResetFilter;
 	protected Action actionShowFind;
 	protected Action actionShowPrefs;
+	/** GROUP_FIELD / SORT_ORDER as last read by syncFilter() - see propertyChange(). */
+	private String syncedGroupPref = "";
+	private String syncedSortPref = "";
 	protected SortByAction actionSortBy;
 	protected ImageAction actionUnsort;
 	protected IMagicViewer viewer;
@@ -675,9 +684,18 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	protected void addListeners() {
+		addPreferenceListeners();
+		addStoreChangeListener();
+	}
+
+	/**
+	 * Preferences only (global, theme, this view's columns) - for a view that
+	 * manages its store-change listener itself but must still follow its column
+	 * preferences.
+	 */
+	protected void addPreferenceListeners() {
 		MagicUIActivator.getDefault().getPreferenceStore().addPropertyChangeListener(preferenceListener);
 		PlatformUI.getWorkbench().getThemeManager().addPropertyChangeListener(preferenceListener);
-		addStoreChangeListener();
 		getColumnsPreferenceStore().addPropertyChangeListener(preferenceListener);
 	}
 
@@ -931,12 +949,23 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		}
 	}
 
+	/**
+	 * Background of the status line, matching the last {@link #getStatusMessage()};
+	 * {@code null} (the default) for the normal one.
+	 */
+	protected Color getStatusBackground() {
+		return null;
+	}
+
 	@Override
 	public void setStatus(String text) {
 		if (statusLine == null)
 			return;
 		if (statusLine.isDisposed())
 			return;
+		Color bg = getStatusBackground();
+		if (statusLine.getBackground() != bg && (bg == null || !bg.equals(statusLine.getBackground())))
+			statusLine.setBackground(bg);
 		if (statusLine.getText().equals(text))
 			return;
 		this.statusLine.setText(text);
@@ -1342,6 +1371,22 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				});
 				scheduleRefreshViewer();
 			}
+		} else if (property.equals(PreferenceConstants.GROUP_FIELD)
+				|| property.equals(PreferenceConstants.SORT_ORDER)) {
+			// changed outside the view (e.g. Restore Defaults on its preference
+			// page); the Group By / Sort By buttons already regrouped themselves,
+			// so only act when the stored value is not the one last applied
+			WaitUtils.asyncExec(() -> {
+				Control c = viewer.getViewer() == null ? null : viewer.getViewer().getControl();
+				if (c == null || c.isDisposed())
+					return;
+				IPersistentPreferenceStore s = getPresentaionPreferenceStore();
+				if (s.getString(PreferenceConstants.GROUP_FIELD).equals(syncedGroupPref)
+						&& s.getString(PreferenceConstants.SORT_ORDER).equals(syncedSortPref))
+					return;
+				reGroup();
+				syncToolbarActionState();
+			});
 		} else if (property.equals(PreferenceConstants.SHOW_GRID)) {
 			scheduleRefreshViewer();
 		} else if (property.equals(PreferenceConstants.LOCAL_SHOW_QUICKFILTER)) {
@@ -1531,6 +1576,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		IPersistentPreferenceStore viewSettings = getPresentaionPreferenceStore();
 		String fields = viewSettings.getString(PreferenceConstants.GROUP_FIELD);
 		String sortStr = viewSettings.getString(PreferenceConstants.SORT_ORDER);
+		syncedGroupPref = fields;
+		syncedSortPref = sortStr;
 		// The plain TABLE view is a flat list and never groups. The grouping /
 		// sort prefs are shared with the tree / split / gallery views, so a
 		// grouping chosen there bleeds in here and reorders the table (an

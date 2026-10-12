@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Prices</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Prices</h1>
+
+<p>ManaDesk shows card prices from two stores, both coming with the Scryfall card data:</p>
+<ul>
+<li><b>TCGplayer</b>, in US dollars;</li>
+<li><b>Cardmarket</b>, in euros.</li>
+</ul>
+<p>Each has non-foil and foil prices (and etched where it exists). Prices are refreshed when you
+<a href="update.html">update the card database</a>.</p>
+
+<h2>Choosing the price source</h2>
+<p>In <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>, <i>Card prices from</i>:
+TCGplayer or Cardmarket. The default depends on where you live. Prices are shown in that store's currency.</p>
+<p class="shot"><img src="../images/prices_prefs.png" alt="Screenshot: the ManaDesk preferences page"></p>
+
+<h2>Where prices appear</h2>
+<table>
+<tr><th>Where</th><th>What</th></tr>
+<tr><td>Card Info</td><td>Both stores' prices, non-foil and foil, with a link to the card's page in each store.</td></tr>
+<tr><td><b>SPrice</b> column</td><td>The store price of the card, for its finish (foil copies get the foil price).</td></tr>
+<tr><td><b>User Price</b> column</td><td>Your own price: what you paid, or what the card is worth to you. You type it in
+(Edit Card, or click the cell); imports can fill it too.</td></tr>
+<tr><td>Group totals, deck Info tab, Collector</td><td>The value of a group, a deck or a set.</td></tr>
+<tr><td>Buyer</td><td>What the cards you need will cost (see <a href="../plan/buyer.html">Buyer</a>).</td></tr>
+</table>
+
+<div class="note">Prices are estimates from the stores' data at the time of your last database update; the
+actual price in the store may differ.</div>
+
+<p class="seealso">See also: <a href="update.html">Updating the card database</a> &middot;
+<a href="../reference/columns.html">Columns reference</a></p>
+</body>
+</html>

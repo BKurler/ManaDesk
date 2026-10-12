@@ -1,0 +1,96 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Searching and filtering</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Searching and filtering</h1>
+
+<p>There are three ways to find cards in a list, from the quickest to the most complete:</p>
+<ol>
+<li><a href="#find">Find</a> &mdash; jump to a card in the list without hiding the others.</li>
+<li><a href="#quick">The quick filter bar</a> &mdash; filter by name, type or set in one click.</li>
+<li><a href="#dialog">The filter dialog</a> &mdash; filter by anything: colors, mana value, rules text,
+abilities, legality, condition...</li>
+</ol>
+
+<h2 id="find">Find</h2>
+<p>Click <b>Find...</b> (the magnifier in the view's toolbar). A find bar opens with a <i>search...</i> box:
+type a name, and ManaDesk selects the first card that matches. Use the up and down arrows (<b>Previous</b> and <b>Next</b>) to go
+through the others. Find does not hide anything.</p>
+<p class="shot"><img src="../images/find_bar.png" alt="Screenshot: the find bar"></p>
+<ul>
+<li><b>W</b> (Whole word) matches whole words only. Find is not case-sensitive.</li>
+<li>At the end of the list, Find starts again from the top and says <i>Wrap around</i>; <i>String not found</i> means nothing matches.</li>
+<li>Use <code>*</code> as a wildcard, for example <code>Jace*</code>.</li>
+<li>Find starts from the selected card, so you can select a card by hand and search again from there.</li>
+</ul>
+
+<h2 id="quick">The quick filter bar</h2>
+<p>The quick filter bar sits above the list. To show or hide it in a view, check or uncheck
+<i>Show quick filter</i> in that view's page under
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; View: ...</span>.</p>
+<p class="shot"><img src="../images/quick_filter.png" alt="Screenshot: the quick filter bar in My Cards"></p>
+<ul>
+<li><b>Name filter</b> &mdash; only cards whose name contains the text (<code>*</code> and <code>?</code> work).</li>
+<li><b>Type filter</b> &mdash; creatures, instants, lands...</li>
+<li><b>Set filter</b> &mdash; one set (start typing its name).</li>
+<li>In <b>My Cards</b>: <b>Own</b> / <b>Virtual</b> (cards you own or not), and <b>Decks</b> /
+<b>Collections</b> (where they are).</li>
+</ul>
+<p>When some cards are hidden by a filter, the list says so. Use <b>Reset Filter</b> to show everything again.</p>
+
+<h2 id="dialog">The filter dialog</h2>
+<p>Click <b>Filter...</b> in the view's toolbar, or press <kbd>Ctrl</kbd>+<kbd>6</kbd>. The dialog has tabs:</p>
+
+<h3>Main Filter</h3>
+<p class="shot"><img src="../images/filter_dialog_basic.png" alt="Screenshot: Filter dialog, Main Filter tab"></p>
+<ul>
+<li><b>Types</b>, <b>Rarity</b>, <b>Colors</b> &mdash; check what you want to see. In Colors:
+<b>Mono-Color</b> and <b>Multi-Color</b> keep one-color or several-color cards; <b>Hybrid</b> keeps cards
+with hybrid mana; <b>And</b> asks for all the checked colors instead of any of them; <b>Only</b> excludes
+the other colors; <b>Identity</b> and <b>Extended Identity</b> match the checked colors against the card's
+color identity or extended color identity instead of its color (see
+<a href="../reference/columns.html#identity">Color identity</a>).</li>
+<li><b>Numbers</b> &mdash; mana value, power, toughness, count, prices, collector number... Each can be a
+single value with a comparison (<code>&gt;=</code>, <code>=</code>...) or a <b>range</b> (from... to...).</li>
+<li><b>Finish</b> &mdash; non-foil, foil, etched.</li>
+<li>For your own cards: <b>Condition</b>, <b>Ownership</b> (own / virtual) and <b>Proxy</b>.</li>
+<li><b>Text search</b> &mdash; name, type line, rules text, artist, your comment, special tags, legality,
+language. As you type in the <b>Text</b> field, it suggests keyword abilities (Flying, Deathtouch,
+Cascade...); the <b>Type</b> field suggests card types and the <b>Special</b> field your tags.</li>
+</ul>
+<p class="shot"><img src="../images/filter_dialog_ranges.png" alt="Screenshot: Filter dialog with ranges filled in"></p>
+<p class="shot"><img src="../images/filter_dialog_text.png" alt="Screenshot: Filter dialog, Text field with ability suggestions"></p>
+<p>The <b>Search Tips</b> panel at the bottom of the dialog explains the search syntax for the field you
+are in. It is also in <a href="../reference/syntax.html">Filter and search syntax</a>.</p>
+
+<h3>Set Filter</h3>
+<p>Choose which sets to show. Type in the box to find a set; the label shows how many sets are
+selected. <i>Only show the card from the latest set</i> keeps a single printing per card.</p>
+<p class="shot"><img src="../images/filter_dialog_sets.png" alt="Screenshot: Filter dialog, Set Filter tab"></p>
+<p>Set lists are in alphabetical order. To list them by release date (oldest first) instead, check
+<i>List sets by release date</i> in <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>.</p>
+
+<h3>Location Filter (My Cards)</h3>
+<p>Only show the cards that are in the decks and collections you check.</p>
+
+<h3>Save/Load Filter</h3>
+<p>Save the current filter under a name, and load it again later.</p>
+
+<p>Use <b>Apply</b> to see the result without closing the dialog, and <b>Restore All Defaults</b> to clear
+every tab.</p>
+
+<p class="seealso">See also: <a href="../reference/syntax.html">Filter and search syntax</a> &middot;
+<a href="browse.html">Browsing the card database</a></p>
+</body>
+</html>

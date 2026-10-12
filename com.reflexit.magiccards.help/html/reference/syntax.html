@@ -1,0 +1,68 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Filter and search syntax</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Filter and search syntax</h1>
+
+<p>The text fields of the <a href="../find/filter.html">filter dialog</a> understand a small search
+language. The same tips appear in the dialog's <b>Search Tips</b> panel.</p>
+
+<h2>Words and phrases</h2>
+<table>
+<tr><th>Type</th><th>Finds</th></tr>
+<tr><td><code>draw card</code></td><td>Both words, in any order (words are combined with AND).</td></tr>
+<tr><td><code>"draw a card"</code></td><td>That exact phrase (not case-sensitive).</td></tr>
+<tr><td><code>-flying</code>, <code>-"enters tapped"</code></td><td>Excludes cards with that word or phrase.</td></tr>
+</table>
+
+<h2>Name: wildcards</h2>
+<table>
+<tr><th>Type</th><th>Finds</th></tr>
+<tr><td><code>Jace*</code></td><td>Every name starting with "Jace".</td></tr>
+<tr><td><code>*Blade</code></td><td>Every name ending with "Blade".</td></tr>
+<tr><td><code>Bo?k</code></td><td>"Book", "Bork"... (<code>?</code> is exactly one character).</td></tr>
+</table>
+<p>A name with <code>*</code> or <code>?</code> is matched as a pattern: AND, quotes and <code>-</code> don't apply to it.
+The Find box and the quick filter's name box accept wildcards too.</p>
+
+<h2>Type</h2>
+<p>The whole type line is searched: <code>Wizard</code>, <code>Instant</code>, <code>Legendary Creature</code>.
+Double-faced cards match on both faces.</p>
+
+<h2>Rules text</h2>
+<table>
+<tr><th>Type</th><th>Finds</th></tr>
+<tr><td><code>[flying]</code></td><td>Cards that really have the ability Flying &mdash; not cards that only mention it
+(for example in Reach's reminder text). The Text field suggests ability names as you type.</td></tr>
+<tr><td><code>{T}</code>, <code>{G}</code>, <code>{2/W}</code>...</td><td>A symbol, exactly as the rules text writes it.</td></tr>
+</table>
+<p>Symbols: colors <code>{W} {U} {B} {R} {G}</code>, colorless <code>{C}</code>, snow <code>{S}</code>,
+energy <code>{E}</code>, <code>{X}</code>, generic <code>{0}</code> to <code>{20}</code>, tap and untap
+<code>{T} {Q}</code>, hybrid <code>{W/U}</code>, two-generic hybrid <code>{2/W}</code>, Phyrexian <code>{W/P}</code>.</p>
+
+<h2>Other fields</h2>
+<ul>
+<li><b>Artist</b> &mdash; the artist of the printing (reprints can have another artist).</li>
+<li><b>Comment</b> &mdash; your own notes.</li>
+<li><b>Special</b> &mdash; your special tags, for example <code>signed</code>. Finish, condition and proxy have
+their own filters.</li>
+</ul>
+
+<h2>Numbers</h2>
+<p>Number fields (mana value, power, toughness, count, prices...) take a comparison and a value
+(<code>&gt;=</code> 3), or a range (from 2 to 4).</p>
+
+<p class="seealso">See also: <a href="../find/filter.html">Searching and filtering</a></p>
+</body>
+</html>

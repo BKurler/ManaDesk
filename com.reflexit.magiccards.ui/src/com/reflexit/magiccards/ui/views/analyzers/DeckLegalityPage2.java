@@ -31,6 +31,14 @@
  *                         pink as the other errors) in the Legality column,
  *                         with the reason in the Error column; their group
  *                         (Main Deck) turns pink too; the format combo says so.
+ *     Rémi Dutil (2026) - proxies: the Main Deck row reads "Using N proxies"
+ *                         (main deck + sideboard - the sideboard row is usually
+ *                         collapsed) and each proxy card reads "Proxy", both in
+ *                         the Error column on yellow when there is no real
+ *                         error - legal, but not for sanctioned play; the
+ *                         status line says it too
+ *     Rémi Dutil (2026) - the status line is colored: red when the deck is not
+ *                         legal, yellow when legal with proxies, green when legal
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -64,6 +72,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.legality.CommanderFormat;
 import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Legality;
 import com.reflexit.magiccards.core.model.LegalityMap;
@@ -327,6 +336,38 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		return n;
 	}
 
+	/**
+	 * Proxy copies to report on this row: on the Main Deck group, all the deck's
+	 * proxies (main deck + sideboard); 0 on the Sideboard group and on cards.
+	 */
+	private int proxiesIn(Object element) {
+		if (!(element instanceof CardGroup) || fstore == null)
+			return 0;
+		for (IMagicCard c : ((CardGroup) element).expand()) {
+			if (c instanceof MagicCardPhysical && ((MagicCardPhysical) c).isSideboard())
+				return 0; // the Sideboard group
+			break;
+		}
+		int n = 0;
+		for (Object c : fstore.getCardStore())
+			if (isProxyCard(c))
+				n += ((MagicCardPhysical) c).getCount();
+		return n;
+	}
+
+	private static boolean isProxyCard(Object element) {
+		return element instanceof MagicCardPhysical && ((MagicCardPhysical) element).isProxy();
+	}
+
+	/** A proxy warning (not an error) on this row: the Main Deck total or a proxy card. */
+	private boolean hasProxyWarning(Object element) {
+		return proxiesIn(element) > 0 || isProxyCard(element);
+	}
+
+	private static String proxyWarning(int n) {
+		return "Using " + n + " prox" + (n == 1 ? "y" : "ies");
+	}
+
 	public void setFStore() {
 		if (getCardStore() == null)
 			return;
@@ -454,8 +495,28 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 					if (n > 0)
 						err = n + " card" + (n == 1 ? "" : "s") + " outside the commander's colors (" + identityColors
 								+ ")";
+					if (err == null && proxiesIn(element) > 0)
+						err = proxyWarning(proxiesIn(element)); // a warning, not an error
+					else if (err == null && isProxyCard(element))
+						err = "Proxy";
 					return err;
 				}
+				return super.getToolTipText(element);
+			}
+
+			@Override
+			public Color getBackground(Object element) {
+				if (element instanceof IMagicCard && hasProxyWarning(element)
+						&& format.validateCardOrGroup((IMagicCard) element) == null && identityInvalidIn(element) == 0
+						&& !isIdentityInvalid(element))
+					return MagicUIActivator.COLOR_YELLOWISH;
+				return super.getBackground(element);
+			}
+
+			@Override
+			public String getToolTipText(Object element) {
+				if (hasProxyWarning(element))
+					return "Legal for the format's card pool, but proxies are not allowed in sanctioned play";
 				return super.getToolTipText(element);
 			}
 		});
@@ -481,11 +542,30 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 		return f.name() + " - " + legality.getLabel();
 	}
 
+	/** Set with each {@link #getStatusMessage()}: red / yellow / green. */
+	private volatile Color statusBackground;
+
+	@Override
+	protected Color getStatusBackground() {
+		return statusBackground;
+	}
+
 	@Override
 	public String getStatusMessage() {
 		if (fstore == null || format == null || stats == null)
 			return "";
 		String err = format.validateLegality((ICardStore) fstore.getCardStore(), stats);
+		if (err == null && !identityOutside.isEmpty() && format instanceof CommanderFormat)
+			err = IDENTITY_INVALID;
+		int proxies = 0;
+		for (Object c : fstore.getCardStore())
+			if (c instanceof MagicCardPhysical && ((MagicCardPhysical) c).isProxy())
+				proxies += ((MagicCardPhysical) c).getCount();
+		statusBackground = err != null ? MagicUIActivator.COLOR_PINKINSH
+				: proxies > 0 ? MagicUIActivator.COLOR_YELLOWISH : MagicUIActivator.COLOR_GREENISH;
+		if (err == null && proxies > 0)
+			return "Format: " + format.name() + " is legal - " + proxyWarning(proxies).toLowerCase()
+					+ " (not allowed in sanctioned play)";
 		if (err == null)
 			return "Format: " + format.name() + " is legal";
 		else

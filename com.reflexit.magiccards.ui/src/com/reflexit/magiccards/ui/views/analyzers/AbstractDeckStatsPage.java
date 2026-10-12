@@ -102,7 +102,7 @@ public abstract class AbstractDeckStatsPage extends AbstractDeckListPage {
 				int count = getCount(element);
 				final int total = ((CardGroup) stats.getInput()).getCount();
 				float per = total == 0 ? 0 : (count / (float) total);
-				return new DecimalFormat("00.0%").format(per);
+				return new DecimalFormat("0.0%").format(per);
 			}
 
 			@Override

@@ -1,0 +1,95 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Decks and collections</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Decks and collections</h1>
+
+<p>ManaDesk keeps your cards in two kinds of lists: <b>collections</b> and <b>decks</b>. Both appear in
+the Card Navigator, under <b>Collections</b> and <b>Decks</b>, and you can organize each in folders.</p>
+
+<h2>Collections</h2>
+<p>A collection is a set of cards you keep together: a binder, a box, your cards for trade, a wish
+list... Each collection has a <b>type</b>:</p>
+<table>
+<tr><th>Type</th><th>For</th><th>Cards in it are</th></tr>
+<tr><td><b>Standard</b></td><td>Cards you own &mdash; genuine or proxy.</td><td>Own</td></tr>
+<tr><td><b>For Trade</b></td><td>Cards you own and offer for trade.</td><td>Own</td></tr>
+<tr><td><b>Wishlist/To Print</b></td><td>Cards to buy, or proxies to print &mdash; cards you don't own
+yet.</td><td>Virtual</td></tr>
+</table>
+<p>You choose the type when you create the collection. Later, in its properties, you can switch between
+Standard and For Trade at any time, but a collection with cards in it can't move between owned and
+virtual: a Wishlist/To Print collection stays Wishlist/To Print, and a Standard or For Trade collection
+never becomes one. Only an empty collection can change to or from Wishlist/To Print. To turn wished
+cards into owned ones, move them to a Standard collection once bought (see
+<a href="move_copy.html">Moving, copying and splitting</a>).</p>
+
+<p class="shot"><img src="../images/edit_collection_properties.png" alt="Screenshot: Edit Properties of a collection"></p>
+
+<h3 id="main">The Main collection</h3>
+<p>Every workspace has a collection called <b>Main</b>. It is always there, always a Standard
+collection, always sorted and writable, and it can't be renamed or deleted. It is where cards go by
+default (for example with <kbd>Insert</kbd> or <b>Add to Default Collection</b>), and where the owned
+cards of a deleted deck go when you choose to <i>disband</i> it.</p>
+<p class="shot"><img src="../images/edit_main_collection.png" alt="Screenshot: Edit Properties of the Main collection"></p>
+
+<h2>Decks</h2>
+<p>A deck is a list of the cards to play. Decks are <b>virtual</b>: a deck lists cards, while the copies
+you own stay in your collections. This is what lets the <a href="../plan/buyer.html">Buyer</a> and the
+<a href="../plan/proxier.html">Proxier</a> tell you which cards a deck still needs.</p>
+<p>A deck can also have a <b>sideboard</b> and an <b>extra list</b> (tokens, emblems, markers). See
+<a href="../decks/sideboard_extra.html">Sideboard, extra list and accessories</a>.</p>
+<div class="note">Older workspaces may have decks that are not virtual. They keep working as before.
+You can make such a deck virtual in its properties, but a virtual deck can't be made non-virtual.</div>
+
+<h2 id="ownership">Own and virtual cards</h2>
+<p>Each card in a list is either <b>Own</b> (you have it) or <b>virtual</b> (you don't). The <b>O</b>
+column shows <code>O</code> or <code>V</code>.</p>
+<p>A card's ownership follows its list: a card is Own in a Standard or For Trade collection, and virtual
+in a deck or a Wishlist/To Print collection. You don't need to set it card by card:</p>
+<ul>
+<li>Moving or copying a card into a list gives it that list's ownership.</li>
+<li>A wished card that you bought (or a proxy you printed) becomes Own when you move it to a Standard
+collection &mdash; ManaDesk asks you to confirm. See <a href="../plan/wishlist.html">From wishlist to collection</a>.</li>
+<li>Importing into a list also follows the list (see <a href="../transfer/import.html">Importing cards</a>).</li>
+</ul>
+<p>Cards from older workspaces may not match their list. They keep their value, and you can only change
+them to match the list.</p>
+
+<h2>Folders</h2>
+<p>Create folders under Decks or Collections to keep things tidy: <i>Commander</i>, <i>Binders</i>,
+<i>Old decks</i>... Right-click a folder in the Card Navigator and choose <b>New Folder...</b>.</p>
+
+<h2>Properties</h2>
+<p>Right-click a deck or collection and choose <b>Edit Properties...</b>:</p>
+<table>
+<tr><th>Property</th><th>Applies to</th><th>Meaning</th></tr>
+<tr><td>Name</td><td>Both</td><td>Rename the list (its sideboard and extra list follow).</td></tr>
+<tr><td>Collection Type</td><td>Collections</td><td>Standard, For Trade or Wishlist/To Print (Wishlist/To Print
+only while the collection is empty).</td></tr>
+<tr><td>Read Only</td><td>Both</td><td>Lock the list against changes.</td></tr>
+<tr><td>Unsorted</td><td>Standard and For Trade collections</td><td>Keep the manual order (see <a href="unsorted.html">Unsorted collections</a>).</td></tr>
+<tr><td>Virtual</td><td>Older decks</td><td>Make a non-virtual deck virtual.</td></tr>
+<tr><td>Boxed</td><td>Decks</td><td>The deck is physically put together (see <a href="../decks/boxed.html">Boxed decks</a>).</td></tr>
+<tr><td>Default Format</td><td>Decks</td><td>The format its legality is checked against.</td></tr>
+<tr><td>Sideboard / Extra list</td><td>Decks</td><td>Create the deck's sideboard or extra list.</td></tr>
+<tr><td>Description</td><td>Both</td><td>Your notes.</td></tr>
+</table>
+<p>The colored dots on the icons show these statuses: see <a href="../start/window.html#markers">Status markers</a>.</p>
+
+<p class="seealso">See also: <a href="create_collection.html">Creating collections and folders</a> &middot;
+<a href="move_copy.html">Moving, copying and splitting</a> &middot;
+<a href="../decks/create_deck.html">Creating a deck</a></p>
+</body>
+</html>

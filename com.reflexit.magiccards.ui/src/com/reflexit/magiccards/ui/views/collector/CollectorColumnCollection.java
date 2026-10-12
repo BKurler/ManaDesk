@@ -24,6 +24,7 @@
  *                         instead of a separate inline GenColumn(...) each -
  *                         so their tuned widths apply here too, not just in
  *                         the other 6 regular views
+ *     Rémi Dutil (2026) - Own Count / Own Unique follow "Count Proxies"
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -44,9 +45,7 @@ import com.reflexit.magiccards.ui.views.columns.LanguageColumn;
 import com.reflexit.magiccards.ui.views.columns.LegalityColumn;
 import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 import com.reflexit.magiccards.ui.views.columns.OracleTextColumn;
-import com.reflexit.magiccards.ui.views.columns.OwnCountColumn;
 import com.reflexit.magiccards.ui.views.columns.OwnTotalCountColumn;
-import com.reflexit.magiccards.ui.views.columns.OwnUniqueColumn;
 import com.reflexit.magiccards.ui.views.columns.PowerColumn;
 import com.reflexit.magiccards.ui.views.columns.ReleaseDateColumn;
 import com.reflexit.magiccards.ui.views.columns.TextColumn;
@@ -72,8 +71,8 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(createGroupColumn());              // "Name" - structural
 		columns.add(new ProgressColumn());
 		columns.add(new Progress4Column());
-		columns.add(new OwnCountColumn());
-		columns.add(new OwnUniqueColumn());
+		columns.add(new CollectorOwnCountColumn());   // proxies only with "Count Proxies"
+		columns.add(new CollectorOwnUniqueColumn());  // proxies only with "Count Proxies"
 		columns.add(new OwnTotalCountColumn());
 		columns.add(createSetColumn());                // "Set"
 		columns.add(new GenColumn(MagicCardField.RARITY, "Rarity"));

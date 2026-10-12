@@ -6,19 +6,18 @@
  *                         Deck view's - they don't want to display the same
  *                         things and a change to one was silently bleeding
  *                         into the other
+ *     Rémi Dutil (2026) - extends CardViewPreferencePage: Restore Defaults also resets Group By / sort
  */
 package com.reflexit.magiccards.ui.preferences;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
 
 import com.reflexit.magiccards.ui.preferences.feditors.ColumnFieldEditor;
 import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
 import com.reflexit.magiccards.ui.views.lib.DeckColumnCollection;
 
-public class CollectionViewPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class CollectionViewPreferencePage extends CardViewPreferencePage {
 	public static String PPID = CollectionViewPreferencePage.class.getName();
 	public CollectionViewPreferencePage() {
 		super(GRID);

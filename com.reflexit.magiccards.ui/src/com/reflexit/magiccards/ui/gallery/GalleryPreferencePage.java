@@ -1,14 +1,17 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - extends CardViewPreferencePage: Restore Defaults also resets Group By / sort
+ */
 package com.reflexit.magiccards.ui.gallery;
 
 import org.eclipse.jface.preference.BooleanFieldEditor;
-import org.eclipse.jface.preference.FieldEditorPreferencePage;
 import org.eclipse.ui.IWorkbench;
-import org.eclipse.ui.IWorkbenchPreferencePage;
 
+import com.reflexit.magiccards.ui.preferences.CardViewPreferencePage;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
 
-public class GalleryPreferencePage extends FieldEditorPreferencePage implements IWorkbenchPreferencePage {
+public class GalleryPreferencePage extends CardViewPreferencePage {
 	public GalleryPreferencePage() {
 		super(GRID);
 		setPreferenceStore(PreferenceInitializer.getLocalStore(getId()));

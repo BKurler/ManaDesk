@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Moving, copying and splitting</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Moving, copying and splitting</h1>
+
+<h2>Move or copy cards</h2>
+<p>Select cards in a deck, a collection or My Cards, then right-click:</p>
+<ul>
+<li><b>Move to</b> &mdash; the cards leave their list and go to the one you pick.</li>
+<li><b>Copy to</b> &mdash; new copies are added to the list you pick; the originals stay.</li>
+</ul>
+<p>You can also drag cards onto a deck or collection tab, or onto one in the Card Navigator: dragging
+moves them, and holding <kbd>Ctrl</kbd> while dropping copies them.</p>
+<p class="shot"><img src="../images/move_to_menu.png" alt="Screenshot: the Move to menu with a greyed destination"></p>
+<p>A destination is greyed when the move or copy isn't allowed, with the reason next to it (the list is
+read-only, it is the current list, or the ownership rules below don't allow it).</p>
+
+<h2 id="rules">What goes where</h2>
+<p>A card's ownership follows its list (see <a href="concepts.html#ownership">Own and virtual cards</a>):</p>
+<table>
+<tr><th></th><th>to a Standard / For Trade collection</th><th>to a deck or a Wishlist/To Print collection</th></tr>
+<tr><td><b>Move</b> an owned card</td><td>Allowed</td><td><b>Not allowed</b> &mdash; copy it instead</td></tr>
+<tr><td><b>Move</b> a virtual card</td><td>Allowed &mdash; the card <b>becomes Own</b>, after a confirmation</td><td>Allowed</td></tr>
+<tr><td><b>Copy</b> an owned card</td><td><b>Not allowed</b> &mdash; it would be counted twice; move it instead</td><td>Allowed &mdash; the copy is virtual</td></tr>
+<tr><td><b>Copy</b> a virtual card</td><td>Allowed &mdash; the copy is Own, after a confirmation</td><td>Allowed</td></tr>
+</table>
+
+<h3>"Virtual Cards Become Own"</h3>
+<p>Moving (or copying) virtual cards into a Standard or For Trade collection means you now own them
+&mdash; you bought the card, or printed the proxy. ManaDesk asks first:</p>
+<p class="shot"><img src="../images/become_own_confirm.png" alt="Screenshot: the Virtual Cards Become Own confirmation"></p>
+<p>This is the normal way to turn a wished card into an owned one. See
+<a href="../plan/wishlist.html">From wishlist to collection</a>.</p>
+
+<h2>Split a pile</h2>
+<p>A row stands for a <i>pile</i> of identical copies (Count 4 = four copies).</p>
+<ul>
+<li><b>Split Pile...</b> &mdash; cut the pile in two rows, for example to give two of the four copies another
+condition.</li>
+<li><b>Split &amp; move to</b> &mdash; move only some copies of the pile to another list. The dialog asks how
+many move and how many stay.</li>
+</ul>
+<p class="shot"><img src="../images/split_dialog.png" alt="Screenshot: the Split &amp; move dialog"></p>
+<p>Split &amp; move follows the same rules as a move, including the confirmation.</p>
+
+<h2 id="location">Changing the Location column</h2>
+<p>In a list with the <b>Location</b> column, click a card's location to move it. The picker only lists
+the allowed destinations; check <i>Include sideboards and extra lists</i> to see those too.</p>
+<p class="shot"><img src="../images/location_picker.png" alt="Screenshot: the location picker"></p>
+
+<h2 id="active">The active deck or collection</h2>
+<p>The deck or collection you opened (activated) last is the <b>active</b> one; its name shows
+<i>(Active)</i>. Right-click a list in the Card Navigator and choose <b>Open (Activate)</b> to make it active.
+Then, from any list:</p>
+<table>
+<tr><th>Shortcut</th><th>Action</th></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>D</kbd></td><td>Copy the selected cards to the active list.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd>, then <kbd>A</kbd></td><td>Move the selected cards to the active list.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd>, then <kbd>1</kbd> to <kbd>4</kbd></td><td>Move that many copies.</td></tr>
+<tr><td><kbd>Ctrl</kbd>+<kbd>T</kbd>, then <kbd>/</kbd></td><td>Move, asking how many copies.</td></tr>
+</table>
+
+<p class="seealso">See also: <a href="concepts.html">Decks and collections</a> &middot;
+<a href="../plan/wishlist.html">From wishlist to collection</a></p>
+</body>
+</html>

@@ -518,7 +518,7 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		boolean srcRO = isSourceReadOnly();
 		this.split.setEnabled(!srcRO);
 		this.edit.setEnabled(!srcRO);
-		manager.add(this.actionCopy);
+		// no Copy here: the list control already adds the Copy / Paste pair
 		manager.add(this.moveToDeckMenu);
 		manager.add(this.splitMoveToDeckMenu);
 		manager.add(this.addToDeck);

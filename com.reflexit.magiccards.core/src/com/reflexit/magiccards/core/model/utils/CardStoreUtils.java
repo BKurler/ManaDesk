@@ -273,7 +273,7 @@ public final class CardStoreUtils {
 	}
 
 	public static ICardGroup buildSpellColorGroups(Iterable store) {
-		CardGroup colorNode = new CardGroup(MagicCardField.COST, "Colour");
+		CardGroup colorNode = new CardGroup(MagicCardField.COST, "Color");
 		for (Object element : store) {
 			IMagicCard elem = (IMagicCard) element;
 			if (isLand(elem))

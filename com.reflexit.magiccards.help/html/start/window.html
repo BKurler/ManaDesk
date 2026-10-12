@@ -1,0 +1,88 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>The ManaDesk window</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>The ManaDesk window</h1>
+
+<p>The ManaDesk window is made of <b>views</b>. Each view shows one thing (a deck, the card database,
+the selected card...), and views are grouped in zones, as tabs.</p>
+
+<p class="shot"><img src="../images/window_overview.png" alt="Screenshot: the ManaDesk window with all its zones"></p>
+
+<h2>The zones</h2>
+<table>
+<tr><th>Zone</th><th>Views</th><th>What it is for</th></tr>
+<tr><td>Left</td><td><a href="../find/card_details.html">Card Info</a></td>
+<td>The selected card: image, text, prices, legality.</td></tr>
+<tr><td>Top center</td><td>Your <a href="../decks/deck_view.html">decks and collections</a></td>
+<td>Each open deck or collection gets its own tab here.</td></tr>
+<tr><td>Center</td><td><a href="../find/browse.html">Scryfall Database</a>,
+<a href="../collection/my_cards.html">My Cards</a>, <a href="../collection/collector.html">Collector</a>,
+<a href="../find/gallery.html">Gallery</a>, <a href="../plan/proxier.html">Proxier</a>,
+<a href="../plan/buyer.html">Buyer</a></td>
+<td>The main lists: all cards, all your cards, set completion, what to print and buy.</td></tr>
+<tr><td>Top right</td><td>Card Navigator</td>
+<td>The tree of your decks, collections and folders. Double-click to open one.</td></tr>
+<tr><td>Bottom right</td><td><a href="../find/card_details.html#rulings">Rulings</a>,
+<a href="../find/card_details.html#printings">Printings</a>,
+<a href="../find/card_details.html#instances">Instances</a></td>
+<td>More about the selected card: its rulings, all its printings, and where your copies are.</td></tr>
+</table>
+
+<p>Every ManaDesk view always opens in its zone. If you drag a view somewhere else, it goes back to
+its zone the next time you start ManaDesk.</p>
+
+<div class="tip">Is the window a mess? Use <span class="menu">Window &gt; Reset Perspective</span> to put
+every view back in its place.</div>
+
+<h2>The Card Navigator</h2>
+<p>The Card Navigator shows <b>My Cards</b>, with two folders: <b>Decks</b> and <b>Collections</b>.
+You can create sub-folders in each. Right-click to create, open, rename or delete a deck, a
+collection or a folder.</p>
+
+<h3 id="markers">Status markers</h3>
+<p>Small colored dots on the icons of decks and collections (in the Card Navigator, on the tabs and in
+the dialogs) show their status at a glance:</p>
+<p class="shot"><img src="../images/status_markers.png" alt="Screenshot: Card Navigator with status markers"></p>
+<table>
+<tr><th>Marker</th><th>Meaning</th></tr>
+<tr><td><span class="dot" style="background:#286eeb"></span> Blue (bottom left)</td>
+<td><b>Virtual</b>: the list holds cards you don't own (decks, Wishlist/To Print collections).</td></tr>
+<tr><td><span class="dot" style="background:#d22d2d"></span> Red (bottom middle)</td>
+<td><b>Read-only</b>: the list is locked; it can't be changed until you unlock it.</td></tr>
+<tr><td><span class="dot" style="background:#2da546"></span> Green (bottom right)</td>
+<td><b>Unsorted</b>: a collection that keeps its manual order (see
+<a href="../collection/unsorted.html">Unsorted collections</a>).</td></tr>
+<tr><td><span class="dot" style="background:#000"></span> Black (top left)</td>
+<td><b>Boxed</b>: a deck you have physically put together (see <a href="../decks/boxed.html">Boxed decks</a>).</td></tr>
+</table>
+
+<h2>Card lists</h2>
+<p>Most views show cards in a list, and all lists work the same way: click a column header to sort,
+use <b>Group By</b> to group, the filter buttons to narrow the list, and right-click for the actions.
+See <a href="../find/browse.html">Browsing the card database</a> and
+<a href="../find/filter.html">Searching and filtering</a>.</p>
+
+<h2>Menus</h2>
+<ul>
+<li><span class="menu">File</span> &mdash; new decks and collections, export, card database update, backup.</li>
+<li><span class="menu">Window</span> &mdash; show a view, reset the window, preferences.</li>
+<li><span class="menu">Help</span> &mdash; this help, What's New, report a bug, support ManaDesk.</li>
+</ul>
+<p>The full list is in <a href="../reference/menus.html">Menus and commands</a>.</p>
+
+<p class="seealso">See also: <a href="../reference/views.html">Views reference</a> &middot;
+<a href="quick_tour.html">Quick tour</a></p>
+</body>
+</html>

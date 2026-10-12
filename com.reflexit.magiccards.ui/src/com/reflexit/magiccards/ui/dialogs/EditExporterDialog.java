@@ -70,7 +70,7 @@ public class EditExporterDialog extends MagicDialog {
 	protected void createBodyArea(Composite area1) {
 		getShell().setText(newexporter ? "New Exporter" : "Edit Exporter");
 		setTitle("Define Export Format");
-		setMessage("Define formatter ether by defining formatter string or using field separator.\n"
+		setMessage("Define the format either with a format string or using field separator.\n"
 				+ "Define fields and their order using 'Fields' input control.");
 		Composite area = new Composite(area1, SWT.NONE);
 		area.setLayout(new GridLayout(4, false));

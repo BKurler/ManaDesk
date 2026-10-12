@@ -1,67 +1,48 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
 <html>
 <head>
-	<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-	<title>Preferences</title>
+<meta charset="utf-8">
+<title>Preferences</title>
+<link rel="stylesheet" href="../help.css">
 </head>
-
 <body>
-<h1><a name="pref"/>Preferences</h1>
-Application preferences available from main menu-&gt;Window-&gt;Preferences.
-It contains the following pages:
-<ul>
-<li>General
-  <ul>
-  <li>Appearance - allow to change colors and font for some part</li>
-  <li>Network Connections - allow to set proxy configuration</li>
-  <li><a href="http://help.eclipse.org/ganymede/index.jsp?topic=/org.eclipse.platform.doc.user/concepts/accessibility/keyboardshortcuts.htm">Keys</a> - define key shortcuts for commands</li>
-  </ul>
-</li>
-<li>Help - allow to specify which tool to use to display help</li>
-<li>ManaDesk Preferences - Common Preferences 
-  <ul>
-  <li>Scryfall Database View Preferences - Preference page for <a href="views.html#viewmagicdb">Scryfall Database</a> view, see <a href="#columnpref">Column Layout Preference Page</a>.</li>
-  <li>My Cards View Preferences - Preference page for <a href="views.html#viewcol">Collection</a> view, see <a href="#columnpref">Column Layout Preference Page</a>.</li>
-  <li>Deck View Preferences - Preference page for a <a href="views.html#viewdeck">Deck</a> view, see <a href="#columnpref">Column Layout Preference Page</a>.</li>
-  <li>Collection View Preferences - Preference page for a Collection view, see <a href="#columnpref">Column Layout Preference Page</a>.</li>
-  <li><a href="#update">Update Scryfall Database</a></li>
-  </ul>
-</li>
-</ul>
+<h1>Preferences</h1>
 
-<h2><a name="commonpref"/>Common Preference Page</h2>
-<p>
-<img src="../screenshots/preferences/magic_prefs.png" alt="common preferences"/>
-</p>
-This pages control some general aspects of card organiser.
-<li> Load card graphics from the web when a card is selected - this controls if card images will be loaded from the web.
-To preserve traffic you may want to disable this.
-You won't see art of the cards in this case (unless they were cached previously),
-but you will still see card text, type and other parameters in the cards view.
-<p>
-There is no "work offline" setting: when the web is not accessible ManaDesk simply carries on with what it already
-has - cached card images and set symbols are shown, a card without a cached image shows an "image not available"
-picture, and actions that need the web (updating the card database, importing a deck from a website, rulings)
-tell you the web is not accessible instead of waiting.
-</p>
+<p>Open <span class="menu">Window &gt; Preferences</span>. ManaDesk's settings are under <b>ManaDesk
+Preferences</b>; the other pages are the standard ones of the window (appearance, keys...).</p>
 
-<h2><a name="columnpref"/>Column Layout Preference Page</h2>
-This preference allow to change order and visibility of columns in views.
-<p/>
-To change order select a column and use Up or Down buttons. <br/>
-To change visible
-check or uncheck the column (it is visible when checked).
-<p/>
-You also also do the same from the view itself: <br/> 
-To change order drag and drop columns by their header. <br/>
-To hide column grab right border of the header and move it until 
-it meets right border. <br>
-To unhide the column do opposite (if column is hiding between two other columns cursor would become double line instead of single line).
-<p/>
-See also <a href="views.html#columns">list of columns</a>.
-<h2><a name="update"/>Update Scryfall Database</h2>
-This pages allows to update your local database from gatherer web site.
-See <a href="../tasks/updatingdb.html">Updating Database</a>. 
+<h2>ManaDesk Preferences</h2>
+<p class="shot"><img src="../images/prices_prefs.png" alt="Screenshot: the ManaDesk preferences page"></p>
+<table>
+<tr><th>Setting</th><th>Meaning</th></tr>
+<tr><td>Check for new cards on startup</td><td>Look for newer card data when ManaDesk starts (see <a href="../database/update.html">Updating the card database</a>).</td></tr>
+<tr><td>Card prices from</td><td>TCGplayer (US$) or Cardmarket (&euro;) (see <a href="../database/prices.html">Prices</a>).</td></tr>
+<tr><td>Load card graphics from the web when a card is selected</td><td>Download card images as you select cards.</td></tr>
+<tr><td>Show grid lines in card tables</td><td>Lines between rows and columns.</td></tr>
+<tr><td>List sets by release date (oldest first) instead of alphabetically</td><td>The order of every list of sets.</td></tr>
+<tr><td>Show workspace selection dialog at startup</td><td>Ask which workspace to use at every start (see <a href="../data/workspace.html">Your workspace</a>).</td></tr>
+</table>
+
+<h2>Sub-pages</h2>
+<table>
+<tr><th>Page</th><th>Settings</th></tr>
+<tr><td>View: Scryfall Database, My Cards, Deck, Collection, Collector, Printings, Instances, Gallery</td>
+<td>For each view: the visible columns and their order, and whether to show the quick filter.
+<b>Restore Defaults</b> also puts the view's grouping and sort order back to their defaults. The Collector
+page also has Count Proxies and Count Finishes Separately.</td></tr>
+<tr><td>Card Export</td><td>Your custom export formats (see <a href="../transfer/custom_export.html">Custom export formats</a>).</td></tr>
+<tr><td>File Locations</td><td>Where backups are written (see <a href="../data/backup.html">Backups</a>).</td></tr>
+<tr><td>Custom Groups</td><td>Your own grouping combinations for the Group By menu.</td></tr>
+<tr><td>Web Favorites</td><td>The deck websites listed when importing from a website (see <a href="../transfer/import_website.html">Importing from a website</a>).</td></tr>
+</table>
+
+<p class="seealso">See also: <a href="menus.html">Menus and commands</a> &middot; <a href="columns.html">Columns</a></p>
 </body>
 </html>

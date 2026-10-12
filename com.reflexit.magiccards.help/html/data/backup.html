@@ -1,0 +1,45 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Backups</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Backups</h1>
+
+<p>A backup is a copy of your whole workspace &mdash; decks, collections, settings and card database &mdash;
+in a single <code>.zip</code> file named after its date and time.</p>
+
+<h2>Making a backup</h2>
+<ul>
+<li><b>By hand</b>: <span class="menu">File &gt; Backup</span>. It runs in the background.</li>
+<li><b>Automatically</b>: ManaDesk makes one before every <a href="../database/update.html">card database update</a>.</li>
+</ul>
+<p>Backups go to the <code>.backup</code> folder of your workspace, or to the folder set in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; File Locations</span>.</p>
+
+<div class="warn">A backup kept in the workspace is lost together with the computer. Keep your workspace on a
+synced drive (see <a href="sync.html">Cloud sync</a>), or copy the backups somewhere else from time to time.</div>
+
+<h2>Restoring a backup</h2>
+<ol>
+<li>Exit ManaDesk.</li>
+<li>Rename your current workspace folder (for example <code>ManaDeskWorkspace-old</code>), to keep it just in case.</li>
+<li>Unzip the backup into a new folder with the workspace's name.</li>
+<li>Start ManaDesk on that workspace.</li>
+</ol>
+<p>To get back a single deck or collection, open the zip file and copy just its file from
+<code>magiccards/Decks</code> or <code>magiccards/Collections</code> into the same place in your workspace,
+while ManaDesk is closed.</p>
+
+<p class="seealso">See also: <a href="workspace.html">Your workspace</a> &middot; <a href="sync.html">Cloud sync</a></p>
+</body>
+</html>

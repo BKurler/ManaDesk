@@ -1,48 +1,84 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!--
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - complete rewrite of the help (new structure, every
+ *                         feature since the fork); screenshots: SCREENSHOTS.md
+ *     Rémi Dutil (2026) - toc.html is generated from this file (ant target "toc",
+ *                         transform_toc.xsl), copyright header included
 -->
 <?NLS TYPE="org.eclipse.help.toc"?>
 
-<toc label="ManaDesk">
-   <topic label="Getting Started">
- 	<topic label="ManaDesk Overview"  href="html/gettingstarted/basic_tutorial.html"> 
-	</topic>
+<toc label="ManaDesk" topic="html/start/welcome.html">
+   <topic label="Getting Started" href="html/start/welcome.html">
+      <topic label="Welcome to ManaDesk" href="html/start/welcome.html"/>
+      <topic label="First Start" href="html/start/first_start.html"/>
+      <topic label="The ManaDesk Window" href="html/start/window.html"/>
+      <topic label="Quick Tour" href="html/start/quick_tour.html"/>
    </topic>
-   <topic label="Tasks">
-	<topic label="Browsing cards"  href="html/tasks/browsing.html"/>  
-	<topic label="Creating a new Deck"  href="html/tasks/creatingdeck.html#create_deck"/> 
-	<topic label="Populating a deck or collection manually" href="html/tasks/creatingdeck.html#populate_manual"/>
-	<topic label="Importing a deck or collection"  href="html/tasks/creatingdeck.html#import_deck"/> 
-	<topic label="Updating magic card Database"  href="html/tasks/updatingdb.html"/>
-	<topic label="Loading Online Prices"  href="html/tasks/loadingprices.html"/>
-	<topic label="Cloud sync and version control"  href="html/tasks/sync.html"/>
+   <topic label="Finding Cards" href="html/find/browse.html">
+      <topic label="Browsing the Card Database" href="html/find/browse.html"/>
+      <topic label="Searching and Filtering" href="html/find/filter.html"/>
+      <topic label="Card Details" href="html/find/card_details.html"/>
+      <topic label="The Gallery" href="html/find/gallery.html"/>
    </topic>
-    <topic label="Reference">
-	<topic label="Workbench"  href="html/reference/workbench.html"> 
-	    <topic label="Concepts" href="html/reference/workbench.html#concepts" />
-		<topic label="Main Menu" href="html/reference/workbench.html#menu" />
-		<topic label="New Menu" href="html/reference/workbench.html#new" />
-		<topic label="Commands" href="html/reference/commands.html" />    
-	</topic>
-	<topic label="Views"  href="html/reference/views.html">
-		<topic label="Scryfall Database" href="html/reference/views.html#viewmagicdb" />
-		<topic label="My Cards" href="html/reference/views.html#viewcol" />
-		<topic label="Collector" href="html/reference/views.html#viewcollector" />
-		<topic label="Deck" href="html/reference/views.html#viewdeck" /> 
-		<topic label="Card Info" href="html/reference/views.html#viewcard" /> 
-		<topic label="Card Navigator" href="html/reference/views.html#viewcardnav" /> 
-		<topic label="Printings" href="html/reference/views.html#viewprintings" /> 
-	</topic>
-	<topic label="Preferences"  href="html/reference/preferences.html"/>
+   <topic label="Your Collection" href="html/collection/concepts.html">
+      <topic label="Decks and Collections" href="html/collection/concepts.html"/>
+      <topic label="Creating Collections and Folders" href="html/collection/create_collection.html"/>
+      <topic label="Adding and Editing Cards" href="html/collection/edit_cards.html"/>
+      <topic label="Moving, Copying and Splitting" href="html/collection/move_copy.html"/>
+      <topic label="My Cards" href="html/collection/my_cards.html"/>
+      <topic label="Collector" href="html/collection/collector.html"/>
+      <topic label="Unsorted Collections" href="html/collection/unsorted.html"/>
    </topic>
-   <topic href="http://www.wizards.com/Magic/TCG/Article.aspx?x=magic/rules" label="Magic: The Gathering Rules Online">
+   <topic label="Building Decks" href="html/decks/create_deck.html">
+      <topic label="Creating a Deck" href="html/decks/create_deck.html"/>
+      <topic label="The Deck View" href="html/decks/deck_view.html"/>
+      <topic label="Formats and Legality" href="html/decks/legality.html"/>
+      <topic label="Sideboard, Extra List and Accessories" href="html/decks/sideboard_extra.html"/>
+      <topic label="Boxed Decks" href="html/decks/boxed.html"/>
    </topic>
-   <topic label="New and Noteworthy">
-      <topic label="New in 1.4.2" href="http://mtgbrowser.sourceforge.net/wiki/index.php/What_is_New_in_1.4.2"/>
-      <topic label="New in 1.4.1" href="http://mtgbrowser.sourceforge.net/wiki/index.php/What_is_New_in_1.4.1"/>
-      <topic label="New in 1.4.0" href="http://mtgbrowser.sourceforge.net/wiki/index.php/What_is_New_in_1.4.0"/>
-      <topic label="Full Change Log" href="http://mtgbrowser.sourceforge.net/wiki/index.php/Change_Log"/>
+   <topic label="Wishlists, Proxies and Buying" href="html/plan/wishlist.html">
+      <topic label="Wishlists and To-Print Lists" href="html/plan/wishlist.html"/>
+      <topic label="Proxies" href="html/plan/proxies.html"/>
+      <topic label="Proxier" href="html/plan/proxier.html"/>
+      <topic label="Buyer" href="html/plan/buyer.html"/>
    </topic>
+   <topic label="Importing and Exporting" href="html/transfer/import.html">
+      <topic label="Importing Cards" href="html/transfer/import.html"/>
+      <topic label="Importing from a Website" href="html/transfer/import_website.html"/>
+      <topic label="ManaBox" href="html/transfer/manabox.html"/>
+      <topic label="Exporting" href="html/transfer/export.html"/>
+      <topic label="Custom Export Formats" href="html/transfer/custom_export.html"/>
+   </topic>
+   <topic label="Card Database and Prices" href="html/database/update.html">
+      <topic label="Updating the Card Database" href="html/database/update.html"/>
+      <topic label="Prices" href="html/database/prices.html"/>
+   </topic>
+   <topic label="Workspace, Backups and Sync" href="html/data/workspace.html">
+      <topic label="Your Workspace" href="html/data/workspace.html"/>
+      <topic label="Backups" href="html/data/backup.html"/>
+      <topic label="Cloud Sync" href="html/data/sync.html"/>
+      <topic label="Software Updates" href="html/data/software_update.html"/>
+   </topic>
+   <topic label="Reference" href="html/reference/views.html">
+      <topic label="Views" href="html/reference/views.html"/>
+      <topic label="Columns" href="html/reference/columns.html"/>
+      <topic label="Menus and Commands" href="html/reference/menus.html"/>
+      <topic label="Preferences" href="html/reference/preferences.html"/>
+      <topic label="Filter and Search Syntax" href="html/reference/syntax.html"/>
+   </topic>
+   <topic label="Help and Support" href="html/support/faq.html">
+      <topic label="Troubleshooting and FAQ" href="html/support/faq.html"/>
+      <topic label="Report a Bug or Request a Feature" href="html/support/report.html"/>
+      <topic label="Supporting ManaDesk" href="html/support/support.html"/>
+   </topic>
+   <topic label="Magic: The Gathering Rules" href="html/support/rules.html"/>
+   <topic label="ManaDesk Releases" href="html/support/releases.html"/>
 </toc>

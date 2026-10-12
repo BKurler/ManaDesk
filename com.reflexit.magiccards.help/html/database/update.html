@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Updating the card database</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Updating the card database</h1>
+
+<p>ManaDesk's card database comes from <a href="https://scryfall.com" target="_blank">Scryfall</a>: every card, every
+printing, with images, rulings, legality and prices. Update it now and then to get the new sets, the
+latest legality changes and fresh prices.</p>
+
+<h2>Update Card Database</h2>
+<p>Choose <span class="menu">File &gt; Update Card Database</span> (also in the Scryfall Database view's
+menu).</p>
+<ul>
+<li>The update runs in the background, with its progress at the bottom of the window. You can keep
+working, or cancel it.</li>
+<li>A complete update takes about a minute.</li>
+<li>Before updating, ManaDesk makes a <b>backup</b> of your workspace (see <a href="../data/backup.html">Backups</a>).</li>
+<li>Your decks and collections are not changed: only the card data is refreshed.</li>
+</ul>
+<p class="shot"><img src="../images/db_update_progress.png" alt="Screenshot: the card database update in progress"></p>
+
+<h2>Check for Card Updates</h2>
+<p><span class="menu">File &gt; Check for Card Updates...</span> tells you whether Scryfall has newer data
+than yours. ManaDesk can also check at every start: <i>Check for new cards on startup</i> in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>.</p>
+
+<h2>Without internet: Import Card Database from File</h2>
+<p>On a computer without internet access:</p>
+<ol>
+<li>On another computer, go to <a href="https://scryfall.com/docs/api/bulk-data" target="_blank">Scryfall's bulk data page</a> and
+download the <b>Default Cards</b> file.</li>
+<li>Copy it to the offline computer.</li>
+<li>In ManaDesk, choose <span class="menu">File &gt; Import Card Database from File...</span> and pick the file
+(<code>.json</code>, <code>.jsonl</code> or <code>.jsonl.gz</code>).</li>
+</ol>
+
+<h2>Missing data</h2>
+<p>If part of the card data is missing (for example after an interrupted update), ManaDesk notices it at
+startup and repairs it in the background.</p>
+
+<p class="seealso">See also: <a href="prices.html">Prices</a> &middot; <a href="../start/first_start.html">First start</a>
+&middot; <a href="../data/backup.html">Backups</a></p>
+</body>
+</html>

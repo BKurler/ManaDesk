@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Adding and editing cards</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Adding and editing cards</h1>
+
+<h2>Adding cards</h2>
+<p>From the <b>Scryfall Database</b> (or the Gallery):</p>
+<ul>
+<li>Right-click the cards and choose <b>Add to</b>, then a deck or collection.</li>
+<li>Drag the cards onto a deck or collection tab, or onto it in the Card Navigator.</li>
+<li>Press <kbd>Insert</kbd> to add them to the <a href="concepts.html#main">Main collection</a>
+(<b>Add to Default Collection</b>), or use <b>Add to Active Collection</b> for the deck or collection
+you opened last (see <a href="move_copy.html#active">the active deck or collection</a>).</li>
+</ul>
+<p>The new cards get the ownership of their list: Own in a Standard or For Trade collection, virtual in
+a deck or a Wishlist/To Print collection.</p>
+<p>To add many cards at once from a list (a deck list, a spreadsheet, another app's export...), import them:
+see <a href="../transfer/import.html">Importing cards</a>.</p>
+
+<h2>Changing the count</h2>
+<p>Select a card and press <kbd>+</kbd> or <kbd>-</kbd>, or right-click <b>Increase Count</b> /
+<b>Decrease Count</b>. You can also type the count in the Edit Card dialog.</p>
+
+<h2>The Edit Card dialog</h2>
+<p>Right-click one or more cards and choose <b>Edit Card...</b>.</p>
+<p class="shot"><img src="../images/edit_card_dialog.png" alt="Screenshot: the Edit Card dialog"></p>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Count</td><td>How many copies this row stands for.</td></tr>
+<tr><td>User Price</td><td>What you paid (or what the card is worth to you), in your currency.</td></tr>
+<tr><td>Comment</td><td>Your own notes.</td></tr>
+<tr><td>Ownership</td><td>Own or Virtual. Only the value that matches the card's list is offered (see
+<a href="concepts.html#ownership">Own and virtual cards</a>).</td></tr>
+<tr><td>Special Tags</td><td>Free-form tags, comma-separated: <code>signed</code>, <code>altered</code>,
+<code>misprint</code>, <code>promo</code>, or your own.</td></tr>
+<tr><td>Condition</td><td>Near Mint (NM), Lightly Played (LP), Moderately Played (MP), Heavily Played (HP),
+Damaged (DMG), or not graded.</td></tr>
+<tr><td>Finish</td><td>Non-foil, Foil or Etched &mdash; only the finishes that printing exists in.</td></tr>
+<tr><td>Proxy</td><td>Genuine or Proxy (see <a href="../plan/proxies.html">Proxies</a>).</td></tr>
+</table>
+<p>With several cards selected, a field left on <i>(unchanged)</i> keeps each card's own value.</p>
+
+<h2>Editing in the list</h2>
+<p>Some columns can be edited directly: click the cell.</p>
+<ul>
+<li><b>Set</b> and <b>Num</b> (collector number) &mdash; switch your copy to another printing of the same
+card (the list offers the sets that card was printed in). The set list is alphabetical, or by release
+date if you chose so in the preferences.</li>
+<li><b>Finish</b>, <b>Condition</b>, <b>Proxy</b>, <b>Count</b>, <b>User Price</b>, <b>Comment</b>.</li>
+<li><b>Location</b> &mdash; moves the card to another deck or collection (see
+<a href="move_copy.html">Moving, copying and splitting</a>).</li>
+</ul>
+<p class="shot"><img src="../images/collection_list_columns.png" alt="Screenshot: a collection list with the O, Proxy, Finish, Condition, Num and User Price columns"></p>
+
+<h2>Removing cards</h2>
+<p>Select the cards and press <kbd>Delete</kbd> (or right-click <b>Delete</b>). ManaDesk asks you to
+confirm; hold <kbd>Shift</kbd> to skip the question.</p>
+
+<p class="seealso">See also: <a href="move_copy.html">Moving, copying and splitting</a> &middot;
+<a href="../reference/columns.html">Columns reference</a></p>
+</body>
+</html>

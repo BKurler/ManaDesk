@@ -31,6 +31,9 @@
  *                         glance in the toolbar - now bold "P"/"F" letter
  *                         icons instead, same technique QuickFilterControl
  *                         already uses for its own O/V toggle buttons
+ *     Rémi Dutil (2026) - P and F toolbar toggles sit just left of the gear
+ *     Rémi Dutil (2026) - follows P / F changed from the preference page
+ *                         (Restore Defaults included): toggles and counts update
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -40,6 +43,7 @@ import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.resource.ImageDescriptor;
+import org.eclipse.jface.util.IPropertyChangeListener;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Font;
@@ -57,6 +61,7 @@ import org.eclipse.ui.PartInitException;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.FilterField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
+import com.reflexit.magiccards.ui.actions.ShowPreferencesAction;
 import com.reflexit.magiccards.ui.preferences.CollectorViewPreferencePage;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
 import com.reflexit.magiccards.ui.views.IViewPage;
@@ -134,9 +139,16 @@ public class CollectorView extends AbstractMyCardsView {
 		// manager.add(onlyOwn);
 		// onlyOwn.setChecked(isOnlyOwn());
 		countProxies.setChecked(isCountProxies());
-		manager.add(countProxies);
 		countFinishesSeparately.setChecked(isCountFinishesSeparately());
-		manager.add(countFinishesSeparately);
+		// P and F go just left of the list's Preferences (gear) button, which
+		// the list control has usually contributed already
+		if (manager.find(ShowPreferencesAction.ID) != null) {
+			manager.insertBefore(ShowPreferencesAction.ID, countProxies);
+			manager.insertBefore(ShowPreferencesAction.ID, countFinishesSeparately);
+		} else {
+			manager.add(countProxies);
+			manager.add(countFinishesSeparately);
+		}
 		super.fillLocalToolBar(manager);
 	}
 
@@ -267,9 +279,28 @@ public class CollectorView extends AbstractMyCardsView {
 		// System.err.println("Remove attempt");
 	}
 
+	/** P / F changed elsewhere (the View: Collector page) - sync the buttons and recount. */
+	private final IPropertyChangeListener countOptionsListener = event -> {
+		String p = event.getProperty();
+		if (!PreferenceConstants.COLLECTOR_COUNT_PROXIES.equals(p)
+				&& !PreferenceConstants.COLLECTOR_COUNT_FINISHES_SEPARATELY.equals(p))
+			return;
+		Display.getDefault().asyncExec(() -> {
+			if (countProxies == null || getPartControl() == null || getPartControl().isDisposed())
+				return;
+			boolean changed = countProxies.isChecked() != isCountProxies()
+					|| countFinishesSeparately.isChecked() != isCountFinishesSeparately();
+			countProxies.setChecked(isCountProxies());
+			countFinishesSeparately.setChecked(isCountFinishesSeparately());
+			if (changed) // the buttons themselves already reloaded
+				reloadData();
+		});
+	};
+
 	@Override
 	public void createPartControl(Composite parent) {
 		super.createPartControl(parent);
+		MagicUIActivator.getDefault().getPreferenceStore().addPropertyChangeListener(countOptionsListener);
 	}
 
 	@Override
@@ -279,6 +310,7 @@ public class CollectorView extends AbstractMyCardsView {
 
 	@Override
 	public void dispose() {
+		MagicUIActivator.getDefault().getPreferenceStore().removePropertyChangeListener(countOptionsListener);
 		if (proxyIcon != null)
 			proxyIcon.dispose();
 		if (finishIcon != null)

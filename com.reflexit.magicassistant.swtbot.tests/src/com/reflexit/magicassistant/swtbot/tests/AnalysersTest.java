@@ -114,7 +114,7 @@ public class AnalysersTest extends AbstractSwtBotTest {
 		SWTBotView deckView = bot.viewByTitle("imported");
 		deckView.bot().cTabItem("Colors").activate();
 		SWTBotTree tree = bot.tree(0);
-		SWTBotTreeItem two = tree.expandNode("Colour", "Red-Green");
+		SWTBotTreeItem two = tree.expandNode("Color", "Red-Green");
 		SWTBotTreeItem node = two.getNode("Firewild Borderpost");
 		assertEquals("1", node.cell(1));
 		assertEquals("16.7%", node.cell(2));

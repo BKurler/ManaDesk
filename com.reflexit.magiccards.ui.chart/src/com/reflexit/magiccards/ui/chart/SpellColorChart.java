@@ -56,7 +56,7 @@ public class SpellColorChart implements IChartGenerator {
 		lg.setVisible(false);
 		lg.getOutline().setVisible(false);
 		// Title
-		cwoaPie.getTitle().getLabel().getCaption().setValue("Colours");//$NON-NLS-1$
+		cwoaPie.getTitle().getLabel().getCaption().setValue("Colors");//$NON-NLS-1$
 		// Data Set
 		TextDataSet categoryValues = TextDataSetImpl.create(labels);
 		NumberDataSet seriesOneValues = NumberDataSetImpl.create(series);

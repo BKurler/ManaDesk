@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Formats and legality</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Formats and legality</h1>
+
+<p>ManaDesk knows the legality of every card in every format (Standard, Pioneer, Modern, Legacy, Vintage,
+Pauper, Commander, Brawl, Oathbreaker, Pauper Commander, Old School, Premodern...), from the Scryfall
+card data. It shows whether a card is legal, banned or restricted.</p>
+
+<h2>A card's legality</h2>
+<p>The <a href="../find/card_details.html">Card Info</a> view lists the card's legality in each format. You can
+also show the <b>Legality</b> column in a list, and filter by legality in the
+<a href="../find/filter.html">filter dialog</a>.</p>
+
+<h2>A deck's legality</h2>
+<p>Open the deck and click its <b>Legality</b> tab.</p>
+<p class="shot"><img src="../images/deck_tab_legality.png" alt="Screenshot: the Legality tab with an illegal card"></p>
+<ul>
+<li>Pick the <b>Format</b> to check. It starts with the deck's <b>Default Format</b> (set it when you create the
+deck, or later in its properties).</li>
+<li>The line at the top of the tab gives the verdict, on a colored background: <b>green</b> when the deck
+is legal, <b>yellow</b> when it is legal but uses proxies, <b>red</b> when it is not legal.</li>
+<li>Each card shows its status in that format; cards that make the deck illegal stand out.</li>
+<li>The tab also checks the number of copies of each card (basic lands excepted).</li>
+<li>A deck that contains <a href="../plan/proxies.html">proxies</a> gets a warning on a yellow background:
+<i>Using N proxies</i> next to Main Deck (counting the sideboard's proxies too), and <i>Proxy</i> next to each
+proxy card. The status line says it as well. The deck is legal for its card pool, but proxies are not allowed
+in sanctioned play. A real error (pink) always takes the place of the warning.</li>
+</ul>
+
+<h2>Commander and color identity</h2>
+<p>In Commander and the other commander formats, every card must match the <b>color identity</b> of the
+commander (put the commander in the deck's sideboard). Cards that don't are shown as
+<b>Color Identity Invalid</b>. In Oathbreaker, the planeswalker sets the colors.</p>
+<p>Legality uses the card's <b>color identity</b>, as Scryfall gives it. The difference with the
+<i>extended</i> color identity is explained in the
+<a href="../reference/columns.html#identity">Columns reference</a>.</p>
+
+<p class="seealso">See also: <a href="deck_view.html">The Deck view</a> &middot;
+<a href="create_deck.html">Creating a deck</a></p>
+</body>
+</html>

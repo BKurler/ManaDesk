@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Troubleshooting and FAQ</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Troubleshooting and FAQ</h1>
+
+<h2>The window is a mess / a view is missing</h2>
+<p>Use <span class="menu">Window &gt; Reset Perspective</span> to put every view back in its place. To open a
+single view, use <span class="menu">Window &gt; Show View</span>.</p>
+
+<h2>The Scryfall Database is empty</h2>
+<p>The card database hasn't been downloaded yet. Choose <span class="menu">File &gt; Update Card Database</span>,
+or, without internet, <span class="menu">File &gt; Import Card Database from File...</span>. See
+<a href="../database/update.html">Updating the card database</a>.</p>
+
+<h2>A new set is missing</h2>
+<p>Update the card database: <span class="menu">File &gt; Update Card Database</span>.</p>
+
+<h2>ManaDesk without internet</h2>
+<p>ManaDesk works without internet: your decks, collections and the card database are on your computer.
+What needs the web (card images not seen before, importing from a website, updating the database) is
+simply skipped until the connection is back.</p>
+
+<h2>Card images don't show</h2>
+<p>Images are downloaded the first time you see a card, which needs internet. Check that <i>Load card
+graphics from the web when a card is selected</i> is on in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>.</p>
+
+<h2>I can't move a card to a list</h2>
+<p>The destination is greyed with a reason. Usually it is read-only, or the ownership rules don't allow it:
+an owned card can't be moved into a deck or a Wishlist/To Print collection (copy it instead). See
+<a href="../collection/move_copy.html#rules">What goes where</a>.</p>
+
+<h2>I can't set a card to Own (or to virtual)</h2>
+<p>A card's ownership follows its list. Move the card to the right kind of list instead: a wished card
+becomes Own when you move it to a Standard collection. See
+<a href="../collection/concepts.html#ownership">Own and virtual cards</a>.</p>
+
+<h2>An imported card is in English instead of its language</h2>
+<p>The card database only has the other-language printings of some cards. When it doesn't have the printing
+in that language, the card is imported in English (shown in yellow in the preview).</p>
+
+<h2>macOS: "ManaDesk is damaged and can't be opened"</h2>
+<p>macOS blocks apps downloaded from the internet that aren't signed by Apple. After moving ManaDesk to
+your Applications folder, either run this command in Terminal:</p>
+<p><code>xattr -dr com.apple.quarantine /Applications/ManaDesk.app</code></p>
+<p>or try to open ManaDesk once, then go to <span class="menu">System Settings &gt; Privacy &amp; Security</span>
+and click <b>Open Anyway</b>. ManaDesk also needs Java to be installed; see the installation notes on the
+<a href="https://github.com/BKurler/ManaDesk" target="_blank">ManaDesk GitHub page</a>.</p>
+
+<h2>How do I keep my collection safe?</h2>
+<p>Put your workspace in a cloud-synced folder (see <a href="../data/sync.html">Cloud sync</a>) and make
+<a href="../data/backup.html">backups</a>.</p>
+
+<h2>Still stuck?</h2>
+<p>Report it: <a href="report.html">Report a bug or request a feature</a>.</p>
+</body>
+</html>

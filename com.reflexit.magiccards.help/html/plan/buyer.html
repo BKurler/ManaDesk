@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Buyer</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Buyer</h1>
+
+<p>The <b>Buyer</b> view is your buy list: <i>which cards do I still need for these decks, and what will
+they cost?</i> It works like the <a href="proxier.html">Proxier</a>, turned toward buying, and prepares the
+list for your favorite store.</p>
+
+<p class="shot"><img src="../images/buyer_view.png" alt="Screenshot: the Buyer view with the store copy panel"></p>
+
+<h2>How to use it</h2>
+<ol>
+<li>On the left, check the decks and collections to complete (check a folder to take everything in it).
+Boxed decks aren't listed: their cards are already in use.</li>
+<li>The table lists every card you need, with how many to buy and an estimated price.</li>
+<li>Click a row to see which list needs that card.</li>
+<li>At the bottom, choose your store, then <b>Copy</b> the list and paste it into the store's bulk-entry
+box &mdash; or click <b>Open in TCGplayer</b> to open TCGplayer's Mass Entry already filled in.</li>
+</ol>
+
+<h2>The columns</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Owned / Boxed / Available / Needed</td><td>As in the <a href="proxier.html">Proxier</a>.</td></tr>
+<tr><td><b>To Buy</b></td><td>How many copies to buy.</td></tr>
+<tr><td>Price</td><td>The estimated price, in the store's currency (TCGplayer in US$, Cardmarket in &euro;).</td></tr>
+<tr><td>Note</td><td>A warning when the store has no price for that printing and finish &mdash; it is probably
+not available there.</td></tr>
+</table>
+
+<h2>Options</h2>
+<ul>
+<li><b>Exact Match</b> &mdash; buy the exact printing (set, collector number and finish) instead of any
+printing. Only the stores that can take a specific printing are then offered.</li>
+<li><b>Replace Proxies</b> (on by default) &mdash; count proxies as missing: buy genuine copies to replace them.</li>
+<li><b>Only To Buy</b> &mdash; only the rows with something to buy.</li>
+<li><b>Only the selected cards</b> &mdash; build the store list from the selected rows only.</li>
+<li><b>Combine foil and non-foil in one list</b> &mdash; most stores want separate lists; this merges them.</li>
+<li><b>Leave out cards with no TCGplayer price</b> (TCGplayer) &mdash; skip the cards it doesn't list.</li>
+<li><b>Create Collection</b> &mdash; create a <b>Wishlist/To Print</b> collection (named <i>ToBuy</i>) with the
+cards to buy. See <a href="wishlist.html">Wishlists and to-print lists</a>.</li>
+<li><b>Refresh</b> &mdash; reload the decks and collections.</li>
+</ul>
+
+<h2>Stores</h2>
+<p>The copy panel prepares the list the way each store's bulk-entry page expects it: TCGplayer (with
+Mass Entry), Cardmarket, Card Kingdom, Face to Face Games, The Mythic Store, Imaginaire, and a plain
+list for anywhere else. It starts on the store that matches your price source
+(<a href="../database/prices.html">Prices</a>).</p>
+
+<p class="seealso">See also: <a href="wishlist.html">Wishlists and to-print lists</a> &middot;
+<a href="proxier.html">Proxier</a> &middot; <a href="../decks/boxed.html">Boxed decks</a></p>
+</body>
+</html>

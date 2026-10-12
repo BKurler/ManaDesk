@@ -1,0 +1,54 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Your workspace</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Your workspace</h1>
+
+<p>The <b>workspace</b> is the folder where ManaDesk keeps everything that is yours. By default it is
+<code>ManaDeskWorkspace</code> in your home folder.</p>
+
+<h2>What is inside</h2>
+<table>
+<tr><th>Folder</th><th>Contents</th><th>Importance</th></tr>
+<tr><td><code>magiccards</code></td><td>Your decks and collections (<code>Decks</code>, <code>Collections</code>), your
+export formats and settings, and the card database (<code>MagicDBScry</code>).</td><td><b>Essential</b> &mdash; this is
+your collection.</td></tr>
+<tr><td><code>.backup</code></td><td>The backups (see <a href="backup.html">Backups</a>).</td><td>Useful.</td></tr>
+<tr><td><code>.metadata</code></td><td>Window layout, cached card images, logs.</td><td>Not needed: ManaDesk rebuilds it.</td></tr>
+</table>
+<p>Each deck and collection is one file, so you can see them in your file explorer. Don't edit them while
+ManaDesk is running.</p>
+
+<h2>Choosing or switching the workspace</h2>
+<p>At startup, ManaDesk asks which workspace to use (unless you turned that off). To switch to another
+workspace, or to move yours:</p>
+<ol>
+<li>Exit ManaDesk.</li>
+<li>To move it, move the whole workspace folder to its new place.</li>
+<li>Start ManaDesk and choose the new location in the workspace dialog.</li>
+</ol>
+<p>If the dialog doesn't show anymore, turn <i>Show workspace selection dialog at startup</i> back on in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>.</p>
+<p class="shot"><img src="../images/workspace_dialog.png" alt="Screenshot: the workspace selection dialog"></p>
+
+<div class="tip">The safest place for your workspace is a cloud-synced folder. See <a href="sync.html">Cloud sync</a>.</div>
+
+<h2>File Locations</h2>
+<p><span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; File Locations</span> sets where the
+backups are written (by default, <code>.backup</code> in the workspace).</p>
+<p class="shot"><img src="../images/file_locations_prefs.png" alt="Screenshot: the File Locations preference page"></p>
+
+<p class="seealso">See also: <a href="backup.html">Backups</a> &middot; <a href="sync.html">Cloud sync</a></p>
+</body>
+</html>
