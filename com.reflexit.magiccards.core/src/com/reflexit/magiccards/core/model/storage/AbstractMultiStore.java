@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - renameLocation(): synchronized, and a no-op when the
+ *                         store was removed meanwhile (rename then delete race)
  */
 
 package com.reflexit.magiccards.core.model.storage;
@@ -244,10 +246,12 @@ public abstract class AbstractMultiStore<T extends ICard> extends AbstractCardSt
 		return defaultLocation;
 	}
 
-	public void renameLocation(Location oldLocation, Location newLocation) {
+	public synchronized void renameLocation(Location oldLocation, Location newLocation) {
 		AbstractCardStoreWithStorage loaded = map.get(oldLocation);
 		if (loaded == null)
 			loaded = map.get(newLocation);
+		if (loaded == null)
+			return; // removed meanwhile (the list was deleted right after the rename) - nothing to rename
 		loaded.setLocation(newLocation);
 		map.remove(oldLocation);
 		map.put(newLocation, loaded);

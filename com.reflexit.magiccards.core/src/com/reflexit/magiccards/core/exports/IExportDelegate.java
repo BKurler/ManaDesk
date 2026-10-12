@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *     Rémi Dutil (2026) - isPrintSheet(): printable sheets, appendable to each other
  *******************************************************************************/
 
 /*
@@ -70,6 +71,14 @@ public interface IExportDelegate<T> {
 	 * Seeds the export wizard's "Combine in one file" checkbox.
 	 */
 	default boolean isCombineByDefault() {
+		return false;
+	}
+
+	/**
+	 * True for a printable sheet ({@link PrintSheet}): always one combined file,
+	 * and it can be appended to another printable sheet.
+	 */
+	default boolean isPrintSheet() {
 		return false;
 	}
 

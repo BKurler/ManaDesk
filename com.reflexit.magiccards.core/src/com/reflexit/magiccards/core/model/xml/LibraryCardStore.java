@@ -1,5 +1,8 @@
 /*
  * Contributors:
+ *     Rémi Dutil (2026) - REMOVE_CONTAINER: the deleted list's store is emptied
+ *                         without saving it, and its file removed if still there
+ *     Rémi Dutil (2026) - RENAME_CONTAINER: no update when the list was deleted meanwhile
  *     Rémi Dutil (2026) - doInitialize() repairs the main collection: always a
  *                         sorted, writable Standard collection
  */
@@ -26,6 +29,7 @@ import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
 import com.reflexit.magiccards.core.model.storage.AbstractCardStoreWithStorage;
 import com.reflexit.magiccards.core.model.storage.CollectionCardStore;
+import com.reflexit.magiccards.core.model.storage.AbstractCardStore;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 
@@ -123,10 +127,19 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 						if (elem instanceof CardCollection) {
 							ICardStore<IMagicCard> store = getStore(elem.getLocation());
 							if (store != null) {
+								// the list is being deleted: emptying its store must not
+								// save it - that raced the file's deletion ("Cannot
+								// delete", "Access is denied") and could even write the
+								// deleted deck's file back
+								if (store instanceof AbstractCardStore)
+									((AbstractCardStore<?>) store).setAutoCommit(false);
 								DataManager.getInstance().remove(null, store);
 								getMultiStore().removeLocation(elem.getLocation());
 								DataManager.getInstance().reconcile(store);
 							}
+							java.io.File file = elem.getFile();
+							if (file != null && file.isFile() && !file.delete())
+								file.deleteOnExit(); // still open elsewhere: gone at exit
 						}
 						break;
 					}
@@ -140,7 +153,8 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 						} else {
 							getMultiStore().renameLocation((Location) event.getData(), elem.getLocation());
 							ICardStore<IMagicCard> store = getStore(elem.getLocation());
-							DataManager.getInstance().update(store, Collections.singleton(MagicCardField.LOCATION));
+							if (store != null) // null when the list was deleted meanwhile
+								DataManager.getInstance().update(store, Collections.singleton(MagicCardField.LOCATION));
 						}
 						break;
 					}

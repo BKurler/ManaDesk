@@ -1,11 +1,12 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - renameWithRelated(): rename + carry the sideboard / extra siblings
+ *     Rémi Dutil (2026) - remove(): a few quick retries when the file is busy, then
+ *                         a trace and delete-on-exit instead of an IOException log
  */
 package com.reflexit.magiccards.core.model.nav;
 
 import java.io.File;
-import java.io.IOException;
 
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
@@ -128,9 +129,28 @@ public abstract class CardElement extends EventManager implements ILocatable {
 			getParent().removeChild(this);
 		}
 		File file = getFile();
-		if (file.exists() && !file.delete()) {
-			MagicLogger.log(new IOException("Cannot delete " + file));
+		if (file.exists() && !deleteWithRetry(file)) {
+			// still open elsewhere (antivirus / indexer scanning a file just
+			// written, a background save finishing): not an error - the list's
+			// REMOVE_CONTAINER processing removes it once done, and Windows at exit
+			file.deleteOnExit();
+			MagicLogger.trace("delete", "File busy, deleted later: " + file);
 		}
+	}
+
+	/** A few quick attempts - Windows refuses to delete a file another process has open for a moment. */
+	private static boolean deleteWithRetry(File file) {
+		for (int i = 0; i < 5; i++) {
+			if (file.delete() || !file.exists())
+				return true;
+			try {
+				Thread.sleep(20);
+			} catch (InterruptedException e) {
+				Thread.currentThread().interrupt();
+				return false;
+			}
+		}
+		return false;
 	}
 
 	public static String basename(String filename) {

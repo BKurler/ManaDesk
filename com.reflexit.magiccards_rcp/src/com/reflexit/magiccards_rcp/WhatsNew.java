@@ -22,6 +22,7 @@
  *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
  *     Rémi Dutil (2026) - "Report a bug or request a feature" entry (+ by email,
  *                         webmail, log file)
+ *     Rémi Dutil (2026) - Export entry: printable sheets, append, page count
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
@@ -176,8 +177,10 @@ final class WhatsNew {
 					+ " ManaDesk knows that printing. Decks and collections can also be exported for ManaBox.",
 					null),
 			new Feature(1, MINOR, IMPORT, "Export", "Several decks at once, in one file or one per deck, a printable"
-					+ " sideboard list, and export formats you can edit with a live preview. Printable formats"
-					+ " (proxies, sideboard list) are previewed as they will print.", null),
+					+ " sideboard list, and export formats you can edit with a live preview. Proxies and"
+					+ " sideboard lists print at 100%, 9 per page, on the same sheets; \"Append to the existing"
+					+ " file\" fills a sheet you already exported (or a CSV with the same columns), and the"
+					+ " preview counts the pages.", null),
 			new Feature(1, MAJOR, DATABASE, "Card database from Scryfall", "Downloaded on first start (or imported from a"
 					+ " file when offline), a full update in under a minute, and a backup before each update.",
 					null),

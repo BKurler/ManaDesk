@@ -14,6 +14,11 @@
  *     Rémi Dutil (2026) - preview jobs never overlap (PREVIEW_RULE): two at once
  *                         shared the format's export delegate and mixed their
  *                         output (header lost, a row cut in the middle)
+ *     Rémi Dutil (2026) - "Append to the existing file" (checked by
+ *                         ExportAppender: same kind of file only); printable
+ *                         sheets always combined in one file, and the preview
+ *                         title gives their page count (9 cards per page,
+ *                         the cards already in the file included)
  *     Rémi Dutil (2026) - html exports (Print Proxies, Print Sideboard List...)
  *                         are previewed rendered, in an embedded browser,
  *                         instead of as raw html code
@@ -41,6 +46,7 @@ import org.eclipse.core.runtime.Status;
 import org.eclipse.core.runtime.jobs.ISchedulingRule;
 import org.eclipse.core.runtime.jobs.Job;
 import org.eclipse.jface.dialogs.IDialogSettings;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.operation.IRunnableContext;
 import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.FileFieldEditor;
@@ -77,7 +83,8 @@ import com.reflexit.magiccards.core.exports.CustomExportDelegate;
 import com.reflexit.magiccards.core.exports.IExportDelegate;
 import com.reflexit.magiccards.core.exports.ImportExportFactory;
 import com.reflexit.magiccards.core.exports.ReportType;
-import com.reflexit.magiccards.core.exports.SideboardHelpHtmlExportDelegate;
+import com.reflexit.magiccards.core.exports.ExportAppender;
+import com.reflexit.magiccards.core.exports.PrintSheet;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.Locations;
@@ -92,7 +99,6 @@ import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.core.model.storage.MemoryFilteredCardStore;
-import com.reflexit.magiccards.core.exports.PrintProxyHtmlExportDelegate;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.LocationPickerDialog;
 import com.reflexit.magiccards.ui.dialogs.MagicFieldSelectorDialog;
@@ -123,6 +129,9 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private Button includeCombine;
 	private Button openAfter;
 	private boolean combineTouched;
+	/** The user's own "Combine in one file" choice - printable sheets force it on without changing it. */
+	private boolean userCombine;
+	private Button appendFile;
 	private StringButtonFieldEditor collection;
 	private Text previewText;
 	/** Renders html exports; null when no browser is available on this system. */
@@ -416,6 +425,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 		}
 		if (dialogSettings.get(INCLUDE_COMBINE) != null) {
 			includeCombine.setSelection(dialogSettings.getBoolean(INCLUDE_COMBINE));
+			userCombine = includeCombine.getSelection();
 			combineTouched = true;
 		}
 		if (dialogSettings.get(OPEN_AFTER) != null) {
@@ -454,7 +464,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 			dialogSettings.put(INCLUDE_HEADER_SETTING, includeHeader.getSelection());
 			dialogSettings.put(INCLUDE_SIDEBOARD, includeSideBoard.getSelection());
 			dialogSettings.put(INCLUDE_EXTRA, includeExtra.getSelection());
-			dialogSettings.put(INCLUDE_COMBINE, includeCombine.getSelection());
+			dialogSettings.put(INCLUDE_COMBINE, userCombine);
 			dialogSettings.put(OPEN_AFTER, openAfter.getSelection());
 			// save into file
 			MagicUIActivator.getDefault().saveDialogSetting(dialogSettings);
@@ -594,7 +604,19 @@ public class DeckExportPage extends WizardDataTransferPage {
 			@Override
 			public void widgetSelected(SelectionEvent e) {
 				combineTouched = true;
+				userCombine = includeCombine.getSelection();
 				updateWidgetEnablements();
+				updatePageCompletion();
+			}
+		});
+		appendFile = new Button(genChecks, SWT.CHECK | SWT.LEFT);
+		appendFile.setText("Append to the existing file");
+		appendFile.setToolTipText("Add this export to the file if it already exists, instead of replacing it - only"
+				+ " when the file is of the same kind (the same CSV columns, or a printable sheet). Needs \"Combine in"
+				+ " one file\" when several decks are selected.");
+		appendFile.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
 				updatePageCompletion();
 			}
 		});
@@ -763,10 +785,25 @@ public class DeckExportPage extends WizardDataTransferPage {
 
 		// "Combine in one file" - only relevant with >1 deck; seed its default
 		// from the export type until the user touches it
-		includeCombine.setEnabled(decks.size() > 1);
-		if (!combineTouched)
-			includeCombine.setSelection(delegate != null && delegate.isCombineByDefault());
+		if (delegate != null && delegate.isPrintSheet()) {
+			// printable sheets: always one file - splitting them makes no sense
+			includeCombine.setSelection(true);
+			includeCombine.setEnabled(false);
+			includeCombine.setToolTipText("A printable sheet always combines the decks in one file");
+		} else {
+			includeCombine.setEnabled(decks.size() > 1);
+			includeCombine.setToolTipText(null);
+			includeCombine.setSelection(
+					combineTouched ? userCombine : delegate != null && delegate.isCombineByDefault());
+		}
 		boolean combine = isCombineSelected() && decks.size() > 1;
+		// "Append" only when everything goes into ONE file: combined, or one deck
+		boolean oneFile = isCombineSelected() || decks.size() <= 1;
+		if (appendFile != null) {
+			appendFile.setEnabled(oneFile);
+			if (!oneFile)
+				appendFile.setSelection(false);
+		}
 
 		// propose a file name: <stem>[-<export content>].<format>
 		//   stem = deck name (1 deck) | "combined" (combine) | "*" (one file per deck)
@@ -854,6 +891,12 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final List<CardElement> decks = selectedDecks();
 		final boolean combine = isCombineSelected() && decks.size() > 1;
 		final boolean markup = isMarkup(type);
+		final boolean sheet = type != null && type.getExportDelegate() != null
+				&& type.getExportDelegate().isPrintSheet();
+		final File appendTo = appendFile != null && appendFile.getSelection() && appendFile.isEnabled()
+				&& (combine || decks.size() <= 1)
+				? singleTarget(decks, combine)
+				: null;
 		if (previewJob != null) {
 			previewJob.cancel();
 		}
@@ -863,8 +906,28 @@ public class DeckExportPage extends WizardDataTransferPage {
 				try {
 					if (combine || decks.size() <= 1) {
 						exportDeck(outStream, monitor, type, header, decks, sideboard, extra, combine);
-						if (!monitor.isCanceled())
-							updatePreview(outStream.toString(), null, markup);
+						if (monitor.isCanceled())
+							return Status.OK_STATUS;
+						String text = ((ByteArrayOutputStream) outStream).toString("UTF-8");
+						String note = null;
+						if (appendTo != null && appendTo.isFile()) {
+							String existing = readUtf8(appendTo);
+							try {
+								text = ExportAppender.append(existing, text, appendFormat(type, header),
+										appendTo.getName());
+								note = "appended to " + appendTo.getName();
+							} catch (ExportAppender.AppendException e) {
+								note = "can't append - " + e.getMessage();
+							}
+						}
+						if (sheet) {
+							int cards = PrintSheet.slots(text).size();
+							String count = PrintSheet.pages(cards) + (PrintSheet.pages(cards) == 1 ? " page" : " pages")
+									+ " (" + cards + (cards == 1 ? " card" : " cards") + ", " + PrintSheet.PER_PAGE
+									+ " per page)";
+							note = note == null ? count : count + " - " + note;
+						}
+						updatePreview(text, note, markup);
 					} else {
 						CardElement first = decks.get(0);
 						exportDeck(outStream, monitor, type, header, java.util.Collections.singletonList(first),
@@ -893,6 +956,27 @@ public class DeckExportPage extends WizardDataTransferPage {
 
 	protected void updatePreview(final String string) {
 		updatePreview(string, null, false);
+	}
+
+	/** The file a combined (or single-deck) export goes to. */
+	private File singleTarget(List<CardElement> decks, boolean combine) {
+		String stem = combine && decks.size() > 1 ? "combined"
+				: decks.isEmpty() ? "deck" : deckFileStem(decks.get(0).getLocation().toMainDeck());
+		return new File(getFileName().replace("*", stem));
+	}
+
+	private static ExportAppender.Format appendFormat(ReportType type, boolean header) {
+		IExportDelegate d = type.getExportDelegate();
+		return new ExportAppender.Format(type.getLabel(), type.getExtension(), d != null && d.isPrintSheet(),
+				type.isXmlFormat(), header && !type.isXmlFormat());
+	}
+
+	private static String readUtf8(File f) {
+		try {
+			return new String(java.nio.file.Files.readAllBytes(f.toPath()), java.nio.charset.StandardCharsets.UTF_8);
+		} catch (IOException e) {
+			return "";
+		}
 	}
 
 	/**
@@ -943,6 +1027,8 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final boolean extra = getIncludeExtra();
 		final List<CardElement> decks = selectedDecks();
 		final boolean combine = isCombineSelected() && decks.size() > 1;
+		final boolean append = appendFile.getSelection() && appendFile.isEnabled();
+		final ReportType type = reportType;
 
 		// resolve the target file(s): "*" in the path is replaced by the deck's
 		// container path + name (so same-named decks in different folders differ)
@@ -962,8 +1048,21 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final Set<String> skip = new LinkedHashSet<>();
 		java.util.List<String> existing = new ArrayList<>();
 		for (String f : targets.keySet())
-			if (new File(f).exists())
+			if (!append && new File(f).exists())
 				existing.add(f);
+		// "Append" but nothing to append to - often a typo in the name or the
+		// wrong folder: ask before creating a new file
+		if (append) {
+			java.util.List<String> missing = new ArrayList<>();
+			for (String f : targets.keySet())
+				if (!new File(f).isFile())
+					missing.add(f);
+			if (!missing.isEmpty() && !MessageDialog.openConfirm(getShell(), "Append to the existing file",
+					(missing.size() == 1 ? "The file " + missing.get(0) + " doesn't exist yet."
+							: missing.size() + " of the files don't exist yet:\n" + String.join("\n", missing))
+							+ "\n\nCreate it" + (missing.size() == 1 ? "" : "m") + " instead of appending?"))
+				return false;
+		}
 		if (!existing.isEmpty()) {
 			String res = mainPage.queryOverwrite(existing.size() == 1 ? existing.get(0)
 					: existing.size() + " files already exist");
@@ -985,8 +1084,18 @@ public class DeckExportPage extends WizardDataTransferPage {
 								monitor.worked(1);
 								continue;
 							}
-							try (OutputStream os = new FileOutputStream(t.getKey())) {
-								exportDeck(os, monitor, reportType, header, t.getValue(), sideboard, extra, combine);
+							File target = new File(t.getKey());
+							if (append && target.isFile()) {
+								ByteArrayOutputStream added = new ByteArrayOutputStream();
+								exportDeck(added, monitor, type, header, t.getValue(), sideboard, extra, combine);
+								String merged = ExportAppender.append(readUtf8(target), added.toString("UTF-8"),
+										appendFormat(type, header), target.getName());
+								java.nio.file.Files.write(target.toPath(),
+										merged.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+							} else {
+								try (OutputStream os = new FileOutputStream(target)) {
+									exportDeck(os, monitor, type, header, t.getValue(), sideboard, extra, combine);
+								}
 							}
 							monitor.worked(1);
 						}
@@ -1015,6 +1124,10 @@ public class DeckExportPage extends WizardDataTransferPage {
 		} catch (InvocationTargetException e) {
 			if (e.getTargetException() instanceof InterruptedException) {
 				mainPage.displayErrorDialog("Export cancelled");
+			} else if (e.getCause() instanceof ExportAppender.AppendException) {
+				// not the same kind of file: nothing written, the wizard stays open
+				setErrorMessage(e.getCause().getMessage());
+				return false;
 			} else
 				mainPage.displayErrorDialog(e.getCause());
 		} catch (InterruptedException e) {
@@ -1053,9 +1166,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 		// column (added by the delegate itself, if not already present) so it is
 		// still clear which deck each card came from. The two per-deck-section
 		// HTML delegates render their own deck headings and opt out.
-		boolean multiDeck = combine && decks.size() > 1
-				&& !(exportDelegate instanceof PrintProxyHtmlExportDelegate)
-				&& !(exportDelegate instanceof SideboardHelpHtmlExportDelegate);
+		boolean multiDeck = combine && decks.size() > 1 && !exportDelegate.isPrintSheet();
 		new ExportDeckJob(outStream, reportType, header, filteredLibrary, cols)
 				.setMultiDeck(multiDeck).syncRun();
 	}

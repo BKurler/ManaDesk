@@ -82,6 +82,8 @@
  *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
  *                         release date (oldest first) instead of alphabetically
  *     Rémi Dutil (2026) - Collector defaults to Group By Set, sets in alphabetical order
+ *     Rémi Dutil (2026) - setToDefault(): no save of an in-memory store (no file -
+ *                         "File name not specified" from the Location picker)
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -328,7 +330,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		for (String id : FilterField.getAllIds()) {
 			store.setValue(id, store.getDefaultString(id));
 		}
-		if (store instanceof IPersistentPreferenceStore) {
+		// an in-memory store (new PreferenceStore(), e.g. the Location picker's
+		// page) has no file: saving it only throws "File name not specified"
+		if (store instanceof IPersistentPreferenceStore
+				&& !(store instanceof org.eclipse.jface.preference.PreferenceStore)) {
 			try {
 				((IPersistentPreferenceStore) store).save();
 			} catch (java.io.IOException e) {
