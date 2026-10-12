@@ -20,7 +20,8 @@
  *     Rémi Dutil (2026) - entries for collection types, ownership following
  *                         the list, and the "Main" collection
  *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
- *     Rémi Dutil (2026) - "Report a bug or request a feature" entry
+ *     Rémi Dutil (2026) - "Report a bug or request a feature" entry (+ by email,
+ *                         webmail, log file)
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
@@ -202,7 +203,9 @@ final class WhatsNew {
 			new Feature(1, MINOR, GENERAL, "No more Work Offline", "Without internet, ManaDesk keeps working and"
 					+ " quietly skips what needs the web.", null),
 			new Feature(1, MINOR, GENERAL, "Report a bug or request a feature", "From the Help menu: describe it,"
-					+ " and ManaDesk opens the report on GitHub, ready to submit.", null), };
+					+ " and ManaDesk opens the report on GitHub, ready to submit - or, without a GitHub account, as"
+					+ " an email to the developer, in your mail app or in Gmail / Outlook.com. For a bug, ManaDesk"
+					+ " prepares its log as a file to attach.", null), };
 
 	private WhatsNew() {
 	}

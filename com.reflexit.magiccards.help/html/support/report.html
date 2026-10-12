@@ -21,16 +21,44 @@
 <li>Choose <span class="menu">Help &gt; Report a Bug or Request a Feature...</span>.</li>
 <li>Choose <b>Bug report</b> or <b>Feature request</b>, and give it a short <b>title</b>.</li>
 <li>Describe it: for a bug, what you did, what you expected and what happened instead; for a feature, what
-you would like and what it would help you do.</li>
-<li>Keep <i>Include system information</i> checked (ManaDesk, Java and operating system versions &mdash;
-nothing personal). For a bug, <i>Include the most recent errors from the log</i> helps a lot.</li>
-<li>Click <b>Open on GitHub</b>. Your browser opens the report on ManaDesk's GitHub page, already filled in:
-review it and click <b>Submit</b>.</li>
+you would like and what it would help you do. The description is limited to 1000 characters, so the report
+fits in an email; the count under it shows how many are left.</li>
+<li>For a bug, keep <b>Include the ManaDesk log</b> checked: it helps a lot (see <a href="#log">The log
+file</a> below).</li>
+<li>Send it with <b>Open on GitHub</b> or <b>Report via Email</b>.</li>
 </ol>
 <p class="shot"><img src="../images/report_issue.png" alt="Screenshot: the Report a Bug or Request a Feature dialog"></p>
+<p>The ManaDesk, Java and operating system versions are always included, on one line &mdash; nothing
+personal. The dialog stays open after the GitHub page or the email opens, so nothing is lost if you cancel
+there.</p>
 
-<div class="note">Submitting needs a free GitHub account. No account? Click <b>Copy Report</b> instead and send
-the text to the developer.</div>
+<h2>Open on GitHub</h2>
+<p>Your browser opens the report on ManaDesk's GitHub page, already filled in. Attach the log file in the
+<b>Log file</b> box, review the report and click <b>Submit</b>. This needs a free GitHub account.</p>
+
+<h2>Report via Email</h2>
+<p>No GitHub account needed: a new email to the developer (BKurler-Manadesk@outlook.com) opens, filled in.
+Attach the log file, review the email and send it.</p>
+<ul>
+<li>Type your address in <b>Your email</b> (ManaDesk remembers it). With a Gmail or Outlook.com / Hotmail
+address, the email opens in that webmail, in your browser; otherwise it opens in your mail app.</li>
+<li>If no mail app is set up on your computer (email links open in a browser, or in nothing), ManaDesk tells
+you first and offers to type your webmail address instead.</li>
+</ul>
+
+<h2 id="log">The log file</h2>
+<p>For a bug, ManaDesk prepares its log as a file, <i>ManaDesk-log.txt</i>: the recent part of the log, with
+your home folder hidden. When you send the report, ManaDesk puts the file in the clipboard and opens its
+folder, then opens the GitHub page or the email. To attach it:</p>
+<ul>
+<li>paste it with <kbd>Ctrl</kbd>+<kbd>V</kbd> (in the GitHub <b>Log file</b> box, or in the email), or</li>
+<li>drag it from its folder, or from the dialog: it is shown under the checkbox, with <b>Show in folder</b>
+and <b>Copy</b>.</li>
+</ul>
+<p>On GitHub, the attached file shows as a link to <i>ManaDesk-log.txt</i>: that's expected.</p>
+
+<div class="note"><b>Copy</b> puts the whole report, with the most recent log errors, in the clipboard, to
+paste it anywhere.</div>
 
 <p>You can follow your report, and any question about it, on
 <a href="https://github.com/BKurler/ManaDesk/issues" target="_blank">ManaDesk's GitHub issues page</a>.</p>

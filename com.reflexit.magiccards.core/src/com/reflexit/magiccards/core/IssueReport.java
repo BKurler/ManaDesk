@@ -7,6 +7,13 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - the report as an email to the developer: toMailto(),
+ *                         toMailLink() (Gmail / Outlook.com picked from the
+ *                         user's address, mailServiceFor()), the system line on
+ *                         top, mailRoomLeft() for the dialog's limit, and a
+ *                         note when the log is attached (setMailAttachment())
+ *     Rémi Dutil (2026) - logForAttachment(): the end of the whole log, for the
+ *                         file attached to an email or a GitHub issue
  *******************************************************************************/
 package com.reflexit.magiccards.core;
 
@@ -27,6 +34,19 @@ import java.util.List;
  */
 public class IssueReport {
 	public static final String NEW_ISSUE_URL = "https://github.com/BKurler/ManaDesk/issues/new";
+	/** Where "Report via Email" sends the report - the developer files the issue. */
+	public static final String REPORT_EMAIL = "BKurler-Manadesk@outlook.com";
+	/**
+	 * Mail apps are started with the whole mailto link on a command line, which
+	 * Windows cuts at about 2 KB - a longer report is shortened in the email and
+	 * given in full through the clipboard instead.
+	 */
+	static final int MAX_MAILTO_LENGTH = 1900;
+	/**
+	 * The description's length limit, in characters: typical text then fits the
+	 * email link with room to spare (the link limit is still checked exactly).
+	 */
+	public static final int MAX_DESCRIPTION_CHARS = 1000;
 	/** Browsers and GitHub handle URLs up to about 8 KB; stay below. */
 	static final int MAX_URL_LENGTH = 7500;
 	/** How many of the most recent log errors to include. */
@@ -58,6 +78,8 @@ public class IssueReport {
 	private String description = "";
 	private String system = "";
 	private String logs = "";
+	/** The error log file sent along with an email report, or null. */
+	private String mailAttachment;
 
 	public IssueReport setKind(Kind kind) {
 		this.kind = kind;
@@ -129,6 +151,133 @@ public class IssueReport {
 		return sb.toString();
 	}
 
+	/** "[ManaDesk bug] title" / "[ManaDesk feature] title" - the email's subject. */
+	public String mailSubject() {
+		return "[ManaDesk " + (kind == Kind.BUG ? "bug" : "feature") + "] " + (title.isEmpty() ? "(no title)" : title);
+	}
+
+	/**
+	 * The report as a {@code mailto:} link to {@link #REPORT_EMAIL}, subject and
+	 * body filled in, never longer than {@link #MAX_MAILTO_LENGTH}: the compact
+	 * system line on top, the user's description (whole - the dialog keeps it
+	 * within {@link #mailRoomLeft()}), and a note when the error log is attached
+	 * (see {@link #setMailAttachment(String)}). Only a description that is still
+	 * too long (should not happen) loses its end.
+	 */
+	public String toMailto() {
+		return mailtoUrl(fittedMailBody());
+	}
+
+	/** Where "Report via Email" opens the email. */
+	public enum MailService {
+		/** The mail program set up on the computer ({@code mailto:} link). */
+		APP("your mail app"),
+		/** Gmail's compose page, in the browser. */
+		GMAIL("Gmail"),
+		/** Outlook.com's compose page, in the browser (also Hotmail / Live). */
+		OUTLOOK("Outlook.com");
+
+		private final String label;
+
+		MailService(String label) {
+			this.label = label;
+		}
+
+		public String getLabel() {
+			return label;
+		}
+	}
+
+	/**
+	 * The webmail of an address, from its domain: Gmail, Outlook.com (Hotmail,
+	 * Live, MSN...), otherwise the mail app.
+	 */
+	public static MailService mailServiceFor(String email) {
+		String e = nz(email).trim().toLowerCase(java.util.Locale.ROOT);
+		int at = e.lastIndexOf('@');
+		if (at < 0)
+			return MailService.APP;
+		String domain = e.substring(at + 1);
+		if (domain.equals("gmail.com") || domain.equals("googlemail.com"))
+			return MailService.GMAIL;
+		if (domain.startsWith("outlook.") || domain.startsWith("hotmail.") || domain.startsWith("live.")
+				|| domain.equals("msn.com") || domain.equals("windowslive.com"))
+			return MailService.OUTLOOK;
+		return MailService.APP;
+	}
+
+	/**
+	 * The report as an email to {@link #REPORT_EMAIL} in {@code service}: a
+	 * {@code mailto:} link for the mail app, or the webmail's "new email" page
+	 * filled in. Same content and size for all of them (see {@link #toMailto()}).
+	 */
+	public String toMailLink(MailService service) {
+		String body = fittedMailBody();
+		switch (service) {
+		case GMAIL:
+			return "https://mail.google.com/mail/?view=cm&fs=1&to=" + encode(REPORT_EMAIL) + "&su="
+					+ encode(mailSubject()) + "&body=" + encode(body);
+		case OUTLOOK:
+			return "https://outlook.live.com/mail/0/deeplink/compose?to=" + encode(REPORT_EMAIL) + "&subject="
+					+ encode(mailSubject()) + "&body=" + encode(body);
+		default:
+			return mailtoUrl(body);
+		}
+	}
+
+	/**
+	 * The error log goes along with the email as an attached file (an email link
+	 * can't carry one): the body only says so. {@code null} for none.
+	 */
+	public IssueReport setMailAttachment(String fileName) {
+		this.mailAttachment = fileName == null || fileName.trim().isEmpty() ? null : fileName.trim();
+		return this;
+	}
+
+	/** The email body, within {@link #MAX_MAILTO_LENGTH} once in a mailto link. */
+	private String fittedMailBody() {
+		String body = mailText(description);
+		String d = description;
+		while (mailtoUrl(body).length() > MAX_MAILTO_LENGTH && !d.isEmpty()) {
+			// last resort - the dialog keeps the description within mailRoomLeft()
+			d = d.substring(0, d.length() * 3 / 4);
+			body = mailText(d + "\n[...]");
+		}
+		return body;
+	}
+
+	/**
+	 * How much room the email link has left for more description, in encoded
+	 * characters (a letter takes 1, a space 3, an accented letter 6, a line
+	 * break 6): negative when the description is too long. The system line and
+	 * the "error log attached" line are counted.
+	 */
+	public int mailRoomLeft() {
+		return MAX_MAILTO_LENGTH - mailtoUrl(mailText(description)).length();
+	}
+
+	/** What {@code text} takes in the email link (see {@link #mailRoomLeft()}). */
+	public static int mailLength(String text) {
+		return encode(nz(text).replace("\r\n", "\n").replace("\n", "\r\n")).length();
+	}
+
+	/** The email body: the system line, the description, and the attachment note. */
+	private String mailText(String desc) {
+		StringBuilder sb = new StringBuilder();
+		if (!system.isEmpty())
+			sb.append(system).append("\n\n");
+		sb.append(desc.isEmpty() ? "(no description)" : desc).append("\n");
+		if (kind == Kind.BUG && mailAttachment != null)
+			sb.append("\nLog: attached (").append(mailAttachment).append(")\n");
+		return sb.toString();
+	}
+
+	private String mailtoUrl(String body) {
+		// CRLF line breaks: what mail clients expect in a mailto body
+		return "mailto:" + REPORT_EMAIL + "?subject=" + encode(mailSubject()) + "&body="
+				+ encode(body.replace("\r\n", "\n").replace("\n", "\r\n"));
+	}
+
 	/** The report as a plain issue body (Markdown), for when there is no form. */
 	String markdownBody(String desc, String logText) {
 		StringBuilder sb = new StringBuilder();
@@ -171,17 +320,54 @@ public class IssueReport {
 	 * missing or has no error.
 	 */
 	public static String recentLogErrors(File log) {
+		return recentLogErrors(log, MAX_LOG_ERRORS, MAX_LINES_PER_ERROR);
+	}
+
+	/**
+	 * The end of the whole log, for the file attached to a report: its last
+	 * {@code maxBytes} (starting at a line), the user's home folder replaced by
+	 * "~". Empty when the file is missing or empty.
+	 */
+	public static String logForAttachment(File log, int maxBytes) {
+		if (log == null || !log.isFile())
+			return "";
+		try {
+			return logForAttachment(new String(Files.readAllBytes(log.toPath()), StandardCharsets.UTF_8),
+					System.getProperty("user.home"), maxBytes);
+		} catch (IOException | RuntimeException e) {
+			return "";
+		}
+	}
+
+	static String logForAttachment(String logText, String home, int maxBytes) {
+		String out = logText;
+		if (out.length() > maxBytes) {
+			out = out.substring(out.length() - maxBytes);
+			int nl = out.indexOf('\n');
+			out = "[older entries cut]\n" + (nl >= 0 ? out.substring(nl + 1) : out);
+		}
+		if (home != null && home.length() > 3)
+			out = out.replace(home, "~");
+		return out.trim();
+	}
+
+	/** Same, with more room. */
+	public static String recentLogErrors(File log, int maxErrors, int maxLinesPerError) {
 		if (log == null || !log.isFile())
 			return "";
 		try {
 			return recentLogErrors(new String(Files.readAllBytes(log.toPath()), StandardCharsets.UTF_8),
-					System.getProperty("user.home"));
+					System.getProperty("user.home"), maxErrors, maxLinesPerError);
 		} catch (IOException | RuntimeException e) {
 			return "";
 		}
 	}
 
 	static String recentLogErrors(String logText, String home) {
+		return recentLogErrors(logText, home, MAX_LOG_ERRORS, MAX_LINES_PER_ERROR);
+	}
+
+	static String recentLogErrors(String logText, String home, int maxErrors, int maxLinesPerError) {
 		List<String> errors = new ArrayList<>();
 		String[] lines = logText.split("\r?\n");
 		StringBuilder cur = null;
@@ -197,14 +383,14 @@ public class IssueReport {
 					errors.add(cur.toString().trim());
 				cur = null;
 			}
-			if (cur != null && kept < MAX_LINES_PER_ERROR) {
+			if (cur != null && kept < maxLinesPerError) {
 				cur.append(line).append('\n');
 				kept++;
 			}
 		}
 		if (cur != null)
 			errors.add(cur.toString().trim());
-		int from = Math.max(0, errors.size() - MAX_LOG_ERRORS);
+		int from = Math.max(0, errors.size() - maxErrors);
 		StringBuilder sb = new StringBuilder();
 		for (int i = from; i < errors.size(); i++) {
 			if (sb.length() > 0)
