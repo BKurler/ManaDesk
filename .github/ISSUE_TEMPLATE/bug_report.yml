@@ -30,3 +30,11 @@ body:
       label: Recent errors from the log
       description: Filled in by ManaDesk when available.
       render: text
+  - type: textarea
+    id: logfile
+    attributes:
+      label: Log file
+      description: >-
+        ManaDesk prepared ManaDesk-log.txt and put it in your clipboard: click in this box and paste it
+        (Ctrl+V), or drag the file here.
+      placeholder: Paste or drop ManaDesk-log.txt here
