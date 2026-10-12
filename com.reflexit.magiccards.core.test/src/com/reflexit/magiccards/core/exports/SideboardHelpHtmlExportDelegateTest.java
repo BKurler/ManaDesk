@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - on the shared printable sheet (PrintSheet): one slot
+ *                         per deck instead of one page per deck
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -34,11 +36,12 @@ public class SideboardHelpHtmlExportDelegateTest extends AbstarctExportTest {
 	}
 
 	@Test
-	public void testCardSizedPage() {
+	public void testOnThePrintableSheet() {
 		run(exporter);
 		String html = out.toString();
-		assertTrue("no @page rule", html.contains("@page"));
-		assertTrue("page not sized to a card on its side", html.contains("88mm 63mm"));
+		assertTrue("not a printable sheet", PrintSheet.isPrintSheet(html));
+		assertEquals(1, PrintSheet.slots(html).size()); // one deck, one card-sized slot
+		assertTrue("slot not card-sized", html.contains("60mm") && html.contains("83.8mm"));
 	}
 
 	@Test
@@ -69,7 +72,7 @@ public class SideboardHelpHtmlExportDelegateTest extends AbstarctExportTest {
 		card2.setLocation(Location.valueOf("deckB-sideboard"));
 		run(exporter);
 		String html = out.toString();
-		int cards = html.split("class=\"card\"", -1).length - 1;
+		int cards = PrintSheet.slots(html).size();
 		assertTrue("expected one printable card per deck, got " + cards, cards == 2);
 		assertTrue("deckA title missing", html.contains(">deckA <"));
 		assertTrue("deckB title missing", html.contains(">deckB <"));

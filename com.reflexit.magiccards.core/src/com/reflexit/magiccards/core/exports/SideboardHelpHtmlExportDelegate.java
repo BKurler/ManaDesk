@@ -7,6 +7,9 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - laid out on the shared PrintSheet: each deck's list is
+ *                         one card-sized slot (upright, text sideways), 9 per
+ *                         page with proxies, printed at 100%
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -50,9 +53,9 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 				Location k = c.getLocation() != null ? c.getLocation().toMainDeck() : deckLoc;
 				byDeck.computeIfAbsent(k == null ? Location.NO_WHERE : k, x -> new ArrayList<>()).add(c);
 			}
-			writeDocStart();
+			List<String> slots = new ArrayList<>();
 			if (byDeck.isEmpty()) {
-				writeCard(deckName(deckLoc), "Sideboard", new ArrayList<>());
+				slots.add(cardSlot(deckName(deckLoc), "Sideboard", new ArrayList<>()));
 			} else {
 				for (Map.Entry<Location, List<MagicCardPhysical>> e : byDeck.entrySet()) {
 					List<MagicCardPhysical> group = e.getValue();
@@ -60,10 +63,10 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 					// sideboard cards first, then extra, name-sorted within each
 					group.sort(Comparator.<MagicCardPhysical, Boolean>comparing(SideboardHelpHtmlExportDelegate::isExtra)
 							.thenComparing(c -> String.valueOf(c.getName()).toLowerCase()));
-					writeCard(e.getKey().getName(), hasExtra ? "Sideboard and Extra" : "Sideboard", group);
+					slots.add(cardSlot(e.getKey().getName(), hasExtra ? "Sideboard and Extra" : "Sideboard", group));
 				}
 			}
-			writeDocEnd();
+			PrintSheet.write(stream, "Sideboard list", slots);
 		} finally {
 			monitor.done();
 		}
@@ -127,68 +130,33 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 		return getName();
 	}
 
-	private void writeDocStart() {
-		stream.println("<!DOCTYPE html>");
-		stream.println("<html><head><meta charset=\"UTF-8\">");
-		stream.println("<title>Sideboard list</title>");
-		stream.println("<style>");
-		// a Magic card on its side: long edge horizontal
-		stream.println("  @page { size: 88mm 63mm; margin: 2.5mm; }");
-		stream.println("  * { box-sizing: border-box; }");
-		stream.println("  html, body { margin: 0; padding: 0; }");
-		stream.println("  body { font: 3.9pt/1.15 'Arial Narrow', 'Segoe UI', Arial, sans-serif;"
-				+ " color: #000; -webkit-print-color-adjust: exact; print-color-adjust: exact; }");
-		stream.println("  .card { width: 83mm; height: 58mm; padding: 1.5mm; border: 0.2mm solid #999;"
-				+ " overflow: hidden; page-break-after: always; }");
-		stream.println("  .title { font-size: 4.6pt; font-weight: 700; margin: 0 0 0.8mm; padding-bottom: 0.4mm;"
-				+ " border-bottom: 0.2mm solid #000; }");
-		stream.println("  .title small { font-weight: 400; }");
-		stream.println("  table { width: 100%; border-collapse: collapse; table-layout: fixed; }");
-		stream.println("  th, td { text-align: left; vertical-align: top; padding: 0.15mm 0.6mm;"
-				+ " overflow-wrap: break-word; }");
-		stream.println("  th { font-weight: 700; text-transform: uppercase; letter-spacing: 0.1pt;"
-				+ " border-bottom: 0.15mm solid #000; white-space: nowrap; }");
-		stream.println("  tbody tr:nth-child(even) { background: #eee; }");
-		stream.println("  .qty { width: 3.5mm; text-align: right; font-weight: 700; }");
-		stream.println("  .set { width: 8mm; }");
-		// special/comment only ever hold short tags ("foil", "PROXY", ...) - keep
-		// them roughly as wide as their header word and give the room to Name
-		stream.println("  .special { width: 8mm; }");
-		stream.println("  .comment { width: 10mm; }");
-		stream.println("  .empty { color: #666; font-style: italic; padding: 2mm 0; }");
-		stream.println("</style></head><body>");
-	}
-
-	private void writeDocEnd() {
-		stream.println("</body></html>");
-	}
-
-	/** One printable card ({@code .card} = one page). */
-	private void writeCard(String deckName, String sectionLabel, List<MagicCardPhysical> cards) {
-		stream.println("<div class=\"card\">");
-		stream.println("  <div class=\"title\">" + esc(deckName) + " <small>&ndash; " + esc(sectionLabel)
-				+ "</small></div>");
+	/** One deck's list: a card-sized slot of the sheet ({@code .sb}, styled by PrintSheet). */
+	private String cardSlot(String deckName, String sectionLabel, List<MagicCardPhysical> cards) {
+		StringBuilder sb = new StringBuilder();
+		sb.append("<div class=\"sb\">\n");
+		sb.append("  <div class=\"title\">").append(esc(deckName)).append(" <small>&ndash; ").append(esc(sectionLabel))
+				.append("</small></div>\n");
 		if (cards.isEmpty()) {
-			stream.println("  <div class=\"empty\">No " + esc(sectionLabel.toLowerCase()) + " cards.</div>");
+			sb.append("  <div class=\"empty\">No ").append(esc(sectionLabel.toLowerCase())).append(" cards.</div>\n");
 		} else {
-			stream.println("  <table>");
-			stream.println("    <thead><tr>"
+			sb.append("  <table>\n");
+			sb.append("    <thead><tr>"
 					+ "<th class=\"qty\">#</th><th class=\"name\">Name</th><th class=\"set\">Set</th>"
-					+ "<th class=\"special\">Special</th><th class=\"comment\">Comment</th></tr></thead>");
-			stream.println("    <tbody>");
+					+ "<th class=\"special\">Special</th><th class=\"comment\">Comment</th></tr></thead>\n");
+			sb.append("    <tbody>\n");
 			for (MagicCardPhysical c : cards) {
-				stream.println("    <tr>"
-						+ "<td class=\"qty\">" + c.getCount() + "</td>"
-						+ "<td class=\"name\">" + esc(c.getName()) + "</td>"
-						+ "<td class=\"set\">" + esc(setLabel(c.getSet())) + "</td>"
-						+ "<td class=\"special\">" + esc(nz(c.getSpecial())) + "</td>"
-						+ "<td class=\"comment\">" + esc(nz(c.getComment())) + "</td>"
-						+ "</tr>");
+				sb.append("    <tr>").append("<td class=\"qty\">").append(c.getCount()).append("</td>")
+						.append("<td class=\"name\">").append(esc(c.getName())).append("</td>")
+						.append("<td class=\"set\">").append(esc(setLabel(c.getSet()))).append("</td>")
+						.append("<td class=\"special\">").append(esc(nz(c.getSpecial()))).append("</td>")
+						.append("<td class=\"comment\">").append(esc(nz(c.getComment()))).append("</td>")
+						.append("</tr>\n");
 			}
-			stream.println("    </tbody>");
-			stream.println("  </table>");
+			sb.append("    </tbody>\n");
+			sb.append("  </table>\n");
 		}
-		stream.println("</div>");
+		sb.append("</div>");
+		return sb.toString();
 	}
 
 	private static String setLabel(String setName) {
@@ -240,6 +208,11 @@ public class SideboardHelpHtmlExportDelegate extends AbstractExportDelegate<IMag
 
 	@Override
 	public boolean isCombineByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean isPrintSheet() {
 		return true;
 	}
 

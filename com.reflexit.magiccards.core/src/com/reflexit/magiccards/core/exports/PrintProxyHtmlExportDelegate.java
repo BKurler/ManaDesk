@@ -5,6 +5,10 @@
  *                         CardCache.getImageURL() returns null; falls back to
  *                         the remote image URL (the exported page may be
  *                         opened when the web is back).
+ *     Rémi Dutil (2026) - laid out on the shared PrintSheet: one card image per
+ *                         60 x 83.8 mm slot (a little smaller than a card, to
+ *                         fit a sleeve), 9 per page, printed at 100% - with
+ *                         sideboard lists when appended to the same file
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -13,18 +17,13 @@ import java.lang.reflect.InvocationTargetException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.util.ArrayList;
-import java.util.LinkedHashMap;
 import java.util.List;
-import java.util.Map;
 
 import com.reflexit.magiccards.core.model.IMagicCard;
-import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.CardCache;
-import com.reflexit.magiccards.core.xml.MyXMLStreamWriter;
-import com.reflexit.magiccards.core.xml.XMLStreamException;
 
 public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicCard> {
 	public static final String CARD_URI = "card://";
@@ -42,96 +41,22 @@ public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicC
 						location = location.toMainDeck();
 				}
 			}
-			try {
-				MyXMLStreamWriter w = new MyXMLStreamWriter(stream);
-				writeHtml(w);
-				w.close();
-			} catch (XMLStreamException e) {
-				throw new InvocationTargetException(e);
+			List<String> slots = new ArrayList<>();
+			for (IMagicCard card : store) {
+				int count = card instanceof ICardCountable ? ((ICardCountable) card).getCount() : 1;
+				String img = "<img class=\"proxy\" src=\"" + PrintSheet.esc(nz(getCardImageUrl(card))) + "\" alt=\""
+						+ PrintSheet.esc(card.getName()) + "\">";
+				for (int i = 0; i < count; i++)
+					slots.add(img);
 			}
+			PrintSheet.write(stream, "Print Proxies", slots);
 		} finally {
 			monitor.done();
 		}
 	}
 
-	private void writeHtml(MyXMLStreamWriter w) throws XMLStreamException {
-		/*-
-		<!DOCTYPE html PUBLIC "-//W3C//DTD HTML 4.01 Transitional//EN"
-		"http://www.w3.org/TR/html4/loose.dtd">
-
-		<html lang="en">
-		<head>
-		<meta http-equiv="Content-Type" content="text/html; charset=utf-8">
-		<title>Print Proxies</title>
-		<style type="text/css">
-		body, html, img, a {margin: 0; padding: 0; border: none;}
-		</style>
-		</head>
-		<body>
-		...
-		</body>
-		</html>
-		 */
-		w.writeDirect("<!DOCTYPE html PUBLIC \"-//W3C//DTD XHTML 1.0 Strict//EN\" \"http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd\">");
-		w.startEl("html", "xmlns", "http://www.w3.org/1999/xhtml");
-		w.startEl("head");
-		w.el("title", "Print Proxies");
-		w.startEl("style", "text", "text/css");
-		w.nl();
-		w.data("body, html, img, div, a {margin: 0; padding: 0; border: none;}");
-		w.endEl();
-		w.lineEl("meta", "http-equiv", "Content-Type", "content", "text/html; charset=utf-8");
-		w.endEl();
-		w.startEl("body");
-		body(w);
-		w.endEl();
-		w.endEl();
-	}
-
-	public void body(MyXMLStreamWriter w) throws XMLStreamException {
-		Map<Location, List<IMagicCard>> byDeck = groupByDeck();
-		if (byDeck.size() <= 1) {
-			list(w, store);
-			return;
-		}
-		// several decks combined into one sheet - one titled section per deck
-		for (Map.Entry<Location, List<IMagicCard>> e : byDeck.entrySet()) {
-			w.el("h2", e.getKey().getName());
-			list(w, e.getValue());
-		}
-	}
-
-	private Map<Location, List<IMagicCard>> groupByDeck() {
-		Map<Location, List<IMagicCard>> byDeck = new LinkedHashMap<>();
-		for (IMagicCard card : store) {
-			Location k = Location.NO_WHERE;
-			if (card instanceof ILocatable && ((ILocatable) card).getLocation() != null)
-				k = ((ILocatable) card).getLocation().toMainDeck();
-			byDeck.computeIfAbsent(k, x -> new ArrayList<>()).add(card);
-		}
-		return byDeck;
-	}
-
-	private void list(MyXMLStreamWriter w, Iterable<IMagicCard> flat) throws XMLStreamException {
-		w.startEl("div", "style", "font-size:0px;");
-		for (IMagicCard card : flat) {
-			w.nl();
-			if (card instanceof ICardCountable) {
-				int count = ((ICardCountable) card).getCount();
-				for (int i = 0; i < count; i++) {
-					cardImage(w, card);
-				}
-			} else {
-				cardImage(w, card);
-			}
-			// w.lineEl("br");
-		}
-		w.endEl();
-	}
-
-	private void cardImage(MyXMLStreamWriter w, IMagicCard card) throws XMLStreamException {
-		String url = getCardImageUrl(card);
-		w.lineEl("img", "src", url, "alt", card.getName());
+	private static String nz(String s) {
+		return s == null ? "" : s;
 	}
 
 	protected String getCardImageUrl(IMagicCard card) {
@@ -168,6 +93,11 @@ public class PrintProxyHtmlExportDelegate extends AbstractExportDelegate<IMagicC
 
 	@Override
 	public boolean isCombineByDefault() {
+		return true;
+	}
+
+	@Override
+	public boolean isPrintSheet() {
 		return true;
 	}
 }

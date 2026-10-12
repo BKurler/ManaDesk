@@ -29,10 +29,16 @@ to another app, or to print proxies or a sideboard list.</p>
 <tr><td>Export Type</td><td>The format (see below).</td></tr>
 <tr><td>Generate header row</td><td>Write the column names on the first line.</td></tr>
 <tr><td>Combine in one file</td><td>With several decks: one file (a Location column tells which deck each card
-comes from) instead of one file per deck.</td></tr>
+comes from) instead of one file per deck. Always on for the printable formats.</td></tr>
+<tr><td>Append to the existing file</td><td>If the file already exists, add this export to it instead of
+replacing it. Only into a file of the same kind: the same CSV header row (same format and columns), or a
+printable sheet (see <a href="#sheet">Printable sheets</a>). Otherwise ManaDesk says why and writes
+nothing. If the file doesn't exist yet, ManaDesk asks before creating it. Available only when everything
+goes into one file: <b>Combine in one file</b> checked, or a single deck.</td></tr>
 <tr><td>Include sideboard / Include extra</td><td>Also export the deck's sideboard and extra list.</td></tr>
 <tr><td>Columns</td><td>For formats that let you choose: <b>Change...</b> picks the columns and their order.</td></tr>
-<tr><td>Preview</td><td>The start of the file, updated as you change the options. Printable formats (Print Proxies, Print Sideboard List) are shown as they will print.</td></tr>
+<tr><td>Preview</td><td>The start of the file, updated as you change the options. Printable formats (Print
+Proxies, Print Sideboard List) are shown as they will print, with the number of pages in the title.</td></tr>
 <tr><td>Automatically open the generated file(s)</td><td>Open the file when it is written.</td></tr>
 </table>
 
@@ -44,7 +50,7 @@ created yourself.</p>
 <tr><td>ManaDesk Full CSV (and Semicolon)</td><td>Everything about each card, for a spreadsheet or a full backup of a list.</td></tr>
 <tr><td>ManaDesk Minimum CSV (and Semicolon)</td><td>Just what's needed to import the list back into ManaDesk
 (name, set, count, condition, finish, proxy...).</td></tr>
-<tr><td>Print Proxies HTML Mobile</td><td>A page of card images, to print proxies from your browser (see <a href="#proxies">below</a>).</td></tr>
+<tr><td>Print Proxies HTML Mobile</td><td>Card images to print as proxies, 9 per page (see <a href="#proxies">below</a>).</td></tr>
 <tr><td>Print Sideboard List</td><td>A card-sized list of the deck's sideboard, to keep in the deck box (see <a href="#sideboardlist">below</a>).</td></tr>
 <tr><td>ManaBox CSV</td><td>To import the list into the ManaBox app (see <a href="manabox.html">ManaBox</a>).</td></tr>
 <tr><td>Your own formats</td><td>See <a href="custom_export.html">Custom export formats</a>.</td></tr>
@@ -52,17 +58,27 @@ created yourself.</p>
 <p>Use the <i>Semicolon</i> variants if your spreadsheet expects <code>;</code> between columns (common outside
 the United States).</p>
 
+<h2 id="sheet">Printable sheets</h2>
+<p>Print Proxies and Print Sideboard List both make a <b>printable sheet</b>: pages of 9 card-sized slots
+(3 rows of 3), each 60&nbsp;&times;&nbsp;83.8&nbsp;mm &mdash; a card's proportions, a little smaller than a
+real card (63&nbsp;&times;&nbsp;88&nbsp;mm) so a printed proxy slides into a sleeve.</p>
+<ul>
+<li><b>Print at 100%</b> (no scaling) on Letter or A4 paper: you get 9 cards per sheet.</li>
+<li>The preview's title gives the number of <b>pages</b> (9 cards per page).</li>
+<li>To fill the sheets before printing, combine as much as you can: select several decks, and use
+<b>Append to the existing file</b> to add more to a sheet you already exported &mdash; proxies and sideboard
+lists can go on the same sheet. Appended cards fill the empty slots of the last page first, and the page
+count includes the cards already in the file.</li>
+</ul>
+
 <h2 id="proxies">Printing proxies</h2>
 <p>To print proxies of a deck or of your to-print collection, choose the <b>Print Proxies HTML Mobile</b>
-format. The preview shows the page as it will print: one card image per copy, side by side.</p>
+format: one card image per copy, in the slots of the <a href="#sheet">printable sheet</a>.</p>
 <p class="shot"><img src="../images/print_proxies.png" alt="Screenshot: the Export wizard previewing Print Proxies"></p>
 <ol>
 <li>Click <b>Finish</b>; with <i>Automatically open the generated file(s)</i> checked, the page opens in
 your browser.</li>
-<li>Print it from the browser and adjust the <b>scale</b> in the print settings until the preview shows
-<b>9 cards per Letter sheet</b> (3 rows of 3): the cards then come out at the size of a real card
-(63&nbsp;&times;&nbsp;88&nbsp;mm). The right scale depends on your printer and browser; print one sheet and
-measure a card to check.</li>
+<li>Print it from the browser at 100%, then cut the cards out.</li>
 </ol>
 
 <h2 id="sideboardlist">Printing a sideboard list</h2>
@@ -71,13 +87,13 @@ measure a card to check.</li>
 <li>Select the deck (or several decks) and open the Export wizard (<span class="menu">File &gt; Export...</span>).</li>
 <li>Choose the <b>Print Sideboard List</b> format. The sideboard is always read; check <b>Include extra</b>
 to list the deck's tokens and markers on the same card.</li>
-<li>Open the generated page in your browser and print it. As for proxies, adjust the <b>scale</b> in the
-print settings until the list comes out at the size of a card; the right scale depends on your printer.</li>
+<li>Open the generated page in your browser and print it at 100%.</li>
 <li>Cut it out and slip it into the deck box.</li>
 </ol>
-<p>The page is the size of a Magic card turned on its side (88 &times; 63 mm). It lists every sideboard card
-with its quantity, name, set, special tags and comment. With several decks combined in one file, each deck
-gets its own card.</p>
+<p>Each list takes one card slot of the <a href="#sheet">printable sheet</a>, its text running sideways (turn
+the card to read it). It lists every sideboard card with its quantity, name, set, special tags and comment.
+With several decks, each deck gets its own card; with <b>Append to the existing file</b>, the lists can share
+the sheet with your proxies.</p>
 <p class="shot"><img src="../images/print_sideboard_list.png" alt="Screenshot: the Export wizard previewing a sideboard list"></p>
 
 <h2>A deck's Export tab</h2>
