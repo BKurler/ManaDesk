@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Importing from a website</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Importing from a website</h1>
+
+<p>Found a deck online? ManaDesk can create it straight from the deck's page.</p>
+
+<ol>
+<li>Choose <span class="menu">File &gt; New &gt; Deck</span>.</li>
+<li>Under <b>Contents</b>, choose <b>Website</b> and paste the address of the deck page.</li>
+<li>Click <b>Browse Website...</b>. The page opens in a small browser inside ManaDesk.</li>
+<li>Navigate if needed (log in, switch to the deck's list view...), then import the deck once you can see it.</li>
+<li>Back in the wizard, ManaDesk fills in the deck's name and its format when the page states them, and
+checks <b>Also create a Sideboard</b> when the deck has one.</li>
+<li>Click <b>Next</b> to check the list, then <b>Finish</b>. See <a href="import.html">Importing cards</a>.</li>
+</ol>
+
+<p class="shot"><img src="../images/browse_website.png" alt="Screenshot: the Browse Website dialog on a deck page"></p>
+
+<h2>Supported sites</h2>
+<p>ManaDesk was tested with Aetherhub, Archidekt, deckbox.org, deckstats.net, Moxfield, mtgdecks.net,
+MTGGoldfish, MTGTop8, TappedOut and TCGplayer. Other sites often work too, as long as the page shows the
+card list.</p>
+<ul>
+<li>A Commander deck's commander goes to the sideboard.</li>
+<li>"Maybeboard" and similar sections (Considering, Wishlist...) are not imported.</li>
+<li>Uncheck <b>Also create a Sideboard</b> to import only the main deck.</li>
+</ul>
+
+<h2>Favorites</h2>
+<p>In the browser, <b>Add current page to Favorites</b> keeps a site at hand. Manage the list in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; Web Favorites</span>.</p>
+
+<div class="note">Importing from a website needs an internet connection. Website import is for decks;
+to fill a collection, copy the list and use <i>Import from Clipboard</i>.</div>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot;
+<a href="../decks/create_deck.html">Creating a deck</a></p>
+</body>
+</html>

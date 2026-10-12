@@ -5,6 +5,7 @@
  *                         "Simulate web not working" preference replaces
  *                         "Work Offline" and is only honoured in a debug
  *                         launch.
+ *     Rémi Dutil (2026) - COLOR_YELLOWISH (warning yellow)
  */
  
  package com.reflexit.magiccards.ui;
@@ -67,6 +68,8 @@ public class MagicUIActivator extends AbstractUIPlugin {
 	public static boolean TRACE_TESTING = false;
 	public static Color COLOR_GREENISH;
 	public static Color COLOR_PINKINSH;
+	/** Soft warning yellow - e.g. a legal deck that uses proxies. */
+	public static Color COLOR_YELLOWISH;
 	private IPersistentPreferenceStore preferenceStoreCore;
 
 	/**
@@ -93,6 +96,7 @@ public class MagicUIActivator extends AbstractUIPlugin {
 		Device device = Display.getDefault();
 		COLOR_GREENISH = new Color(device, 255 - 64, 255, 255 - 64);
 		COLOR_PINKINSH = new Color(device, 255, 255 - 64, 255 - 64);
+		COLOR_YELLOWISH = new Color(device, 255, 242, 168);
 
 		CardCache.setPathProvider(new UICardImagePathProvider());
 

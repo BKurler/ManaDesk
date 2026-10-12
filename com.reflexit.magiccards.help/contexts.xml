@@ -1,27 +1,71 @@
 <!--
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - one context per view (F1 / Dynamic Help), pointing to
+ *                         the rewritten help pages; added Collector, Gallery,
+ *                         Instances, Rulings, Proxier and Buyer
 -->
 <contexts>
+   <context id="viewmagicdb">
+      <description>The Scryfall Database view lists every card printing of the card database.</description>
+      <topic href="html/find/browse.html" label="Browsing the card database"/>
+      <topic href="html/find/filter.html" label="Searching and filtering"/>
+   </context>
+   <context id="viewcol">
+      <description>My Cards lists every card in all your decks and collections.</description>
+      <topic href="html/collection/my_cards.html" label="My Cards"/>
+      <topic href="html/collection/move_copy.html" label="Moving, copying and splitting"/>
+   </context>
+   <context id="viewcollector">
+      <description>The Collector view shows set completion and value.</description>
+      <topic href="html/collection/collector.html" label="Collector"/>
+   </context>
+   <context id="viewgallery">
+      <description>The Gallery shows the card database as card images.</description>
+      <topic href="html/find/gallery.html" label="The Gallery"/>
+   </context>
+   <context id="viewdeck">
+      <description>A deck or collection, with its tabs (Cards, Info, Draw, Mana, Legality, Accessories, Export...).</description>
+      <topic href="html/decks/deck_view.html" label="The Deck view"/>
+      <topic href="html/collection/concepts.html" label="Decks and collections"/>
+      <topic href="html/collection/edit_cards.html" label="Adding and editing cards"/>
+   </context>
    <context id="viewcard">
-      <description>Card Info is a view that shows information about a card. There is a link to the help content below.</description>
-      <topic href="html/reference/views.html#viewcard" label="Card Info view Reference" />
+      <description>Card Info shows the selected card: image, text, prices and legality.</description>
+      <topic href="html/find/card_details.html#cardinfo" label="Card details"/>
    </context>
    <context id="viewcardnav">
-      <description>Card Navigator is a view that shows list of your deck and collections and allow to create new decks/collections/folders. There is a link to the help content below.</description>
-      <topic href="html/reference/views.html#viewcardnav" label="Card Navigator view Reference" />
+      <description>The Card Navigator lists your decks, collections and folders.</description>
+      <topic href="html/start/window.html" label="The ManaDesk window"/>
+      <topic href="html/collection/create_collection.html" label="Creating collections and folders"/>
+      <topic href="html/reference/views.html#viewcardnav" label="Card Navigator menu"/>
    </context>
-      <context id="viewprintings">
-      <description>Printings is a view that shows selected card available in diffrent sets (in own collection or in Scryfall database). There is a link to the help content below.</description>
-      <topic href="html/reference/views.html#viewprintings" label="Printings view Reference" />
+   <context id="viewrulings">
+      <description>The Rulings view shows the official rulings of the selected card.</description>
+      <topic href="html/find/card_details.html#rulings" label="Card details: Rulings"/>
    </context>
-   <context id="viewmagicdb">
-   		<topic label="Scryfall Database" href="html/reference/views.html#viewmagicdb" />
+   <context id="viewprintings">
+      <description>The Printings view lists every printing of the selected card.</description>
+      <topic href="html/find/card_details.html#printings" label="Card details: Printings"/>
    </context>
-      <context id="viewcol">
-   	<topic label="My Cards" href="html/reference/views.html#viewcol" />
-   	</context>
-   	<context id="viewdeck">
-	<topic label="Deck" href="html/reference/views.html#viewdeck" />
-    </context> 
+   <context id="viewinstances">
+      <description>The Instances view shows your copies of the selected card.</description>
+      <topic href="html/find/card_details.html#instances" label="Card details: Instances"/>
+   </context>
+   <context id="viewproxier">
+      <description>The Proxier shows which proxies your decks need.</description>
+      <topic href="html/plan/proxier.html" label="Proxier"/>
+      <topic href="html/plan/proxies.html" label="Proxies"/>
+   </context>
+   <context id="viewbuyer">
+      <description>The Buyer shows the cards your decks still need, with prices and store lists.</description>
+      <topic href="html/plan/buyer.html" label="Buyer"/>
+      <topic href="html/plan/wishlist.html" label="Wishlists and to-print lists"/>
+   </context>
 </contexts>

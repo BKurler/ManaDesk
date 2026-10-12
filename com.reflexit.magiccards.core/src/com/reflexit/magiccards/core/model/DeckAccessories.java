@@ -637,11 +637,12 @@ public final class DeckAccessories {
 	}
 
 	private static String counterLabel(String payload) {
-		if (payload.equals("loyalty"))
-			return "Loyalty counter";
 		if (payload.equals("energy"))
 			return "Energy";
-		return payload + " counter";
+		// capitalized like the other names ("Time counter", "Loyalty counter")
+		if (payload.isEmpty())
+			return "Counter";
+		return Character.toUpperCase(payload.charAt(0)) + payload.substring(1) + " counter";
 	}
 
 	private static String markerLabel(String payload) {

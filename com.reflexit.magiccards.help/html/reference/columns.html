@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Columns</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Columns</h1>
+
+<p>What each column of the card lists means. Not every view has every column; choose them by right-clicking
+a column header, or in <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; View: ...</span>
+(<i>Visible Columns and Order</i>). A few columns have a longer name in that list than in their header:
+it is given in brackets below.</p>
+
+<h2>About the card</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Name</td><td>The card's name. With Group By, this column also shows the groups.</td></tr>
+<tr><td>Cost</td><td>The mana cost, as symbols.</td></tr>
+<tr><td>Type</td><td>The type line (Legendary Creature &mdash; Human Wizard...).</td></tr>
+<tr><td>P, T (Power, Toughness)</td><td>Power and toughness.</td></tr>
+<tr><td>Text, Oracle Text</td><td>The rules text: as printed, and the current official (Oracle) wording.</td></tr>
+<tr><td>Color, Color Type</td><td>The card's colors, and its color category (mono, multi, colorless...).</td></tr>
+<tr><td>Color Identity</td><td>The colors for Commander, from Scryfall (see <a href="#identity">below</a>).</td></tr>
+<tr><td>Extended Color Identity</td><td>The color identity plus the colors a card only touches, such as a land that
+fetches a Forest (see <a href="#identity">below</a>).</td></tr>
+<tr><td>Rarity</td><td>Common, uncommon, rare, mythic, special.</td></tr>
+<tr><td>Finish</td><td>On a printing (Scryfall Database, Printings, Collector): the finishes it exists in &mdash; for example <i>Nonfoil, Foil</i>. On your copy, see <a href="#copy">below</a>.</td></tr>
+<tr><td>Set</td><td>The set of this printing, with its symbol. Editable in your lists: switches to another printing.</td></tr>
+<tr><td>Num (Collector's Number)</td><td>The collector number. Editable in your lists.</td></tr>
+<tr><td>Release Date</td><td>When the set was released.</td></tr>
+<tr><td>Artist</td><td>The artist of this printing.</td></tr>
+<tr><td>Legality</td><td>The card's legality in the formats.</td></tr>
+<tr><td>Language</td><td>The printing's language (English when empty).</td></tr>
+<tr><td>SPrice (Online Price)</td><td>The store price (TCGplayer or Cardmarket, see <a href="../database/prices.html">Prices</a>), for the copy's finish.</td></tr>
+<tr><td>Card Id, Multiverse ID, TCGplayer ID</td><td>The card's identifiers at Scryfall, Gatherer and TCGplayer.</td></tr>
+</table>
+
+<h2 id="copy">About your copy</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Count</td><td>How many copies this row stands for.</td></tr>
+<tr><td>O</td><td>Ownership: <code>O</code> = Own, <code>V</code> = virtual (see <a href="../collection/concepts.html#ownership">Own and virtual cards</a>).</td></tr>
+<tr><td>Finish</td><td>The finish of your copy: Non-foil, Foil or Etched.</td></tr>
+<tr><td>Condition</td><td>NM, LP, MP, HP, DMG, or empty when not graded.</td></tr>
+<tr><td>Proxy</td><td>Genuine or Proxy (see <a href="../plan/proxies.html">Proxies</a>).</td></tr>
+<tr><td>User Price</td><td>Your own price for the copy.</td></tr>
+<tr><td>Special</td><td>Your special tags (signed, altered, misprint...).</td></tr>
+<tr><td>Comment</td><td>Your notes.</td></tr>
+<tr><td>Location</td><td>The deck or collection the copy is in. Editable: moves the copy (see
+<a href="../collection/move_copy.html#location">Changing the Location column</a>).</td></tr>
+<tr><td>Sideboard, Extra</td><td>Whether the copy is in a deck's sideboard or extra list.</td></tr>
+<tr><td>Date</td><td>When the copy was added.</td></tr>
+</table>
+
+<h2>Counting columns (Collector, My Cards)</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Progress</td><td>Collector: <i>X / Y (Z%)</i> &mdash; you own X of the Y different cards of the group. On a
+card: whether you own it.</td></tr>
+<tr><td>Progress4</td><td>Collector: the same for playsets &mdash; 4 copies of each card.</td></tr>
+<tr><td>Own Count</td><td>How many copies of this printing you own.</td></tr>
+<tr><td>Own Total</td><td>How many copies of the card you own, all printings together.</td></tr>
+<tr><td>Own Unique</td><td>How many different cards of the group you own (for set completion).</td></tr>
+<tr><td>Online Price, User Price</td><td>Collector: the value of the copies you own, at the store price or at your
+own price.</td></tr>
+</table>
+<p>In the Collector, proxies only count when <b>Count Proxies</b> is on (see <a href="../collection/collector.html">Collector</a>).</p>
+
+<h2>Deck tabs</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Percent</td><td>Mana, Types, Creatures, Colors, Abilities: the share of the group in the deck.</td></tr>
+<tr><td>D, Zone, Tapped, Notes</td><td>Draw: the order the card was drawn, where it is now (hand, battlefield,
+graveyard...), whether it is tapped, and your notes.</td></tr>
+<tr><td>Have, Deck Cards</td><td>Accessories: how many you have in the extra list, and how many of the deck's cards
+need it.</td></tr>
+</table>
+
+<h2>Import preview</h2>
+<table>
+<tr><th>Column</th><th>Meaning</th></tr>
+<tr><td>Error</td><td>Why a row couldn't be matched to a card (see <a href="../transfer/import.html">Importing cards</a>).</td></tr>
+</table>
+
+<h2 id="identity">Color identity and extended color identity</h2>
+<table>
+<tr><th></th><th>Color identity</th><th>Extended color identity</th></tr>
+<tr><td>What it is</td><td>The colors of the mana symbols in the card's cost and rules text, as Scryfall
+gives them &mdash; the official Commander rule.</td><td>The color identity, plus the colors the card only
+<i>touches</i>: the basic land types or colors its text names, such as a land that fetches a Forest or a
+spell that adds mana of a named color.</td></tr>
+<tr><td>Example</td><td>A land that says "search your library for a Forest or Plains card" is
+colorless.</td><td>The same land is green and white.</td></tr>
+<tr><td>Used for</td><td>Commander legality (see <a href="../decks/legality.html">Formats and legality</a>).</td><td>Searching and sorting only: to find
+the cards that really work in a green-white deck.</td></tr>
+</table>
+<p>Both are columns (<b>Color Identity</b>, <b>Extended Color Identity</b>) and both can be searched in the
+filter dialog: check the colors, then <b>Identity</b> or <b>Extended Identity</b> (see
+<a href="../find/filter.html#dialog">The filter dialog</a>).</p>
+
+
+<p class="seealso">See also: <a href="../find/browse.html">Browsing the card database</a> &middot;
+<a href="preferences.html">Preferences</a></p>
+</body>
+</html>

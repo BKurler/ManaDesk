@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>ManaBox</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>ManaBox</h1>
+
+<p>Already keep your cards in <b>ManaBox</b>, the phone app? You can bring them into ManaDesk easily, and
+send your decks and collections back to it. ManaBox and ManaDesk both use Scryfall's card data, so each card
+arrives as the exact printing you have.</p>
+
+<h2>From ManaBox to your collection</h2>
+<ol>
+<li>In ManaBox, export the binder or list to <b>CSV</b> and get the file on your computer (e-mail, cloud
+drive...).</li>
+<li>In ManaDesk, right-click a Standard collection and choose <b>Import into...</b>
+(or create a new collection from the file).</li>
+<li>Pick the file. The format is recognized as <b>ManaBox CSV</b>.</li>
+<li>Check the preview, then click <b>Finish</b>. See <a href="import.html">Importing cards</a>.</li>
+</ol>
+<p class="shot"><img src="../images/manabox_export.png" alt="Screenshot: ManaBox's export screen (phone)"></p>
+
+<h2>What comes across</h2>
+<table>
+<tr><th>ManaBox</th><th>ManaDesk</th></tr>
+<tr><td>Scryfall ID (or Name, Set, Collector number)</td><td>The exact printing</td></tr>
+<tr><td>Quantity</td><td>Count</td></tr>
+<tr><td>Foil (normal / foil / etched)</td><td>Finish</td></tr>
+<tr><td>Condition</td><td>Condition: near mint and mint &rarr; NM, excellent &rarr; LP, good and light played &rarr; MP,
+played &rarr; HP, poor &rarr; DMG</td></tr>
+<tr><td>Language</td><td>Language, when the card database has that printing (otherwise English, shown in yellow in the preview)</td></tr>
+<tr><td>Purchase price</td><td>User Price (converted to your currency when possible)</td></tr>
+<tr><td>Proxy</td><td>Proxy</td></tr>
+<tr><td>Misprint, Altered, Signed</td><td>The <code>misprint</code>, <code>altered</code> and <code>signed</code> special tags</td></tr>
+<tr><td>Added</td><td>The copy's date</td></tr>
+</table>
+<p>A full-collection export from ManaBox includes the binder of each card; ManaDesk imports all of them into
+the collection you chose.</p>
+
+<h2>From ManaDesk to ManaBox</h2>
+<p>Export a deck or collection with the <b>ManaBox CSV</b> format (see <a href="export.html">Exporting</a>),
+then import the file in ManaBox. The Scryfall ID tells ManaBox the exact printing.</p>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>

@@ -128,6 +128,7 @@
  *                         moved to the shared core class DeckNeeds - the Buyer
  *                         view uses the same one; "To Print" = Row.shortfall().
  *                         Behaviour unchanged.
+ *     Rémi Dutil (2026) - F1 help context (viewproxier)
  */
 package com.reflexit.magiccards.ui.views.proxier;
 
@@ -165,6 +166,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.swt.widgets.Tree;
+import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.part.ViewPart;
 
 import com.reflexit.magiccards.core.DataManager;
@@ -279,6 +281,7 @@ public class ProxierView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, MagicUIActivator.helpId("viewproxier"));
 		SashForm sash = new SashForm(parent, SWT.HORIZONTAL);
 		createLeftPane(sash);
 		createRightPane(sash);

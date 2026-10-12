@@ -304,7 +304,8 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 			}
 		});
 
-		dbprice.setText(sp + " (" + up + ")");
+		// the user-price total in brackets only when there is one - not an empty "()"
+		dbprice.setText(up == null || up.trim().isEmpty() ? sp : sp + " (" + up + ")");
 		updateProxyStats(mainStore, sideboardStore);
 		colors.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(mainStore)));
 		colorsSideboard.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(sideboardStore)));
@@ -312,7 +313,9 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		decktype.setText(prefix);
 		List<? extends ICard> childrenList = group.getChildrenList();
 		maxRepeats.setText(String.valueOf(CardStoreUtils.getMaxRepeats(childrenList)));
-		CardGroup types = CardStoreUtils.buildTypeGroups(childrenList);
+		// rarity and average mana cost describe the main deck only (like the Mana and
+		// Types tabs) - the sideboard is counted separately
+		CardGroup types = CardStoreUtils.buildTypeGroups(mainStore);
 		CardGroup top = (CardGroup) types.getChildAtIndex(0);
 		CardGroup ncre = (CardGroup) top.getChildAtIndex(1);
 		CardGroup cre = (CardGroup) top.getChildAtIndex(2);
@@ -338,7 +341,7 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 			int creCost = CardStoreUtils.getManaCost(cre.expand());
 			int ncreCost = CardStoreUtils.getManaCost(ncre.expand());
 			averagecost.setText(
-					String.valueOf((creCost + ncreCost) / (float) spellCount) + " (" + spellCount + " spells)");
+					String.format("%.2f", (creCost + ncreCost) / (float) spellCount) + " (" + spellCount + " spells)");
 		} else {
 			averagecost.setText("-");
 		}

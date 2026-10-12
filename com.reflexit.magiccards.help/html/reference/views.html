@@ -1,283 +1,67 @@
-<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.0 Transitional//EN">
-
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
 <html>
 <head>
-<meta http-equiv="Content-Type" content="text/html; charset=iso-8859-1">
-
+<meta charset="utf-8">
 <title>Views</title>
+<link rel="stylesheet" href="../help.css">
 </head>
-
 <body>
-	<h1>Views</h1>
-	<h2>
-		<a name="viewmagicdb">Scryfall Database View</a>
-	</h2>
-	"Scryfall Database" view show all available cards. 
-	Default database contains sets only up to the last public set that was
-	released prior to the software release. You can update local database
-	with specific set, with recent sets (least 2 years) or all sets. See
-	<a href="preferences.html#update">Update Scryfall Database</a>.
-	<p />
-	Scryfall Database View specific context menu actions:
-	<ul>
-		<li>Filter... - opens a <a href="filter_dialog.html">Filter
-				Dialog</a></li>
-		<li>Copy - copy card to clipboard</li>
-		<li>Add to Active Deck/Collection (hotkey + or =) - menu to move
-			card to active collection (or deck). Active collection is the
-			collection that was active last time</li>
-		<li>Add to - add card to selected deck/collection. Collection
-			must be open to show up in the menu.</li>
-		<li>Show Other Sets - for selected card show if this is printed
-			in other sets, opens the <a href="#viewprintings">Printings</a> view
-		</li>
-	</ul>
-	<p />
-	<p>
-		<img src="../screenshots/views/mtg_database.png"
-			alt="mtg database view image" />
-	</p>
+<h1>Views</h1>
 
-	<h3>
-		<a name="viewcomp">Cards view Components</a>
-	</h3>
-	<ul>
-		<li>Cards Table - see <a href="#cardstable">Cards Table</a>
-			reference.
-		</li>
-		<li>Status Bar - shows information about current card table.</li>
-		<li>Search Bar (Optional) - see <a href="search_bar.html#search">Search</a>.
-		</li>
-		<li>Tool Bar
-			<ul>
-				<li><img
-					src="../../../com.reflexit.magiccards.ui/icons/clcl16/filter.gif" />
-					(Open Filter) - opens a <a href="filter_dialog.html">Filter
-						dialog</a>.</li>
-				<li><a name="viewmenu"></a><img
-					src="../screenshots/icons/view_menu.gif" /> (View Menu)
-					<ul>
-						<li>Filter... - opens a <a href="filter_dialog.html">Filter
-								Dialog</a></li>
-						<li>"Group By" menu
-							<ul>
-								<li>None - no grouping</li>
-								<li>Cost - to group cards by converted mana cost</li>
-								<li>Color - to group cards by color name</li>
-								<li>Type - to group cards by type</li>
-							</ul>
-						</li>
-						<li>"Preferences..." - opens this view <a
-							href="preferences.html#columnpref">preferences</a>.
-						</li>
-						<li>"Find..." - opens a <a href="search_bar.html#search">search</a>
-							bar.
-						</li>
-						<li>"Sort By" - sorts by specific column</li>
-					</ul></li>
-			</ul>
-		</li>
-	</ul>
+<p>Every ManaDesk view, where it lives in the window, and where to read more. Open any view with
+<span class="menu">Window &gt; Show View</span>; press <kbd>F1</kbd> in a view for its help.</p>
 
+<table>
+<tr><th>View</th><th>Zone</th><th>Shows</th><th>More</th></tr>
+<tr><td id="viewmagicdb">Scryfall Database</td><td>Center</td><td>Every card printing in the card database.</td>
+<td><a href="../find/browse.html">Browsing the card database</a></td></tr>
+<tr><td id="viewcol">My Cards</td><td>Center</td><td>All the cards in all your decks and collections.</td>
+<td><a href="../collection/my_cards.html">My Cards</a></td></tr>
+<tr><td id="viewcollector">Collector</td><td>Center</td><td>Set completion and value.</td>
+<td><a href="../collection/collector.html">Collector</a></td></tr>
+<tr><td id="viewgallery">Gallery</td><td>Center</td><td>The card database as images.</td>
+<td><a href="../find/gallery.html">The Gallery</a></td></tr>
+<tr><td id="viewproxier">Proxier</td><td>Center</td><td>The proxies your decks need.</td>
+<td><a href="../plan/proxier.html">Proxier</a></td></tr>
+<tr><td id="viewbuyer">Buyer</td><td>Center</td><td>The cards your decks still need, with prices and store lists.</td>
+<td><a href="../plan/buyer.html">Buyer</a></td></tr>
+<tr><td id="viewdeck">Deck (one per deck or collection)</td><td>Top center</td><td>A deck or collection, with its tabs.</td>
+<td><a href="../decks/deck_view.html">The Deck view</a></td></tr>
+<tr><td id="viewcard">Card Info</td><td>Left</td><td>The selected card.</td>
+<td><a href="../find/card_details.html#cardinfo">Card details</a></td></tr>
+<tr><td id="viewcardnav">Card Navigator</td><td>Top right</td><td>Your decks, collections and folders.</td>
+<td><a href="../start/window.html">The ManaDesk window</a></td></tr>
+<tr><td id="viewrulings">Rulings</td><td>Bottom right</td><td>The selected card's rulings.</td>
+<td><a href="../find/card_details.html#rulings">Card details</a></td></tr>
+<tr><td id="viewprintings">Printings</td><td>Bottom right</td><td>Every printing of the selected card.</td>
+<td><a href="../find/card_details.html#printings">Card details</a></td></tr>
+<tr><td id="viewinstances">Instances</td><td>Bottom right</td><td>Your copies of the selected card.</td>
+<td><a href="../find/card_details.html#instances">Card details</a></td></tr>
+</table>
 
-	<h3>
-		<a name="cardstable">Cards Table</a>
-	</h3>
-	Cards table is a table (or table tree) that show cards for current
-	view. It provides the following actions:
-	<br />
-	<li>Select a row - show card description in <a href="#viewcard">Card
-			Info</a> view.
-	</li>
-	<li>Hover over a cell - show a tooltip - full text of the cell if
-		cell is to small to show it (ex. Description column).</li>
-	<li>Click on column header - sort by column, click again on the
-		same column header to change direction of a sort</li>
-	<li>Click inside a cell - bring up cell editor (if applicable, ex.
-		Count column)</li>
-	<p />
-	This is a list of all possible columns:
-	<br />
-	<a name="columns" />
-	<ul>
-		<li>Name - name of the card</li>
-		<li>Id - id of the card (Scryfall id)</li>
-		<li>Cost - cost images and converted cast cost (sorts by CCC)</li>
-		<li>Type - type of card</li>
-		<li>P - power for creatures</li>
-		<li>T - toughness for creatures and for planeswalkers</li>
-		<li>Rarity - card rarity</li>
-		<li>Set - card set</li>
-		<li>Oracle text - text of card (oracle variant)</li>
-		<li>Color - card color determined by casting cost</li>
-		<li>Color type - mono, multi or hybrid</li>
-		<li>SPrice - price of single card from TCGplayer</li>
-	</ul>
-	<p />
-	These only available in Deck and My Cards view:
-	<ul>
-		<li>Count - Card count</li>
-		<li>Location - Card location: Deck or Collection path</li>
-		<li>Comment - card comment</li>
-		<li>User Price - personal price per card</li>
-	</ul>
+<h2>Card Navigator menu</h2>
+<p>Right-click in the Card Navigator:</p>
+<table>
+<tr><th>Item</th><th>Action</th></tr>
+<tr><td>Open (Activate)</td><td>Open the deck or collection and make it the <a href="../collection/move_copy.html#active">active</a> one.</td></tr>
+<tr><td>New Deck..., New Collection..., New Folder...</td><td>Create one in the selected folder.</td></tr>
+<tr><td>Import into...</td><td>Import a card list into the selected deck or collection.</td></tr>
+<tr><td>Edit Properties...</td><td>The deck's or collection's properties.</td></tr>
+<tr><td>Rename, Delete</td><td>Rename or delete it (see <a href="../collection/create_collection.html">Creating collections and folders</a>).</td></tr>
+<tr><td>Show These Cards in My Cards View</td><td>Filter My Cards to the selection.</td></tr>
+<tr><td>Show Sideboards and Extras</td><td>Also list the decks' sideboards and extra lists.</td></tr>
+<tr><td>Show Scryfall Database</td><td>Bring the Scryfall Database view to the front.</td></tr>
+<tr><td>Refresh</td><td>Reload the tree.</td></tr>
+</table>
 
-
-	<h2>
-		<a name="viewcol" />My Cards View
-	</h2>
-	My Cards View shows cards from all your decks or collections (or from
-	selected ones). To control which collections are shown you can use
-	<a href="filter_dialog.html#filterloc">Location</a> page of the view's
-	Filter. For the list of view components (menus, card table, status bar)
-	see
-	<a href="#viewcomp">Scryfall Database view</a>.
-	<p />
-	You can open "My Cards" view by double-clicking on one of the
-	collections or containers from
-	<a href="#viewcardnav">Card Navigator</a> view.
-	<p />
-	Context menu actions:
-	<ul>
-		<li>Filter... - opens a <a href="filter_dialog.html">Filter
-				Dialog</a></li>
-		<li>Delete - delete a cards pile (one row which usually groups
-			cards with the same name)</li>
-		<li>Copy - copy card to clipboard</li>
-		<li>Paste - paste card from clipboard</li>
-		<li>Move to - menu to move card to selected collection/deck.
-			Collection must be opened to show up in this menu.</li>
-		<li>Split pile... - split cards in pile (cards with the same
-			name) into 2 piles (opens a dialog that allow to select number of
-			cards in each)</li>
-		<li>Edit Card... - edit card properties, note: card count can be
-			edited right in the cell</li>
-	</ul>
-	<h2>
-		<a name="viewcollector" />Collector
-	</h2>
-	Collector view is oriented to people who collecting magic cards and
-	shows overall completion of collection for each set and what cards are
-	missing. Collector view has same context menu actions as My Cards view.
-	It has different grouping options oriented on set and languages.
-
-	<h2>
-		<a name="viewdeck" />Deck View
-	</h2>
-	Deck view shows cards from a specific deck. To open a Deck view
-	double-click on a deck from
-	<a href="#viewcardnav">Card Navigator</a> view. To close a Deck view
-	click on "X" icon near the view header.
-	<p />
-	For the list of view components (menus, card table, status bar) see
-	<a href="#viewcomp">Scryfall Database view</a>.
-	<p />
-	Context menu actions:
-	<ul>
-		<li>Filter... - opens a <a href="filter_dialog.html">Filter
-				Dialog</a></li>
-		<li>Delete - delete a card pile</li>
-		<li>Increase (hotkey + or =) - increase count of the cards for
-			selected card piles</li>
-		<li>Decrease (hotkey -) - decrease count of the cards for
-			selected card piles</li>
-		<li>Copy - copy card to clipboard</li>
-		<li>Paste - paste card from clipboard</li>
-		<li>Move to - menu to move card to selected collection/deck.
-			Collection must be opened to show up in this menu.</li>
-		<li>Split pile... - split cards in pile (cards with the same
-			name) into 2 piles</li>
-		<li>Edit Card... - edit card properties, note: card count can be
-			edited right in the cell</li>
-	</ul>
-	<p />
-	You can drag cards from and to Deck view. Dragging a card from a Deck
-	view to another deck or collection will move the card. Dragging a card
-	from Scryfall Database view to a Deck view will add 1 card to the deck.
-	<p />
-	You can change number of cards of the same name by editing Count cell
-	or edit multiple cards by selecting them and using "Edit..." from
-	context menu.
-	<p />
-	Deck view also has Mana Curve tab - to show mana curve, Card Types type
-	- to show chart of type distribution and types info, Colors - to show
-	chart of colors distribution for spells, and Info tab where you can
-	edit deck description.
-
-	<p />
-	To try what hands you can get with this deck you can run command
-	"New Game" from the view menu (triangle icon).
-
-	<h2>
-		<a name="viewcard" />Card Info View
-	</h2>
-	Card Info view shows details of the card selected in one of the cards
-	views (Scryfall Database, My Cards or Deck). It loads a card image from
-	"Scryfall" site, and caches it in the workspace.
-	<p />
-	You can turn off card caching from
-	<a href="preferences.html">Preferences</a> in the Magic Preferences
-	page. If you need to use proxy you can set it up proxy settings from
-	Preferences-&gt;General-&gt;Network Connections.
-	<p />
-	If image is not loaded or image quality is not acceptable card
-	information is duplicated as a text below the image.
-	<p />
-	To load card information into Card Info view select a card (single
-	click) from any other views that shows cards list.
-
-	<h2>
-		<a name="viewcardnav" />Card Navigator View
-	</h2>
-	Card navigator allows you to create a structure to organise your cards.
-	You can create arbitrary structures to organise you collections and
-	decks.
-	<p />
-	To add new elements in the structure you can use view context menu
-	(right click) or main File menu, see details in
-	<a href="workbench.html#new">New Menu</a>.
-	<p />
-	To delete an element use context menu "Delete". Select an element,
-	right-click on it and select menu item "Delete".
-	<p />
-	To rename an element use context menu "Rename". Select an element,
-	right-click on it and select menu item "Rename".
-	<p />
-	You can also Export and Import deck/collections from this view.
-
-	<h2>
-		<a name="viewprintings" />Printings View
-	</h2>
-
-	Printings view shows all sets in which selected card was
-	printed (which is known to local database), for example land such as
-	Island would be listed at least four times for each core set in this
-	view. Card in other languages won't be listed by default, until you extend database with
-	printings in a specific language.
-	<p />
-	<p>
-		<img src="../screenshots/views/printings.png"
-			alt="Printings view image" />
-	</p>
-		<p>The globe looking button is "Update printings from the web", it
-		will synchronize local database copy with gatherer database for
-		selected card.</p>
-
-	<h2>
-		<a name="viewinstances" />Instances View
-	</h2>
-	Shows instances of selected card available in
-	your collections real or virtual (columns are "Set", "Ownership", "Count", 
-	"Location", "Special", "Comment" and "For Trade Count"). Columns can be dragged around and resized. 
-	You can drag cards from this view to deck/collection.
-	It will move a card pile to another collection, unless you "copy" drag (which is usually
-	ctrl+drag). Note that copying real cards is protected operation and not permitted unless you override it in setting.
-	<p>
-		<img src="../screenshots/views/instances.png"
-			alt="Printings view image" />
-	</p>
-	To open Printings view for the same card press "M" looking button.
-
-
+<p class="seealso">See also: <a href="../start/window.html">The ManaDesk window</a> &middot;
+<a href="menus.html">Menus and commands</a></p>
 </body>
 </html>

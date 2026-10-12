@@ -21,6 +21,9 @@
  *                         when the card file cannot be downloaded, repair /
  *                         parser-version prompts are skipped when there is
  *                         nothing to rebuild from.
+ *     Rémi Dutil (2026) - promptDownloadIfEmpty(): "can download" no longer
+ *                         depends on the bulk file size, which Scryfall stopped
+ *                         publishing (it showed "web not accessible" online)
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -155,8 +158,11 @@ public class CheckForUpdateDbHandler extends AbstractHandler {
 					lastEmptyPrompt = System.currentTimeMillis();
 				}
 				final boolean haveBulk = ScryfallBulkCache.hasLocalBulk();
+				// can download = the bulk index gives a download link and answers;
+				// the size is optional (Scryfall no longer publishes it), only
+				// used for the "(about N MB)" in the question
+				final boolean canDownload = haveBulk || ScryfallBulkCache.isReachable();
 				final long mb = haveBulk ? -1 : ScryfallBulkCache.remoteBulkSizeMB();
-				final boolean canDownload = haveBulk || mb > 0;
 				Display.getDefault().asyncExec(() -> {
 					if (!canDownload) {
 						MessageDialog.openInformation(MagicUIActivator.getShell(), "Card Database",

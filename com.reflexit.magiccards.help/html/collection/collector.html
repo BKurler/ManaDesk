@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Collector</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Collector</h1>
+
+<p>The <b>Collector</b> view is for set collectors. It lists the cards of the card database grouped by
+set, and shows for each set how many cards you own, the completion percentage and the value.</p>
+
+<p class="shot"><img src="../images/collector_view.png" alt="Screenshot: the Collector view grouped by set"></p>
+
+<h2>Options</h2>
+<table>
+<tr><th>Option</th><th>Meaning</th></tr>
+<tr><td><b>Count Proxies</b> (P)</td><td>Include proxy copies in the completion %, Own Count, Own Unique, the
+total in the status line and the value. Off by default: a set completed with proxies isn't really
+complete.</td></tr>
+<tr><td><b>Count Finishes Separately</b> (F)</td><td>Treat each finish (non-foil, foil, etched) of a printing as
+a card of its own &mdash; for completing a set in foil too.</td></tr>
+<tr><td><b>Refresh</b></td><td>Recount after changes.</td></tr>
+</table>
+<p>Count Proxies and Count Finishes Separately are also on the
+<span class="menu">View: Collector</span> preference page, where <b>Restore Defaults</b> turns both off.</p>
+
+<p>Only cards you <b>own</b> count (cards in decks and Wishlist/To Print collections are virtual, so they
+don't).</p>
+
+<p>By default the list is grouped by set, with the sets in alphabetical order. It can be grouped
+differently (by rarity, by color...), sorted and filtered like any other card list; <b>Restore
+Defaults</b> on its preference page brings back the grouping by set. Choose its columns in
+<span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences &gt; View: Collector</span>.</p>
+
+<p class="seealso">See also: <a href="../plan/proxies.html">Proxies</a> &middot;
+<a href="my_cards.html">My Cards</a></p>
+</body>
+</html>

@@ -1151,7 +1151,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	private String getClipboardClipped() {
-		String cl = getClipboardText();
+		// a single-line field drops the line breaks and glues the lines together
+		// ("1 Food1 Haunting Echoes") - show them as " | " instead
+		String cl = getClipboardText().trim().replaceAll("\\s*[\\r\\n]+\\s*", " | ");
 		String clipped = cl.length() > 80 ? cl.subSequence(0, 80) + "..." : cl;
 		return clipped;
 	}

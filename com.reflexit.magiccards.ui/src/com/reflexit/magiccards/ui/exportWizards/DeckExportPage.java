@@ -14,6 +14,9 @@
  *     Rémi Dutil (2026) - preview jobs never overlap (PREVIEW_RULE): two at once
  *                         shared the format's export delegate and mixed their
  *                         output (header lost, a row cut in the middle)
+ *     Rémi Dutil (2026) - html exports (Print Proxies, Print Sideboard List...)
+ *                         are previewed rendered, in an embedded browser,
+ *                         instead of as raw html code
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -47,6 +50,10 @@ import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.viewers.StructuredSelection;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.browser.Browser;
+import org.eclipse.swt.browser.LocationAdapter;
+import org.eclipse.swt.browser.LocationEvent;
+import org.eclipse.swt.custom.StackLayout;
 import org.eclipse.swt.events.ModifyEvent;
 import org.eclipse.swt.events.ModifyListener;
 import org.eclipse.swt.events.SelectionAdapter;
@@ -56,6 +63,7 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Group;
 import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
@@ -64,6 +72,7 @@ import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.dialogs.IOverwriteQuery;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.exports.CustomExportDelegate;
 import com.reflexit.magiccards.core.exports.IExportDelegate;
 import com.reflexit.magiccards.core.exports.ImportExportFactory;
@@ -116,6 +125,10 @@ public class DeckExportPage extends WizardDataTransferPage {
 	private boolean combineTouched;
 	private StringButtonFieldEditor collection;
 	private Text previewText;
+	/** Renders html exports; null when no browser is available on this system. */
+	private Browser previewBrowser;
+	private Group previewGroup;
+	private StackLayout previewStack;
 	private Job previewJob;
 	/**
 	 * Previews never overlap: they share each format's single export delegate,
@@ -320,17 +333,41 @@ public class DeckExportPage extends WizardDataTransferPage {
 	}
 
 	protected void createPreviewGroup(Composite parent) {
-		Group previewGroup = new Group(parent, SWT.NONE);
+		previewGroup = new Group(parent, SWT.NONE);
 		GridLayout layout = new GridLayout();
 		previewGroup.setLayout(layout);
 		previewGroup.setLayoutData(new GridData(GridData.FILL_BOTH));
 		previewGroup.setText("Preview");
 		previewGroup.setFont(parent.getFont());
-		previewText = new Text(previewGroup, SWT.READ_ONLY | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
-		previewText.setText("preview...");
+		// raw text for csv / text formats, a browser for html ones - stacked
+		Composite stack = new Composite(previewGroup, SWT.NONE);
+		previewStack = new StackLayout();
+		stack.setLayout(previewStack);
 		GridData layoutData = new GridData(GridData.FILL_BOTH);
-		layoutData.heightHint = 100;
-		previewText.setLayoutData(layoutData);
+		layoutData.heightHint = 200; // room for a rendered page (proxies, sideboard card)
+		stack.setLayoutData(layoutData);
+		previewText = new Text(stack, SWT.READ_ONLY | SWT.MULTI | SWT.V_SCROLL | SWT.H_SCROLL);
+		previewText.setText("preview...");
+		try {
+			previewBrowser = new Browser(stack, SWT.NONE);
+			previewBrowser.addLocationListener(new LocationAdapter() {
+				@Override
+				public void changing(LocationEvent event) {
+					// a preview: links (card pages...) must not navigate away
+					if (event.location != null && !event.location.startsWith("about:"))
+						event.doit = false;
+				}
+			});
+		} catch (Throwable e) {
+			MagicLogger.log(e);
+			previewBrowser = null; // no browser - html is shown as text
+		}
+		previewStack.topControl = previewText;
+	}
+
+	private boolean isMarkup(ReportType type) {
+		return type != null && previewBrowser != null && !previewBrowser.isDisposed()
+				&& ("html".equalsIgnoreCase(type.getExtension()) || type.getLabel().contains("HTML"));
 	}
 
 	private void defaultPrompt() {
@@ -816,6 +853,7 @@ public class DeckExportPage extends WizardDataTransferPage {
 		final ReportType type = getReportType();
 		final List<CardElement> decks = selectedDecks();
 		final boolean combine = isCombineSelected() && decks.size() > 1;
+		final boolean markup = isMarkup(type);
 		if (previewJob != null) {
 			previewJob.cancel();
 		}
@@ -826,15 +864,14 @@ public class DeckExportPage extends WizardDataTransferPage {
 					if (combine || decks.size() <= 1) {
 						exportDeck(outStream, monitor, type, header, decks, sideboard, extra, combine);
 						if (!monitor.isCanceled())
-							updatePreview(outStream.toString());
+							updatePreview(outStream.toString(), null, markup);
 					} else {
 						CardElement first = decks.get(0);
 						exportDeck(outStream, monitor, type, header, java.util.Collections.singletonList(first),
 								sideboard, extra, false);
 						if (!monitor.isCanceled())
-							updatePreview("# Preview: \"" + first.getLocation().toMainDeck().getName()
-									+ "\" only — " + decks.size() + " files will be written.\n\n"
-									+ outStream.toString());
+							updatePreview(outStream.toString(), "\"" + first.getLocation().toMainDeck().getName()
+									+ "\" only — " + decks.size() + " files will be written", markup);
 					}
 				} catch (InvocationTargetException e) {
 					if (e.getTargetException() instanceof InterruptedException) {
@@ -855,13 +892,37 @@ public class DeckExportPage extends WizardDataTransferPage {
 	}
 
 	protected void updatePreview(final String string) {
+		updatePreview(string, null, false);
+	}
+
+	/**
+	 * @param note
+	 *            shown before the preview (in the group title for a rendered one),
+	 *            or null
+	 * @param markup
+	 *            render the text as html in the browser instead of showing the code
+	 */
+	protected void updatePreview(final String string, final String note, final boolean markup) {
 		if (getControl() == null)
 			return;
 		getControl().getDisplay().asyncExec(new Runnable() {
 			@Override
 			public void run() {
-				previewText.setText(string);
-				previewText.getParent().layout(true, true);
+				if (previewText.isDisposed())
+					return;
+				boolean render = markup && previewBrowser != null && !previewBrowser.isDisposed();
+				Control top;
+				if (render) {
+					previewBrowser.setText(string);
+					previewGroup.setText(note == null ? "Preview" : "Preview: " + note);
+					top = previewBrowser;
+				} else {
+					previewText.setText(note == null ? string : "# Preview: " + note + ".\n\n" + string);
+					previewGroup.setText("Preview");
+					top = previewText;
+				}
+				previewStack.topControl = top;
+				previewGroup.layout(true, true);
 			}
 		});
 	}

@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Importing cards</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Importing cards</h1>
+
+<p>Import a card list to create a deck or collection in one go, or to add many cards to an existing one.
+The list can come from the clipboard, a file, a deck website, or another app's export.</p>
+
+<h2>Where to start</h2>
+<table>
+<tr><th>To...</th><th>Use</th></tr>
+<tr><td>Create a new deck from a list</td><td><span class="menu">File &gt; New &gt; Deck</span>, then
+<i>Import from Clipboard</i>, <i>Import from File</i> or <i>Website</i> (see <a href="../decks/create_deck.html">Creating a deck</a>).</td></tr>
+<tr><td>Create a new collection from a list</td><td><span class="menu">File &gt; New &gt; Collection</span>, then
+<i>Import from Clipboard</i> or <i>Import from File</i> (see <a href="../collection/create_collection.html">Creating collections</a>).</td></tr>
+<tr><td>Add cards to an existing deck or collection</td><td>Right-click it in the Card Navigator, <b>Import into...</b></td></tr>
+</table>
+
+<h2>Step 1 &mdash; the source</h2>
+<p>All the ways in lead to the same pages. Here, the <b>New Deck</b> wizard with a list on the clipboard:</p>
+<p class="shot"><img src="../images/import_source.png" alt="Screenshot: the New Deck wizard, source and format"></p>
+<ul>
+<li><b>Clipboard</b> &mdash; copy the list first. <b>Edit...</b> shows the text and lets you change it.</li>
+<li><b>File</b> &mdash; <b>Browse...</b> to pick the file.</li>
+<li><b>Website</b> (decks only) &mdash; see <a href="import_website.html">Importing from a website</a>.</li>
+</ul>
+<p>ManaDesk recognizes the <b>format</b> on its own; you can still pick it in the list. <b>Example...</b> shows
+what that format looks like. The line below tells how many cards were found.</p>
+
+<h3>Supported formats</h3>
+<table>
+<tr><th>Format</th><th>What it is</th></tr>
+<tr><td>Freeform Text</td><td>Any deck list: <code>4 Lightning Bolt</code>, <code>4x Lightning Bolt (M10)</code>,
+<code>Lightning Bolt</code>, lines with a Scryfall id, <code>#</code> comments, and a <i>Sideboard</i> line before
+the sideboard cards. This is what most websites, forums and apps produce.</td></tr>
+<tr><td>ManaDesk CSV / ManaDesk CSV Semicolon</td><td>The files ManaDesk exports (see <a href="export.html">Exporting</a>).</td></tr>
+<tr><td>ManaBox CSV</td><td>Exports from the ManaBox app (see <a href="manabox.html">ManaBox</a>).</td></tr>
+<tr><td>Magic Assistant CSV</td><td>CSV files with a header row, from Magic Assistant and similar programs
+(columns such as Name, Set, Count, Language, Collector Number...).</td></tr>
+</table>
+
+<h2>Step 2 &mdash; check the list</h2>
+<p>Click <b>Next</b>. The preview shows every card as ManaDesk understood it, before anything is imported.</p>
+<p class="shot"><img src="../images/import_preview.png" alt="Screenshot: the import preview with an error and an auto-filled cell"></p>
+<ul>
+<li>A card is matched by its Scryfall id when the file has one, otherwise by its name, set and collector number.</li>
+<li>Rows ManaDesk couldn't match show an <b>error</b> in red. Select the row: the zone below the table explains
+the problem.</li>
+<li>Fix a row by editing its <b>Name</b>, <b>Set</b>, <b>Num</b> or <b>Multiverse id</b> cell. Cells ManaDesk filled
+in by itself show in green.</li>
+<li><b>Auto complete using first match</b> picks the first matching printing for every card that is still
+ambiguous.</li>
+<li><b>Ignore cards with errors</b> imports only the valid rows.</li>
+</ul>
+
+<h3>Warnings</h3>
+<p>The zone below the table also warns you when the import changes something from the file:</p>
+<p class="shot"><img src="../images/import_preview_warnings.png" alt="Screenshot: import preview with the language warning and a yellow Language cell"></p>
+<ul>
+<li><b>Ownership</b> &mdash; imported cards take the ownership of their destination (see
+<a href="../collection/concepts.html#ownership">Own and virtual cards</a>):
+ <ul>
+ <li>into a Standard or For Trade collection, cards the file marks as virtual become Own, and are marked
+ as <b>Proxy</b> &mdash; a <b>Proxy</b> column appears so you can untick the genuine ones;</li>
+ <li>into a deck or a Wishlist/To Print collection, cards the file marks as Own become virtual.</li>
+ </ul></li>
+<li><b>Language</b> &mdash; when the file gives a card in another language, ManaDesk uses that language's printing
+if the card database has it (same set). Otherwise the card is imported in English, shown with a yellow
+<b>Language</b> cell.</li>
+</ul>
+
+<p>Click <b>Finish</b> to import.</p>
+
+<p class="seealso">See also: <a href="import_website.html">Importing from a website</a> &middot;
+<a href="manabox.html">ManaBox</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>

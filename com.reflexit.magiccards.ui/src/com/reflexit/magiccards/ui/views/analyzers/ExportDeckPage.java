@@ -40,6 +40,7 @@ import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.program.Program;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.FileDialog;
 import org.eclipse.swt.widgets.Text;
 import org.eclipse.ui.IActionBars;
@@ -74,6 +75,7 @@ import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 
 public class ExportDeckPage extends AbstractDeckPage {
 	private Browser textBrowser;
+	private Composite exportArea;
 	private ISelectionProvider selProvider = new StoredSelectionProvider();
 	private IFilteredCardStore<IMagicCard> fstore;
 	private IAction save;
@@ -113,7 +115,7 @@ public class ExportDeckPage extends AbstractDeckPage {
 				setReportType(ImportExportFactory.getByLabel(typeCombo.getText()));
 			}
 		});
-		Composite exportArea = new Composite(area, SWT.NONE);
+		exportArea = new Composite(area, SWT.NONE);
 		exportArea.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
 		exportArea.setFont(area.getFont());
 		stackLayout = new StackLayout();
@@ -177,7 +179,14 @@ public class ExportDeckPage extends AbstractDeckPage {
 		// the raw-text area
 		boolean markup = reportType != null && textBrowser != null
 				&& ("html".equalsIgnoreCase(reportType.getExtension()) || reportType.getLabel().contains("HTML"));
-		stackLayout.topControl = markup ? textBrowser : textArea;
+		Control top = markup ? textBrowser : textArea;
+		if (stackLayout.topControl != top) {
+			stackLayout.topControl = top;
+			// a StackLayout only swaps on its own composite's layout() - without
+			// this the previous control (e.g. the browser) stays visible
+			if (exportArea != null && !exportArea.isDisposed())
+				exportArea.layout();
+		}
 	}
 
 	private boolean isSecondaryView() {

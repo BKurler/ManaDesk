@@ -22,6 +22,10 @@
  *     Rémi Dutil (2026) - "Set lists" entry (alphabetical / release date)
  *     Rémi Dutil (2026) - "Report a bug or request a feature" entry
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
+ *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
+ *                         mentions the printable preview
+ *     Rémi Dutil (2026) - "Extra list" and "Collector" entries; Proxies, Filters
+ *                         and sorting, Printings and Instances entries updated
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -123,8 +127,10 @@ final class WhatsNew {
 					+ " own price.", null),
 			new Feature(1, MINOR, CARDS, "Condition", "Grade your copies, from Near Mint to Damaged.", null),
 			new Feature(1, MINOR, CARDS, "Proxies", "Mark copies as proxies, shown with a red Proxy badge - collection"
-					+ " value and completion leave them out, and a deck's info shows how many it has and what"
-					+ " replacing them would cost.", null),
+					+ " value, completion and owned counts leave them out (unless you turn on Count Proxies in the"
+					+ " Collector), a deck's info shows how many it has and what replacing them would cost, and the"
+					+ " Legality tab warns when a legal deck uses proxies.",
+					null),
 			new Feature(1, MINOR, CARDS, "Quick edits", "Change the set or collector number right in the list, and"
 					+ " \"Split & move to\" moves part of a pile to another deck or collection.", null),
 			new Feature(1, MINOR, CARDS, "Unsorted boxes", "Card positions in unsorted collections: find a card without"
@@ -141,7 +147,8 @@ final class WhatsNew {
 					+ " Standard collection marks it as owned.", null),
 			new Feature(1, MAJOR, DECKS, "Formats and legality", "Pick a deck's format: legality now covers every"
 					+ " format (Brawl, Oathbreaker, Pauper Commander, Old School...), and commander decks are"
-					+ " checked against the commander's color identity.", null),
+					+ " checked against the commander's color identity. The Legality tab shows its verdict in"
+					+ " green (legal), yellow (legal, with proxies) or red (not legal).", null),
 			new Feature(1, MINOR, DECKS, "Status at a glance", "Small colored markers on deck tabs, in the"
 					+ " navigator and in the dialogs: virtual (blue), read-only (red), unsorted (green) and boxed"
 					+ " (black). Moving or copying cards where they can't go is blocked.", null),
@@ -151,29 +158,45 @@ final class WhatsNew {
 					+ " collection and virtual in a deck or a Wishlist/To Print collection - no need to set it card"
 					+ " by card. Imports follow the destination too, and virtual cards imported into a collection"
 					+ " are marked as proxies.", null),
+			new Feature(1, MINOR, DECKS, "Deck statistics", "The average mana cost counts the main deck only,"
+					+ " like the Mana and Types tabs; cleaner percentages; and the Export tab shows text formats"
+					+ " line by line.", null),
+			new Feature(1, MINOR, DECKS, "Extra list", "A deck's extra list is created with the tokens, emblems and"
+					+ " markers the deck needs, at count 0. After you change the deck, Refresh (F5) in the extra list"
+					+ " adds what is now needed and removes what is not - the counts you set are kept.", null),
 			new Feature(1, MINOR, DECKS, "Main collection", "Renamed \"Main\"; it is always there, sorted and"
 					+ " writable.", null),
 			new Feature(1, MAJOR, IMPORT, "Import from a website", "Moxfield, Archidekt, TappedOut, MTGGoldfish, TCGplayer"
 					+ " and more - or any card list from the clipboard or a file, with a preview to fix unknown"
 					+ " cards.", null),
-			new Feature(1, MAJOR, IMPORT, "ManaBox", "Scan your cards with the ManaBox app, export them to CSV,"
-					+ " and import them into a collection - each card with its exact printing, finish, condition"
-					+ " and language. Decks and collections can also be exported for ManaBox.", null),
+			new Feature(1, MAJOR, IMPORT, "ManaBox", "Already using the ManaBox app? Import its CSV exports into a"
+					+ " collection: each card keeps its exact printing, finish, condition,"
+					+ " purchase price, proxy and misprint / altered / signed marks, and its language when"
+					+ " ManaDesk knows that printing. Decks and collections can also be exported for ManaBox.",
+					null),
 			new Feature(1, MINOR, IMPORT, "Export", "Several decks at once, in one file or one per deck, a printable"
-					+ " sideboard list, and export formats you can edit with a live preview.", null),
+					+ " sideboard list, and export formats you can edit with a live preview. Printable formats"
+					+ " (proxies, sideboard list) are previewed as they will print.", null),
 			new Feature(1, MAJOR, DATABASE, "Card database from Scryfall", "Downloaded on first start (or imported from a"
 					+ " file when offline), a full update in under a minute, and a backup before each update.",
 					null),
 			new Feature(1, MAJOR, DATABASE, "Prices", "From TCGplayer (US$) or Cardmarket (€), non-foil and foil; the"
 					+ " card info links to both stores.", null),
 			new Feature(1, MINOR, BROWSING, "Filters and sorting", "A filter dialog with tabs and ranges, quick filters in"
-					+ " My Cards, sort by any column, and column sizes are remembered.", null),
-			new Feature(1, MINOR, BROWSING, "Printings and Instances", "Sortable, with their own choice of columns.", null),
+					+ " My Cards, sort by any column, and column sizes are remembered. Restore Defaults on a view's"
+					+ " preference page also resets its grouping and sorting.", null),
+			new Feature(1, MINOR, BROWSING, "Collector", "Grouped by set by default, sets in alphabetical order;"
+					+ " Count Proxies and Count Finishes Separately are also on its preference page.", null),
+			new Feature(1, MINOR, BROWSING, "Printings and Instances", "Sortable, with their own choice of columns;"
+					+ " Instances shows Name, Count, Set, Num and Location first.", null),
 			new Feature(1, MINOR, BROWSING, "Rulings", "Shown formatted, in their own view.", null),
 			new Feature(1, MINOR, BROWSING, "Find", "Next / previous, and * as a wildcard in Find and in the name"
 					+ " filter.", null),
 			new Feature(1, MINOR, BROWSING, "Set lists", "Lists of sets are alphabetical, or by release date"
 					+ " (oldest first) if you prefer - see the ManaDesk preferences.", null),
+			new Feature(1, MAJOR, GENERAL, "New help", "Rewritten from scratch, with screenshots: getting started,"
+					+ " collections and decks, wishlists, proxies and buying, import and export, backups and cloud"
+					+ " sync. Press F1 in a view to open its page.", null),
 			new Feature(1, MINOR, GENERAL, "Faster startup", "The splash screen shows the real progress, and the"
 					+ " window opens ready to use.", null),
 			new Feature(1, MINOR, GENERAL, "No more Work Offline", "Without internet, ManaDesk keeps working and"

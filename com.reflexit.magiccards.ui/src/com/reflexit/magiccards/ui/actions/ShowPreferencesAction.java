@@ -11,6 +11,8 @@
  *                         same page and edit the same store for every Deck
  *                         AND every Collection, however DeckView#
  *                         getPreferencePageId() was implemented
+ *     Rémi Dutil (2026) - has an ID, so a view can place its own toolbar
+ *                         buttons just before it
  */
 package com.reflexit.magiccards.ui.actions;
 
@@ -21,11 +23,14 @@ import org.eclipse.jface.window.Window;
 import org.eclipse.ui.dialogs.PreferencesUtil;
 
 public class ShowPreferencesAction extends ImageAction {
+	/** Toolbar / menu id - lets a view insert its own buttons before this one. */
+	public static final String ID = "com.reflexit.magiccards.ui.actions.showPreferences";
 	private final Supplier<String> idSupplier;
 
 	public ShowPreferencesAction(Supplier<String> idSupplier) {
 		super("Preferences...", "icons/clcl16/gear.png", "Opens UI preferences");
 		this.idSupplier = idSupplier;
+		setId(ID);
 		// setId(ActionFactory.DELETE.getId());
 		// setActionDefinitionId("org.eclipse.ui.edit.findReplace");
 	}

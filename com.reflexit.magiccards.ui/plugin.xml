@@ -642,7 +642,7 @@
          </command>
          <command
                commandId="com.reflexit.magiccards.ui.commands.decreaseCount"
-               label="Descrease Count"
+               label="Decrease Count"
                mnemonic="C"
                >
             <visibleWhen>

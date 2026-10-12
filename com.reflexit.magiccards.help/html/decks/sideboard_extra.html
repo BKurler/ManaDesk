@@ -1,0 +1,69 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Sideboard, extra list and accessories</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Sideboard, extra list and accessories</h1>
+
+<h2>Sideboard</h2>
+<p>A deck can have a <b>sideboard</b>: a separate list that goes with the deck. The sideboard is always
+part of the deck's legality check: its cards must be legal in the format too (see
+<a href="legality.html">Formats and legality</a>). In commander formats, put the commander there.</p>
+<ul>
+<li>Create it with <b>Also create a Sideboard</b> in the New Deck wizard, or later in the deck's
+<b>Edit Properties...</b>.</li>
+<li>Open it with <b>Open Sideboard</b> in the deck's toolbar (see <a href="#open">Opening them</a> below).
+Its tab name starts with <code>#</code>.</li>
+<li>Imported deck lists with a sideboard section fill it automatically.</li>
+<li>Print it on a card to keep in the deck box: see <a href="../transfer/export.html#sideboardlist">Printing a sideboard list</a>.</li>
+</ul>
+
+<h2>Extra list</h2>
+<p>The <b>extra list</b> holds what the deck needs besides its cards: tokens, emblems, markers.</p>
+<ul>
+<li>Create it with <b>Also create an Extra list</b> in the New Deck wizard, or later in the deck's properties.
+It is created already filled with what the deck needs, at count 0.</li>
+<li>Open it with <b>Open Extra</b> in the deck's toolbar. Its tab name starts with <code>~</code>.</li>
+<li>Set the count of what you actually have, like any other list.</li>
+<li>After you change the deck, open the extra list and click <b>Refresh</b> (or press <kbd>F5</kbd>): in an
+extra list, it also updates the list from the deck. It adds what the deck now needs, at count 0, and
+removes the entries at count 0 that the deck doesn't need anymore or that repeat a token already listed.
+Entries with a count above 0 are never changed. Any printing counts: two Beast tokens from another set
+already cover a Beast the deck needs.</li>
+</ul>
+
+<h2 id="open">Opening them</h2>
+<p>The Card Navigator hides sideboards and extra lists to keep the tree short (<b>Show Sideboards and
+Extras</b> in its menu shows them). You don't need them in the tree to open them: two buttons in the deck's
+toolbar do it.</p>
+<table>
+<tr><th>Button</th><th>Does</th></tr>
+<tr><td><b>Open Sideboard</b> (orange)</td><td>Opens the deck's sideboard in its own tab.</td></tr>
+<tr><td><b>Open Extra</b> (grey)</td><td>Opens the deck's extra list in its own tab.</td></tr>
+</table>
+<ul>
+<li>A button is greyed when the list doesn't exist yet: create it in the deck's <b>Edit Properties...</b>.</li>
+<li>They also work from the sideboard or the extra list itself, to jump from one to the other.</li>
+</ul>
+
+<h2 id="accessories">Accessories</h2>
+<p>The deck's <b>Accessories</b> tab lists everything the deck's cards can create or use, read from the card
+text: tokens, emblems, counters, player markers (the monarch, the initiative...) and dice or coins.</p>
+<p class="shot"><img src="../images/deck_tab_accessories.png" alt="Screenshot: the Accessories tab"></p>
+<p>It tells you what to bring to the table with the deck. The extra list is where you keep track of the
+tokens and markers you actually own for it.</p>
+
+<p class="seealso">See also: <a href="deck_view.html">The Deck view</a> &middot;
+<a href="create_deck.html">Creating a deck</a></p>
+</body>
+</html>

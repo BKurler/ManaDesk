@@ -81,6 +81,7 @@
  *                         Europe, TCGplayer elsewhere (PriceSources).
  *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
  *                         release date (oldest first) instead of alphabetically
+ *     Rémi Dutil (2026) - Collector defaults to Group By Set, sets in alphabetical order
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -95,6 +96,7 @@ import org.osgi.service.prefs.BackingStoreException;
 
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.model.FilterField;
+import com.reflexit.magiccards.core.model.GroupOrder;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.gallery.GalleryPreferencePage;
@@ -203,8 +205,10 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 						+ "-Color Identity,-Extended Color Identity,-Artist,-Language,-Multiverse ID,"
 						+ "-TCGplayer ID,-Legality,-Text,-Oracle Text,-Release Date");
 		getCollectorStore().setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, true);
-		// !!! RD getCollectorStore().setDefault(PreferenceConstants.GROUP_FIELD,
-		// GroupOrder.createGroupKey(CollectorListControl.DEF_GROUP));
+		// grouped by set, sets in alphabetical order (the "Set" Group By entry)
+		getCollectorStore().setDefault(PreferenceConstants.GROUP_FIELD,
+				new GroupOrder(MagicCardField.SET).getKey());
+		getCollectorStore().setDefault(PreferenceConstants.SORT_ORDER, MagicCardField.SET.name());
 		// !!! RD getCollectorStore().setDefault(PreferenceConstants.PRESENTATION_VIEW,
 		// Presentation.TREE.key());
 		getCollectorStore().setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
@@ -224,14 +228,15 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 						+ "-Multiverse ID,-TCGplayer ID,-Release Date");
 		printingsSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());
 
-		// instances - full deck/collection column set; default order is by
-		// location (handled at the model level in InstancesListControl)
+		// instances - full deck/collection column set: Name, Count, Set, Num,
+		// Location first; default row order is by location (handled at the
+		// model level in InstancesListControl)
 		IPersistentPreferenceStore instancesSettings = getLocalStore(InstancesView.ID);
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_COLUMNS,
-				"Count,Name,-Card Id,Set,Collector's Number,Ownership,Finish,Condition,Proxy,-Online Price,"
-						+ "-User Price,-Type,-Cost,-Power,-Toughness,-Rarity,-Special,Comment,-Color,-Color Type,"
-						+ "-Color Identity,-Extended Color Identity,-Artist,-Language,-Multiverse ID,"
-						+ "-TCGplayer ID,Location,-Legality,-Text,-Oracle Text,-Sideboard,-Extra,-For Trade,"
+				"Name,Count,Set,Collector's Number,Location,Ownership,Finish,Condition,Proxy,-Card Id,"
+						+ "-Online Price,-User Price,-Type,-Cost,-Power,-Toughness,-Rarity,-Special,Comment,-Color,"
+						+ "-Color Type,-Color Identity,-Extended Color Identity,-Artist,-Language,-Multiverse ID,"
+						+ "-TCGplayer ID,-Legality,-Text,-Oracle Text,-Sideboard,-Extra,-For Trade,"
 						+ "-Date,-Release Date");
 		instancesSettings.setDefault(PreferenceConstants.LOCAL_SHOW_QUICKFILTER, false);
 		instancesSettings.setDefault(PreferenceConstants.PRESENTATION_VIEW, Presentation.TABLE.key());

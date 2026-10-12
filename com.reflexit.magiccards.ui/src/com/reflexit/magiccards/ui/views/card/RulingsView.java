@@ -9,6 +9,7 @@
  *     Rémi Dutil - created for ManaDesk
  *     Rémi Dutil (2026) - no "Work Offline" check; no web shows "the web is
  *                         not accessible right now".
+ *     Rémi Dutil (2026) - F1 help context (viewrulings)
  *******************************************************************************/
 package com.reflexit.magiccards.ui.views.card;
 
@@ -52,6 +53,7 @@ public class RulingsView extends ViewPart {
 
 	@Override
 	public void createPartControl(Composite parent) {
+		PlatformUI.getWorkbench().getHelpSystem().setHelp(parent, MagicUIActivator.helpId("viewrulings"));
 		parent.setLayout(new FillLayout());
 		try {
 			browser = new Browser(parent, SWT.NONE);

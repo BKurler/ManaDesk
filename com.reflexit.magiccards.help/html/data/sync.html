@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Cloud sync</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Cloud sync</h1>
+
+<p>Your collection only exists on your computer. If the computer is lost, stolen or its disk dies, years
+of collection tracking go with it &mdash; unless your workspace is somewhere safe.</p>
+
+<div class="tip"><b>The best protection is to keep your workspace in a cloud-synced folder</b>: OneDrive,
+Google Drive, Dropbox, iCloud Drive, or any other folder your computer copies to the cloud automatically.
+Every change you make in ManaDesk is then saved online too, with no extra step.</div>
+
+<h2>Moving your workspace to a synced folder</h2>
+<ol>
+<li>Exit ManaDesk.</li>
+<li>Make a backup copy of your workspace folder (by default <code>ManaDeskWorkspace</code> in your home folder).</li>
+<li>Move the workspace folder into your synced folder, for example <code>OneDrive/ManaDeskWorkspace</code>.</li>
+<li>Start ManaDesk. When it asks for the workspace, choose the new location. (If it doesn't ask, see
+<a href="workspace.html">Your workspace</a>.)</li>
+</ol>
+<p>On a new workspace, simply choose a folder inside the synced folder the first time ManaDesk asks.</p>
+
+<h2>What to sync</h2>
+<table>
+<tr><th>Folder</th><th>Sync it?</th></tr>
+<tr><td><code>magiccards</code></td><td><b>Always</b> &mdash; your decks, collections and settings.</td></tr>
+<tr><td><code>.backup</code></td><td>Yes, if you have the space.</td></tr>
+<tr><td><code>.metadata</code></td><td>Not needed (window layout, cache, logs). Most sync tools handle it fine anyway.</td></tr>
+</table>
+
+<h2>Using ManaDesk on two computers</h2>
+<p>With the workspace in a synced folder, both computers can use the same collection. Use it on <b>one
+computer at a time</b>: exit ManaDesk on the first one and let the sync finish before you start it on
+the other. Two copies of ManaDesk changing the same files at the same time can lose changes.</p>
+
+<h2>Version control (advanced)</h2>
+<p>If you know Git or another version control system, you can put the <code>magiccards</code> folder under
+version control to keep the full history of your collection. Add <code>.backup</code> and
+<code>.metadata</code> to the ignore list.</p>
+
+<p class="seealso">See also: <a href="workspace.html">Your workspace</a> &middot; <a href="backup.html">Backups</a></p>
+</body>
+</html>

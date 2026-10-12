@@ -1,0 +1,90 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Exporting</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Exporting</h1>
+
+<p>Export decks and collections to a file &mdash; to share them, to open them in a spreadsheet, to move them
+to another app, or to print proxies or a sideboard list.</p>
+
+<h2>The Export wizard</h2>
+<p>Select the decks or collections in the Card Navigator (optional), then choose
+<span class="menu">File &gt; Export...</span> and <b>Export Collection</b>.</p>
+<p class="shot"><img src="../images/export_wizard.png" alt="Screenshot: the Export wizard"></p>
+<table>
+<tr><th>Field</th><th>Meaning</th></tr>
+<tr><td>Decks / collections</td><td>What to export; <b>Change...</b> to pick one or several.</td></tr>
+<tr><td>Select output file</td><td>Where to save. The suggested name includes the deck and the format.</td></tr>
+<tr><td>Export Type</td><td>The format (see below).</td></tr>
+<tr><td>Generate header row</td><td>Write the column names on the first line.</td></tr>
+<tr><td>Combine in one file</td><td>With several decks: one file (a Location column tells which deck each card
+comes from) instead of one file per deck.</td></tr>
+<tr><td>Include sideboard / Include extra</td><td>Also export the deck's sideboard and extra list.</td></tr>
+<tr><td>Columns</td><td>For formats that let you choose: <b>Change...</b> picks the columns and their order.</td></tr>
+<tr><td>Preview</td><td>The start of the file, updated as you change the options. Printable formats (Print Proxies, Print Sideboard List) are shown as they will print.</td></tr>
+<tr><td>Automatically open the generated file(s)</td><td>Open the file when it is written.</td></tr>
+</table>
+
+<h2>Formats</h2>
+<p>The list shows ManaDesk's own formats first, then other applications' formats, then the formats you
+created yourself.</p>
+<table>
+<tr><th>Format</th><th>For</th></tr>
+<tr><td>ManaDesk Full CSV (and Semicolon)</td><td>Everything about each card, for a spreadsheet or a full backup of a list.</td></tr>
+<tr><td>ManaDesk Minimum CSV (and Semicolon)</td><td>Just what's needed to import the list back into ManaDesk
+(name, set, count, condition, finish, proxy...).</td></tr>
+<tr><td>Print Proxies HTML Mobile</td><td>A page of card images, to print proxies from your browser (see <a href="#proxies">below</a>).</td></tr>
+<tr><td>Print Sideboard List</td><td>A card-sized list of the deck's sideboard, to keep in the deck box (see <a href="#sideboardlist">below</a>).</td></tr>
+<tr><td>ManaBox CSV</td><td>To import the list into the ManaBox app (see <a href="manabox.html">ManaBox</a>).</td></tr>
+<tr><td>Your own formats</td><td>See <a href="custom_export.html">Custom export formats</a>.</td></tr>
+</table>
+<p>Use the <i>Semicolon</i> variants if your spreadsheet expects <code>;</code> between columns (common outside
+the United States).</p>
+
+<h2 id="proxies">Printing proxies</h2>
+<p>To print proxies of a deck or of your to-print collection, choose the <b>Print Proxies HTML Mobile</b>
+format. The preview shows the page as it will print: one card image per copy, side by side.</p>
+<p class="shot"><img src="../images/print_proxies.png" alt="Screenshot: the Export wizard previewing Print Proxies"></p>
+<ol>
+<li>Click <b>Finish</b>; with <i>Automatically open the generated file(s)</i> checked, the page opens in
+your browser.</li>
+<li>Print it from the browser and adjust the <b>scale</b> in the print settings until the preview shows
+<b>9 cards per Letter sheet</b> (3 rows of 3): the cards then come out at the size of a real card
+(63&nbsp;&times;&nbsp;88&nbsp;mm). The right scale depends on your printer and browser; print one sheet and
+measure a card to check.</li>
+</ol>
+
+<h2 id="sideboardlist">Printing a sideboard list</h2>
+<p>Don't want to memorize every deck's sideboard? Print it on a card you keep in the deck box.</p>
+<ol>
+<li>Select the deck (or several decks) and open the Export wizard (<span class="menu">File &gt; Export...</span>).</li>
+<li>Choose the <b>Print Sideboard List</b> format. The sideboard is always read; check <b>Include extra</b>
+to list the deck's tokens and markers on the same card.</li>
+<li>Open the generated page in your browser and print it. As for proxies, adjust the <b>scale</b> in the
+print settings until the list comes out at the size of a card; the right scale depends on your printer.</li>
+<li>Cut it out and slip it into the deck box.</li>
+</ol>
+<p>The page is the size of a Magic card turned on its side (88 &times; 63 mm). It lists every sideboard card
+with its quantity, name, set, special tags and comment. With several decks combined in one file, each deck
+gets its own card.</p>
+<p class="shot"><img src="../images/print_sideboard_list.png" alt="Screenshot: the Export wizard previewing a sideboard list"></p>
+
+<h2>A deck's Export tab</h2>
+<p>For a quick copy and paste, open the deck and click its <b>Export</b> tab: it shows the deck in the
+format you choose, ready to copy. See <a href="../decks/deck_view.html">The Deck view</a>.</p>
+
+<p class="seealso">See also: <a href="custom_export.html">Custom export formats</a> &middot;
+<a href="import.html">Importing cards</a> &middot; <a href="../plan/proxies.html#print">Printing proxies</a></p>
+</body>
+</html>

@@ -66,7 +66,11 @@ public class CollectorListControl extends AbstractMagicCardsListControl {
 				if (((IMagicCardPhysical) object).isOwn())
 					count++;
 			} else if (object instanceof MagicCard) {
-				if (((MagicCard) object).getOwnCount() > 0)
+				// like the Progress column: a card owned only as a proxy counts
+				// only when "Count Proxies" is on
+				MagicCard mc = (MagicCard) object;
+				if (CollectorView.isCountProxies() ? mc.getOwnCount() > 0
+						: CollectorOwnCountColumn.genuineOwnCount(mc) > 0)
 					count++;
 			}
 		}

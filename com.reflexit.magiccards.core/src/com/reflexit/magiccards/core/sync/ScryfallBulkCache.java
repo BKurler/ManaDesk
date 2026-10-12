@@ -122,7 +122,9 @@ public final class ScryfallBulkCache {
 
 	/**
 	 * Approximate size (MB) of the current remote Default Cards bulk file, from the
-	 * Scryfall bulk-data index; {@code -1} when the index could not be reached.
+	 * Scryfall bulk-data index; {@code -1} when the index could not be reached or
+	 * gives no size (Scryfall no longer publishes it) - use {@link #isReachable()}
+	 * to know whether a download is possible.
 	 */
 	public static long remoteBulkSizeMB() {
 		refreshIndex();

@@ -13,6 +13,9 @@
  *     Rémi Dutil (2026) - "Materialize..." removed from the view menu (the
  *                         MaterializeAction and DataManager.materialize()
  *                         backend are kept, to be re-enabled later).
+ *     Rémi Dutil (2026) - in an extra list's tab, Refresh (button / F5) also brings
+ *                         the list up to date with the deck; replaces the
+ *                         menu-only "Fill from Deck", which never showed
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -20,6 +23,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.InputStream;
 
+import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.Separator;
@@ -37,6 +41,7 @@ import org.eclipse.ui.PlatformUI;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -49,6 +54,7 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.MaterializeAction;
 import com.reflexit.magiccards.ui.actions.OpenExtraAction;
 import com.reflexit.magiccards.ui.actions.OpenSideboardAction;
+import com.reflexit.magiccards.ui.actions.RefreshAction;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.dialogs.DeckFilterDialog;
 import com.reflexit.magiccards.ui.preferences.CollectionViewPreferencePage;
@@ -64,7 +70,6 @@ public class DeckView extends AbstractMyCardsView {
 	private CardCollection deck;
 	private OpenSideboardAction sideboard;
 	private OpenExtraAction extra;
-	private org.eclipse.jface.action.Action fillExtra;
 	private MaterializeAction materialize;
 
 	/**
@@ -128,18 +133,23 @@ public class DeckView extends AbstractMyCardsView {
 		super.makeActions();
 		this.sideboard = new OpenSideboardAction(deck);
 		this.extra = new OpenExtraAction(deck);
-		this.fillExtra = new org.eclipse.jface.action.Action("Fill from Deck") {
-			@Override
-			public void run() {
-				// already on the UI thread here (menu selection) - populate() fires
-				// CardEvents that touch SWT widgets, so it must not run off a Job thread
-				if (deck == null)
-					return;
-				final com.reflexit.magiccards.core.model.Location loc = deck.getLocation().toExtra();
-				com.reflexit.magiccards.core.model.DeckAccessoriesPopulator.populate(loc);
-			}
-		};
-		this.fillExtra.setToolTipText("Add every token / emblem / marker the deck needs, at count 0");
+		if (isExtraTab()) {
+			// Refresh in an extra list also syncs it with the deck: adds what the
+			// deck now needs (count 0), drops the count-0 entries it no longer
+			// needs, never touches a count above 0 (DeckAccessoriesPopulator)
+			final Action plainRefresh = this.actionRefresh;
+			final Location loc = Location.createLocation(getDeckId());
+			this.actionRefresh = new RefreshAction(() -> {
+				int[] res = DeckAccessoriesPopulator.refresh(loc);
+				getViewSite().getActionBars().getStatusLineManager()
+						.setMessage(res[0] == 0 && res[1] == 0 ? "Extra list up to date with the deck"
+								: "Extra list updated from the deck: " + res[0] + " added, " + res[1] + " removed");
+				plainRefresh.run();
+			});
+			this.actionRefresh.setToolTipText("Refresh - also updates this extra list from the deck: adds what"
+					+ " the deck now needs (count 0), removes the count-0 entries it no longer needs;"
+					+ " counts above 0 are not changed");
+		}
 		this.materialize = new MaterializeAction(getFilteredStore().getCardStore());
 	}
 
@@ -320,22 +330,16 @@ public class DeckView extends AbstractMyCardsView {
 				sideboard.setEnabled(false);
 			if (extra != null)
 				extra.setEnabled(familyMemberExists(main.toExtra()));
-			if (fillExtra != null)
-				fillExtra.setEnabled(false);
 		} else if (deck.getLocation().isExtra()) {
 			if (sideboard != null)
 				sideboard.setEnabled(familyMemberExists(main.toSideboard()));
 			if (extra != null)
 				extra.setEnabled(false);
-			if (fillExtra != null)
-				fillExtra.setEnabled(true);
 		} else {
 			if (sideboard != null)
 				sideboard.setEnabled(familyMemberExists(main.toSideboard()));
 			if (extra != null)
 				extra.setEnabled(familyMemberExists(main.toExtra()));
-			if (fillExtra != null)
-				fillExtra.setEnabled(false);
 		}
 		// used in drop adapter
 		getPartControl().setData("deck", deck);
@@ -345,6 +349,12 @@ public class DeckView extends AbstractMyCardsView {
 	public void activate() {
 		super.activate();
 		updatePartName();
+	}
+
+	/** From the tab id, not {@code deck}: the deck model loads in the background, after the actions are built. */
+	private boolean isExtraTab() {
+		String id = getDeckId();
+		return id != null && Location.createLocation(id).isExtra();
 	}
 
 	@Override
@@ -363,8 +373,6 @@ public class DeckView extends AbstractMyCardsView {
 		super.fillLocalPullDown(manager);
 		manager.add(this.sideboard);
 		manager.add(this.extra);
-		if (deck != null && deck.getLocation().isExtra())
-			manager.add(this.fillExtra);
 		// "Materialize..." removed from the menu - the action and
 		// DataManager.materialize() are kept; re-add it here to bring it back:
 		// manager.add(this.materialize);
