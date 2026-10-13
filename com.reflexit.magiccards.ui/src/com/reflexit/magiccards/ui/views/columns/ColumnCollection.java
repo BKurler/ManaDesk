@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - a saved column that no longer exists is traced, not
+ *                         logged as an error ("Cannot find column ...")
+ */
 package com.reflexit.magiccards.ui.views.columns;
 
 import java.util.ArrayList;
@@ -8,8 +13,8 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.NoSuchElementException;
 
+import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.abs.ICardField;
-import com.reflexit.magiccards.ui.MagicUIActivator;
 
 public abstract class ColumnCollection {
 	private List<AbstractColumn> columns;
@@ -116,7 +121,9 @@ public abstract class ColumnCollection {
 				try {
 					column = columns.stream().filter((c) -> c.getColumnFullName().equals(colname)).findAny().get();
 				} catch (NoSuchElementException e) {
-					MagicUIActivator.log("Cannot find column " + colname);
+					// a column saved by an older version, no longer in this view
+					// (removed or renamed): skipped - not an error
+					MagicLogger.trace("columns", "Saved column no longer exists, skipped: " + colname);
 					continue;
 				}
 			}
