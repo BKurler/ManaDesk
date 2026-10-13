@@ -12,6 +12,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - setGroupsVisible(): a card's size when the placeholder image is missing
  */
 
 package com.reflexit.magiccards.ui.gallery;
@@ -125,8 +126,11 @@ public class LazyGalleryTreeViewer extends GalleryTreeViewer implements ISelecti
 		else
 			gallery.setGroupRenderer(new NoGroupRenderer());
 		Image v = ImageCreator.getInstance().getCardNotFoundImageTemplate();
+		// the placeholder gives the item size; a card's size if it can't be loaded
+		int w = v != null ? v.getBounds().width : ImageCreator.CARD_WIDTH;
+		int h = v != null ? v.getBounds().height : ImageCreator.CARD_HEIGHT;
 		AbstractGridGroupRenderer groupRenderer = (AbstractGridGroupRenderer) gallery.getGroupRenderer();
-		groupRenderer.setItemSize(v.getBounds().width + 8, v.getBounds().height + 20 + 8);
+		groupRenderer.setItemSize(w + 8, h + 20 + 8);
 		groupRenderer.setMinMargin(4);
 	}
 

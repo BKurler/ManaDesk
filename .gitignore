@@ -1,2 +1,6 @@
 *.class
 CVS
+
+# build output
+releases/
+.tycho-consumer-pom.xml

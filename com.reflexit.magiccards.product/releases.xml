@@ -1,0 +1,58 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+
+  Copies the finished product archives from target/products to <repository>/releases,
+  so a clean of target/ (an Eclipse rebuild, mvn clean) never loses them. Called by
+  the "copy-releases" step of pom.xml at verify; it never fails the build.
+
+  The .tar.gz copies get their launchers made executable (FixTarModes.java): built
+  on Windows, the archives lose the executable flag (Windows has none), so on Linux /
+  macOS "manadesk" would not start. Only the copies in releases/ are changed -
+  target/products stays as Tycho made it.
+-->
+<project name="releases" default="releases">
+	<property name="releases.dir" location="${basedir}/../releases" />
+	<property name="linux.tar" value="manadesk-${version}-linux.gtk.x86_64.tar.gz" />
+	<property name="mac.tar" value="manadesk-${version}-macosx.cocoa.x86_64.tar.gz" />
+	<available property="linux.present" file="${products.dir}/${linux.tar}" />
+	<available property="mac.present" file="${products.dir}/${mac.tar}" />
+
+	<target name="releases" depends="zips, linux, mac" />
+
+	<!-- the Windows zip: as is -->
+	<target name="zips">
+		<mkdir dir="${releases.dir}" />
+		<copy todir="${releases.dir}" overwrite="true" verbose="true" failonerror="false">
+			<fileset dir="${products.dir}" erroronmissingdir="false">
+				<include name="manadesk-*.zip" />
+			</fileset>
+		</copy>
+	</target>
+
+	<!-- FixTarModes.java (run as a single source file by the build's java) copies the
+	     archive byte for byte and only makes the launchers executable - no extraction
+	     (some paths are longer than Windows allows), nothing else rewritten -->
+	<target name="linux" if="linux.present">
+		<exec executable="${java.home}/bin/java" dir="${basedir}" failonerror="false">
+			<arg value="FixTarModes.java" />
+			<arg file="${products.dir}/${linux.tar}" />
+			<arg file="${releases.dir}/${linux.tar}" />
+			<arg value="ManaDesk/manadesk" />
+			<arg value="ManaDesk/manadesk.sh" />
+		</exec>
+	</target>
+
+	<target name="mac" if="mac.present">
+		<exec executable="${java.home}/bin/java" dir="${basedir}" failonerror="false">
+			<arg value="FixTarModes.java" />
+			<arg file="${products.dir}/${mac.tar}" />
+			<arg file="${releases.dir}/${mac.tar}" />
+			<arg value="ManaDesk.app/Contents/MacOS/manadesk" />
+		</exec>
+	</target>
+</project>

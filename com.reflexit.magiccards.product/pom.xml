@@ -99,6 +99,26 @@
 							<goal>run</goal>
 						</goals>
 					</execution>
+					<!-- Keep a copy of the finished archives outside target/, in
+					     <repository>/releases: an Eclipse (m2e) rebuild of this project, or
+					     any clean, wipes target/ - and the release archives with it -->
+					<execution>
+						<id>copy-releases</id>
+						<phase>verify</phase>
+						<configuration>
+							<target>
+								<!-- a convenience copy only (see releases.xml): the .tar.gz get
+								     their launchers made executable, lost when building on Windows -->
+								<ant antfile="${project.basedir}/releases.xml" target="releases" inheritAll="false">
+									<property name="products.dir" value="${project.build.directory}/products" />
+									<property name="version" value="${qualifiedVersion}" />
+								</ant>
+							</target>
+						</configuration>
+						<goals>
+							<goal>run</goal>
+						</goals>
+					</execution>
 					<!-- Restore previous value -->
 					<execution>
 						<id>package</id>

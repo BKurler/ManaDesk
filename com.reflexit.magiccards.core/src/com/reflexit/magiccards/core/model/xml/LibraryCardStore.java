@@ -2,7 +2,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - REMOVE_CONTAINER: the deleted list's store is emptied
  *                         without saving it, and its file removed if still there
- *     Rémi Dutil (2026) - RENAME_CONTAINER: no update when the list was deleted meanwhile
+ *     Rémi Dutil (2026) - RENAME_CONTAINER: nothing when the list was deleted
+ *                         meanwhile (isInTree()); the event threads never let an
+ *                         exception escape - logged, or traced for a deleted list
  *     Rémi Dutil (2026) - doInitialize() repairs the main collection: always a
  *                         sorted, writable Standard collection
  */
@@ -113,6 +115,21 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 			new Thread("Lib event processing") {
 				@Override
 				public void run() {
+					try {
+						handle();
+					} catch (Throwable t) {
+						// never escape the thread ("Exception in thread ..."): log it -
+						// unless the list was deleted while this was still working on
+						// it (its file is gone, e.g. "Access is denied"): nothing lost
+						Object o = event.getType() == CardEvent.RENAME_CONTAINER ? event.getSource() : event.getData();
+						if (o instanceof CardElement && !isInTree((CardElement) o))
+							MagicLogger.trace("lib", "List deleted while being processed: " + t);
+						else
+							MagicLogger.log(t);
+					}
+				}
+
+				private void handle() {
 					switch (event.getType()) {
 					case CardEvent.ADD_CONTAINER: {
 						CardElement elem = (CardElement) event.getData();
@@ -150,7 +167,7 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 						if (elem instanceof CardOrganizer) {
 							// ignore, individual rename per element would be sent for
 							// path and name changes
-						} else {
+						} else if (isInTree(elem)) { // not when the list was deleted meanwhile
 							getMultiStore().renameLocation((Location) event.getData(), elem.getLocation());
 							ICardStore<IMagicCard> store = getStore(elem.getLocation());
 							if (store != null) // null when the list was deleted meanwhile
@@ -168,6 +185,18 @@ public class LibraryCardStore extends CollectionMultiFileCardStore {
 				}
 			}.start();
 		}
+	}
+
+	/**
+	 * Whether {@code el} is still in the deck / collection tree - a deleted
+	 * element keeps its parent link, but its parent no longer lists it.
+	 */
+	static boolean isInTree(CardElement el) {
+		CardElement cur = el;
+		for (CardOrganizer p = cur.getParent(); p != null; cur = p, p = p.getParent())
+			if (!p.getChildren().contains(cur))
+				return false;
+		return true;
 	}
 
 	public CollectionMultiFileCardStore getMultiStore() {
