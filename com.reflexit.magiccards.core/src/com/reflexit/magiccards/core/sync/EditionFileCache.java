@@ -30,6 +30,12 @@
  *     Rémi Dutil (2026) - ensureSetSymbolExists(): no stack trace when the
  *                         web is not accessible (no icon for now, retried
  *                         later).
+ *     Rémi Dutil (2026) - isStaleCommonIcon(): Common icons cached while
+ *                         COMMON was white are never regenerated (a cached
+ *                         file is always reused), so they stayed white on
+ *                         white after the fix - e.g. a 0.9.6 cache carried
+ *                         over to 0.9.7. An all-white Common icon is now
+ *                         deleted and re-rendered black.
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -70,7 +76,7 @@ public class EditionFileCache {
 			String localPath = createLocalSetImageFilePath(rarity);
 			File localFile = new File(localPath);
 
-			if (localFile.exists()) {
+			if (localFile.exists() && !isStaleCommonIcon(rarity, localFile)) {
 				return localFile;
 			}
 
@@ -118,7 +124,7 @@ public class EditionFileCache {
 		String path = createLocalSetImageFilePath(rarity);
 		if (forceRemote == false) {
 			cachedFile = new CachedFile(null, new File(path));
-			if (cachedFile.isImage()) {
+			if (cachedFile.isImage() && !isStaleCommonIcon(rarity, new File(path))) {
 				map.put(rarity, cachedFile);
 				return cachedFile;
 			}
@@ -171,6 +177,35 @@ public class EditionFileCache {
 			tryRarity = Rarity.getMoreRare(tryRarity);
 		}
 		return null;
+	}
+
+	/**
+	 * True for a Common icon rendered while RarityColor.COMMON was white
+	 * (every visible pixel white) - deletes it so the caller re-renders it.
+	 */
+	private static boolean isStaleCommonIcon(String rarity, File file) {
+		if (!"Common".equalsIgnoreCase(rarity) || !file.exists())
+			return false;
+		try {
+			BufferedImage bi = ImageIO.read(file);
+			if (bi == null)
+				return false;
+			boolean any = false;
+			for (int y = 0; y < bi.getHeight(); y++)
+				for (int x = 0; x < bi.getWidth(); x++) {
+					int argb = bi.getRGB(x, y);
+					if ((argb >>> 24) == 0)
+						continue;
+					if ((argb & 0xFFFFFF) != 0xFFFFFF)
+						return false;
+					any = true;
+				}
+			if (any)
+				file.delete();
+			return any;
+		} catch (IOException e) {
+			return false;
+		}
 	}
 
 	public enum RarityColor {

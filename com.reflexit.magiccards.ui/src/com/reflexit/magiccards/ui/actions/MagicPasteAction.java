@@ -38,6 +38,17 @@ public class MagicPasteAction extends AbstractMagicAction {
 
 // RD New paste implementation
 	public Object readClipboard() {
+		// Linux: read it through SWT - the AWT clipboard starts AWT's own GTK
+		// integration inside SWT's (Gdk-CRITICAL, a known cause of hangs)
+		if ("gtk".equals(org.eclipse.swt.SWT.getPlatform())) {
+			org.eclipse.swt.dnd.Clipboard cb = new org.eclipse.swt.dnd.Clipboard(org.eclipse.swt.widgets.Display.getCurrent());
+			try {
+				Object text = cb.getContents(org.eclipse.swt.dnd.TextTransfer.getInstance());
+				return text != null ? text : "";
+			} finally {
+				cb.dispose();
+			}
+		}
 		Clipboard clipboard = Toolkit.getDefaultToolkit().getSystemClipboard();
 		try {
 			String result = (String) clipboard.getData(DataFlavor.stringFlavor);

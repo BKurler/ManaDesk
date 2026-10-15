@@ -111,6 +111,11 @@ public class Colors implements ISearchableProperty {
 		return res;
 	}
 
+	/** "{" followed by a generic/numeric mana symbol (0-9, X, Y, Z): becomes {C. Compiled
+	 *  once - getColorPresense() runs per card for every group-row color aggregate. The
+	 *  other substitutions there are plain literals (String.replace, no regex). */
+	private static final Pattern COLORLESS_SYMBOL = Pattern.compile("\\x{7b}([\\dXYZ])++");
+
 	public static Collection<String> getColorPresense(String text) {
 		return getColorPresense(text, new LinkedHashSet<String>());
 	}
@@ -133,13 +138,13 @@ public class Colors implements ISearchableProperty {
 		String oracle = text;
 
 		// Before doing the color pattern check, replace all the hybrid with separate colors
-		oracle = oracle.replaceAll("/", "}{");
+		oracle = oracle.replace("/", "}{");
 
 		// Before doing the color pattern check, replace all colorless with C
-		oracle = oracle.replaceAll("\\x{7b}([\\dXYZ])++", "{C");
+		oracle = COLORLESS_SYMBOL.matcher(oracle).replaceAll("{C");
 
 		// Before doing the color pattern check, remove all the "Pay life" tag
-		oracle = oracle.replaceAll("P}", "}");
+		oracle = oracle.replace("P}", "}");
 
 		// Replace all the land types with a equivalent mana color to allow the pattern to find it
 		// (used to be gated on the text not starting with '{', meant to skip this for a plain
@@ -149,32 +154,32 @@ public class Colors implements ISearchableProperty {
 		// skipping the substitution for exactly the land type of card it's meant to catch. A
 		// plain cost string never contains these literal phrases anyway, so always running this
 		// is harmless for that caller and fixes it for oracle text.
-		oracle = oracle.replaceAll(", or Island card", " card {U}");
-		oracle = oracle.replaceAll(", or Plains card", " card {W}");
-		oracle = oracle.replaceAll(", or Mountain card", " card {R}");
-		oracle = oracle.replaceAll(", or Swamp card", " card {B}");
-		oracle = oracle.replaceAll(", or Forest card", " card {G}");
+		oracle = oracle.replace(", or Island card", " card {U}");
+		oracle = oracle.replace(", or Plains card", " card {W}");
+		oracle = oracle.replace(", or Mountain card", " card {R}");
+		oracle = oracle.replace(", or Swamp card", " card {B}");
+		oracle = oracle.replace(", or Forest card", " card {G}");
 
 		// Replace all the land types with a equivalent mana color to allow the pattern to find it
-		oracle = oracle.replaceAll("or Island card", "card {U}");
-		oracle = oracle.replaceAll("or Plains card", "card {W}");
-		oracle = oracle.replaceAll("or Mountain card", "card {R}");
-		oracle = oracle.replaceAll("or Swamp card", "card {B}");
-		oracle = oracle.replaceAll("or Forest card", "card {G}");
+		oracle = oracle.replace("or Island card", "card {U}");
+		oracle = oracle.replace("or Plains card", "card {W}");
+		oracle = oracle.replace("or Mountain card", "card {R}");
+		oracle = oracle.replace("or Swamp card", "card {B}");
+		oracle = oracle.replace("or Forest card", "card {G}");
 
 		// Replace all the land types with a equivalent mana color to allow the pattern to find it
-		oracle = oracle.replaceAll(", Island card", " card {U}");
-		oracle = oracle.replaceAll(", Plains card", " card {W}");
-		oracle = oracle.replaceAll(", Mountain card", " card {R}");
-		oracle = oracle.replaceAll(", Swamp card", " card {B}");
-		oracle = oracle.replaceAll(", Forest card", " card {G}");
+		oracle = oracle.replace(", Island card", " card {U}");
+		oracle = oracle.replace(", Plains card", " card {W}");
+		oracle = oracle.replace(", Mountain card", " card {R}");
+		oracle = oracle.replace(", Swamp card", " card {B}");
+		oracle = oracle.replace(", Forest card", " card {G}");
 
 		// Replace all the land types with a equivalent mana color to allow the pattern to find it
-		oracle = oracle.replaceAll("Island card", "card {U}");
-		oracle = oracle.replaceAll("Plains card", "card {W}");
-		oracle = oracle.replaceAll("Mountain card", "card {R}");
-		oracle = oracle.replaceAll("Swamp card", "card {B}");
-		oracle = oracle.replaceAll("Forest card", "card {G}");
+		oracle = oracle.replace("Island card", "card {U}");
+		oracle = oracle.replace("Plains card", "card {W}");
+		oracle = oracle.replace("Mountain card", "card {R}");
+		oracle = oracle.replace("Swamp card", "card {B}");
+		oracle = oracle.replace("Forest card", "card {G}");
 
 		Matcher matcher = colorpattern.matcher(oracle);
 		while (matcher.find()) {

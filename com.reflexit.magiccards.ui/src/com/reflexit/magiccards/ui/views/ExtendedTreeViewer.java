@@ -424,6 +424,12 @@ public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer
 	}
 
 	public void setColumnProperties(TreeColumn[] acolumns) {
+		// GTK reports width 0 for every column until the table has been laid
+		// out on screen (e.g. a view in a background tab), which used to save
+		// all columns as hidden. Columns can only be resized/hidden by the user
+		// while visible, so otherwise keep the model as it is.
+		if (!getControl().isVisible())
+			return;
 		for (int i = 0; i < acolumns.length - 1; i++) {
 			TreeColumn acol = acolumns[i];
 			AbstractColumn mcol = manager.getColumn(i);

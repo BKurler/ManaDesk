@@ -308,6 +308,10 @@ public class BuyerView extends ViewPart {
 		sourceTree.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
+				// the input is the model root (so My Cards keeps its own all-decks-and-collections checkbox);
+				// the card database sits under it too but is never something you buy for
+				if (element == DataManager.getInstance().getModelRoot().getMagicDBContainer())
+					return false;
 				return !(element instanceof CardCollection && ((CardCollection) element).isBoxed());
 			}
 		});

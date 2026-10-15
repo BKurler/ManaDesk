@@ -1,0 +1,44 @@
+/*
+ * GTK3 stylesheet loaded on Linux only (see MAApplication.installLinuxGtkCss).
+ * Default Linux themes (e.g. Ubuntu's Yaru with an 11pt font) are much roomier
+ * than Windows, which makes views and toolbars overflow. This brings the
+ * padding closer to the Windows look. Font size can't be set here - SWT
+ * takes the system font from GNOME directly - so the launchers set
+ * GDK_DPI_SCALE for that instead.
+ */
+button {
+	min-height: 0;
+	min-width: 0;
+	padding: 2px 4px;
+}
+
+toolbar, toolbar button {
+	padding: 1px;
+}
+
+entry, spinbutton, combobox button {
+	min-height: 0;
+	padding-top: 2px;
+	padding-bottom: 2px;
+}
+
+/* Search fields (SWT.SEARCH - the views' name filters, GtkSearchEntry):
+ * GTK briefly gives them 14px while their toolbar is first laid out;
+ * Yaru's 8px side padding + 1px border (18px) then logs "Negative content
+ * width" for each. 4px keeps the minimum under 14px. */
+entry.search {
+	padding-left: 4px;
+	padding-right: 4px;
+}
+
+notebook tab {
+	min-height: 0;
+	padding: 2px 6px;
+}
+
+/* No treeview padding rule: in GTK3 padding on treeview.view is added to
+ * every row (21px rows became 38px) - the theme's own row height is fine. */
+
+/* No scrollbar slider minimum here: "scrollbar slider { min-width/min-height }"
+ * made GTK log pixman "Invalid rectangle" + "GtkScrollbar ... height -7" every time
+ * a table with a column header was created (e.g. restoring deck tabs). */

@@ -49,6 +49,10 @@ public final class BrowserLauncher {
 	public static boolean open(String url) {
 		if (url == null || !MonetizationConfig.isWebUrl(url))
 			return false;
+		// Linux: xdg-open keeps the whole URL, and java.awt.Desktop would load AWT's
+		// own GTK inside SWT's process (Gdk-CRITICAL, possible hangs)
+		if ("gtk".equals(org.eclipse.swt.SWT.getPlatform()) && Program.launch(url))
+			return true;
 		try {
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 				// '|' (Mass Entry's line separator) is not legal in a java.net.URI

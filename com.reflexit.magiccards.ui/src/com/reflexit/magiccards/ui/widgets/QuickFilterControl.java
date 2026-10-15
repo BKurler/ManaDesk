@@ -245,7 +245,7 @@ public class QuickFilterControl extends Composite {
 	private void createSearchField(Composite toolbar) {
 		this.searchText = new Text(toolbar, SWT.SEARCH | SWT.ICON_CANCEL);
 		this.searchText.setText(ALL_NAMES);
-		searchText.setLayoutData(GridDataFactory.fillDefaults().hint(120, 16).create());
+		searchText.setLayoutData(GridDataFactory.fillDefaults().hint(120, SWT.DEFAULT).create());
 		this.searchText.addFocusListener(new FocusListener() {
 			@Override
 			public void focusLost(FocusEvent e) {

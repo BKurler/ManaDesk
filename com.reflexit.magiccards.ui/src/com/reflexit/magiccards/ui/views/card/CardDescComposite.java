@@ -125,7 +125,12 @@ class CardDescComposite extends Composite {
 							return;
 						}
 						if (location.contains("https:")) {
-							if (Desktop.isDesktopSupported()
+							// Linux: open links natively. java.awt.Desktop starts AWT's own GTK
+							// integration inside SWT's GTK process (Gdk-CRITICAL
+							// gdk_threads_set_lock_functions, and a known cause of hangs).
+							if ("gtk".equals(org.eclipse.swt.SWT.getPlatform())) {
+								org.eclipse.swt.program.Program.launch(location);
+							} else if (Desktop.isDesktopSupported()
 									&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 								URI url = new URI(location);
 								Desktop.getDesktop().browse(url);

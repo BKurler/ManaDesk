@@ -667,6 +667,10 @@ public class ReportIssueDialog extends TitleAreaDialog {
 	 * Windows, so it is only a fallback).
 	 */
 	private static boolean openInBrowser(String url) {
+		// Linux: xdg-open keeps the query string, and java.awt.Desktop would start
+		// AWT's own GTK integration inside SWT's (Gdk-CRITICAL, possible hangs)
+		if ("gtk".equals(SWT.getPlatform()) && Program.launch(url))
+			return true;
 		try {
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.BROWSE)) {
 				Desktop.getDesktop().browse(new URI(url));
@@ -689,6 +693,8 @@ public class ReportIssueDialog extends TitleAreaDialog {
 
 	/** Opens the user's mail app on a {@code mailto:} link. */
 	private static boolean openMail(String mailto) {
+		if ("gtk".equals(SWT.getPlatform()) && Program.launch(mailto)) // see openInBrowser
+			return true;
 		try {
 			if (Desktop.isDesktopSupported() && Desktop.getDesktop().isSupported(Desktop.Action.MAIL)) {
 				Desktop.getDesktop().mail(new URI(mailto));
