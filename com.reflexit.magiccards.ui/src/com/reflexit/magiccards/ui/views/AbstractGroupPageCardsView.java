@@ -9,6 +9,9 @@
  *                         time its own dispose() runs
  *     Rémi Dutil (2026) - getFocusListControl(): the active page's selection is
  *                         revealed when the view gets the focus back.
+ *     Rémi Dutil (2026) - getMainFilterPreferenceStore() / getMainPresentation-
+ *                         PreferenceStore(): the Cards tab's filter and sort,
+ *                         shared with the Export tab
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -190,5 +193,22 @@ public abstract class AbstractGroupPageCardsView extends AbstractCardsView {
 		if (getActivePage() instanceof IMagicCardListControl)
 			return ((IMagicCardListControl) getActivePage()).getElementPreferenceStore();
 		return null;
+	}
+
+	/** The main (first) page's filter, whichever page is active - e.g. for a
+	 *  deck's Export tab, which exports what the Cards tab shows. */
+	public IPersistentPreferenceStore getMainFilterPreferenceStore() {
+		IViewPage main = getMainPage();
+		if (main instanceof IMagicCardListControl)
+			return ((IMagicCardListControl) main).getElementPreferenceStore();
+		return null;
+	}
+
+	/** The main (first) page's presentation, grouping and sort store. */
+	public IPersistentPreferenceStore getMainPresentationPreferenceStore() {
+		IViewPage main = getMainPage();
+		if (main instanceof AbstractMagicCardsListControl)
+			return ((AbstractMagicCardsListControl) main).getPresentaionPreferenceStore();
+		return getLocalPreferenceStore();
 	}
 }

@@ -84,6 +84,8 @@
  *     Rémi Dutil (2026) - Collector defaults to Group By Set, sets in alphabetical order
  *     Rémi Dutil (2026) - setToDefault(): no save of an in-memory store (no file -
  *                         "File name not specified" from the Location picker)
+ *     Rémi Dutil (2026) - getListViewStore() / resetListViewSettings(): a deck's
+ *                         or collection's own presentation, grouping and sort
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -253,6 +255,55 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 			id = MagicUIActivator.PLUGIN_ID;
 		ScopedPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE, id);
 		return store;
+	}
+
+	/** Node name suffix of a deck's / collection's own view settings (see getListViewStore). */
+	private static final String LIST_VIEW_SUFFIX = ".view";
+
+	/**
+	 * One deck's or collection's own presentation (View As), grouping and sort
+	 * - the columns stay in the shared {@link #getLocalStore(String)} of its
+	 * view page. Node {@code <pageId>.deck.<listId>.view}, next to the list's
+	 * filter node ({@code <pageId>.deck.<name>}). Its defaults are those of the
+	 * shared store.
+	 */
+	public static IPersistentPreferenceStore getListViewStore(String pageId, String listId) {
+		// a list id is a path ("Collections/Main"): a '/' would nest the node under
+		// one named after the folder, out of reach of resetListViewSettings()
+		String flatId = listId.replace('/', '_').replace('\\', '_');
+		ScopedPreferenceStore store = new ScopedPreferenceStore(InstanceScope.INSTANCE,
+				pageId + ".deck." + flatId + LIST_VIEW_SUFFIX);
+		if (com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl.TRACE_VIEW_RESTORE)
+			com.reflexit.magiccards.core.MagicLogger.info("[view] list store node " + pageId + ".deck." + flatId
+					+ LIST_VIEW_SUFFIX);
+		IPreferenceStore shared = getLocalStore(pageId);
+		for (String key : new String[] { PreferenceConstants.PRESENTATION_VIEW, PreferenceConstants.GROUP_FIELD,
+				PreferenceConstants.SORT_ORDER })
+			store.setDefault(key, shared.getDefaultString(key));
+		return store;
+	}
+
+	/**
+	 * Restore Defaults of a view page: every deck's / collection's own grouping
+	 * and sort go back to the defaults too (open tabs follow, through their
+	 * store listener).
+	 */
+	public static void resetListViewSettings(String pageId) {
+		try {
+			// the instance scope root: parent of any plug-in node
+			org.osgi.service.prefs.Preferences root = InstanceScope.INSTANCE.getNode(pageId).parent();
+			String prefix = pageId + ".deck.";
+			for (String name : root.childrenNames()) {
+				if (!name.startsWith(prefix) || !name.endsWith(LIST_VIEW_SUFFIX))
+					continue;
+				org.osgi.service.prefs.Preferences node = root.node(name);
+				node.remove(PreferenceConstants.GROUP_FIELD);
+				node.remove(PreferenceConstants.SORT_ORDER);
+				node.flush();
+			}
+		} catch (BackingStoreException e) {
+			MagicUIActivator.log(e);
+		}
 	}
 
 	public static IPersistentPreferenceStore getFilterStore(String id) {

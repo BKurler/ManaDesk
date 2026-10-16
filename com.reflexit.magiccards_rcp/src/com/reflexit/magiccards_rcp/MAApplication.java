@@ -15,6 +15,8 @@
  *                         harness pins the same property to the same path
  *                         formula so it shares this exact profile/cookies
  *                         rather than starting cold every run
+ *     Rémi Dutil (2026) - resetFiltersAndSorting() leaves the decks' and
+ *                         collections' own settings alone: they are restored
  */
 
 /*******************************************************************************
@@ -63,6 +65,8 @@ import org.osgi.service.prefs.Preferences;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
+import com.reflexit.magiccards.ui.preferences.CollectionViewPreferencePage;
+import com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage;
 
 /**
  * The "main program" for the Eclipse IDE.
@@ -186,18 +190,34 @@ public class MAApplication implements IApplication, IExecutableExtension {
 	private static final String SORT_ORDER_KEY = "com.reflexit.magiccards.ui.sortorder";
 
 	/**
-	 * Every run starts with no filter and the default sort order, in every view:
+	 * Node name prefixes of the decks' and collections' own settings (filter,
+	 * presentation, grouping, sort): restored as they were, never reset.
+	 */
+	private static final String[] LIST_NODE_PREFIXES = { DeckViewPreferencePage.PPID + ".deck.",
+			CollectionViewPreferencePage.PPID + ".deck." };
+
+	/**
+	 * Every run starts with no filter and the default sort order, in every view
+	 * but the deck and collection tabs (LIST_NODE_PREFIXES), which come back as
+	 * they were left:
 	 * removes the saved filter values and sort orders from all ManaDesk
 	 * preference nodes before the workbench creates any view. Columns,
 	 * presentation and grouping are kept. (A per-view reset missed views that
 	 * share a preference page id but keep their filter in their own store, such
 	 * as a deck page's "...deck.main" node.)
 	 */
+	private static boolean isListNode(String name) {
+		for (String prefix : LIST_NODE_PREFIXES)
+			if (name.startsWith(prefix))
+				return true;
+		return false;
+	}
+
 	private static void resetFiltersAndSorting() {
 		try {
 			Preferences root = Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
 			for (String name : root.childrenNames()) {
-				if (!name.startsWith("com.reflexit.magiccards"))
+				if (!name.startsWith("com.reflexit.magiccards") || isListNode(name))
 					continue;
 				Preferences node = root.node(name);
 				boolean changed = false;

@@ -37,11 +37,14 @@ import com.reflexit.magiccards.ui.exportWizards.DeckExportPageSelectionTest;
 import com.reflexit.magiccards.ui.exportWizards.ImportNameDiagnosisTest;
 import com.reflexit.magiccards.ui.view.model.RootTreeViewerContentProviderTest;
 import com.reflexit.magiccards.ui.view.model.TreeViewerContentProviderTest;
+import com.reflexit.magiccards.ui.views.ViewSettingsTest;
+import com.reflexit.magiccards.ui.views.lib.ListViewSettingsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ TreeViewerContentProviderTest.class, RootTreeViewerContentProviderTest.class,
 		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class,
 		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class, DeckExportPageSelectionTest.class,
-		EditCardsPropertiesDialogFinishTest.class, DeckColumnCollectionTest.class, BrowseWebsiteLiveTest.class })
+		EditCardsPropertiesDialogFinishTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class,
+		BrowseWebsiteLiveTest.class })
 public class AllTests {
 }

@@ -1,6 +1,23 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - presentation (View As), grouping and sort read from /
+ *                         written to getPresentaionPreferenceStore(), which a
+ *                         deck / collection tab keeps per list
+ *                         (hasOwnPresentationStore()); columns stay shared
+ *     Rémi Dutil (2026) - TRACE_VIEW_RESTORE: "[view ...]" INFO lines in the log
+ *                         for every read / write of a list's presentation,
+ *                         grouping, sort and column layout
+ *     Rémi Dutil (2026) - saveColumnLayout(): keeps the stored entries of the
+ *                         columns the saving viewer doesn't have (a Split view
+ *                         saved a shorter layout, dropping the table's extra
+ *                         columns - mergeColumnLayout)
+ *     Rémi Dutil (2026) - syncFilter(): in TABLE, a sort of more than 2 levels is
+ *                         kept (only the grouping's levels are left out) - a
+ *                         multi-column header sort was lost at the next refresh
+ *     Rémi Dutil (2026) - switchPresentation(): re-applies the saved column layout
+ *                         (loadInitial) to the rebuilt viewer, which showed the
+ *                         default columns after any View As change
  *     Rémi Dutil (2026) - addPreferenceListeners() split out of addListeners()
  *     Rémi Dutil (2026) - getStatusBackground(): a page can color its status line
  *                         (the Legality tab: red / yellow / green)
@@ -271,6 +288,39 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	 */
 	static final boolean DEBUG = false;
 
+	/**
+	 * Flip to {@code true} to log (INFO, in the workspace .log) how each list
+	 * saves and restores its presentation (View As), grouping, sort and column
+	 * layout: which stores, what is read, every write. Keep {@code false} for
+	 * releases - never delete these traces.
+	 */
+	public static boolean TRACE_VIEW_RESTORE = false;
+
+	/** A {@link #TRACE_VIEW_RESTORE} line, tagged with this list. */
+	protected void vtrace(String msg) {
+		if (!TRACE_VIEW_RESTORE)
+			return;
+		String list = null;
+		try {
+			list = getViewSite() == null ? null : getViewSite().getSecondaryId();
+		} catch (RuntimeException e) {
+			// not initialized yet
+		}
+		MagicLogger.info("[view " + getClass().getSimpleName() + " " + (list == null ? "-" : list) + " pres="
+				+ getPresentation() + "] " + msg);
+	}
+
+	/** Which stores this list uses, for {@link #vtrace(String)}. */
+	protected String storesForTrace() {
+		String page = null;
+		try {
+			page = getPreferencePageId();
+		} catch (RuntimeException e) {
+			// not initialized yet
+		}
+		return "page=" + page + " ownPresentationStore=" + hasOwnPresentationStore();
+	}
+
 	protected void trace(String msg) {
 		if (DEBUG) {
 			Location loc = fstore == null ? null : fstore.getLocation();
@@ -395,10 +445,18 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			return;
 		}
 		trace("switchPresentation -> " + selected);
+		vtrace("switchPresentation: " + getPresentation() + " -> " + selected + ", store viewas now='"
+				+ getPresentaionPreferenceStore().getString(PreferenceConstants.PRESENTATION_VIEW) + "' "
+				+ storesForTrace());
 		setPresentation(selected);
+		savePresentationStore();
 		if (actionViewAs != null)
 			actionViewAs.syncIcon();
 		createTableControl(mainControl);
+		// the new viewer starts with the default columns: apply the saved layout
+		// (visible columns, order, widths) as the first build does - without it,
+		// a resize would even save the default layout over the user's
+		loadInitial();
 		if (getGroupAction() != null) {
 			boolean cangroup = getPresentation() != Presentation.TABLE;
 			getGroupAction().setEnabled(cangroup);
@@ -422,7 +480,10 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 	public void createMainControl(Composite area) {
 		if (!fixedPresentation) {
-			String cur = getColumnsPreferenceStore().getString(PreferenceConstants.PRESENTATION_VIEW);
+			String cur = getPresentaionPreferenceStore().getString(PreferenceConstants.PRESENTATION_VIEW);
+			vtrace("createMainControl: read viewas='" + cur + "' default='"
+					+ getPresentaionPreferenceStore().getDefaultString(PreferenceConstants.PRESENTATION_VIEW) + "' "
+					+ storesForTrace());
 			if (cur != null) {
 				try {
 					Presentation pres = Presentation.valueOf(cur);
@@ -543,8 +604,31 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		return PreferenceInitializer.getFilterStore(getPreferencePageId());
 	}
 
+	/**
+	 * Presentation (View As), grouping and sort. The columns store by default;
+	 * a view that keeps them apart (one store per deck / collection) returns
+	 * its own, always the same instance, and says so in
+	 * {@link #hasOwnPresentationStore()}.
+	 */
 	public IPersistentPreferenceStore getPresentaionPreferenceStore() {
 		return getColumnsPreferenceStore();
+	}
+
+	/** True when {@link #getPresentaionPreferenceStore()} is not the columns store. */
+	protected boolean hasOwnPresentationStore() {
+		return false;
+	}
+
+	/** Saves the presentation / grouping / sort right away, so a crash doesn't lose them. */
+	protected void savePresentationStore() {
+		IPersistentPreferenceStore st = getPresentaionPreferenceStore();
+		if (st != null && st.needsSaving()) {
+			try {
+				st.save();
+			} catch (IOException e) {
+				MagicUIActivator.log(e);
+			}
+		}
 	}
 
 	public IMagicViewer getManager() {
@@ -733,11 +817,15 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		MagicUIActivator.getDefault().getPreferenceStore().addPropertyChangeListener(preferenceListener);
 		PlatformUI.getWorkbench().getThemeManager().addPropertyChangeListener(preferenceListener);
 		getColumnsPreferenceStore().addPropertyChangeListener(preferenceListener);
+		if (hasOwnPresentationStore())
+			getPresentaionPreferenceStore().addPropertyChangeListener(preferenceListener);
 	}
 
 	protected void removeListeners() {
 		removeStoreChangeListener();
 		getColumnsPreferenceStore().removePropertyChangeListener(preferenceListener);
+		if (hasOwnPresentationStore())
+			getPresentaionPreferenceStore().removePropertyChangeListener(preferenceListener);
 		MagicUIActivator.getDefault().getPreferenceStore().removePropertyChangeListener(preferenceListener);
 		PlatformUI.getWorkbench().getThemeManager().removePropertyChangeListener(preferenceListener);
 	}
@@ -1096,6 +1184,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 
 		viewer = null; // absolutely required
 		this.viewer = createViewer(parent);
+		vtrace("createTableControl: new " + viewer.getClass().getSimpleName());
 
 		// Persist column widths / order whenever the user changes them.
 		if (viewer instanceof IMagicColumnViewer)
@@ -1358,8 +1447,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		this.actionShowPrefs.setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/clcl16/gear.png"));
 		this.actionShowFind = new SearchCardAction(this::runFind);
 		if (!fixedPresentation)
-			this.actionViewAs = new ViewAsAction(Arrays.asList(Presentation.values()), getColumnsPreferenceStore(),
-					this::switchPresentation);
+			this.actionViewAs = new ViewAsAction(Arrays.asList(Presentation.values()),
+					getPresentaionPreferenceStore(), this::switchPresentation);
 		// double click
 		hookDoubleClickAction();
 		// disable group by
@@ -1394,6 +1483,15 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	protected void propertyChange(PropertyChangeEvent event) {
+		if (TRACE_VIEW_RESTORE && (PreferenceConstants.PRESENTATION_VIEW.equals(event.getProperty())
+				|| PreferenceConstants.GROUP_FIELD.equals(event.getProperty())
+				|| PreferenceConstants.SORT_ORDER.equals(event.getProperty())
+				|| PreferenceConstants.LOCAL_COLUMNS.equals(event.getProperty())))
+			vtrace("pref changed " + event.getProperty() + ": '" + event.getOldValue() + "' -> '"
+					+ event.getNewValue() + "' (source " + (event.getSource() == null ? null
+							: event.getSource().getClass().getSimpleName() + "@"
+									+ Integer.toHexString(System.identityHashCode(event.getSource())))
+					+ ")");
 		if (viewer.getViewer() == null || viewer.getViewer().getControl() == null)
 			return;
 		String property = event.getProperty();
@@ -1614,18 +1712,18 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		String sortStr = viewSettings.getString(PreferenceConstants.SORT_ORDER);
 		syncedGroupPref = fields;
 		syncedSortPref = sortStr;
-		// The plain TABLE view is a flat list and never groups. The grouping /
-		// sort prefs are shared with the tree / split / gallery views, so a
-		// grouping chosen there bleeds in here and reorders the table (an
-		// unsorted collection must stay in its on-disk / entry order). Ignore
-		// the grouping for TABLE, and the multi-field sort CHAIN that grouping
-		// leaves behind in SORT_ORDER even after the grouping itself is cleared
-		// (e.g. "TYPEv/TOUGHNESS^/CMCv/SETv/COSTv/SET_COREv/SET_BLOCKv/"). A
-		// genuine 1-2 column table sort by the user is still honoured.
+		savePresentationStore(); // a Sort By / Group By just written
+		vtrace("syncFilter: read group='" + fields + "' sort='" + sortStr + "' viewas='"
+				+ viewSettings.getString(PreferenceConstants.PRESENTATION_VIEW) + "'");
+		// The plain TABLE view is a flat list and never groups: ignore the
+		// grouping, and the sort levels Group By added for it (the group fields).
+		// Every other level is the user's own sort - a header click adds one on
+		// top of the previous ones, so a multi-column sort has 3, 4... levels and
+		// must be kept (it used to be dropped above 2 levels, so a table lost its
+		// sort and its arrow at the next refresh).
 		if (getPresentation() == Presentation.TABLE) {
+			sortStr = withoutSortFields(sortStr, fields);
 			fields = "";
-			if (countSortFields(sortStr) > 2)
-				sortStr = "";
 		}
 		GroupOrder groupOrder = new GroupOrder(fields);
 		filter.setGroupOrder(groupOrder);
@@ -1643,15 +1741,24 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		return s == null || s.trim().isEmpty();
 	}
 
-	/** Number of real sort fields in a persisted SORT_ORDER string ("A/B/C/" -> 3). */
-	private static int countSortFields(String sortStr) {
-		if (isBlank(sortStr))
-			return 0;
-		int n = 0;
-		for (String part : sortStr.split("/"))
-			if (!part.trim().isEmpty())
-				n++;
-		return n;
+	/**
+	 * {@code sortStr} ("SET^/NAME^/COLLNUM^/") without the levels on the fields of
+	 * the group key {@code groupKey} ("TYPE/CMC").
+	 */
+	static String withoutSortFields(String sortStr, String groupKey) {
+		if (isBlank(sortStr) || isBlank(groupKey))
+			return sortStr;
+		java.util.Set<String> group = new java.util.HashSet<>(Arrays.asList(groupKey.split("/")));
+		StringBuilder res = new StringBuilder();
+		for (String part : sortStr.split("/")) {
+			String p = part.trim();
+			if (p.isEmpty())
+				continue;
+			String field = (p.endsWith("^") || p.endsWith("v")) ? p.substring(0, p.length() - 1) : p;
+			if (!group.contains(field))
+				res.append(p).append('/');
+		}
+		return res.toString();
 	}
 
 	protected void loadInitial() {
@@ -1660,6 +1767,8 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			IMagicColumnViewer cviewer = (IMagicColumnViewer) viewer;
 			// update manager columns
 			String value = ps.getString(PreferenceConstants.LOCAL_COLUMNS);
+			vtrace("loadInitial: apply columns to " + viewer.getClass().getSimpleName() + ": '" + value + "' "
+					+ storesForTrace());
 			cviewer.updateColumns(value);
 		}
 		boolean qf = ps.getBoolean(PreferenceConstants.LOCAL_SHOW_QUICKFILTER);
@@ -2508,6 +2617,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			// both survive a filter change and an app restart.
 			final IPersistentPreferenceStore sortStore = getPresentaionPreferenceStore();
 			final java.util.function.Consumer<SortOrder> persist = (o) -> {
+				vtrace("header sort: column index " + index + " -> SORT_ORDER='" + o.getStringValue() + "'");
 				if (sortStore != null)
 					sortStore.setValue(PreferenceConstants.SORT_ORDER, o.getStringValue());
 			};
@@ -2806,12 +2916,17 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		if (!(viewer instanceof IMagicColumnViewer))
 			return;
 		IMagicColumnViewer cviewer = (IMagicColumnViewer) viewer;
-		final String value = cviewer.getColumnLayoutProperty();
-		if (value == null || value.isEmpty())
+		String own = cviewer.getColumnLayoutProperty();
+		if (own == null || own.isEmpty())
 			return;
 		IPersistentPreferenceStore store = getColumnsPreferenceStore();
+		// the store is shared by viewers that know different columns (a Split
+		// view has fewer than a table): keep the entries this one doesn't know
+		final String value = mergeColumnLayout(own, store.getString(PreferenceConstants.LOCAL_COLUMNS));
 		if (value.equals(store.getString(PreferenceConstants.LOCAL_COLUMNS)))
 			return;
+		vtrace("saveColumnLayout: '" + store.getString(PreferenceConstants.LOCAL_COLUMNS) + "' -> '" + value
+				+ "' from " + viewer.getClass().getSimpleName() + " " + storesForTrace());
 		synchronized (this) {
 			store.removePropertyChangeListener(this.preferenceListener);
 			// System.err.println("saving layout " + this.getClass() + " " +
@@ -2827,6 +2942,38 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 				// ignore
 			}
 		}
+	}
+
+	/**
+	 * {@code own} (a viewer's layout: "Name:280,-Card Id:260,...") followed by
+	 * the entries of {@code stored} for the columns {@code own} doesn't list,
+	 * in their stored order - so saving from a viewer with fewer columns never
+	 * drops the visibility, width and order of the others.
+	 */
+	static String mergeColumnLayout(String own, String stored) {
+		if (stored == null || stored.isEmpty())
+			return own;
+		java.util.Set<String> known = new java.util.HashSet<>();
+		for (String e : own.split(","))
+			known.add(columnEntryName(e));
+		StringBuilder res = new StringBuilder(own);
+		for (String e : stored.split(",")) {
+			String name = columnEntryName(e);
+			if (!name.isEmpty() && known.add(name))
+				res.append(',').append(e.trim());
+		}
+		return res.toString();
+	}
+
+	/** "-Card Id:260" -> "Card Id". */
+	private static String columnEntryName(String entry) {
+		String n = entry.trim();
+		if (n.startsWith("-"))
+			n = n.substring(1);
+		int colon = n.lastIndexOf(':');
+		if (colon >= 0)
+			n = n.substring(0, colon);
+		return n.trim();
 	}
 
 	private Object jobFamility = new Object();

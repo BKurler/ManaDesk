@@ -6,6 +6,10 @@
  *                         (and store) for a Collection than for a Deck, so
  *                         their column visibility/width/order are no longer
  *                         shared
+ *     Rémi Dutil (2026) - getPreferencePageId(): decided from the id's root folder
+ *                         first, so a collection restored at startup (library
+ *                         not loaded yet) no longer gets the Deck page's columns
+ *                         and settings
  *     Rémi Dutil (2026) - getCardFilterDialog(): wires setOnApply() so the
  *                         filter dialog's OK/Apply actually refresh this
  *                         view - see CardFilterDialog#performApply()'s own
@@ -67,6 +71,9 @@ import com.reflexit.magiccards.ui.views.nav.CardsNavigatorView;
 
 public class DeckView extends AbstractMyCardsView {
 	public static final String ID = "com.reflexit.magiccards.ui.views.lib.DeckView";
+	/** Root folders of the two sides (ModelRoot): a list's id starts with one. */
+	private static final String COLLECTIONS_ROOT = "Collections";
+	private static final String DECKS_ROOT = "Decks";
 	private CardCollection deck;
 	private OpenSideboardAction sideboard;
 	private OpenExtraAction extra;
@@ -444,6 +451,17 @@ public class DeckView extends AbstractMyCardsView {
 
 	@Override
 	protected String getPreferencePageId() {
+		// The id is the list's path, under the "Decks" or "Collections" root:
+		// that answers right away, even for a tab restored at startup before the
+		// library is loaded (the lookup below then found nothing and returned the
+		// Deck page - a restored collection got the deck columns and settings)
+		String id = getDeckId();
+		String byPath = preferencePageIdForPath(id);
+		if (byPath != null)
+			return byPath;
+		if (com.reflexit.magiccards.ui.views.AbstractMagicCardsListControl.TRACE_VIEW_RESTORE)
+			com.reflexit.magiccards.core.MagicLogger.info("[view DeckView " + id
+					+ "] getPreferencePageId: id under neither root, model lookup (deck loaded=" + (deck != null) + ")");
 		// this.deck is only populated once loadInitialInBackground() runs - fall
 		// back to a direct (cheap, in-memory) lookup by id for any earlier caller
 		CardCollection cc = this.deck;
@@ -452,6 +470,20 @@ public class DeckView extends AbstractMyCardsView {
 		if (cc != null && !cc.isDeck())
 			return CollectionViewPreferencePage.class.getName();
 		return DeckViewPreferencePage.class.getName();
+	}
+
+	/**
+	 * The view preference page (and store) of the list with this id, from its
+	 * root folder: Collection or Deck page, or null for an id under neither.
+	 */
+	static String preferencePageIdForPath(String id) {
+		if (id == null)
+			return null;
+		if (id.startsWith(COLLECTIONS_ROOT + "/"))
+			return CollectionViewPreferencePage.class.getName();
+		if (id.startsWith(DECKS_ROOT + "/"))
+			return DeckViewPreferencePage.class.getName();
+		return null;
 	}
 
 	public CardCollection getCardCollection() {

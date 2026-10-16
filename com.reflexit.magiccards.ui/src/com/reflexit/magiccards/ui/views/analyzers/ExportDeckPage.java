@@ -1,6 +1,12 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - Filter / Reset Filter / Unsort like the Cards tab; the
+ *                         sort and filter ARE the Cards tab's (shared both ways),
+ *                         so Save As exports the list as the Cards tab shows it
+ *     Rémi Dutil (2026) - Save As on an existing file: Overwrite or Append (same
+ *                         rules as the Export wizard's "Append to the existing
+ *                         file" - ExportAppender)
  */
 
 package com.reflexit.magiccards.ui.views.analyzers;
@@ -9,8 +15,11 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
+import java.nio.charset.StandardCharsets;
+import java.nio.file.Files;
 import java.util.ArrayList;
 import java.util.Collection;
+import java.util.HashMap;
 import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Set;
@@ -26,9 +35,12 @@ import org.eclipse.jface.action.StatusLineContributionItem;
 import org.eclipse.jface.dialogs.IDialogConstants;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
+import org.eclipse.jface.preference.IPersistentPreferenceStore;
+import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceDialog;
 import org.eclipse.jface.viewers.ISelectionProvider;
 import org.eclipse.jface.viewers.StructuredSelection;
+import org.eclipse.jface.window.Window;
 import org.eclipse.osgi.util.NLS;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.browser.Browser;
@@ -51,9 +63,11 @@ import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.exports.AbstractExportDelegate;
 import com.reflexit.magiccards.core.exports.CompactHtmlExportDelegate;
+import com.reflexit.magiccards.core.exports.ExportAppender;
 import com.reflexit.magiccards.core.exports.IExportDelegate;
 import com.reflexit.magiccards.core.exports.ImportExportFactory;
 import com.reflexit.magiccards.core.exports.ReportType;
+import com.reflexit.magiccards.core.model.FilterField;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
@@ -68,8 +82,11 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.ImageAction;
 import com.reflexit.magiccards.ui.actions.RefreshAction;
 import com.reflexit.magiccards.ui.actions.SortByAction;
+import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
+import com.reflexit.magiccards.ui.dialogs.DeckFilterDialog;
 import com.reflexit.magiccards.ui.preferences.DeckViewPreferencePage;
 import com.reflexit.magiccards.ui.preferences.PreferenceConstants;
+import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
 import com.reflexit.magiccards.ui.utils.StoredSelectionProvider;
 import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 
@@ -93,6 +110,12 @@ public class ExportDeckPage extends AbstractDeckPage {
 	private Action actionShowPrefs;
 	private MagicCardFilter filter;
 	private SortByAction actionSort;
+	/** Holds the Cards tab's sort only - the Sort By menu edits it in place.
+	 *  The store's filter gets a copy plus the section keepers (setFStore). */
+	private final MagicCardFilter sortHolder = new MagicCardFilter();
+	private ImageAction actionUnsort;
+	private ImageAction actionFilter;
+	private ImageAction actionResetFilter;
 	private ImageAction actionRefresh;
 	private Combo typeCombo;
 
@@ -204,6 +227,9 @@ public class ExportDeckPage extends AbstractDeckPage {
 	public void fillLocalToolBar(IToolBarManager manager) {
 		manager.add(this.save);
 		manager.add(actionSort);
+		manager.add(actionUnsort);
+		manager.add(actionFilter);
+		manager.add(actionResetFilter);
 		manager.add(this.actionShowPrefs);
 		manager.add(this.sideboard);
 		manager.add(this.extra);
@@ -255,9 +281,83 @@ public class ExportDeckPage extends AbstractDeckPage {
 				}
 			}
 		};
-		this.actionSort = new SortByAction(new MagicColumnCollection(null), filter, null, this::refresh);
+		// no store given: the menu edits sortHolder in place, saveSort() persists it
+		this.actionSort = new SortByAction(new MagicColumnCollection(null), sortHolder, null, this::saveSort);
+		this.actionUnsort = new ImageAction("Unsort", "icons/clcl16/unsort.png",
+				"Clear the sort (main deck, sideboard, extra - each by name)", () -> {
+					sortHolder.getSortOrder().clear();
+					saveSort();
+				});
+		this.actionFilter = new ImageAction("Filter...", "icons/clcl16/filter_ps.png",
+				"Choose which cards to export", this::runFilter);
+		this.actionResetFilter = new ImageAction("Reset Filter", "icons/clcl16/reset_filter.gif",
+				"Resets the filter to default values", () -> {
+					IPersistentPreferenceStore st = getCardsFilterStore();
+					if (st != null)
+						PreferenceInitializer.setToDefault(st);
+					refresh();
+				});
 		this.actionRefresh = new RefreshAction(this::activate);
 		initReportTypes();
+	}
+
+	/**
+	 * The Cards tab's filter: the export shows (and saves) the list as the Cards
+	 * tab shows it, and a filter or sort changed here is the Cards tab's too.
+	 * Each tab re-reads them when it is activated.
+	 */
+	private IPersistentPreferenceStore getCardsFilterStore() {
+		return getDeckView() != null ? getDeckView().getMainFilterPreferenceStore() : null;
+	}
+
+	/** The Cards tab's own sort (this deck's / collection's, not shared). */
+	private IPersistentPreferenceStore getCardsSortStore() {
+		return getDeckView() != null ? getDeckView().getMainPresentationPreferenceStore() : null;
+	}
+
+	/** Saves the sort (edited in place by Sort By / Unsort) as the Cards tab's, and refreshes. */
+	private void saveSort() {
+		IPersistentPreferenceStore st = getCardsSortStore();
+		if (st != null) {
+			st.setValue(PreferenceConstants.SORT_ORDER, sortHolder.getSortOrder().getStringValue());
+			try {
+				st.save();
+			} catch (IOException e) {
+				MagicUIActivator.log(e);
+			}
+		}
+		refresh();
+	}
+
+	private void runFilter() {
+		IPersistentPreferenceStore st = getCardsFilterStore();
+		if (st == null)
+			return;
+		CardFilterDialog dialog = new DeckFilterDialog(getArea().getShell(), st);
+		dialog.setOnApply(this::refresh);
+		if (dialog.open() == Window.OK)
+			refresh();
+	}
+
+	private static HashMap<String, String> storeToMap(IPreferenceStore st) {
+		HashMap<String, String> map = new HashMap<>();
+		for (String id : FilterField.getAllIds()) {
+			String value = st.getString(id);
+			if (value != null && value.length() > 0)
+				map.put(id, value);
+		}
+		return map;
+	}
+
+	/** Grey out Unsort / Reset Filter when there is nothing to undo. */
+	private void syncActionState() {
+		if (actionUnsort != null)
+			actionUnsort.setEnabled(!sortHolder.getSortOrder().isEmpty());
+		if (actionResetFilter != null) {
+			IPersistentPreferenceStore st = getCardsFilterStore();
+			String[] names = st == null ? null : PreferenceInitializer.preferenceNames(st);
+			actionResetFilter.setEnabled(names != null && names.length > 0);
+		}
 	}
 
 	protected boolean isInludeSideboard() {
@@ -371,7 +471,6 @@ public class ExportDeckPage extends AbstractDeckPage {
 		if (fstore == null) {
 			fstore = new MemoryFilteredCardStore<>();
 			filter = fstore.getFilter();
-			actionSort.setFilter(filter);
 		}
 		Location loc = store.getLocation();
 		Location main = loc.toMainDeck();
@@ -413,9 +512,9 @@ public class ExportDeckPage extends AbstractDeckPage {
 		}
 
 		// Always emit main deck first, then sideboard, then extra - name-sorted
-		// within each section. fstore keeps no sort of its own so this grouping
-		// survives (unless the user picks an explicit column sort).
+		// within each section. With no sort, fstore keeps this order.
 		SortOrder nameSort = new SortOrder();
+		int sections = 0;
 		for (Location l : new Location[] { main, sb, ex }) {
 			if (!want.contains(l))
 				continue;
@@ -425,9 +524,26 @@ public class ExportDeckPage extends AbstractDeckPage {
 			List<IMagicCard> group = new ArrayList<>(s.getCards());
 			group.sort(nameSort);
 			fstore.getCardStore().addAll(group);
+			sections++;
 		}
 		fstore.setLocation(main);
+
+		// the Cards tab's filter + sort: export what that list shows
+		IPersistentPreferenceStore filterStore = getCardsFilterStore();
+		filter.update(filterStore != null ? storeToMap(filterStore) : new HashMap<String, String>());
+		IPersistentPreferenceStore sortStore = getCardsSortStore();
+		String sortStr = sortStore != null ? sortStore.getString(PreferenceConstants.SORT_ORDER) : "";
+		sortHolder.setSortOrder(SortOrder.valueOf(sortStr));
+		SortOrder effective = SortOrder.valueOf(sortStr);
+		if (!effective.isEmpty() && sections > 1) {
+			// keep main deck -> sideboard -> extra; the user sort applies inside
+			// each section. Last setSortField() = primary
+			effective.setSortField(MagicCardField.SIDEBOARD, true);
+			effective.setSortField(MagicCardField.EXTRA, true);
+		}
+		filter.setSortOrder(effective);
 		updateSecondaryActionLabels();
+		syncActionState();
 		fstore.update();
 	}
 
@@ -471,24 +587,34 @@ public class ExportDeckPage extends AbstractDeckPage {
 	 * Return code indicating the entity should be overwritten.
 	 */
 	public static final String YES = "YES"; //$NON-NLS-1$
+	/**
+	 * Return code indicating the export should be added at the end of the entity.
+	 */
+	public static final String APPEND = "APPEND"; //$NON-NLS-1$
 	private StackLayout stackLayout;
 
-	public String queryOverwrite(String pathString) {
+	/**
+	 * Asks what to do with an existing file: {@link #YES} (overwrite),
+	 * {@link #APPEND} (only offered when {@code canAppend}) or {@link #CANCEL}.
+	 */
+	public String queryOverwrite(String pathString, boolean canAppend) {
 		Path path = new Path(pathString);
 		String messageString;
 		// Break the message up if there is a file name and a directory
 		// and there are at least 2 segments.
 		if (path.getFileExtension() == null || path.segmentCount() < 2) {
-			messageString = NLS.bind("File {0} already exists, overwrite?", pathString);
+			messageString = NLS.bind("File {0} already exists.", pathString);
 		} else {
-			messageString = NLS.bind("File {0} already exists in directory {1}, owerwrite?", path.lastSegment(),
+			messageString = NLS.bind("File {0} already exists in directory {1}.", path.lastSegment(),
 					path.removeLastSegments(1).toOSString());
 		}
-		final MessageDialog dialog = new MessageDialog(getArea().getShell(), "Question", null, messageString,
-				MessageDialog.QUESTION,
-				new String[] { IDialogConstants.YES_LABEL, IDialogConstants.NO_LABEL, IDialogConstants.CANCEL_LABEL },
-				0);
-		String[] response = new String[] { YES, NO, CANCEL };
+		messageString += canAppend ? "\n\nOverwrite it, or append this export at the end of it?"
+				: "\n\nOverwrite it?";
+		String[] labels = canAppend ? new String[] { "Overwrite", "Append", IDialogConstants.CANCEL_LABEL }
+				: new String[] { "Overwrite", IDialogConstants.CANCEL_LABEL };
+		final MessageDialog dialog = new MessageDialog(getArea().getShell(), "File Exists", null, messageString,
+				MessageDialog.QUESTION, labels, 0);
+		String[] response = canAppend ? new String[] { YES, APPEND, CANCEL } : new String[] { YES, CANCEL };
 		// run in syncExec because callback is from an operation,
 		// which is probably not running in the UI thread.
 		getControl().getDisplay().syncExec(new Runnable() {
@@ -530,9 +656,21 @@ public class ExportDeckPage extends AbstractDeckPage {
 				boolean succ = false;
 				try {
 					File file = new File(fileStr);
-					if (!file.exists() || queryOverwrite(fileStr) == YES) {
+					String answer = file.exists() ? queryOverwrite(fileStr, canAppend()) : YES;
+					if (answer == YES) {
 						FileUtils.saveString(textResult, file);
 						succ = true;
+					} else if (answer == APPEND) {
+						String existing = new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8);
+						try {
+							String merged = ExportAppender.append(existing, textResult, appendFormat(),
+									file.getName());
+							Files.write(file.toPath(), merged.getBytes(StandardCharsets.UTF_8));
+							succ = true;
+						} catch (ExportAppender.AppendException e) {
+							// not the same kind of file: left untouched
+							MessageDialog.openError(getArea().getShell(), "Cannot Append", e.getMessage());
+						}
 					}
 					if (succ) {
 						try {
@@ -546,6 +684,21 @@ public class ExportDeckPage extends AbstractDeckPage {
 				}
 			}
 		}
+	}
+
+	/** XML formats can't be appended to; printable sheets (html) can. */
+	private boolean canAppend() {
+		if (reportType == null)
+			return false;
+		IExportDelegate<?> d = reportType.getExportDelegate();
+		return !reportType.isXmlFormat() || (d != null && d.isPrintSheet());
+	}
+
+	/** Same as the Export wizard's (DeckExportPage.appendFormat). */
+	private ExportAppender.Format appendFormat() {
+		IExportDelegate<?> d = reportType.getExportDelegate();
+		return new ExportAppender.Format(reportType.getLabel(), reportType.getExtension(),
+				d != null && d.isPrintSheet(), reportType.isXmlFormat(), includeHeader && !reportType.isXmlFormat());
 	}
 
 	public void setReportType(final ReportType rt) {
