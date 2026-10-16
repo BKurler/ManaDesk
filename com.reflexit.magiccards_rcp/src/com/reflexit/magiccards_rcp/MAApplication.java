@@ -1,6 +1,10 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - the decks'/collections' preference node prefixes are built
+ *                         on demand (listNodePrefixes()), not in a static field:
+ *                         that loaded the UI plug-in before checkInstanceLocation()
+ *                         and the "Select a workspace" dialog was never shown
  *     Rémi Dutil (2026) - checkInstanceLocation(): guard against a null first
  *                         entry in the recent-workspaces list (new File(null)
  *                         threw an uncaught NPE - seen launching headless via
@@ -192,13 +196,20 @@ public class MAApplication implements IApplication, IExecutableExtension {
 	/**
 	 * Node name prefixes of the decks' and collections' own settings (filter,
 	 * presentation, grouping, sort): restored as they were, never reset.
+	 * <p>
+	 * Built on demand, NOT kept in a static field: reading DeckViewPreferencePage.PPID
+	 * loads that preference page class, and a static initializer here runs as soon as
+	 * MAApplication is loaded - before checkInstanceLocation(). Loading the UI plug-in
+	 * that early fixes the workspace location to its default, so the "Select a
+	 * workspace" dialog was never shown.
 	 */
-	private static final String[] LIST_NODE_PREFIXES = { DeckViewPreferencePage.PPID + ".deck.",
-			CollectionViewPreferencePage.PPID + ".deck." };
+	private static String[] listNodePrefixes() {
+		return new String[] { DeckViewPreferencePage.PPID + ".deck.", CollectionViewPreferencePage.PPID + ".deck." };
+	}
 
 	/**
 	 * Every run starts with no filter and the default sort order, in every view
-	 * but the deck and collection tabs (LIST_NODE_PREFIXES), which come back as
+	 * but the deck and collection tabs (listNodePrefixes()), which come back as
 	 * they were left:
 	 * removes the saved filter values and sort orders from all ManaDesk
 	 * preference nodes before the workbench creates any view. Columns,
@@ -207,7 +218,7 @@ public class MAApplication implements IApplication, IExecutableExtension {
 	 * as a deck page's "...deck.main" node.)
 	 */
 	private static boolean isListNode(String name) {
-		for (String prefix : LIST_NODE_PREFIXES)
+		for (String prefix : listNodePrefixes())
 			if (name.startsWith(prefix))
 				return true;
 		return false;
