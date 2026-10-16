@@ -890,7 +890,9 @@
 	<colorDefinition
 		categoryId="com.reflexit.magiccards.ui.preferences.themeElementCategory"
 		id="com.reflexit.magiccards.ui.preferences.vcard.bgcolor" label="Virtual Card Background Color"
-		value="COLOR_WIDGET_LIGHT_SHADOW">
+		value="227,227,227">
+		<!-- explicit RGB, not COLOR_WIDGET_LIGHT_SHADOW: that is 227,227,227 on Windows but
+		     250,250,250 on Linux/GTK, next to the 255 white of own cards = no visible difference -->
 		<description>
 			Background color for rows of virtual cards in ManaDesk tables and trees
         </description>

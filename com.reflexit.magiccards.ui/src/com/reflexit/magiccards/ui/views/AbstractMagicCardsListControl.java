@@ -106,12 +106,15 @@ import org.eclipse.swt.events.MouseEvent;
 import org.eclipse.swt.events.MouseListener;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.FontData;
+import org.eclipse.swt.graphics.Point;
 import org.eclipse.swt.graphics.RGB;
 import org.eclipse.swt.layout.GridData;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 import org.eclipse.swt.widgets.Display;
+import org.eclipse.swt.widgets.Event;
 import org.eclipse.swt.widgets.Label;
+import org.eclipse.swt.widgets.Listener;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Table;
 import org.eclipse.ui.IActionBars;
@@ -432,6 +435,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		mainControl = new Composite(area, SWT.NONE);
 		mainControl.setLayout(GridLayoutFactory.fillDefaults().spacing(0, 0).create());
 		mainControl.setLayoutData(GridDataFactory.fillDefaults().grab(true, true).create());
+		hideUntilSized(area, mainControl);
 
 		createTopBar(mainControl);
 
@@ -442,6 +446,38 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		createTableControl(mainControl);
 
 		getSelectionProvider().addSelectionChangedListener(statusSelectionListener);
+	}
+
+	/**
+	 * GTK only: keeps {@code content} hidden until {@code area} first gets a real
+	 * size. A view is built lazily when its tab is first shown, while its
+	 * containers are still 0x0; GTK allocates the already-visible widgets anyway,
+	 * clamped to 1px, and logs a "Negative content height/width" warning for
+	 * every toolbar button and search field (~100 per view) until the real
+	 * layout runs ~100ms later. Hidden widgets are not allocated at all, so
+	 * showing the content on the first real resize avoids that pass entirely.
+	 */
+	private static void hideUntilSized(Composite area, Composite content) {
+		if (!"gtk".equals(SWT.getPlatform()))
+			return;
+		Point size = area.getSize();
+		if (size.x > 0 && size.y > 0)
+			return; // already laid out - nothing to avoid
+		content.setVisible(false);
+		area.addListener(SWT.Resize, new Listener() {
+			@Override
+			public void handleEvent(Event e) {
+				if (content.isDisposed() || area.isDisposed()) {
+					return;
+				}
+				Point s = area.getSize();
+				if (s.x <= 0 || s.y <= 0)
+					return;
+				area.removeListener(SWT.Resize, this);
+				content.setVisible(true);
+				area.layout(true, true);
+			}
+		});
 	}
 
 	public IMagicViewer createViewer(Composite parent) {

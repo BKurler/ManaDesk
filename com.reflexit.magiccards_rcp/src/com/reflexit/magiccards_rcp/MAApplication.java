@@ -39,9 +39,12 @@ import java.net.URL;
 import java.util.Map;
 import java.util.Properties;
 
+import org.eclipse.core.runtime.FileLocator;
 import org.eclipse.core.runtime.IConfigurationElement;
 import org.eclipse.core.runtime.IExecutableExtension;
+import org.eclipse.core.runtime.Path;
 import org.eclipse.core.runtime.Platform;
+import org.eclipse.core.runtime.preferences.InstanceScope;
 import org.eclipse.equinox.app.IApplication;
 import org.eclipse.equinox.app.IApplicationContext;
 import org.eclipse.jface.dialogs.Dialog;
@@ -55,6 +58,8 @@ import org.eclipse.swt.widgets.Shell;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.PlatformUI;
 import org.eclipse.ui.internal.WorkbenchPlugin;
+import org.osgi.service.prefs.BackingStoreException;
+import org.osgi.service.prefs.Preferences;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
@@ -104,7 +109,16 @@ public class MAApplication implements IApplication, IExecutableExtension {
 		// "Comparison method violates its general contract"; the legacy merge sort
 		// tolerates it (the order just self-corrects on the next stable refresh).
 		System.setProperty("java.util.Arrays.useLegacyMergeSort", "true");
+		installLinuxGtkCss();
 		Display display = createDisplay();
+		// Linux: AWT is only used for off-screen image work there (set icons) - links,
+		// mail and paste go through SWT. A non-headless AWT loads GTK a second time
+		// inside SWT's process on first use (Gdk-CRITICAL gdk_threads_set_lock_functions,
+		// a known cause of hangs). Set after the display exists, so AwtFatalErrorDialog
+		// still works if SWT cannot start; -Djava.awt.headless=false overrides it (the
+		// SWTBot drag-and-drop tests use java.awt.Robot).
+		if ("gtk".equals(SWT.getPlatform()) && System.getProperty("java.awt.headless") == null)
+			System.setProperty("java.awt.headless", "true");
 		// processor must be created before we start event loop
 		try {
 			// look and see if there's a splash shell we can parent off of
@@ -126,6 +140,7 @@ public class MAApplication implements IApplication, IExecutableExtension {
 				Platform.endSplash();
 				return instanceLocationCheck;
 			}
+			resetFiltersAndSorting();
 			// Give the embedded "Browse Website..." Edge/WebView2 browser a
 			// persistent, workspace-scoped profile directory instead of
 			// whatever undocumented default WebView2 would otherwise pick -
@@ -160,6 +175,63 @@ public class MAApplication implements IApplication, IExecutableExtension {
 			Location instanceLoc = Platform.getInstanceLocation();
 			if (instanceLoc != null)
 				instanceLoc.release();
+		}
+	}
+
+	/** Preference key prefix of every saved filter value (FilterField.getPrefConstant()). */
+	private static final String FILTER_KEY_PREFIX = "com.reflexit.magiccards.core.filter.";
+	/** The grouping is kept: it is part of the view layout, not a filter. */
+	private static final String GROUP_KEY_PART = ".filter.group_field.";
+	/** PreferenceConstants.SORT_ORDER */
+	private static final String SORT_ORDER_KEY = "com.reflexit.magiccards.ui.sortorder";
+
+	/**
+	 * Every run starts with no filter and the default sort order, in every view:
+	 * removes the saved filter values and sort orders from all ManaDesk
+	 * preference nodes before the workbench creates any view. Columns,
+	 * presentation and grouping are kept. (A per-view reset missed views that
+	 * share a preference page id but keep their filter in their own store, such
+	 * as a deck page's "...deck.main" node.)
+	 */
+	private static void resetFiltersAndSorting() {
+		try {
+			Preferences root = Platform.getPreferencesService().getRootNode().node(InstanceScope.SCOPE);
+			for (String name : root.childrenNames()) {
+				if (!name.startsWith("com.reflexit.magiccards"))
+					continue;
+				Preferences node = root.node(name);
+				boolean changed = false;
+				for (String key : node.keys()) {
+					boolean filter = key.startsWith(FILTER_KEY_PREFIX) && !key.contains(GROUP_KEY_PART);
+					if (filter || key.equals(SORT_ORDER_KEY)) {
+						node.remove(key);
+						changed = true;
+					}
+				}
+				if (changed)
+					node.flush();
+			}
+		} catch (BackingStoreException | RuntimeException e) {
+			Activator.log("Could not reset the saved filters: " + e);
+		}
+	}
+
+	/**
+	 * On Linux, makes SWT load css/gtk-linux.css on top of the GTK theme so the
+	 * UI density is closer to Windows. SWT reads this property when the Display
+	 * is created, so it must be called before createDisplay(). Not set if the
+	 * user (or a launch config) already supplied their own GTK stylesheet.
+	 */
+	private void installLinuxGtkCss() {
+		final String prop = "org.eclipse.swt.internal.gtk.cssFile";
+		if (!Platform.OS_LINUX.equals(Platform.getOS()) || System.getProperty(prop) != null)
+			return;
+		try {
+			URL url = FileLocator.find(Activator.getDefault().getBundle(), new Path("css/gtk-linux.css"), null);
+			if (url != null)
+				System.setProperty(prop, new File(FileLocator.toFileURL(url).getPath()).getAbsolutePath());
+		} catch (IOException e) {
+			e.printStackTrace();
 		}
 	}
 

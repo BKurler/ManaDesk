@@ -298,7 +298,15 @@ public class BrowseWebsiteLiveTest {
 	 *  project, already uses by convention. Pinned explicitly here (only if
 	 *  not already set - an explicit -Dma.magiccards.area on the launch
 	 *  itself still wins) so this test's data source is never an accident. */
-	private static final String DEFAULT_MAGICCARDS_DIR = "C:/Dev/runtime-magic.product/magiccards";
+	/** The dev runtime workspace (the magic.product launch's -data, i.e.
+	 *  ${workspace_loc}/../runtime-magic.product): C:/Dev on Windows, the
+	 *  home directory elsewhere. A Windows path on Linux silently resolves
+	 *  as a relative directory, finds no database, and skips every test. */
+	private static final String RUNTIME_DIR = System.getProperty("os.name").startsWith("Windows")
+			? "C:/Dev/runtime-magic.product"
+			: System.getProperty("user.home") + "/runtime-magic.product";
+
+	private static final String DEFAULT_MAGICCARDS_DIR = RUNTIME_DIR + "/magiccards";
 
 	/** A real, PERSISTENT WebView2 profile (cookies, local storage - so a
 	 *  first-visit consent wall only ever has to be cleared once, not on
@@ -320,7 +328,7 @@ public class BrowseWebsiteLiveTest {
 	 *  is defense-in-depth only, not a guarantee - never save a password
 	 *  through this profile regardless. Wired to SWT's real, documented
 	 *  property for this - org.eclipse.swt.browser.Edge.DATA_DIR_PROP. */
-	private static final String BROWSER_PROFILE_DIR = "C:/Dev/runtime-magic.product/.metadata/.plugins/com.reflexit.magiccards.core/browser-profile";
+	private static final String BROWSER_PROFILE_DIR = RUNTIME_DIR + "/.metadata/.plugins/com.reflexit.magiccards.core/browser-profile";
 
 	/** How long to wait between innerText re-checks after navigating - matches
 	 *  BrowseWebsiteDialog's own live card-count polling interval, since some
@@ -607,12 +615,16 @@ public class BrowseWebsiteLiveTest {
 		display.syncExec(() -> {
 			try {
 				Object result = browser.evaluate(BrowseWebsiteDialog.CAPTURE_TEXT_WITH_IMAGE_ALT_SCRIPT);
+				if (!(result instanceof String))
+					trace("  image-alt capture returned " + (result == null ? "null" : result.getClass().getName()));
 				textRef.set((result instanceof String) ? (String) result : "");
 			} catch (Exception e) {
+				trace("  image-alt capture failed: " + e);
 				textRef.set("");
 			}
 		});
 		String text = textRef.get();
+		trace("  image-alt capture length: " + text.length());
 		DeckTextExtractor.CardCount withAlt = DeckTextExtractor.countRecognizedCards(text);
 		boolean commanderRecovered = text.toLowerCase(java.util.Locale.ROOT).contains("xenagos");
 		trace("  image-alt-substituted RESULT: total=" + withAlt.total + " unique=" + withAlt.unique

@@ -315,12 +315,16 @@ public final class ImageCreator {
 
 		iconTasks.add(() -> {
 			try {
-				// Heavy work off UI thread
-				if (!file.exists()) {
-					File generated = efc.ensureSetSymbolExists(rarity);
-					if (generated == null || !generated.exists()) {
-						return;
-					}
+				// ManaDesk is shutting down (plugins already stopped): queued icon
+				// loads have nothing to do and would only throw NPEs
+				if (MagicUIActivator.getDefault() == null
+						|| com.reflexit.magiccards.core.Activator.getDefault() == null)
+					return;
+				// Heavy work off UI thread - also when the PNG exists: a stale one
+				// (an old white Common tint) is re-rendered, a good one returned as is
+				File generated = efc.ensureSetSymbolExists(rarity);
+				if (generated == null || !generated.exists()) {
+					return;
 				}
 
 				Display display = Display.getDefault();
@@ -344,6 +348,8 @@ public final class ImageCreator {
 				refreshSetIconViewer(edition);
 
 			} catch (Exception e) {
+				if (MagicUIActivator.getDefault() == null)
+					return; // ManaDesk closed while this icon was loading - nothing to report
 				System.err.println("Error loading set icon: " + e.getMessage());
 			} finally {
 				pendingIcons.remove(key);
@@ -436,29 +442,8 @@ public final class ImageCreator {
 				return cached;
 			}
 
-			// 2) Load asynchronously, but ONLY if Display and Registry are still alive
-			Display display = Display.getDefault();
-			if (display == null || display.isDisposed()) {
-				return null;
-			}
-
-			display.asyncExec(() -> {
-				try {
-					// Double-check everything again inside async
-					if (display.isDisposed())
-						return;
-					if (reg == null)
-						return;
-					if (reg.get(key) != null)
-						return; // already loaded
-
-					Image img = new Image(display, file.getAbsolutePath());
-					reg.put(key, img);
-
-				} catch (Exception ex) {
-					System.err.println("Async set icon load failed: " + ex.getMessage());
-				}
-			});
+			// 2) Load in the background (checks a stale cached PNG first)
+			scheduleSetIconLoad(efc, rarity, file, key, ed);
 
 			// First paint returns null; next paint will find cached image
 			return null;

@@ -1,0 +1,2 @@
+# Shell scripts ship in the Linux/macOS archives; CRLF breaks the #!/bin/bash line
+*.sh text eol=lf

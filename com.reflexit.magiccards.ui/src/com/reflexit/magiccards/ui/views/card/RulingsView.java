@@ -66,7 +66,12 @@ public class RulingsView extends ViewPart {
 					if (loc.startsWith("http")) {
 						event.doit = false;
 						try {
-							if (Desktop.isDesktopSupported()
+							// Linux: open links natively. java.awt.Desktop starts AWT's own GTK
+							// integration inside SWT's GTK process (Gdk-CRITICAL
+							// gdk_threads_set_lock_functions, and a known cause of hangs).
+							if ("gtk".equals(org.eclipse.swt.SWT.getPlatform()))
+								org.eclipse.swt.program.Program.launch(loc);
+							else if (Desktop.isDesktopSupported()
 									&& Desktop.getDesktop().isSupported(Desktop.Action.BROWSE))
 								Desktop.getDesktop().browse(new URI(loc));
 						} catch (Exception e) {

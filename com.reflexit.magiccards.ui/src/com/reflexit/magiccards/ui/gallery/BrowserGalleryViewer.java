@@ -62,6 +62,13 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	private java.util.List<IMagicCard> flatInput = java.util.Collections.emptyList();
 	/** id of the card a programmatic setSelection() wants highlighted once the page is ready */
 	private String pendingSelectId;
+	/**
+	 * False between render() and the new page's 'completed': a selection pushed
+	 * in that window ran in the OLD page (previous input), which then paged
+	 * through the whole new list hunting for the card - 67 synchronous pages
+	 * for a 5,378-card filter. It stays pending; 'completed' applies it.
+	 */
+	private boolean pageReady;
 
 	public BrowserGalleryViewer(Composite parent, int style) {
 
@@ -76,6 +83,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 
 			@Override
 			public void completed(org.eclipse.swt.browser.ProgressEvent event) {
+				pageReady = true;
 				applyPendingSelect();
 			}
 		});
@@ -108,10 +116,21 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 				int start = ((Double) args[0]).intValue();
 				int count = ((Double) args[1]).intValue();
 
-				int end = Math.min(start + count, flatInput.size());
+				// the page may still be the previous input's (a filter change races a
+				// selection into the old page): out of range is an empty page, not an
+				// IndexOutOfBoundsException thrown into the page's script
+				start = Math.max(0, Math.min(start, flatInput.size()));
+				int end = Math.max(start, Math.min(start + count, flatInput.size()));
 				List<IMagicCard> slice = flatInput.subList(start, end);
 
-				return cardsToJson(slice);
+				String json = cardsToJson(slice);
+				// Percent-encoded, decoded by the page (decodeURIComponent). SWT's
+				// WebKit bridge (Linux) passes a return value back wrapped in its
+				// own JSON without escaping it: any backslash - i.e. every \" of a
+				// card name with quotes - or a lone surrogate made the page get
+				// `undefined`, so the gallery stayed empty. Only [A-Za-z0-9%._*-]
+				// crosses the bridge now, in every browser.
+				return java.net.URLEncoder.encode(json, java.nio.charset.StandardCharsets.UTF_8).replace("+", "%20");
 			}
 		};
 
@@ -243,6 +262,8 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 	private void applyPendingSelect() {
 		if (pendingSelectId == null || browser == null || browser.isDisposed())
 			return;
+		if (!pageReady)
+			return; // the page is being replaced - see pageReady
 		String id = pendingSelectId.replace("\\", "\\\\").replace("'", "\\'");
 		int idx = indexOfCardId(pendingSelectId);
 		boolean ok;
@@ -305,6 +326,7 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 			pendingSelectId = null;
 		String html = GalleryHtmlBuilder.buildVirtualGalleryHtml(total, pendingSelectId, selIdx);
 
+		pageReady = false;
 		browser.setText(html, true);
 	}
 
@@ -393,7 +415,14 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 					 * println(">>> javaSelectCard BEFORE setSelection, currentSelectionElement = "
 					 * + currentSelectionElement);
 					 */
-					setSelection(new StructuredSelection(element), true);
+					// Return to the page first: setSelection() calls back into it
+					// (applyPendingSelect -> browser.execute) and notifies other views.
+					// Edge allows a nested call like that, but WebKit (Linux) blocks it
+					// until SWT's 10s timeout - the click froze and the selection glitched.
+					browser.getDisplay().asyncExec(() -> {
+						if (!browser.isDisposed())
+							setSelection(new StructuredSelection(element), true);
+					});
 					/*
 					 * System.out.
 					 * println(">>> javaSelectCard AFTER setSelection, currentSelectionElement = " +
@@ -440,7 +469,12 @@ public class BrowserGalleryViewer extends Viewer implements IMagicViewer, ISelec
 					Object id = args[0];
 					Object element = resolveElementFromId(id);
 					if (element != null) {
-						fireDoubleClick(element);
+						// same as javaSelectCard: never block the page's callback (a
+						// double-click can open a dialog) - WebKit would hang
+						browser.getDisplay().asyncExec(() -> {
+							if (!browser.isDisposed())
+								fireDoubleClick(element);
+						});
 					}
 				}
 				return null;

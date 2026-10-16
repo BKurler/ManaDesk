@@ -5,6 +5,8 @@
 
 package com.reflexit.magiccards.ui.gallery;
 
+import java.util.Collections;
+
 import org.eclipse.jface.action.MenuManager;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.IDoubleClickListener;
@@ -150,12 +152,15 @@ public class SplitGalleryViewer implements IMagicColumnViewer {
 		viewer.setInput(input);
 		if (galleryviewer == null || this.galleryviewer.getControl().isDisposed())
 			return;
-		if (selection.isEmpty()) {
-			ICardGroup group = ((IFilteredCardStore) input).getCardGroupRoot();
-			viewer.setSelection(new StructuredSelection(group), true);
-		} else {
-			viewer.setSelection(selection, true);
-		}
+		if (selection.isEmpty())
+			selection = new StructuredSelection(((IFilteredCardStore) input).getCardGroupRoot());
+		viewer.setSelection(selection, true);
+		// When the view isn't grouped the tree is collapsed out of the sash
+		// (0x0). On GTK such a tree doesn't take a programmatic selection, so
+		// no selectionChanged reached the gallery and it stayed empty - feed it
+		// directly then (Windows selects fine, which fires the listener).
+		if (viewer.getSelection().isEmpty())
+			galleryviewer.setInput(Collections.singletonList(((IFilteredCardStore) input).getCardGroupRoot()));
 	}
 
 	@Override

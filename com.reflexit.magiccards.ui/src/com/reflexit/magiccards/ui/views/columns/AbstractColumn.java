@@ -5,6 +5,7 @@ import org.eclipse.jface.viewers.ColumnLabelProvider;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.EditingSupport;
 import org.eclipse.jface.viewers.TextCellEditor;
+import org.eclipse.jface.viewers.ViewerCell;
 import org.eclipse.swt.SWT;
 import org.eclipse.swt.graphics.Color;
 import org.eclipse.swt.graphics.Image;
@@ -13,6 +14,7 @@ import org.eclipse.swt.widgets.Composite;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
+import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
@@ -110,6 +112,24 @@ public abstract class AbstractColumn extends ColumnLabelProvider {
 		return visible;
 	}
 
+	/**
+	 * Hidden columns (width 0, see the column layout) are not computed: JFace
+	 * refreshes every column of a row, and for a group row several columns
+	 * aggregate every card in the group (color identity, legality...), which
+	 * kept the UI busy for seconds when the Collector (all ~115k printings)
+	 * opened. Showing a column again goes through updateColumns() and a
+	 * viewer refresh, which fills it in.
+	 */
+	@Override
+	public void update(ViewerCell cell) {
+		if (!visible) {
+			cell.setText("");
+			cell.setImage(null);
+			return;
+		}
+		super.update(cell);
+	}
+
 	public void setVisible(boolean visible) {
 		this.visible = visible;
 	}
@@ -135,6 +155,9 @@ public abstract class AbstractColumn extends ColumnLabelProvider {
 		boolean own = false;
 		if (element instanceof IMagicCardPhysical) {
 			own = ((IMagicCardPhysical) element).isOwn();
+		} else if (element instanceof MagicCard) {
+			// a card database row: "own" when you own at least one copy of it
+			own = ((MagicCard) element).getOwnCount() > 0;
 		}
 		return MagicUIActivator.getDefault().getBgColor(own);
 	}

@@ -1038,13 +1038,21 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		}
 	}
 
+	/** At least 100 wide, but never narrower than the button's own label - a
+	 *  fixed 100 clipped "Browse Website..." whenever the system font is larger
+	 *  than Windows' 9pt (e.g. Ubuntu's default 11pt). FILL makes every button
+	 *  in the column as wide as the widest one. */
+	private static GridData buttonData(Button button) {
+		int width = Math.max(100, button.computeSize(SWT.DEFAULT, SWT.DEFAULT).x);
+		return GridDataFactory.fillDefaults().align(SWT.FILL, SWT.CENTER).hint(width, SWT.DEFAULT).create();
+	}
+
 	/** The Clipboard (radio + preview + Edit...) and File (radio + path +
 	 *  Browse...) controls - in their own "Import Source" group by default, or
 	 *  folded into the caller's own group by {@link #createSourceContainer}. */
 	protected void createSourceGroup(final Composite parent) {
 		Composite fileSelectionArea = createSourceContainer(parent);
 		GridDataFactory textBoxFc = GridDataFactory.fillDefaults().hint(200, SWT.DEFAULT).grab(true, false);
-		GridDataFactory buttFc = GridDataFactory.swtDefaults().hint(100, SWT.DEFAULT).grab(true, false);
 
 		// clipboard control: radio + read-only preview of the current clipboard +
 		// an Edit... button (opens the text in a dialog and copies it back)
@@ -1063,7 +1071,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			}
 		});
 		editButton = toolkit.createButton(fileSelectionArea, "Edit...", SWT.PUSH, (e) -> openEditDialog());
-		editButton.setLayoutData(buttFc.create());
+		editButton.setLayoutData(buttonData(editButton));
 
 		// file selector
 		fileRadio = toolkit.createButton(fileSelectionArea, fileRadioLabel(), SWT.RADIO,
@@ -1087,7 +1095,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				fileText.setSelection(file.length(), file.length());
 			}
 		});
-		browseButton.setLayoutData(buttFc.create());
+		browseButton.setLayoutData(buttonData(browseButton));
 
 		// website control: radio + an editable address field (paste/type a URL
 		// here, or it fills in with the page last imported from) + a Browse
@@ -1115,7 +1123,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				(e) -> openBrowseWebsiteDialog());
 		browseWebsiteButton.setToolTipText("Open the address above in an embedded browser, so you can navigate, "
 				+ "log in if needed, and import the deck once you can see it");
-		browseWebsiteButton.setLayoutData(buttFc.create());
+		browseWebsiteButton.setLayoutData(buttonData(browseWebsiteButton));
 		// editor controls
 		// inputRadio = toolkit.createButton(fileSelectionArea, "Editor",
 		// SWT.RADIO,

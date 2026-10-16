@@ -159,14 +159,22 @@ public final class GalleryHtmlBuilder {
 
 		// Load a page of cards from Java
 		sb.append("function loadNextPage(){");
-		sb.append(" if(loading) return;");
+		// not bound yet (WebKit, see __start below): bail out BEFORE setting
+		// `loading`, or the exception would leave it stuck at true
+		// ...and stop once everything is loaded (scrolling at the bottom kept
+		// asking Java for an empty page)
+		sb.append(" if(loading || typeof window.loadCardRange!=='function' || loadedUntil>=window.totalCards) return;");
 		sb.append(" loading=true;");
-		sb.append(" var json=window.loadCardRange(loadedUntil,pageSize);");
-		sb.append(" var cards=JSON.parse(json);");
-		sb.append(" appendCards(cards);");
-		sb.append(" loadedUntil+=cards.length;");
-		sb.append(" loading=false;");
-		sb.append(" window.__lastLoadAt=Date.now();");
+		// try/finally: an exception here used to leave `loading` stuck at true,
+		// after which nothing loaded any more and every click was ignored
+		sb.append(" try{");
+		sb.append("  var json=window.loadCardRange(loadedUntil,pageSize);");
+		// percent-encoded by BrowserGalleryViewer.loadCardRange - see there why
+		sb.append("  var cards=JSON.parse(decodeURIComponent(json));");
+		sb.append("  appendCards(cards);");
+		sb.append("  loadedUntil+=cards.length;");
+		sb.append(" }catch(e){ jlog('loadNextPage failed at '+loadedUntil+': '+e+' json='+(typeof json)+' '+(json?String(json).length:0)); }");
+		sb.append(" finally{ loading=false; window.__lastLoadAt=Date.now(); }");
 		sb.append("}");
 
 		// Append cards using the SAME DOM structure as your old appendCard()
@@ -261,8 +269,19 @@ public final class GalleryHtmlBuilder {
 		sb.append(" }");
 		sb.append(" return !!document.querySelector(\".card[data-id='\"+id+\"']\");");
 		sb.append("}");
+		// WebKit (Linux) ignores scrollIntoView while a freshly rendered page is
+		// still laying out (scrollY stays 0) - retry briefly until the card is
+		// actually on screen. Edge scrolls on the first try, so this is a no-op there.
+		sb.append("function __rescroll(card,n){");
+		sb.append(" var r=card.getBoundingClientRect();");
+		sb.append(" if(r.bottom>0 && r.top<window.innerHeight) return;");
+		sb.append(" if(n>=20 || !card.classList.contains('sel')) return;");
+		sb.append(" setTimeout(function(){ try{card.scrollIntoView({block:'center'});}catch(e){} __rescroll(card,n+1); },50);");
+		sb.append("}");
 		sb.append("function __applySelect(){");
 		sb.append(" var id=window.__wantSelect; if(!id) return;");
+		// too early to load pages - keep __wantSelect, __start applies it
+		sb.append(" if(typeof window.loadCardRange!=='function') return;");
 		sb.append(" __ensureLoadedFor(id, window.__wantIndex);");
 		sb.append(" var card=document.querySelector(\".card[data-id='\"+id+\"']\");");
 		sb.append(" jlog('__applySelect id='+id+' found='+(!!card)+' loaded='+loadedUntil+'/'+window.totalCards+' tries='+window.__selTries+' scrollY='+window.scrollY);");
@@ -276,7 +295,7 @@ public final class GalleryHtmlBuilder {
 		sb.append("   var r=card.getBoundingClientRect();");
 		sb.append("   var off=(r.bottom<=0 || r.top>=window.innerHeight);");
 		sb.append("   jlog('  card rect top='+Math.round(r.top)+' bottom='+Math.round(r.bottom)+' innerH='+window.innerHeight+' offscreen='+off);");
-		sb.append("   if(off){ try{card.scrollIntoView({block:'center'});}catch(e){} jlog('  scrolled, scrollY now '+window.scrollY); }");
+		sb.append("   if(off){ try{card.scrollIntoView({block:'center'});}catch(e){} jlog('  scrolled, scrollY now '+window.scrollY); __rescroll(card,0); }");
 		sb.append("  }");
 		sb.append("  window.__selectedId=id; window.__wantSelect=null;");
 		sb.append(" } else {");
@@ -288,29 +307,58 @@ public final class GalleryHtmlBuilder {
 		sb.append(" }");
 		sb.append("}");
 
+		// GALLERY_CSS gives html/body height:100% + overflow:auto, so the element
+		// that actually scrolls is <body>, not the window: window 'scroll' never
+		// fired, window.scrollY stayed 0 and body.offsetHeight always equalled
+		// the window height - infinite scroll never loaded past the first pages.
+		// Work with whichever element scrolls, and measure the gallery itself.
+		sb.append("function __scroller(){");
+		sb.append(" var b=document.body;");
+		sb.append(" if(b && b.scrollHeight>b.clientHeight+1 && getComputedStyle(b).overflowY!=='visible') return b;");
+		sb.append(" return document.scrollingElement||document.documentElement;");
+		sb.append("}");
+		sb.append("function __nearBottom(){");
+		sb.append(" var el=__scroller();");
+		sb.append(" return el.scrollTop + el.clientHeight >= el.scrollHeight - 300;");
+		sb.append("}");
+
 		// SAFE viewport fill (NO while loop)
 		sb.append("function fillViewport(){");
-		sb.append(" if(loadedUntil < window.totalCards && ");
-		sb.append("    document.body.offsetHeight < window.innerHeight + 100){");
+		sb.append(" var g=document.getElementById('gallery');");
+		sb.append(" if(loadedUntil < window.totalCards && g && g.offsetHeight < window.innerHeight + 100){");
 		sb.append("    loadNextPage();");
 		sb.append(" }");
 		sb.append("}");
 
-		// Infinite scroll
-		sb.append("window.addEventListener('scroll', function(){");
-		sb.append(" if(window.innerHeight + window.scrollY >= document.body.offsetHeight - 300){");
+		// Infinite scroll - capture phase so a scrolling <body> (or any inner
+		// element) is seen too; 'scroll' itself does not bubble
+		sb.append("document.addEventListener('scroll', function(){");
+		sb.append(" if(__nearBottom()){");
 		sb.append("  loadNextPage();");
 		sb.append(" }");
-		sb.append("});");
+		sb.append("}, true);");
 
 		// Resize handling
 		sb.append("window.addEventListener('resize', function(){");
 		sb.append(" fillViewport();");
 		sb.append("});");
 
-		// Initial load
-		sb.append("loadNextPage();");
-		sb.append("fillViewport();");
+		// Initial load. Edge binds BrowserFunctions before the page's own scripts
+		// run, but WebKit (Linux) only once the page has loaded - calling
+		// loadCardRange right away there threw and the gallery stayed empty. Wait
+		// for it (n=0, i.e. Edge, behaves exactly as before), then apply any
+		// selection that arrived while waiting.
+		sb.append("function __start(n){");
+		sb.append(" if(typeof window.loadCardRange!=='function'){");
+		sb.append("  if(n<250) setTimeout(function(){__start(n+1);},20);");
+		sb.append("  else jlog('loadCardRange never became available');");
+		sb.append("  return;");
+		sb.append(" }");
+		sb.append(" loadNextPage();");
+		sb.append(" fillViewport();");
+		sb.append(" if(n>0 && window.__wantSelect) __applySelect();");
+		sb.append("}");
+		sb.append("__start(0);");
 
 		sb.append("</script>");
 
