@@ -11,6 +11,8 @@
  *                         Defaults also resets the view's Group By and sort
  *                         order, which live in the same store but have no
  *                         field editor on the page
+ *     Rémi Dutil (2026) - ... and every deck's / collection's own grouping and sort
+ *                         (PreferenceInitializer.resetListViewSettings)
  *******************************************************************************/
 package com.reflexit.magiccards.ui.preferences;
 
@@ -49,6 +51,8 @@ public abstract class CardViewPreferencePage extends FieldEditorPreferencePage i
 			IPreferenceStore store = getPreferenceStore();
 			store.setToDefault(PreferenceConstants.GROUP_FIELD);
 			store.setToDefault(PreferenceConstants.SORT_ORDER);
+			// deck / collection tabs keep their own (page id = this class's name)
+			PreferenceInitializer.resetListViewSettings(getClass().getName());
 			if (store instanceof IPersistentPreferenceStore && store.needsSaving()) {
 				try {
 					((IPersistentPreferenceStore) store).save();

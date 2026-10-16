@@ -28,6 +28,11 @@
  *                         mentions the printable preview
  *     Rémi Dutil (2026) - "Extra list" and "Collector" entries; Proxies, Filters
  *                         and sorting, Printings and Instances entries updated
+ *     Rémi Dutil (2026) - Export entry: the Export tab follows the Cards tab's
+ *                         sort and filter
+ *     Rémi Dutil (2026) - Filters and sorting (several levels, each deck and
+ *                         collection keeps its own), Collector (faster), new
+ *                         Gallery and Linux entries
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -180,17 +185,24 @@ final class WhatsNew {
 					+ " sideboard list, and export formats you can edit with a live preview. Proxies and"
 					+ " sideboard lists print at 100%, 9 per page, on the same sheets; \"Append to the existing"
 					+ " file\" fills a sheet you already exported (or a CSV with the same columns), and the"
-					+ " preview counts the pages.", null),
+					+ " preview counts the pages. A deck's or collection's Export tab now follows the Cards"
+					+ " tab's sort (several columns) and filter, so you save the list as you see it; saving over a"
+					+ " file offers Overwrite or Append.", null),
 			new Feature(1, MAJOR, DATABASE, "Card database from Scryfall", "Downloaded on first start (or imported from a"
 					+ " file when offline), a full update in under a minute, and a backup before each update.",
 					null),
 			new Feature(1, MAJOR, DATABASE, "Prices", "From TCGplayer (US$) or Cardmarket (€), non-foil and foil; the"
 					+ " card info links to both stores.", null),
 			new Feature(1, MINOR, BROWSING, "Filters and sorting", "A filter dialog with tabs and ranges, quick filters in"
-					+ " My Cards, sort by any column, and column sizes are remembered. Restore Defaults on a view's"
-					+ " preference page also resets its grouping and sorting.", null),
-			new Feature(1, MINOR, BROWSING, "Collector", "Grouped by set by default, sets in alphabetical order;"
-					+ " Count Proxies and Count Finishes Separately are also on its preference page.", null),
+					+ " My Cards, sort by several columns, and column sizes are remembered. Restore Defaults on a"
+					+ " view's preference page also resets its grouping and sorting. Each deck and collection"
+					+ " remembers its own View As, grouping, sort and filter, even after a restart; columns stay"
+					+ " the same for all decks, and for all collections.", null),
+			new Feature(1, MINOR, BROWSING, "Collector", "Opens much faster, grouped by set by default, sets in"
+					+ " alphabetical order; Count Proxies and Count Finishes Separately are also on its preference"
+					+ " page.", null),
+			new Feature(1, MINOR, BROWSING, "Gallery", "Scrolls on to the end of long lists without getting stuck,"
+					+ " and keeps the selected card in view.", null),
 			new Feature(1, MINOR, BROWSING, "Printings and Instances", "Sortable, with their own choice of columns;"
 					+ " Instances shows Name, Count, Set, Num and Location first.", null),
 			new Feature(1, MINOR, BROWSING, "Rulings", "Shown formatted, in their own view.", null),
@@ -203,6 +215,8 @@ final class WhatsNew {
 					+ " sync. Press F1 in a view to open its page.", null),
 			new Feature(1, MINOR, GENERAL, "Faster startup", "The splash screen shows the real progress, and the"
 					+ " window opens ready to use.", null),
+			new Feature(1, MINOR, GENERAL, "Linux", "The Linux version starts right from its archive, with a more"
+					+ " compact look, and its toolbars draw correctly under Wayland.", null),
 			new Feature(1, MINOR, GENERAL, "No more Work Offline", "Without internet, ManaDesk keeps working and"
 					+ " quietly skips what needs the web.", null),
 			new Feature(1, MINOR, GENERAL, "Report a bug or request a feature", "From the Help menu: describe it,"
