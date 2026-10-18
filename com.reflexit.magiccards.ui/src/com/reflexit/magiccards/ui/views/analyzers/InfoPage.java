@@ -5,6 +5,7 @@
  *                         extra creation); use getArea().getShell() (editButton is
  *                         never built)
  *     Rémi Dutil (2026) - proxy count (tournament-readiness) + cost to replace them
+ *     Rémi Dutil (2026) - Game Changers and mana sources of the main deck (Scryfall's flags)
  *     Rémi Dutil (2026) - proxies split into "covered by cards you own (any print)"
  *                         vs "must acquire"; only the latter feeds the cost
  *     Rémi Dutil (2026) - Type shows the collection type ("Collection (Wishlist/To Print)");
@@ -80,6 +81,8 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 	private Label proxies;
 	private Label proxiesOwned;
 	private Label proxyCost;
+	private Label gameChangers;
+	private Label manaSources;
 	private DynamicCombo protection;
 	private IStorageInfo storageInfo;
 	private static final DecimalFormat INFO_DECIMAL = new DecimalFormat("#0.00");
@@ -162,6 +165,10 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		maxRepeats = createTextLabel("Max Repeats: ",
 				"How many time each card repeats, excluding basic land (for legality purposes)");
 		rarity = createTextLabel("Rarity: ");
+		gameChangers = createTextLabel("Game Changers: ",
+				"Cards Scryfall flags as Commander Game Changers (they count toward the Commander bracket rules) - main deck");
+		manaSources = createTextLabel("Mana sources: ",
+				"How many cards of the main deck can produce each mana (lands, rocks, mana creatures...), from Scryfall");
 		// tree.setBackground(Display.getCurrent().getSystemColor(SWT.COLOR_BLUE));
 		dbprice = createTextLabel("Price: ",
 				"Cost of a deck using Online Price column," + " in brackets cost of a deck using User Price column");
@@ -307,6 +314,7 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		// the user-price total in brackets only when there is one - not an empty "()"
 		dbprice.setText(up == null || up.trim().isEmpty() ? sp : sp + " (" + up + ")");
 		updateProxyStats(mainStore, sideboardStore);
+		updateDeckFacts(mainStore);
 		colors.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(mainStore)));
 		colorsSideboard.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(sideboardStore)));
 		ownership.setText(store.isVirtual() ? "Virtual" : "Own");
@@ -367,6 +375,33 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		} catch (Exception x) {
 			x.printStackTrace();
 		}
+	}
+
+	/** Game Changers and mana sources of the main deck (Scryfall's own flags, see MagicCardField). */
+	private void updateDeckFacts(ICardStore<IMagicCard> mainStore) {
+		java.util.Map<String, Integer> changers = CardStoreUtils.buildGameChangers(mainStore);
+		if (changers.isEmpty()) {
+			gameChangers.setText("none");
+		} else {
+			int n = 0;
+			StringBuilder names = new StringBuilder();
+			for (java.util.Map.Entry<String, Integer> e : changers.entrySet()) {
+				n += e.getValue();
+				if (names.length() > 0)
+					names.append(", ");
+				names.append(e.getValue() > 1 ? e.getValue() + "x " + e.getKey() : e.getKey());
+			}
+			gameChangers.setText(n + "  (" + names + ")");
+		}
+		StringBuilder sources = new StringBuilder();
+		for (java.util.Map.Entry<String, Integer> e : CardStoreUtils.buildManaSources(mainStore).entrySet()) {
+			if (e.getValue() == 0)
+				continue;
+			if (sources.length() > 0)
+				sources.append("   ");
+			sources.append(e.getKey()).append(' ').append(e.getValue());
+		}
+		manaSources.setText(sources.length() == 0 ? "-" : sources.toString());
 	}
 
 	private void updateProxyStats(ICardStore<IMagicCard> mainStore, ICardStore<IMagicCard> sideboardStore) {

@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - null-safe oldest-print-first sort applied at the model level
+ *     Rémi Dutil (2026) - printings found by Scryfall's oracle id (name only as the fallback)
  */
 package com.reflexit.magiccards.ui.views.printings;
 
@@ -20,6 +21,8 @@ import org.eclipse.swt.widgets.Composite;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
+import com.reflexit.magiccards.core.model.MagicCardField;
+import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
@@ -182,6 +185,14 @@ public class PrintingListControl extends AbstractMagicCardsListControl {
 	public Collection<IMagicCard> searchInStore(IDbCardStore<IMagicCard> store) {
 		if (card == null || card == MagicCard.DEFAULT || card.getName() == null)
 			return Collections.emptyList();
+		// Scryfall's oracle id names the card exactly, whatever the printing's name or language -
+		// the name is only the way in for a card database that has no oracle ids yet
+		Object oracleId = card.get(MagicCardField.ORACLE_ID);
+		if (oracleId != null) {
+			Collection<IMagicCard> byOracle = CardStoreUtils.printingsByOracleId(store, oracleId.toString());
+			if (!byOracle.isEmpty())
+				return byOracle;
+		}
 		String englishName;
 		String enId = card.getEnglishCardId();
 		if (enId != null) {

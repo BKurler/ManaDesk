@@ -122,6 +122,8 @@
  *                         Search Tips on focus (regex dropped from both
  *                         surfaces entirely - see FilterSyntaxHelp's own
  *                         header for why).
+ *     Rémi Dutil (2026) - Text suggestions: abilities and traits, offered only after a "[" (ContextAssist#addBracketAssist);
+ *                         the Special field no longer suggests anything
  */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
@@ -139,10 +141,11 @@ import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.legality.Format;
+import com.reflexit.magiccards.core.model.Abilities;
+import com.reflexit.magiccards.core.model.CardTraits;
 import com.reflexit.magiccards.core.model.CardTypes;
 import com.reflexit.magiccards.core.model.FilterField;
 import com.reflexit.magiccards.core.model.Languages;
-import com.reflexit.magiccards.core.model.SpecialTags;
 import com.reflexit.magiccards.ui.widgets.ContextAssist;
 
 public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
@@ -205,7 +208,8 @@ public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
 		// past it the way an explicit widthHint wider than that combined
 		// width would
 		StringFieldEditor textSfe = new StringFieldEditor(textId, "Text", textRow);
-		addContextAssist(textSfe, getTextProposals(), textRow);
+		// suggestions only after a "[" (abilities and traits), never while typing plain words
+		ContextAssist.addBracketAssist(textSfe.getTextControl(textRow), getTextProposals());
 		addField(textSfe);
 		this.textControl = textSfe.getTextControl(textRow);
 		addTooltip(textSfe, FilterSyntaxHelp.TOOLTIP, textRow);
@@ -278,7 +282,6 @@ public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
 			Text tags = specialSfe.getTextControl(left);
 			this.specialControl = tags;
 			addTooltip(specialSfe, FilterSyntaxHelp.TOOLTIP, left);
-			ContextAssist.addContextAssist(tags, SpecialTags.getTags(), true);
 			ids.add(specialId);
 		}
 		// language
@@ -339,65 +342,18 @@ public class TextSearchPreferenceGroup extends MFieldEditorPreferencePage {
 		});
 	}
 
-	static String[] textProposals = new String[] {
-
-			"Living weapon", "Jump-start", "Commander ninjutsu", "Legendary landwalk", "Nonbasic landwalk", "Megamorph",
-			"Haunt", "Forecast", "Graft", "Fortify", "Frenzy", "Gravestorm", "Hideaway", "Level Up", "Infect", "Reach",
-			"Rampage", "Phasing", "Multikicker", "Morph", "Provoke", "Modular", "Ninjutsu", "Replicate", "Recover",
-			"Poisonous", "Reinforce", "Persist", "Retrace", "Rebound", "Miracle", "Overload", "Outlast", "Prowess",
-			"Renown", "Myriad", "Shroud", "Trample", "Vigilance", "Storm", "Soulshift", "Splice", "Transmute", "Ripple",
-			"Suspend", "Vanishing", "Transfigure", "Wither", "Undying", "Soulbond", "Unleash", "Ascend", "Assist",
-			"Afterlife", "Companion", "Fabricate", "Embalm", "Escape", "Fuse", "Menace", "Ingest", "Melee", "Improvise",
-			"Mentor", "Partner", "Mutate", "Tribute", "Surge", "Skulk", "Riot", "Spectacle", "Forestwalk", "Islandwalk",
-			"Mountainwalk", "Double strike", "Cumulative upkeep", "First strike", "Scavenge", "Encore", "Deathtouch",
-			"Defender", "Amplify", "Affinity", "Bushido", "Convoke", "Bloodthirst", "Absorb", "Aura Swap", "Changeling",
-			"Conspire", "Cascade", "Annihilator", "Battle Cry", "Cipher", "Bestow", "Dash", "Awaken", "Crew",
-			"Aftermath", "Afflict", "Flanking", "Foretell", "Fading", "Eternalize", "Entwine", "Epic", "Dredge",
-			"Delve", "Evoke", "Exalted", "Evolve", "Extort", "Dethrone", "Exploit", "Devoid", "Emerge", "Escalate",
-			"Flying", "Haste", "Hexproof", "Indestructible", "Intimidate", "Lifelink", "Horsemanship", "Kicker",
-			"Madness", "Swampwalk", "Desertwalk", "Craft", "Plainswalk", "Split second", "Augment", "Double agenda",
-			"Reconfigure", "Ward", "Partner with", "Daybound", "Nightbound", "Decayed", "Disturb", "Squad", "Enlist",
-			"Read Ahead", "Ravenous", "Blitz", "Offering", "Living metal", "Backup", "Banding", "Hidden agenda",
-			"For Mirrodin!", "Friends forever", "Casualty", "Protection", "Compleated", "Enchant", "Flash", "Boast",
-			"Demonstrate", "Sunburst", "Flashback", "Cycling", "Equip", "Buyback", "Hexproof from",
-			"More Than Meets the Eye", "Cleave", "Champion", "Specialize", "Training", "Prototype", "Toxic", "Unearth",
-			"Intensity", "Plainscycling", "Swampcycling", "Typecycling", "Wizardcycling", "Mountaincycling",
-			"Basic landcycling", "Islandcycling", "Forestcycling", "Slivercycling", "Landcycling", "Bargain",
-			"Choose a background", "Echo", "Disguise", "Doctor's companion", "Landwalk", "Umbra armor", "Freerunning",
-			"Spree", "Saddle", "Shadow", "Warp", "Station", "Devour", "Undaunted", "Offspring", "Impending", "Gift",
-			"Harmonize", "Exhaust", "Max speed", "Fear", "Tiered", "Mobilize", "Double team", "Job select", "Mayhem",
-			"Web-slinging", "Prowl", "Solved", "Sneak", "Increment", "Paradigm", "Power-up", "Firebending",
-
-			"Scry", "Seek", "Activate", "Attach", "Cast", "Counter", "Create", "Destroy", "Discard", "Exchange",
-			"Exile", "Adapt", "Support", "Play", "Regenerate", "Reveal", "Sacrifice", "Shuffle", "Tap", "Untap", "Vote",
-			"Time Travel", "Goad", "Transform", "Surveil", "Planeswalk", "Mill", "Learn", "Connive",
-			"Venture into the dungeon", "Exert", "Open an Attraction", "Food", "Discover", "Abandon", "Explore",
-			"Treasure", "Roll to Visit Your Attractions", "Set in motion", "Fateseal", "Manifest", "Populate", "Detain",
-			"Investigate", "Monstrosity", "Clash", "Incubate", "Proliferate", "Meld", "Convert", "Fight", "Bolster",
-			"Assemble", "Conjure", "Amass", "Cloak", "Suspect", "Collect evidence", "Role token", "Plot", "Harness",
-			"Heist", "Forage", "Manifest dread", "Endure", "Prepared", "Incorporate", "Waterbend", "Airbend",
-			"Earthbend", "Blight", "Behold", "Double", "Triple",
-
-			"Eerie", "Battalion", "Bloodrush", "Channel", "Chroma", "Cohort", "Constellation", "Converge", "Delirium",
-			"Domain", "Fateful hour", "Ferocious", "Formidable", "Grandeur", "Hellbent", "Heroic", "Imprint",
-			"Inspired", "Join forces", "Kinship", "Landfall", "Lieutenant", "Metalcraft", "Morbid", "Parley",
-			"Radiance", "Raid", "Rally", "Spell mastery", "Strive", "Sweep", "Tempting offer", "Threshold",
-			"Will of the council", "Adamant", "Addendum", "Council's dilemma", "Eminence", "Enrage", "Hero's Reward",
-			"Kinfall", "Landship", "Legacy", "Revolt", "Underdog", "Undergrowth", "Void", "Descend",
-			"Fathomless descent", "Magecraft", "Teamwork", "Pack tactics", "Coven", "Alliance", "Corrupted",
-			"Secret council", "Celebration", "Paradox", "Disappear", "Will of the Planeswalkers", "Survival", "Flurry",
-			"Valiant", "Start your engines!", "Renew", "Repartee", "Opus", "Infusion", "Covercast", "Vivid",
-
-	};
-
 	/**
 	 * TODO: refactor
 	 *
 	 * @return
 	 */
 	private String[] getTextProposals() {
-		// TODO Auto-generated method stub
-		return textProposals;
+		// the official keyword abilities, ability words and keyword actions (refreshed with the card
+		// database), plus the traits ([showcase], [reserved list]...)
+		java.util.List<String> all = new java.util.ArrayList<String>(java.util.Arrays.asList(Abilities.getNames()));
+		all.addAll(CardTraits.suggestions());
+		java.util.Collections.sort(all, String.CASE_INSENSITIVE_ORDER);
+		return all.toArray(new String[all.size()]);
 	}
 
 	private void addContextAssist(StringFieldEditor sfe, String[] proposals, Composite parent) {

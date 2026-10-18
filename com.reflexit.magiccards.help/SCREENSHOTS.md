@@ -20,11 +20,10 @@ images of that window here, retake them with the same setup and overwrite the fi
 | 7 | `scryfall_db_view.png` | find/browse | Scryfall Database view with a few columns and a group | Group by set, a card selected |
 | 8 | `find_bar.png` | find/filter | The find bar, opened with the **Find...** button (magnifier in the view's toolbar): the "search..." box, Previous / Next arrows, W (Whole word) | Type e.g. `Lightning*`, a matching card selected |
 | 9 | `quick_filter.png` | find/filter, collection/my_cards | My Cards quick filter bar | — |
-| 10 | `filter_dialog_basic.png` | find/filter | Filter dialog, first tab | — |
-| 11 | `filter_dialog_ranges.png` | find/filter | Filter dialog, a tab with ranges (cost / power…) | Some ranges filled |
-| 12 | `filter_dialog_text.png` | find/filter | Filter dialog, Main Filter tab: the Text field with its ability suggestions open (no separate Abilities tab anymore) | Type e.g. `fly` in the Text field |
+| 10 | `filter_dialog_basic.png` | find/filter | Filter dialog, **Main Filter** tab, opened from **My Cards** (the fullest form: it also has Condition, Ownership, Proxy, Count, User Price, Comment, Special). The page explains the other forms in a table, so no other picture is needed. Colors group shows the **Produced** checkbox | Some ranges filled, a few colors checked |
+| 12 | `filter_dialog_text.png` | find/filter | Same dialog (from My Cards): the **Text** field with its suggestion list open - suggestions appear only after a `[` (abilities and traits) | Type `[fl` in the Text field |
 | 13 | `filter_dialog_sets.png` | find/filter | Filter dialog, Sets tab ("X of N sets selected") | A few sets checked |
-| 14 | `card_info.png` | find/card_details | Card Info view: image, prices, store links, legality | A card with prices |
+| 14 | `card_info.png` | find/card_details | Card Info view: image, prices, finishes, the new **Traits:** and **Produces:** lines under the finishes, store links, legality | A card with prices and traits (a Commander staple, or a showcase / prerelease printing) |
 | 15 | `rulings_view.png` | find/card_details | Rulings view | A card with rulings |
 | 16 | `printings_view.png` | find/card_details | Printings view | A card with many printings |
 | 17 | `instances_view.png` | find/card_details | Instances view | A card you own in several places |
@@ -44,13 +43,13 @@ images of that window here, retake them with the same setup and overwrite the fi
 | 31 | `new_deck_wizard.png` | decks/create_deck | New Deck wizard (Empty / Clipboard / File / Website, Default Format, sideboard / extra) | — |
 | 32 | `edit_deck_properties.png` | decks/create_deck, decks/boxed | Edit Properties of a deck (Boxed, sideboard / extra, Default Format) | — |
 | 33 | `deck_view_cards.png` | decks/deck_view | Deck view, Cards tab | A full deck |
-| 34 | `deck_tab_info.png` | decks/deck_view | Info tab | Same deck |
+| 34 | `deck_tab_info.png` | decks/deck_view | Info tab, with the new **Game Changers** and **Mana sources** lines | A Commander deck with a Game Changer or two |
 | 35 | `deck_tab_draw.png` | decks/deck_view | Draw tab | Same deck |
 | 36 | `deck_tab_mana.png` | decks/deck_view | Mana curve tab | Same deck |
 | 37 | `deck_tab_types.png` | decks/deck_view | Types tab | Same deck |
 | 37b | `deck_tab_creatures.png` | decks/deck_view | Creatures tab | Same deck |
 | 38 | `deck_tab_colors.png` | decks/deck_view | Colors tab | Same deck |
-| 38b | `deck_tab_abilities.png` | decks/deck_view | Abilities tab | Same deck |
+| 38b | `deck_tab_abilities.png` | decks/deck_view | Abilities tab: official keyword abilities, ability words and keyword actions | Same deck |
 | 39 | `deck_tab_legality.png` | decks/legality | Legality tab, a format with an illegal card | e.g. a Commander deck with a color-identity issue |
 | 40 | `deck_tab_accessories.png` | decks/sideboard_extra | Accessories tab | A deck with tokens |
 | 41 | `deck_tab_export.png` | transfer/export | Deck Export tab | — |

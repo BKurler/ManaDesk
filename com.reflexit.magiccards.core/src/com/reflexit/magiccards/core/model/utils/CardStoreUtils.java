@@ -7,6 +7,8 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *    Rémi Dutil (2026) - ability groups / stats from the card's Scryfall keywords (Abilities.of)
+ *    Rémi Dutil (2026) - buildGameChangers() / buildManaSources() for the deck info; printingsByOracleId()
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.utils;
 
@@ -20,6 +22,7 @@ import java.util.Iterator;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
@@ -481,74 +484,105 @@ public final class CardStoreUtils {
 	}
 
 	public static ICardGroup buildAbilityGroups(Iterable iterable) {
-		HashMap<String, CardGroup> abilityGroups = new HashMap<String, CardGroup>();
-		HashMap<String, CardGroup> minedAbilityGroups = new HashMap<String, CardGroup>();
-		Abilities.IAbilityMatcher[] abilities = Abilities.getAbilities();
+		// what Scryfall says each card has (Abilities.of), in sorted order
+		Map<String, CardGroup> abilityGroups = new TreeMap<String, CardGroup>(String.CASE_INSENSITIVE_ORDER);
 		for (Iterator iterator = iterable.iterator(); iterator.hasNext();) {
 			IMagicCard elem = (IMagicCard) iterator.next();
-			String text = elem.getOracleText();
-			if (text == null || text.length() == 0)
-				continue;
-			for (int i = 0; i < abilities.length; i++) {
-				if (abilities[i].match(text)) {
-					HashMap<String, CardGroup> groups;
-					if (abilities[i].isKeyword()) {
-						groups = abilityGroups;
-					} else {
-						groups = minedAbilityGroups;
-					}
-					String name = abilities[i].getDisplayName();
-					if (groups.containsKey(name)) {
-						groups.get(name).add(elem);
-					} else {
-						groups.put(name, new CardGroup(MagicCardField.TEXT, name));
-						groups.get(name).add(elem);
-					}
+			for (String name : Abilities.of(elem)) {
+				CardGroup group = abilityGroups.get(name);
+				if (group == null) {
+					group = new CardGroup(MagicCardField.TEXT, name);
+					abilityGroups.put(name, group);
 				}
+				group.add(elem);
 			}
 		}
 		ICardGroup root = new CardGroup(MagicCardField.TEXT, ""); //$NON-NLS-1$
 		CardGroup abilityNode = new CardGroup(MagicCardField.TEXT, "Ability");
 		CardGroup abilityKeywordNode = new CardGroup(MagicCardField.TEXT, "Keyword Ability");
-		CardGroup minedAbilityNode = new CardGroup(MagicCardField.TEXT, "Mined Ability");
 		root.add(abilityNode);
 		abilityNode.add(abilityKeywordNode);
-		abilityNode.add(minedAbilityNode);
 		for (CardGroup cardGroup : abilityGroups.values()) {
 			abilityKeywordNode.add(cardGroup);
-		}
-		for (CardGroup cardGroup : minedAbilityGroups.values()) {
-			minedAbilityNode.add(cardGroup);
 		}
 		return root;
 	}
 
 	public static HashMap<String, Integer> buildAbilityStats(ICardStore store) {
 		HashMap<String, Integer> abilityCount = new HashMap<String, Integer>();
-		Abilities.IAbilityMatcher[] abilities = Abilities.getAbilities();
 		for (Iterator iterator = store.iterator(); iterator.hasNext();) {
 			IMagicCard elem = (IMagicCard) iterator.next();
-			String text = elem.getOracleText();
-			if (text == null || text.length() == 0)
-				continue;
 			int count = 1;
 			if (elem instanceof ICardCountable) {
 				count = ((ICardCountable) elem).getCount();
 			}
-			for (int i = 0; i < abilities.length; i++) {
-				if (abilities[i].isKeyword()) {
-					if (abilities[i].match(text)) {
-						String name = abilities[i].getDisplayName();
-						if (abilityCount.containsKey(name)) {
-							abilityCount.put(name, abilityCount.get(name) + count);
-						} else {
-							abilityCount.put(name, count);
-						}
-					}
-				}
+			for (String name : Abilities.of(elem)) {
+				Integer prev = abilityCount.get(name);
+				abilityCount.put(name, prev == null ? count : prev + count);
 			}
 		}
 		return abilityCount;
+	}
+
+	/**
+	 * The Commander "Game Changers" among the cards (Scryfall's {@code game_changer}
+	 * flag), by name, with how many copies there are.
+	 */
+	public static Map<String, Integer> buildGameChangers(Iterable<? extends IMagicCard> cards) {
+		Map<String, Integer> res = new TreeMap<String, Integer>(String.CASE_INSENSITIVE_ORDER);
+		for (IMagicCard card : cards) {
+			if (!"true".equals(card.get(MagicCardField.GAME_CHANGER)))
+				continue;
+			Integer prev = res.get(card.getName());
+			res.put(card.getName(), (prev == null ? 0 : prev) + countOf(card));
+		}
+		return res;
+	}
+
+	/**
+	 * How many cards can produce each kind of mana (W, U, B, R, G, C), counting every
+	 * copy - Scryfall's {@code produced_mana}, so a land, a mana rock and a creature
+	 * that taps for mana all count. Always has the six keys, in that order.
+	 */
+	public static Map<String, Integer> buildManaSources(Iterable<? extends IMagicCard> cards) {
+		Map<String, Integer> res = new LinkedHashMap<String, Integer>();
+		for (String tag : new String[] { "W", "U", "B", "R", "G", "C" })
+			res.put(tag, 0);
+		for (IMagicCard card : cards) {
+			Object produced = card.get(MagicCardField.PRODUCED_MANA);
+			if (produced == null)
+				continue;
+			int count = countOf(card);
+			for (String tag : res.keySet().toArray(new String[0])) {
+				if (produced.toString().contains("{" + tag + "}"))
+					res.put(tag, res.get(tag) + count);
+			}
+		}
+		return res;
+	}
+
+	private static int countOf(IMagicCard card) {
+		return card instanceof ICardCountable ? ((ICardCountable) card).getCount() : 1;
+	}
+
+	/**
+	 * Every printing of a card: all the cards that share its oracle id (Scryfall's id for
+	 * "this card", the same whatever the printing's set, language or name spelling).
+	 * Used instead of matching on the card name, which fails when a name changes or two
+	 * different cards share one.
+	 *
+	 * @param all the card database (or any collection of cards)
+	 * @return the matches in the order met; empty when {@code oracleId} is null or unknown
+	 */
+	public static List<IMagicCard> printingsByOracleId(Iterable<? extends IMagicCard> all, String oracleId) {
+		List<IMagicCard> res = new ArrayList<IMagicCard>();
+		if (oracleId == null || oracleId.isEmpty())
+			return res;
+		for (IMagicCard card : all) {
+			if (oracleId.equals(card.get(MagicCardField.ORACLE_ID)))
+				res.add(card);
+		}
+		return res;
 	}
 
 	public static int getMaxRepeats(Iterable store) {

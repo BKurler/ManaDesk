@@ -27,6 +27,10 @@
  *                         search for. A plain cost string never contains
  *                         these literal phrases, so running the substitution
  *                         unconditionally is harmless for that caller too.
+ *     Rémi Dutil (2026) - getFetchableColors() / getReminderTextColors() /
+ *                         getExtendedIdentityCost(): the Extended Color Identity is now
+ *                         Scryfall's color identity plus the colors the card can fetch and
+ *                         those of the symbols in its reminder text, not the guess above
  */
 
 package com.reflexit.magiccards.core.model;
@@ -129,6 +133,94 @@ public class Colors implements ISearchableProperty {
 
 	public String getColorIdentityAsCost(IMagicCard card) {
 		return toCost(getColorIdentity(card));
+	}
+
+	private static final String[][] LAND_TYPE_COLORS = { { "Plains", "W" }, { "Island", "U" }, { "Swamp", "B" },
+			{ "Mountain", "R" }, { "Forest", "G" } };
+	private static final Pattern SEARCH_SENTENCE = Pattern.compile("[Ss]earch your library for[^.]*\\.");
+	private static final Pattern REMINDER_TEXT = Pattern.compile("\\([^)]*\\)");
+	private static final Pattern OFFICIAL_COLOR = Pattern.compile("\\{([WUBRG])\\}");
+
+	/**
+	 * The colors of the basic land types a card can <em>fetch</em>: the types named in its
+	 * "Search your library for ..." sentences (a fetch land, Farseek...) or in a
+	 * {@code Plainscycling}-style ability. A fetch land makes no mana itself, but it finds a
+	 * land that does, so it "touches" those colors. Reminder text is ignored (as Scryfall
+	 * does for the color identity); "a basic land card" with no type names no color.
+	 *
+	 * @return color tags (W, U, B, R, G), possibly empty; never {@code null}
+	 */
+	public static Collection<String> getFetchableColors(String oracleText) {
+		Collection<String> res = new LinkedHashSet<String>();
+		if (oracleText == null || oracleText.isEmpty())
+			return res;
+		String text = REMINDER_TEXT.matcher(oracleText).replaceAll(" ");
+		java.util.regex.Matcher m = SEARCH_SENTENCE.matcher(text);
+		while (m.find()) {
+			for (String[] t : LAND_TYPE_COLORS) {
+				if (m.group().contains(t[0]))
+					res.add(t[1]);
+			}
+		}
+		for (String[] t : LAND_TYPE_COLORS) {
+			if (text.contains(t[0] + "cycling"))
+				res.add(t[1]);
+		}
+		return res;
+	}
+
+	private static final Pattern MANA_SYMBOL = Pattern.compile("\\{([^}]+)\\}");
+
+	/**
+	 * The colors of the mana symbols written in the card's <em>reminder text</em> (Extort's
+	 * {@code {W/B}}, Firebending's {@code {R}}, Trinisphere's example...). Scryfall's color identity
+	 * ignores reminder text, but those symbols say which colors the card is about.
+	 * Hybrid ({@code {W/B}}), Phyrexian ({@code {G/P}}) and two-brid ({@code {2/W}}) symbols
+	 * count for their colors; generic, colorless, snow, tap... symbols for none.
+	 *
+	 * @return color tags (W, U, B, R, G), possibly empty; never {@code null}
+	 */
+	public static Collection<String> getReminderTextColors(String oracleText) {
+		Collection<String> res = new LinkedHashSet<String>();
+		if (oracleText == null || oracleText.isEmpty())
+			return res;
+		java.util.regex.Matcher reminder = REMINDER_TEXT.matcher(oracleText);
+		while (reminder.find()) {
+			java.util.regex.Matcher symbol = MANA_SYMBOL.matcher(reminder.group());
+			while (symbol.find()) {
+				for (String part : symbol.group(1).split("/")) {
+					if (part.length() == 1 && "WUBRG".contains(part))
+						res.add(part);
+					else if (part.length() == 2 && part.charAt(0) == 'H' && "WUBRG".indexOf(part.charAt(1)) >= 0)
+						res.add(part.substring(1)); // half mana: {HW}
+				}
+			}
+		}
+		return res;
+	}
+
+	/**
+	 * The Extended Color Identity: Scryfall's own color identity, plus the colors the card can
+	 * fetch ({@link #getFetchableColors}), plus the colors of the mana symbols in its reminder
+	 * text ({@link #getReminderTextColors}) - everything the card is "about" in color, so the
+	 * cards that really work in a given deck can be found. Computed when the card database is
+	 * updated.
+	 *
+	 * @param officialIdentityCost Scryfall's color identity as a cost string ({@code "{W}{U}"},
+	 *        {@code "{C}"} for colorless), or {@code null} if it is not known
+	 * @return the extended identity as a cost string ({@code "{C}"} when it has no color), or
+	 *         {@code null} when {@code officialIdentityCost} is {@code null} (caller falls back)
+	 */
+	public static String getExtendedIdentityCost(String officialIdentityCost, String oracleText) {
+		if (officialIdentityCost == null)
+			return null;
+		Collection<String> tags = new LinkedHashSet<String>();
+		java.util.regex.Matcher m = OFFICIAL_COLOR.matcher(officialIdentityCost);
+		while (m.find())
+			tags.add(m.group(1));
+		tags.addAll(getFetchableColors(oracleText));
+		tags.addAll(getReminderTextColors(oracleText));
+		return tags.isEmpty() ? "{C}" : toCost(tags);
 	}
 
 	public static Collection<String> getColorPresense(String text, Collection<String> res) {

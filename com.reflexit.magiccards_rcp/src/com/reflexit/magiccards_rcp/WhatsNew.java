@@ -23,6 +23,8 @@
  *     Rémi Dutil (2026) - "Report a bug or request a feature" entry (+ by email,
  *                         webmail, log file)
  *     Rémi Dutil (2026) - Export entry: printable sheets, append, page count
+ *     Rémi Dutil (2026) - "Symbols and keywords stay current" entry
+ *     Rémi Dutil (2026) - "More card facts" entry
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
@@ -143,6 +145,18 @@ final class WhatsNew {
 			new Feature(1, MINOR, CARDS, "Unsorted boxes", "Card positions in unsorted collections: find a card without"
 					+ " sorting the box first.", null),
 			new Feature(1, MINOR, CARDS, "Safer deleting", "Deleting cards asks for a confirmation first.", null),
+			new Feature(1, MINOR, CARDS, "More card facts", "A new Traits column (Reserved List, Game Changer,"
+					+ " Reprint, and how a printing looks: Showcase, Borderless, Full Art, an old frame, a stamp, Oversized,"
+					+ " a watermark, Prerelease, Playtest, Surge Foil...; the card text lists them too), an EDHREC Rank column to sort by popularity, a Produced Mana column (also a \"Produced\""
+					+ " choice next to Identity and Extended Identity in the Colors filter) and, in the card text under"
+					+ " the finishes, those traits plus the mana the card produces; search the traits"
+					+ " with brackets ([reserved], [showcase], [full art]...; type \"[\" in the Text field for suggestions, which no longer pop up while you type plain words). The Extended Color Identity is now"
+					+ " Scryfall's identity plus the colors a card can fetch (fetch lands, Farseek...) or shows in its"
+					+ " reminder text (Extort...), no longer a guess from the text. A deck's Info tab lists its Game Changers and its mana sources. The Printings view"
+					+ " now finds a card's printings by Scryfall's own id, not by its name. A card's Color is now"
+					+ " Scryfall's own (a color indicator counts, a devoid card or a land is colorless), and your decks"
+					+ " and collections follow cards Scryfall merged into others. Update the card database once to"
+					+ " fill it all in.", null),
 			new Feature(1, MINOR, CARDS, "Color identity", "Now taken straight from Scryfall, so it is always"
 					+ " right (it used to be guessed from the card text, which got some cards wrong), and groups"
 					+ " show all their colors. New: an Extended Color Identity column and filter that also catch"
@@ -191,6 +205,12 @@ final class WhatsNew {
 			new Feature(1, MAJOR, DATABASE, "Card database from Scryfall", "Downloaded on first start (or imported from a"
 					+ " file when offline), a full update in under a minute, and a backup before each update.",
 					null),
+			new Feature(1, MINOR, DATABASE, "Symbols and keywords stay current", "Updating the card database also"
+					+ " refreshes the mana symbols, keyword abilities, ability words and card types from Scryfall, so"
+					+ " new ones appear without a new ManaDesk release. The Abilities tab and the [ability] search now use"
+					+ " the abilities Scryfall lists for each card - keyword abilities, ability words and keyword"
+					+ " actions (Scry, Surveil...) - so a card that only mentions the word no longer counts. Update"
+					+ " the card database once to fill them in.", null),
 			new Feature(1, MAJOR, DATABASE, "Prices", "From TCGplayer (US$) or Cardmarket (€), non-foil and foil; the"
 					+ " card info links to both stores.", null),
 			new Feature(1, MINOR, BROWSING, "Filters and sorting", "A filter dialog with tabs and ranges, quick filters in"

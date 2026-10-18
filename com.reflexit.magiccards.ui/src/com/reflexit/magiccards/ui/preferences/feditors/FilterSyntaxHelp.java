@@ -128,6 +128,8 @@
  *                         (Finish, Condition, Proxy) and listing them here
  *                         read as encouraging tag-based filtering the app no
  *                         longer wants to be the primary way to do this.
+ *     Rémi Dutil (2026) - TEXT_TIPS: [trait] searches ([showcase], [full art]...) and the
+ *                         "type [ for suggestions" note
  */
 package com.reflexit.magiccards.ui.preferences.feditors;
 
@@ -182,7 +184,9 @@ public class FilterSyntaxHelp {
 	public static final String TEXT_TIPS = "" //
 			+ "[ability] looks up a real keyword/ability by name, not a plain word - it also correctly ignores " //
 			+ "a mention of that ability inside ANOTHER ability's own reminder text (e.g. Reach's reminder text " //
-			+ "says \"creatures with flying\" - [flying] alone does not match a Reach-only creature).\n\n" //
+			+ "says \"creatures with flying\" - [flying] alone does not match a Reach-only creature). The same " //
+			+ "brackets find a trait: [reserved], [game changer], [reprint], [first printing], [showcase], " //
+			+ "[borderless], [full art], [oversized], [watermark: selesnya]... Type \"[\" to get the suggestions.\n\n" //
 			+ "{SYMBOL} matches a mana/tap symbol exactly as the rules text writes it:\n" //
 			+ "  Colors {W} {U} {B} {R} {G}\n" //
 			+ "  Colorless {C}\n" //

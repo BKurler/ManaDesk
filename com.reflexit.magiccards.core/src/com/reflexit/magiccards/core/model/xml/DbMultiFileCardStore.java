@@ -140,6 +140,13 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 				String acc = card.getAccessories();
 				if (acc != null)
 					((MagicCard) prev).set(MagicCardField.ACCESSORIES, acc);
+				// the same goes for the other Scryfall-derived facts (keywords, reserved,
+				// reprint...): re-derived on every split, so a card that no longer has one
+				// must lose the old value
+				for (MagicCardField f : new MagicCardField[] { MagicCardField.KEYWORDS, MagicCardField.RESERVED,
+						MagicCardField.REPRINT, MagicCardField.GAME_CHANGER, MagicCardField.EDHREC_RANK,
+						MagicCardField.PRODUCED_MANA, MagicCardField.ORACLE_ID, MagicCardField.EXTRA_TRAITS })
+					((MagicCard) prev).set(f, card.getBase().get(f));
 				return true;
 			}
 			String id = card.getCardId();

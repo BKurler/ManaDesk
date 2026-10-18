@@ -30,6 +30,8 @@
  *                         never owned -> non-virtual (always blocked now, the
  *                         "Allow to copy non-virtual cards" preference is
  *                         gone), the copy takes the destination's ownership
+ *     Rémi Dutil (2026) - reconcile(): a card id Scryfall merged into another one
+ *                         is linked to the card that replaced it (ScryfallMigrations)
  */
 
 package com.reflexit.magiccards.core;
@@ -66,6 +68,7 @@ import com.reflexit.magiccards.core.model.storage.IDbPriceStore;
 import com.reflexit.magiccards.core.model.storage.ILocatable;
 import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.model.xml.XmlCardHolder;
+import com.reflexit.magiccards.core.sync.ScryfallMigrations;
 
 public class DataManager {
 	public static final String ID = "com.reflexit.magiccards.core";
@@ -684,9 +687,17 @@ public class DataManager {
 			mcp.setMagicCard(base);
 		} else {
 
-			// RD To allow automatic "link" for collections and decks using different ids
-			// This is not "updating" the source file, just linking them
-			ImportUtils.updateCardReference((MagicCardPhysical) mcp);
+			// A card id Scryfall merged into another one (see ScryfallMigrations): link to
+			// the card that replaced it
+			String replacement = ScryfallMigrations.newIdFor(id);
+			MagicCard merged = replacement == null ? null : (MagicCard) db.getCard(replacement);
+			if (merged != null) {
+				mcp.setMagicCard(merged);
+			} else {
+				// RD To allow automatic "link" for collections and decks using different ids
+				// This is not "updating" the source file, just linking them
+				ImportUtils.updateCardReference((MagicCardPhysical) mcp);
+			}
 
 			id = mcp.getCardId();
 			if (id == null)

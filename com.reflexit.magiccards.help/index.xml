@@ -1,0 +1,1370 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!--
+ * Copyright (c) 2026 Rémi Dutil.
+ * All rights reserved. This program and the accompanying materials are made
+ * available under the terms of the Eclipse Public License v2.0 which accompanies
+ * this distribution, and is available at:
+ *   https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+ *
+ * Contributors:
+ *     Rémi Dutil (2026) - keyword index of the help (the Index tab), generated from the pages
+-->
+<?NLS TYPE="org.eclipse.help.index"?>
+<index>
+   <entry keyword="A card's legality">
+      <topic href="html/decks/legality.html" title="Formats and legality - A card's legality"/>
+   </entry>
+   <entry keyword="A deck's Export tab">
+      <topic href="html/transfer/export.html" title="Exporting - A deck's Export tab"/>
+   </entry>
+   <entry keyword="A deck's legality">
+      <topic href="html/decks/legality.html" title="Formats and legality - A deck's legality"/>
+   </entry>
+   <entry keyword="A new set is missing">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - A new set is missing"/>
+   </entry>
+   <entry keyword="Abilities">
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="About the card">
+      <topic href="html/reference/columns.html" title="Columns - About the card"/>
+   </entry>
+   <entry keyword="About your copy">
+      <topic href="html/reference/columns.html#copy" title="Columns - About your copy"/>
+   </entry>
+   <entry keyword="Accessories">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view - Accessories"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/decks/sideboard_extra.html#accessories" title="Sideboard, extra list and accessories - Accessories"/>
+   </entry>
+   <entry keyword="Add it to your collection">
+      <topic href="html/start/quick_tour.html" title="Quick tour - Add it to your collection"/>
+   </entry>
+   <entry keyword="Adding and editing cards">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+   </entry>
+   <entry keyword="Adding cards">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards - Adding cards"/>
+   </entry>
+   <entry keyword="After creating the deck">
+      <topic href="html/decks/create_deck.html" title="Creating a deck - After creating the deck"/>
+   </entry>
+   <entry keyword="An imported card is in English instead of its language">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - An imported card is in English instead of its language"/>
+   </entry>
+   <entry keyword="Backup">
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/software_update.html" title="Software updates"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Backups">
+      <topic href="html/data/backup.html" title="Backups"/>
+   </entry>
+   <entry keyword="Bought it? Printed it?">
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists - Bought it? Printed it?"/>
+   </entry>
+   <entry keyword="Boxed decks">
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+   </entry>
+   <entry keyword="Browsing the card database">
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+   </entry>
+   <entry keyword="Build a deck">
+      <topic href="html/start/quick_tour.html" title="Quick tour - Build a deck"/>
+   </entry>
+   <entry keyword="Buyer">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Card database">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Card details">
+      <topic href="html/find/card_details.html" title="Card details"/>
+   </entry>
+   <entry keyword="Card images don't show">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - Card images don't show"/>
+   </entry>
+   <entry keyword="Card Info">
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/find/card_details.html#cardinfo" title="Card details - Card Info"/>
+   </entry>
+   <entry keyword="Card list menu (right-click)">
+      <topic href="html/reference/menus.html" title="Menus and commands - Card list menu (right-click)"/>
+   </entry>
+   <entry keyword="Card lists">
+      <topic href="html/start/window.html" title="The ManaDesk window - Card lists"/>
+   </entry>
+   <entry keyword="Card Navigator menu">
+      <topic href="html/reference/views.html" title="Views - Card Navigator menu"/>
+   </entry>
+   <entry keyword="Cards">
+      <topic href="html/decks/deck_view.html" title="The Deck view - Cards"/>
+   </entry>
+   <entry keyword="Change a collection">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders - Change a collection"/>
+   </entry>
+   <entry keyword="Changing the count">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards - Changing the count"/>
+   </entry>
+   <entry keyword="Changing the Location column">
+      <topic href="html/collection/move_copy.html#location" title="Moving, copying and splitting - Changing the Location column"/>
+   </entry>
+   <entry keyword="Check for Card Updates">
+      <topic href="html/database/update.html" title="Updating the card database - Check for Card Updates"/>
+   </entry>
+   <entry keyword="Check the deck">
+      <topic href="html/start/quick_tour.html" title="Quick tour - Check the deck"/>
+   </entry>
+   <entry keyword="Choose your workspace">
+      <topic href="html/start/first_start.html" title="First start - Choose your workspace"/>
+   </entry>
+   <entry keyword="Choosing or switching the workspace">
+      <topic href="html/data/workspace.html" title="Your workspace - Choosing or switching the workspace"/>
+   </entry>
+   <entry keyword="Choosing the price source">
+      <topic href="html/database/prices.html" title="Prices - Choosing the price source"/>
+   </entry>
+   <entry keyword="Cloud sync">
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+   </entry>
+   <entry keyword="Collection">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Collections">
+      <topic href="html/collection/concepts.html" title="Decks and collections - Collections"/>
+   </entry>
+   <entry keyword="Collector">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Color identity">
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+   </entry>
+   <entry keyword="Color identity, extended color identity and produced mana">
+      <topic href="html/reference/columns.html#identity" title="Columns - Color identity, extended color identity and produced mana"/>
+   </entry>
+   <entry keyword="Colors">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Columns">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database - Columns"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+   </entry>
+   <entry keyword="Commander">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+   </entry>
+   <entry keyword="Commander and color identity">
+      <topic href="html/decks/legality.html" title="Formats and legality - Commander and color identity"/>
+   </entry>
+   <entry keyword="Condition">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Counters">
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+   </entry>
+   <entry keyword="Counting columns (Collector, My Cards)">
+      <topic href="html/reference/columns.html" title="Columns - Counting columns (Collector, My Cards)"/>
+   </entry>
+   <entry keyword="Create a collection">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders - Create a collection"/>
+   </entry>
+   <entry keyword="Create a folder">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders - Create a folder"/>
+   </entry>
+   <entry keyword="Creating a deck">
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+   </entry>
+   <entry keyword="Creating collections and folders">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+   </entry>
+   <entry keyword="Creating one">
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists - Creating one"/>
+   </entry>
+   <entry keyword="Custom export formats">
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+   </entry>
+   <entry keyword="Deck">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Deck tabs">
+      <topic href="html/reference/columns.html" title="Columns - Deck tabs"/>
+   </entry>
+   <entry keyword="Decks">
+      <topic href="html/collection/concepts.html" title="Decks and collections - Decks"/>
+   </entry>
+   <entry keyword="Decks and collections">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+   </entry>
+   <entry keyword="Doing something with a card">
+      <topic href="html/find/browse.html" title="Browsing the card database - Doing something with a card"/>
+   </entry>
+   <entry keyword="Download the card database">
+      <topic href="html/start/first_start.html" title="First start - Download the card database"/>
+   </entry>
+   <entry keyword="Draw">
+      <topic href="html/decks/deck_view.html" title="The Deck view - Draw"/>
+   </entry>
+   <entry keyword="EDHREC">
+      <topic href="html/reference/columns.html" title="Columns"/>
+   </entry>
+   <entry keyword="Editing a format">
+      <topic href="html/transfer/custom_export.html" title="Custom export formats - Editing a format"/>
+   </entry>
+   <entry keyword="Editing in the list">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards - Editing in the list"/>
+   </entry>
+   <entry keyword="Export">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view - Export"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Exporting">
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Extended color identity">
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+   </entry>
+   <entry keyword="Extra list">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories - Extra list"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Favorites">
+      <topic href="html/transfer/import_website.html" title="Importing from a website - Favorites"/>
+   </entry>
+   <entry keyword="File">
+      <topic href="html/reference/menus.html" title="Menus and commands - File"/>
+   </entry>
+   <entry keyword="File Locations">
+      <topic href="html/data/workspace.html" title="Your workspace - File Locations"/>
+   </entry>
+   <entry keyword="Fill an existing collection from a list">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders - Fill an existing collection from a list"/>
+   </entry>
+   <entry keyword="Filling it">
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists - Filling it"/>
+   </entry>
+   <entry keyword="Filter">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Filter and search syntax">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="Find">
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+      <topic href="html/find/filter.html#find" title="Searching and filtering - Find"/>
+   </entry>
+   <entry keyword="Find a card">
+      <topic href="html/start/quick_tour.html" title="Quick tour - Find a card"/>
+   </entry>
+   <entry keyword="Finish">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="First start">
+      <topic href="html/start/first_start.html" title="First start"/>
+   </entry>
+   <entry keyword="Foil">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Folders">
+      <topic href="html/collection/concepts.html" title="Decks and collections - Folders"/>
+   </entry>
+   <entry keyword="Formats">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting - Formats"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Formats and legality">
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+   </entry>
+   <entry keyword="From ManaBox to your collection">
+      <topic href="html/transfer/manabox.html" title="ManaBox - From ManaBox to your collection"/>
+   </entry>
+   <entry keyword="From ManaDesk to ManaBox">
+      <topic href="html/transfer/manabox.html" title="ManaBox - From ManaDesk to ManaBox"/>
+   </entry>
+   <entry keyword="Gallery">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Game Changers">
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="Group">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Grouping">
+      <topic href="html/find/browse.html" title="Browsing the card database - Grouping"/>
+   </entry>
+   <entry keyword="Help">
+      <topic href="html/reference/menus.html" title="Menus and commands - Help"/>
+   </entry>
+   <entry keyword="How do I keep my collection safe?">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - How do I keep my collection safe?"/>
+   </entry>
+   <entry keyword="How to spot them">
+      <topic href="html/plan/proxies.html" title="Proxies - How to spot them"/>
+   </entry>
+   <entry keyword="How to use it">
+      <topic href="html/plan/buyer.html" title="Buyer - How to use it"/>
+      <topic href="html/plan/proxier.html" title="Proxier - How to use it"/>
+   </entry>
+   <entry keyword="I can't move a card to a list">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - I can't move a card to a list"/>
+   </entry>
+   <entry keyword="I can't set a card to Own (or to virtual)">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - I can't set a card to Own (or to virtual)"/>
+   </entry>
+   <entry keyword="Import">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Import preview">
+      <topic href="html/reference/columns.html" title="Columns - Import preview"/>
+   </entry>
+   <entry keyword="Importing cards">
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+   </entry>
+   <entry keyword="Importing from a website">
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+   </entry>
+   <entry keyword="Info">
+      <topic href="html/decks/deck_view.html" title="The Deck view - Info"/>
+   </entry>
+   <entry keyword="Instances">
+      <topic href="html/find/card_details.html#instances" title="Card details - Instances"/>
+   </entry>
+   <entry keyword="Keyboard shortcuts">
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/menus.html" title="Menus and commands - Keyboard shortcuts"/>
+      <topic href="html/support/report.html" title="Report a bug or request a feature"/>
+   </entry>
+   <entry keyword="Language">
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Legality">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view - Legality"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
+   </entry>
+   <entry keyword="Location">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Location Filter (My Cards)">
+      <topic href="html/find/filter.html#location" title="Searching and filtering - Location Filter (My Cards)"/>
+   </entry>
+   <entry keyword="macOS: &quot;ManaDesk is damaged and can't be opened&quot;">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - macOS: &quot;ManaDesk is damaged and can't be opened&quot;"/>
+   </entry>
+   <entry keyword="Magic: The Gathering rules">
+      <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
+   </entry>
+   <entry keyword="Main Filter">
+      <topic href="html/find/filter.html" title="Searching and filtering - Main Filter"/>
+   </entry>
+   <entry keyword="Making a backup">
+      <topic href="html/data/backup.html" title="Backups - Making a backup"/>
+   </entry>
+   <entry keyword="Making a collection unsorted">
+      <topic href="html/collection/unsorted.html" title="Unsorted collections - Making a collection unsorted"/>
+   </entry>
+   <entry keyword="Mana">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/software_update.html" title="Software updates"/>
+      <topic href="html/data/sync.html" title="Cloud sync"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+      <topic href="html/support/report.html" title="Report a bug or request a feature"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Mana, Types, Creatures, Colors, Abilities">
+      <topic href="html/decks/deck_view.html" title="The Deck view - Mana, Types, Creatures, Colors, Abilities"/>
+   </entry>
+   <entry keyword="ManaBox">
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="ManaDesk Preferences">
+      <topic href="html/reference/preferences.html" title="Preferences - ManaDesk Preferences"/>
+   </entry>
+   <entry keyword="ManaDesk releases">
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+   </entry>
+   <entry keyword="ManaDesk without internet">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - ManaDesk without internet"/>
+   </entry>
+   <entry keyword="Managing your formats">
+      <topic href="html/transfer/custom_export.html" title="Custom export formats - Managing your formats"/>
+   </entry>
+   <entry keyword="Marking a copy as a proxy">
+      <topic href="html/plan/proxies.html" title="Proxies - Marking a copy as a proxy"/>
+   </entry>
+   <entry keyword="Marking a deck as boxed">
+      <topic href="html/decks/boxed.html" title="Boxed decks - Marking a deck as boxed"/>
+   </entry>
+   <entry keyword="Menus">
+      <topic href="html/start/window.html" title="The ManaDesk window - Menus"/>
+   </entry>
+   <entry keyword="Menus and commands">
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+   </entry>
+   <entry keyword="Missing data">
+      <topic href="html/database/update.html" title="Updating the card database - Missing data"/>
+   </entry>
+   <entry keyword="Move or copy cards">
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting - Move or copy cards"/>
+   </entry>
+   <entry keyword="Moving your workspace to a synced folder">
+      <topic href="html/data/sync.html" title="Cloud sync - Moving your workspace to a synced folder"/>
+   </entry>
+   <entry keyword="Moving, copying and splitting">
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+   </entry>
+   <entry keyword="My Cards">
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+   </entry>
+   <entry keyword="Name: wildcards">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Name: wildcards"/>
+   </entry>
+   <entry keyword="Narrowing the list">
+      <topic href="html/find/browse.html" title="Browsing the card database - Narrowing the list"/>
+   </entry>
+   <entry keyword="Next steps">
+      <topic href="html/start/first_start.html" title="First start - Next steps"/>
+   </entry>
+   <entry keyword="Numbers">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Numbers"/>
+   </entry>
+   <entry keyword="Open on GitHub">
+      <topic href="html/support/report.html" title="Report a bug or request a feature - Open on GitHub"/>
+   </entry>
+   <entry keyword="Opening them">
+      <topic href="html/decks/sideboard_extra.html#open" title="Sideboard, extra list and accessories - Opening them"/>
+   </entry>
+   <entry keyword="Options">
+      <topic href="html/collection/collector.html" title="Collector - Options"/>
+      <topic href="html/plan/buyer.html" title="Buyer - Options"/>
+      <topic href="html/plan/proxier.html" title="Proxier - Options"/>
+   </entry>
+   <entry keyword="Other fields">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Other fields"/>
+   </entry>
+   <entry keyword="Own and virtual cards">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/collection/concepts.html#ownership" title="Decks and collections - Own and virtual cards"/>
+   </entry>
+   <entry keyword="Ownership">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+   </entry>
+   <entry keyword="Planning what to print">
+      <topic href="html/plan/proxies.html" title="Proxies - Planning what to print"/>
+   </entry>
+   <entry keyword="Preferences">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+   </entry>
+   <entry keyword="Price">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Prices">
+      <topic href="html/database/prices.html" title="Prices"/>
+   </entry>
+   <entry keyword="Print">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Printable sheets">
+      <topic href="html/transfer/export.html#sheet" title="Exporting - Printable sheets"/>
+   </entry>
+   <entry keyword="Printing a sideboard list">
+      <topic href="html/transfer/export.html#sideboardlist" title="Exporting - Printing a sideboard list"/>
+   </entry>
+   <entry keyword="Printing proxies">
+      <topic href="html/plan/proxies.html#print" title="Proxies - Printing proxies"/>
+      <topic href="html/transfer/export.html#proxies" title="Exporting - Printing proxies"/>
+   </entry>
+   <entry keyword="Printings">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+      <topic href="html/find/card_details.html#printings" title="Card details - Printings"/>
+   </entry>
+   <entry keyword="Produced mana">
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+   </entry>
+   <entry keyword="Properties">
+      <topic href="html/collection/concepts.html" title="Decks and collections - Properties"/>
+   </entry>
+   <entry keyword="Proxier">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Proxies">
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+   </entry>
+   <entry keyword="Proxies in your numbers">
+      <topic href="html/plan/proxies.html" title="Proxies - Proxies in your numbers"/>
+   </entry>
+   <entry keyword="Proxy">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/plan/buyer.html" title="Buyer"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/plan/proxies.html" title="Proxies"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Quick tour">
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+   </entry>
+   <entry keyword="Rarity">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+   </entry>
+   <entry keyword="Regular expression">
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+      <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+   </entry>
+   <entry keyword="Removing cards">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards - Removing cards"/>
+   </entry>
+   <entry keyword="Rename, move, delete">
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders - Rename, move, delete"/>
+   </entry>
+   <entry keyword="Report a bug">
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+      <topic href="html/support/report.html" title="Report a bug or request a feature"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+   </entry>
+   <entry keyword="Report a bug or request a feature">
+      <topic href="html/support/report.html" title="Report a bug or request a feature"/>
+   </entry>
+   <entry keyword="Report via Email">
+      <topic href="html/support/report.html" title="Report a bug or request a feature - Report via Email"/>
+   </entry>
+   <entry keyword="Reserved List">
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="Restoring a backup">
+      <topic href="html/data/backup.html" title="Backups - Restoring a backup"/>
+   </entry>
+   <entry keyword="Rules text">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Rules text"/>
+   </entry>
+   <entry keyword="Rulings">
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
+      <topic href="html/find/card_details.html#rulings" title="Card details - Rulings"/>
+   </entry>
+   <entry keyword="Save/Load Filter">
+      <topic href="html/find/filter.html#save" title="Searching and filtering - Save/Load Filter"/>
+   </entry>
+   <entry keyword="Scryfall">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/start/first_start.html" title="First start"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/manabox.html" title="ManaBox"/>
+   </entry>
+   <entry keyword="Search">
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+      <topic href="html/start/quick_tour.html" title="Quick tour"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="Searching and filtering">
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+   </entry>
+   <entry keyword="Set">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Set Filter">
+      <topic href="html/find/filter.html" title="Searching and filtering - Set Filter"/>
+   </entry>
+   <entry keyword="Sideboard">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/legality.html" title="Formats and legality"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories - Sideboard"/>
+      <topic href="html/plan/proxier.html" title="Proxier"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/views.html" title="Views"/>
+      <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+      <topic href="html/transfer/import.html" title="Importing cards"/>
+      <topic href="html/transfer/import_website.html" title="Importing from a website"/>
+   </entry>
+   <entry keyword="Sideboard, extra list and accessories">
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+   </entry>
+   <entry keyword="Software updates">
+      <topic href="html/data/software_update.html" title="Software updates"/>
+   </entry>
+   <entry keyword="Sort">
+      <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
+      <topic href="html/collection/my_cards.html" title="My Cards"/>
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/reference/preferences.html" title="Preferences"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Sorting">
+      <topic href="html/find/browse.html" title="Browsing the card database - Sorting"/>
+   </entry>
+   <entry keyword="Split a pile">
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting - Split a pile"/>
+   </entry>
+   <entry keyword="Status markers">
+      <topic href="html/start/window.html#markers" title="The ManaDesk window - Status markers"/>
+   </entry>
+   <entry keyword="Step 1 - the source">
+      <topic href="html/transfer/import.html" title="Importing cards - Step 1 - the source"/>
+   </entry>
+   <entry keyword="Step 2 - check the list">
+      <topic href="html/transfer/import.html" title="Importing cards - Step 2 - check the list"/>
+   </entry>
+   <entry keyword="Still stuck?">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - Still stuck?"/>
+   </entry>
+   <entry keyword="Stores">
+      <topic href="html/plan/buyer.html" title="Buyer - Stores"/>
+   </entry>
+   <entry keyword="Sub-pages">
+      <topic href="html/reference/preferences.html" title="Preferences - Sub-pages"/>
+   </entry>
+   <entry keyword="Supported formats">
+      <topic href="html/transfer/import.html" title="Importing cards - Supported formats"/>
+   </entry>
+   <entry keyword="Supported sites">
+      <topic href="html/transfer/import_website.html" title="Importing from a website - Supported sites"/>
+   </entry>
+   <entry keyword="Supporting ManaDesk">
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+   </entry>
+   <entry keyword="Symbols">
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="The active deck or collection">
+      <topic href="html/collection/move_copy.html#active" title="Moving, copying and splitting - The active deck or collection"/>
+   </entry>
+   <entry keyword="The Card Navigator">
+      <topic href="html/start/window.html" title="The ManaDesk window - The Card Navigator"/>
+   </entry>
+   <entry keyword="The columns">
+      <topic href="html/plan/buyer.html" title="Buyer - The columns"/>
+      <topic href="html/plan/proxier.html" title="Proxier - The columns"/>
+   </entry>
+   <entry keyword="The Deck view">
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+   </entry>
+   <entry keyword="The Edit Card dialog">
+      <topic href="html/collection/edit_cards.html" title="Adding and editing cards - The Edit Card dialog"/>
+   </entry>
+   <entry keyword="The Export wizard">
+      <topic href="html/transfer/export.html" title="Exporting - The Export wizard"/>
+   </entry>
+   <entry keyword="The filter dialog">
+      <topic href="html/find/filter.html#dialog" title="Searching and filtering - The filter dialog"/>
+   </entry>
+   <entry keyword="The Gallery">
+      <topic href="html/find/gallery.html" title="The Gallery"/>
+   </entry>
+   <entry keyword="The log file">
+      <topic href="html/support/report.html#log" title="Report a bug or request a feature - The log file"/>
+   </entry>
+   <entry keyword="The Main collection">
+      <topic href="html/collection/concepts.html#main" title="Decks and collections - The Main collection"/>
+   </entry>
+   <entry keyword="The ManaDesk window">
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+   </entry>
+   <entry keyword="The quick filter">
+      <topic href="html/collection/my_cards.html" title="My Cards - The quick filter"/>
+   </entry>
+   <entry keyword="The quick filter bar">
+      <topic href="html/find/filter.html#quick" title="Searching and filtering - The quick filter bar"/>
+   </entry>
+   <entry keyword="The Scryfall Database is empty">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - The Scryfall Database is empty"/>
+   </entry>
+   <entry keyword="The window is a mess / a view is missing">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ - The window is a mess / a view is missing"/>
+   </entry>
+   <entry keyword="The zones">
+      <topic href="html/start/window.html" title="The ManaDesk window - The zones"/>
+   </entry>
+   <entry keyword="Tokens">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
+      <topic href="html/decks/boxed.html" title="Boxed decks"/>
+      <topic href="html/decks/create_deck.html" title="Creating a deck"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Traits">
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/columns.html" title="Columns"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="Troubleshooting and FAQ">
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+   </entry>
+   <entry keyword="Type">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Type"/>
+   </entry>
+   <entry keyword="Unsorted collections">
+      <topic href="html/collection/unsorted.html" title="Unsorted collections"/>
+   </entry>
+   <entry keyword="Update">
+      <topic href="html/database/prices.html" title="Prices"/>
+      <topic href="html/database/update.html" title="Updating the card database"/>
+      <topic href="html/data/backup.html" title="Backups"/>
+      <topic href="html/data/software_update.html" title="Software updates"/>
+      <topic href="html/decks/deck_view.html" title="The Deck view"/>
+      <topic href="html/decks/sideboard_extra.html" title="Sideboard, extra list and accessories"/>
+      <topic href="html/find/browse.html" title="Browsing the card database"/>
+      <topic href="html/find/card_details.html" title="Card details"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+      <topic href="html/support/support.html" title="Supporting ManaDesk"/>
+      <topic href="html/transfer/export.html" title="Exporting"/>
+   </entry>
+   <entry keyword="Update Card Database">
+      <topic href="html/database/update.html" title="Updating the card database - Update Card Database"/>
+   </entry>
+   <entry keyword="Updating the card database">
+      <topic href="html/database/update.html" title="Updating the card database"/>
+   </entry>
+   <entry keyword="Using ManaDesk on two computers">
+      <topic href="html/data/sync.html" title="Cloud sync - Using ManaDesk on two computers"/>
+   </entry>
+   <entry keyword="Version control (advanced)">
+      <topic href="html/data/sync.html" title="Cloud sync - Version control (advanced)"/>
+   </entry>
+   <entry keyword="View As">
+      <topic href="html/find/browse.html" title="Browsing the card database - View As"/>
+   </entry>
+   <entry keyword="Views">
+      <topic href="html/reference/views.html" title="Views"/>
+   </entry>
+   <entry keyword="Warnings">
+      <topic href="html/transfer/import.html" title="Importing cards - Warnings"/>
+   </entry>
+   <entry keyword="Welcome to ManaDesk">
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk"/>
+   </entry>
+   <entry keyword="What comes across">
+      <topic href="html/transfer/manabox.html" title="ManaBox - What comes across"/>
+   </entry>
+   <entry keyword="What goes where">
+      <topic href="html/collection/move_copy.html#rules" title="Moving, copying and splitting - What goes where"/>
+   </entry>
+   <entry keyword="What is inside">
+      <topic href="html/data/workspace.html" title="Your workspace - What is inside"/>
+   </entry>
+   <entry keyword="What it changes">
+      <topic href="html/decks/boxed.html" title="Boxed decks - What it changes"/>
+   </entry>
+   <entry keyword="What to sync">
+      <topic href="html/data/sync.html" title="Cloud sync - What to sync"/>
+   </entry>
+   <entry keyword="What you can do with ManaDesk">
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk - What you can do with ManaDesk"/>
+   </entry>
+   <entry keyword="What's missing?">
+      <topic href="html/start/quick_tour.html" title="Quick tour - What's missing?"/>
+   </entry>
+   <entry keyword="What's New">
+      <topic href="html/data/software_update.html" title="Software updates"/>
+      <topic href="html/reference/menus.html" title="Menus and commands"/>
+      <topic href="html/start/first_start.html" title="First start - What's New"/>
+      <topic href="html/start/window.html" title="The ManaDesk window"/>
+      <topic href="html/support/releases.html" title="ManaDesk releases"/>
+   </entry>
+   <entry keyword="Where is this card?">
+      <topic href="html/collection/my_cards.html" title="My Cards - Where is this card?"/>
+   </entry>
+   <entry keyword="Where prices appear">
+      <topic href="html/database/prices.html" title="Prices - Where prices appear"/>
+   </entry>
+   <entry keyword="Where to start">
+      <topic href="html/start/welcome.html" title="Welcome to ManaDesk - Where to start"/>
+      <topic href="html/transfer/import.html" title="Importing cards - Where to start"/>
+   </entry>
+   <entry keyword="Wildcard">
+      <topic href="html/find/filter.html" title="Searching and filtering"/>
+      <topic href="html/reference/syntax.html" title="Filter and search syntax"/>
+   </entry>
+   <entry keyword="Window">
+      <topic href="html/reference/menus.html" title="Menus and commands - Window"/>
+   </entry>
+   <entry keyword="Wishlists and to-print lists">
+      <topic href="html/plan/wishlist.html" title="Wishlists and to-print lists"/>
+   </entry>
+   <entry keyword="Without internet: Import Card Database from File">
+      <topic href="html/database/update.html" title="Updating the card database - Without internet: Import Card Database from File"/>
+   </entry>
+   <entry keyword="Words and phrases">
+      <topic href="html/reference/syntax.html" title="Filter and search syntax - Words and phrases"/>
+   </entry>
+   <entry keyword="Working with an unsorted collection">
+      <topic href="html/collection/unsorted.html" title="Unsorted collections - Working with an unsorted collection"/>
+   </entry>
+   <entry keyword="Your workspace">
+      <topic href="html/data/workspace.html" title="Your workspace"/>
+   </entry>
+</index>

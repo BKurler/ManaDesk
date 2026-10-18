@@ -146,17 +146,86 @@ public class MagicCardFilterTest extends TestCase {
 		search("flying -with", "Flying", true);
 	}
 
-	@Test
-	public void testAbilityBracketMatchesRealAbility() {
-		search("[flying]", "Flying");
-		search("[Flying]", "Flying");
+	private void searchKeywords(String expr, String keywords, boolean exp) {
+		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, expr);
+		MagicCard mc = new MagicCard();
+		mc.set(MagicCardField.KEYWORDS, keywords);
+		assertEquals(exp, e.evaluate(mc));
 	}
 
 	@Test
-	public void testAbilityBracketStripsReminderText() {
+	public void testAbilityBracketMatchesRealAbility() {
+		searchKeywords("[flying]", "Flying", true);
+		searchKeywords("[Flying]", "Flying", true);
+		searchKeywords("[flying]", "Trample|Flying", true);
+		searchKeywords("[scry]", "Scry", true); // a keyword action
+		searchKeywords("[landfall]", "Trample|Landfall", true); // an ability word
+	}
+
+	@Test
+	public void testAbilityBracketUsesTheCardsKeywordsNotItsText() {
 		// Reach's own reminder text mentions "flying" in passing - having
 		// Reach does not mean the card itself has Flying
-		search("[flying]", "Reach (This creature can block creatures with flying.)", false);
+		searchKeywords("[flying]", "Reach", false);
+		// ... and rules text that says "flying" or "scry" is not enough either
+		search("[flying]", "Flying", false);
+		search("[scry]", "When this enters, scry 2.", false);
+		// a card never synced (no keywords at all) has no abilities
+		searchKeywords("[flying]", null, false);
+	}
+
+	private void searchTrait(String expr, MagicCard card, boolean exp) {
+		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, expr);
+		assertEquals(expr, exp, e.evaluate(card));
+	}
+
+	@Test
+	public void testTraitBrackets() {
+		MagicCard rare = new MagicCard();
+		rare.set(MagicCardField.RESERVED, "true");
+		rare.set(MagicCardField.GAME_CHANGER, "true");
+		MagicCard reprint = new MagicCard();
+		reprint.set(MagicCardField.REPRINT, "true");
+		MagicCard plain = new MagicCard();
+		searchTrait("[reserved]", rare, true);
+		searchTrait("[Reserved]", rare, true);
+		searchTrait("[reserved]", plain, false);
+		searchTrait("[game changer]", rare, true);
+		searchTrait("[gamechanger]", rare, true);
+		searchTrait("[game changer]", plain, false);
+		searchTrait("[reprint]", reprint, true);
+		searchTrait("[reprint]", plain, false);
+		// a first printing is a card that is not a reprint
+		searchTrait("[first printing]", plain, true);
+		searchTrait("[first printing]", reprint, false);
+	}
+
+	@Test
+	public void testTraitBracketsFindTreatments() {
+		MagicCard fancy = new MagicCard();
+		fancy.set(MagicCardField.EXTRA_TRAITS, "Showcase|Watermark: Selesnya");
+		MagicCard plain = new MagicCard();
+		searchTrait("[showcase]", fancy, true);
+		searchTrait("[Showcase]", fancy, true);
+		searchTrait("[watermark: selesnya]", fancy, true);
+		searchTrait("[watermark: izzet]", fancy, false);
+		searchTrait("[showcase]", plain, false);
+		searchTrait("[borderless]", fancy, false);
+	}
+
+	@Test
+	public void testTraitBracketsDoNotShadowAbilities() {
+		MagicCard c = new MagicCard();
+		c.set(MagicCardField.KEYWORDS, "Flying");
+		searchTrait("[flying]", c, true);
+		assertNull(MagicCardFilter.traitSearch("flying"));
+		assertNull(MagicCardFilter.traitSearch(null));
+	}
+
+	@Test
+	public void testAbilityBracketIsAWholeKeyword() {
+		searchKeywords("[first strike]", "Double strike", false);
+		searchKeywords("[strike]", "First strike", false);
 	}
 
 	/**
@@ -169,14 +238,14 @@ public class MagicCardFilterTest extends TestCase {
 	 */
 	@Test
 	public void testAbilityBracketMatchesRealAbilityOnPhysicalCard() {
-		mcp.getCard().setOracleText("Flying");
+		mcp.getCard().set(MagicCardField.KEYWORDS, "Flying");
 		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, "[flying]");
 		assertTrue("MagicCardPhysical.matches() must find [flying] on \"Flying\"", e.evaluate(mcp));
 	}
 
 	@Test
 	public void testAbilityBracketStripsReminderTextOnPhysicalCard() {
-		mcp.getCard().setOracleText("Reach (This creature can block creatures with flying.)");
+		mcp.getCard().set(MagicCardField.KEYWORDS, "Reach");
 		Expr e = BinaryExpr.textSearch(MagicCardField.ORACLE, "[flying]");
 		assertFalse("MagicCardPhysical.matches() must not match a reminder-text-only mention", e.evaluate(mcp));
 	}
@@ -564,6 +633,7 @@ public class MagicCardFilterTest extends TestCase {
 
 	String black_id = Colors.getInstance().getPrefConstant(Colors.getColorName(BLACK_COST));
 	String red_id = Colors.getInstance().getPrefConstant(Colors.getColorName(RED_COST));
+	String green_id = Colors.getInstance().getPrefConstant(Colors.getColorName("{G}"));
 
 	public MagicCardPhysical mcp() {
 		return CardGenerator.generatePhysicalCardWithValues();
@@ -624,6 +694,20 @@ public class MagicCardFilterTest extends TestCase {
 		MagicCardPhysical p = mcp();
 		p.getCard().set(MagicCardField.COLOR_IDENTITY, identityCost);
 		return p;
+	}
+
+	/** "Produced": the mana a card can produce - its own filter field, next to Identity / Extended Identity. */
+	public void testColorProduced() {
+		MagicCardPhysical producesG = mcp();
+		producesG.getCard().set(MagicCardField.PRODUCED_MANA, "{G}{C}");
+		MagicCardPhysical producesNothing = mcp();
+		setFilterTrue(black_id, ColorTypes.PRODUCED_ID);
+		checkNotFound(producesG);
+		checkNotFound(producesNothing);
+		propMap.clear();
+		setFilterTrue(green_id, ColorTypes.PRODUCED_ID);
+		checkFound(producesG);
+		checkNotFound(producesNothing);
 	}
 
 	public void testColorBlackOrRedIdentity() {
