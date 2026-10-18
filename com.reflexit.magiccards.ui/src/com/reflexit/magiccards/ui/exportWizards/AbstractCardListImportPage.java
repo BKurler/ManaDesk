@@ -41,8 +41,7 @@
  *                         without the checkbox ever having created it
  *                         explicitly, or its "virtual" flag being consistent.
  *                         Added wantSideboard()/wantExtra() (read on the UI
- *                         thread by performImport(), same as wantVirtual())
- *                         and createImportExtras(), called right after
+ *                         thread by performImport(), same as wantVirtual()) *                         and createImportExtras(), called right after
  *                         createNewDeck() in importRunnable() - so the
  *                         checkbox now has the same effect whether the deck
  *                         is created empty or from an import.
@@ -133,6 +132,8 @@
  *                         createNewDeck() takes the new collection's type.
  *     Rémi Dutil (2026) - offerWebsiteSource() hook: the collection pages hide
  *                         the Website source.
+ *     Rémi Dutil (2026) - refuses to import into an owned (non-virtual) deck;
+ *                         typeCombo / exampleLink are protected so a page can grey them.
  *     Rémi Dutil (2026) - after resolving, a card the file gives in another
  *                         language takes that language's printing when the
  *                         card database has it (ImportUtils.applyDeclaredLanguages)
@@ -216,6 +217,7 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.abs.ICardField;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CardOrganizer;
@@ -254,7 +256,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	protected Button clipboardRadio;
 	private Button editButton;
 	private Button browseButton;
-	private Combo typeCombo;
+	protected Combo typeCombo;
+	/** The "Example..." link next to the Import Format combo. */
+	protected org.eclipse.ui.forms.widgets.Hyperlink exampleLink;
 	private boolean newVirtualChoice;
 	private boolean newReadOnlyChoice;
 	private boolean newUnsortedChoice;
@@ -1288,7 +1292,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			}
 		});
 		typeCombo.setLayoutData(new GridData(GridData.FILL_HORIZONTAL));
-		toolkit.createHyperlink(buttonComposite, "Example...", SWT.NONE).addHyperlinkListener(new HyperlinkAdapter() {
+		exampleLink = toolkit.createHyperlink(buttonComposite, "Example...", SWT.NONE);
+		exampleLink.addHyperlinkListener(new HyperlinkAdapter() {
 			@Override
 			public void linkActivated(HyperlinkEvent e) {
 				if (reportType == null)
@@ -1491,6 +1496,10 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 						if (!(element instanceof CardCollection)) {
 							throw new IllegalArgumentException("Cannot import into " + element);
 						}
+						// an owned deck only gets cards moved in - an import would create owned cards
+						CardCollection target = (CardCollection) element;
+						if (target.isDeck() && !target.isVirtual())
+							throw new MagicException(OwnershipRules.NO_ADD_TO_OWNED_DECK);
 						Location location = getSelectedLocation();
 						importData.setLocation(location);
 						ImportUtils.updateLocation(result, location);

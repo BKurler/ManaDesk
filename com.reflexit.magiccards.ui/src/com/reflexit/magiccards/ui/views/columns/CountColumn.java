@@ -1,5 +1,6 @@
 package com.reflexit.magiccards.ui.views.columns;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.CellEditor;
 import org.eclipse.jface.viewers.ColumnViewer;
 import org.eclipse.jface.viewers.EditingSupport;
@@ -8,8 +9,10 @@ import org.eclipse.swt.SWT;
 import org.eclipse.swt.events.VerifyEvent;
 import org.eclipse.swt.events.VerifyListener;
 import org.eclipse.swt.widgets.Composite;
+import org.eclipse.swt.widgets.Display;
 import org.eclipse.swt.widgets.Text;
 
+import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
@@ -51,7 +54,12 @@ public class CountColumn extends GenColumn {
 		if (value instanceof String) {
 			value = Integer.valueOf((String) value);
 		}
-		super.setElementValue(element, value);
+		try {
+			super.setElementValue(element, value);
+		} catch (MagicException e) {
+			// e.g. more copies in an owned deck (see OwnershipRules#countIncreaseVeto)
+			MessageDialog.openError(Display.getDefault().getActiveShell(), "Count", e.getMessage());
+		}
 	}
 
 	@Override

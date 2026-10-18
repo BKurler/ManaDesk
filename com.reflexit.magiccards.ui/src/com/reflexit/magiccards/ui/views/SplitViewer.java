@@ -16,6 +16,11 @@
  *                         and Order" list built its own separate, unfiltered
  *                         collection and kept offering every one of these
  *                         columns regardless
+ *     Rémi Dutil (2026) - takes the column set of the list it shows: a deck, a
+ *                         collection or My Cards in the split-tree presentation
+ *                         used the Scryfall Database's columns (no Count,
+ *                         Ownership, Condition...), so its table did not share the
+ *                         columns of the same list shown as a table
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -65,7 +70,17 @@ public class SplitViewer implements IMagicColumnViewer {
 		return viewer.getControl();
 	}
 
+	/** The columns of the list this viewer shows; null: the Scryfall Database's own set. */
+	private final ColumnCollection givenColumns;
+
 	public SplitViewer(Composite parent, String id) {
+		this(parent, id, null);
+	}
+
+	/** @param columns the column set of the list shown (a deck's, a collection's...), so the table
+	 *        part shows the same columns, in the same shared layout, as that list's table view */
+	public SplitViewer(Composite parent, String id, ColumnCollection columns) {
+		this.givenColumns = columns;
 		main = (Composite) createContents(parent, id);
 	}
 
@@ -156,6 +171,8 @@ public class SplitViewer implements IMagicColumnViewer {
 	 *  "Visible Columns and Order" list needs the exact same column set, and
 	 *  an anonymous class defined inline here would be invisible to it. */
 	protected ColumnCollection doGetColumnCollection(String prefPageId) {
+		if (givenColumns != null)
+			return givenColumns;
 		return new MagicDbColumnCollection(prefPageId);
 	}
 

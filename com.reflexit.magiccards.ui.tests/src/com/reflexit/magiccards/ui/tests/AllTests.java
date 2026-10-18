@@ -33,6 +33,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.reflexit.magiccards.ui.dialogs.EditCardsPropertiesDialogFinishTest;
+import com.reflexit.magiccards.ui.dialogs.EditDeckPropertiesDialogBoxedTest;
 import com.reflexit.magiccards.ui.exportWizards.DeckExportPageSelectionTest;
 import com.reflexit.magiccards.ui.exportWizards.ImportNameDiagnosisTest;
 import com.reflexit.magiccards.ui.view.model.RootTreeViewerContentProviderTest;
@@ -45,7 +46,7 @@ import com.reflexit.magiccards.ui.views.lib.ListViewSettingsTest;
 @SuiteClasses({ TreeViewerContentProviderTest.class, RootTreeViewerContentProviderTest.class,
 		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class,
 		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class, DeckExportPageSelectionTest.class,
-		EditCardsPropertiesDialogFinishTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
+		EditCardsPropertiesDialogFinishTest.class, EditDeckPropertiesDialogBoxedTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
 		BrowseWebsiteLiveTest.class })
 public class AllTests {
 }

@@ -2,6 +2,9 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - empty-database hint ("run Update Card Database")
+ *     Rémi Dutil (2026) - "Add to" greys an owned (non-virtual) deck
+ *     Rémi Dutil (2026) - the list control names the database column set itself
+ *                         (the split-tree viewer now takes its list's own columns)
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -23,6 +26,7 @@ import org.eclipse.ui.PartInitException;
 import org.eclipse.ui.part.ShowInContext;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -36,6 +40,8 @@ import com.reflexit.magiccards.ui.dialogs.EditMagicCardDialog;
 import com.reflexit.magiccards.ui.preferences.MagicDbViewPreferencePage;
 import com.reflexit.magiccards.ui.preferences.PreferenceInitializer;
 import com.reflexit.magiccards.ui.views.card.CardDescView;
+import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
+import com.reflexit.magiccards.ui.views.columns.MagicDbColumnCollection;
 
 public class MagicDbView extends AbstractSingleControlCardsView {
 	public static final String ID = "com.reflexit.magiccards.ui.views.MagicDbView";
@@ -60,6 +66,12 @@ public class MagicDbView extends AbstractSingleControlCardsView {
 		@Override
 		protected String getPreferencePageId() {
 			return MagicDbView.this.getPreferencePageId();
+		}
+
+		/** The database's own columns: no per-copy ones (Count, Ownership, Condition...). */
+		@Override
+		protected MagicColumnCollection createColumnCollection() {
+			return new MagicDbColumnCollection(getPreferencePageId());
 		}
 
 		@Override
@@ -139,6 +151,14 @@ public class MagicDbView extends AbstractSingleControlCardsView {
 		 * 
 		 * @Override public void run() { editCard(); } };
 		 */
+	}
+
+	/** Database cards are never owned: adding them to an owned (non-virtual) deck would create owned cards. */
+	@Override
+	protected String deckDestinationVeto(CardCollection dest, DeckMenuKind kind) {
+		if (dest != null && dest.isDeck() && !dest.isVirtual())
+			return "owned deck: move cards in";
+		return super.deckDestinationVeto(dest, kind);
 	}
 
 	protected void editCard() {

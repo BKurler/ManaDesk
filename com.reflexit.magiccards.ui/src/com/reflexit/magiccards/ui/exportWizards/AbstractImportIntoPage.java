@@ -5,6 +5,7 @@
  *                         (ImportIntoDeckPage / ImportIntoCollectionPage). Just a
  *                         target picker + the inherited source group - no Name,
  *                         no "Empty". Creating a new element is a separate wizard.
+ *     Rémi Dutil (2026) - an owned (non-virtual) deck cannot be a target.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -50,6 +51,11 @@ public abstract class AbstractImportIntoPage extends AbstractCardListImportPage 
 
 	/** DECK / COLLECTION. */
 	protected abstract ModelRoot.Side side();
+
+	/** A deck that is not virtual only receives owned cards moved in from a collection. */
+	private static boolean isOwnedDeck(CardCollection c) {
+		return c.isDeck() && !c.isVirtual();
+	}
 
 	private ModelRoot.Side sideOf(CardElement el) {
 		return DataManager.getInstance().getModelRoot().sideOf(el);
@@ -117,6 +123,8 @@ public abstract class AbstractImportIntoPage extends AbstractCardListImportPage 
 			if (!(picked instanceof CardCollection) || sideOf(picked) != side()) {
 				setErrorMessage("Pick a " + typeName() + " under “"
 						+ DataManager.getInstance().getModelRoot().containerFor(side()).getName() + "”.");
+			} else if (isOwnedDeck((CardCollection) picked)) {
+				setErrorMessage("\"" + picked.getName() + "\" is not virtual - you cannot import into it.");
 			} else if (((CardCollection) picked).isReadOnly()) {
 				setErrorMessage("“" + picked.getName() + "” is read-only - you cannot import into it.");
 			} else {
@@ -150,6 +158,11 @@ public abstract class AbstractImportIntoPage extends AbstractCardListImportPage 
 		}
 		if (((CardCollection) element).isReadOnly()) {
 			setErrorMessage("“" + element.getName() + "” is read-only.");
+			return false;
+		}
+		if (isOwnedDeck((CardCollection) element)) {
+			setErrorMessage("\"" + element.getName() + "\" is not virtual: import into a virtual deck, or move"
+					+ " the cards in from a collection.");
 			return false;
 		}
 		return super.validateDestinationGroup();

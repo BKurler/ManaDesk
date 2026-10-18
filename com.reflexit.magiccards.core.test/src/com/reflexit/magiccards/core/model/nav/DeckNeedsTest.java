@@ -10,6 +10,7 @@
  *     Rémi Dutil (2026) - DeckNeeds (shared by the Proxier and Buyer views):
  *                         wanted / owned / boxed / shortfall /
  *                         genuineShortfall / per-list breakdown.
+ *     Rémi Dutil (2026) - an owned (non-virtual) deck claims its copies.
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.nav;
 
@@ -122,6 +123,24 @@ public class DeckNeedsTest extends TestCase {
 		assertEquals(free.boxed.genuine + 1, r.boxed.genuine);
 		assertEquals(Math.max(0, free.available().genuine - 1), r.available().genuine);
 		assertTrue(r.shortfall() >= free.shortfall());
+	}
+
+	public void testOwnedDeckClaimsItsCopies() {
+		add(wantDeck, 2, false, false);
+		add(stock, 2, true, false);
+		Row free = row(Collections.singletonList(wantDeck));
+		boxedDeck = create(true, false); // an owned (non-virtual) deck, not flagged boxed
+		add(boxedDeck, 1, true, false);
+		assertTrue(boxedDeck.isOwnedDeck());
+		assertFalse(wantDeck.isOwnedDeck()); // a virtual deck
+		assertFalse(stock.isOwnedDeck()); // a collection
+		Row r = row(Collections.singletonList(wantDeck));
+		// the copy in the owned deck is counted as owned (the total never changes)...
+		assertEquals(free.owned.genuine + 1, r.owned.genuine);
+		// ...but it is spoken for: nothing new becomes available for the virtual deck
+		assertEquals(free.boxed.genuine + 1, r.boxed.genuine);
+		assertEquals(free.available().genuine, r.available().genuine);
+		assertEquals(free.shortfall(), r.shortfall());
 	}
 
 	public void testByFinishKeepsFoilAndNonFoilApart() {

@@ -46,6 +46,7 @@
  *                  short bottom area the Copy / Open buttons were squeezed
  *                  out of sight.
  *     Rémi Dutil (2026) - F1 help context (viewbuyer)
+ *     Rémi Dutil (2026) - owned (non-virtual) decks are left out, like boxed ones
  *******************************************************************************/
 package com.manadesk.monetization;
 
@@ -312,7 +313,7 @@ public class BuyerView extends ViewPart {
 				// the card database sits under it too but is never something you buy for
 				if (element == DataManager.getInstance().getModelRoot().getMagicDBContainer())
 					return false;
-				return !(element instanceof CardCollection && ((CardCollection) element).isBoxed());
+				return !(element instanceof CardCollection && isLeftOut((CardCollection) element));
 			}
 		});
 		sourceTree.addCheckStateListener(e -> {
@@ -329,7 +330,7 @@ public class BuyerView extends ViewPart {
 
 	private void refreshSources() {
 		for (Object o : sourceTree.getCheckedElements())
-			if (o instanceof CardCollection && ((CardCollection) o).isBoxed())
+			if (o instanceof CardCollection && isLeftOut((CardCollection) o))
 				sourceTree.setChecked(o, false);
 		sourceTree.refresh();
 		rebuildSourceList();
@@ -350,7 +351,12 @@ public class BuyerView extends ViewPart {
 		Location loc = cc.getLocation();
 		if (loc != null && (loc.isSideboard() || loc.isExtra()))
 			return false; // pulled in with their main deck
-		return !cc.isBoxed();
+		return !isLeftOut(cc);
+	}
+
+	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so nothing is bought for them. */
+	private static boolean isLeftOut(CardCollection cc) {
+		return cc.isBoxed() || cc.isOwnedDeck();
 	}
 
 	// ------------------------------------------------------- right pane

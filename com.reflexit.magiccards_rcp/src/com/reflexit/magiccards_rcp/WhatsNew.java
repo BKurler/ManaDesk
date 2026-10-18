@@ -145,6 +145,13 @@ final class WhatsNew {
 			new Feature(1, MINOR, CARDS, "Unsorted boxes", "Card positions in unsorted collections: find a card without"
 					+ " sorting the box first.", null),
 			new Feature(1, MINOR, CARDS, "Safer deleting", "Deleting cards asks for a confirmation first.", null),
+			new Feature(1, MINOR, DECKS, "Owned decks", "Decks stay virtual by default. Uncheck Virtual when you create"
+					+ " a deck to make an owned deck, for cards you really own: it starts empty (no import) and you move"
+					+ " owned cards into it from your Standard or For Trade collections. Adding from the database, copying,"
+					+ " pasting, importing, changing a count and deleting cards are refused in it - cards only leave by"
+					+ " being moved out - so the number of cards you own never changes by mistake. Its sideboard and extra"
+					+ " list are owned too, and the Proxier and the Buyer leave it out and count its cards as in use."
+					+ " The choice is made at creation and cannot be changed.", null),
 			new Feature(1, MINOR, CARDS, "More card facts", "A new Traits column (Reserved List, Game Changer,"
 					+ " Reprint, and how a printing looks: Showcase, Borderless, Full Art, an old frame, a stamp, Oversized,"
 					+ " a watermark, Prerelease, Playtest, Surge Foil...; the card text lists them too), an EDHREC Rank column to sort by popularity, a Produced Mana column (also a \"Produced\""
@@ -174,7 +181,13 @@ final class WhatsNew {
 					+ " navigator and in the dialogs: virtual (blue), read-only (red), unsorted (green) and boxed"
 					+ " (black). Moving or copying cards where they can't go is blocked.", null),
 			new Feature(1, MINOR, DECKS, "Boxed decks", "Mark a built deck as boxed: its cards count as in use,"
-					+ " so the Proxier and Buyer don't count on them for other decks.", null),
+					+ " so the Proxier and Buyer don't count on them for other decks. ManaDesk asks you to confirm,"
+					+ " because boxed means every card of the deck is really in the box.", null),
+			new Feature(1, MINOR, CARDS, "Columns stay in place", "A deck, a collection or My Cards now shows the same"
+					+ " columns in every View As (table, tree, split tree): the split tree used the card database's"
+					+ " columns, without Count, Ownership or Condition, and reshuffled the ones you chose. Count stays"
+					+ " first, except in a tree, whose first column is always Name (Restore Defaults once on the"
+					+ " column page if yours were already shuffled).", null),
 			new Feature(1, MINOR, DECKS, "Ownership follows the list", "A card is owned in a Standard or For Trade"
 					+ " collection and virtual in a deck or a Wishlist/To Print collection - no need to set it card"
 					+ " by card. Imports follow the destination too, and virtual cards imported into a collection"

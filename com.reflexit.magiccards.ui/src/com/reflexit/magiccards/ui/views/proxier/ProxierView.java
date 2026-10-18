@@ -129,6 +129,7 @@
  *                         view uses the same one; "To Print" = Row.shortfall().
  *                         Behaviour unchanged.
  *     Rémi Dutil (2026) - F1 help context (viewproxier)
+ *     Rémi Dutil (2026) - owned (non-virtual) decks are left out, like boxed ones
  */
 package com.reflexit.magiccards.ui.views.proxier;
 
@@ -361,8 +362,8 @@ public class ProxierView extends ViewPart {
 		deckTreeViewer.addFilter(new ViewerFilter() {
 			@Override
 			public boolean select(Viewer viewer, Object parentElement, Object element) {
-				// boxed decks are excluded entirely, not shown disabled
-				return !(element instanceof CardCollection && ((CardCollection) element).isBoxed());
+				// boxed decks (and owned, non-virtual ones) are excluded entirely, not shown disabled
+				return !(element instanceof CardCollection && isLeftOut((CardCollection) element));
 			}
 		});
 		deckTreeViewer.addCheckStateListener(e -> {
@@ -383,7 +384,7 @@ public class ProxierView extends ViewPart {
 	/** Reloads the tree and drops now-boxed decks - the explicit alternative to auto-refreshing on every change. */
 	private void refreshDecks() {
 		for (Object o : deckTreeViewer.getCheckedElements()) {
-			if (o instanceof CardCollection && ((CardCollection) o).isBoxed())
+			if (o instanceof CardCollection && isLeftOut((CardCollection) o))
 				deckTreeViewer.setChecked(o, false);
 		}
 		deckTreeViewer.refresh();
@@ -406,7 +407,12 @@ public class ProxierView extends ViewPart {
 		Location loc = cc.getLocation();
 		if (loc != null && (loc.isSideboard() || loc.isExtra()))
 			return false;
-		return !cc.isBoxed();
+		return !isLeftOut(cc);
+	}
+
+	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so they are not planned. */
+	private static boolean isLeftOut(CardCollection cc) {
+		return cc.isBoxed() || cc.isOwnedDeck();
 	}
 
 	// --- right pane: pivot grid on top, per-deck breakdown of the selected row below ---
