@@ -24,6 +24,8 @@
  *                         virtual, a new collection's virtual flag follows
  *                         the collection type chosen FIRST on the page
  *                         (createLeadingOptions(), above Name).
+ *     Rémi Dutil (2026) - importAllowed()/syncImportAllowed(): a page can force
+ *                         Empty and grey the import radios (an owned deck).
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -361,6 +363,35 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 				websiteRadio.setSelection(false);
 			syncEmptyImport();
 		}
+	}
+
+	/** Whether the new element may be filled from the clipboard / a file / a
+	 *  website. An owned (non-virtual) deck starts empty: its cards are moved
+	 *  in from a collection, never created by an import. */
+	protected boolean importAllowed() {
+		return true;
+	}
+
+	/** Re-applies {@link #importAllowed()}: Empty forced, the import radios greyed. */
+	protected void syncImportAllowed() {
+		if (emptyRadio == null || emptyRadio.isDisposed())
+			return;
+		boolean allowed = importAllowed();
+		if (!allowed) {
+			emptyRadio.setSelection(true);
+			for (Button b : new Button[] { clipboardRadio, fileRadio, websiteRadio })
+				if (b != null && !b.isDisposed())
+					b.setSelection(false);
+		}
+		for (Button b : new Button[] { clipboardRadio, fileRadio, websiteRadio })
+			if (b != null && !b.isDisposed())
+				b.setEnabled(allowed);
+		// the format of an import has no meaning when nothing can be imported
+		if (typeCombo != null && !typeCombo.isDisposed())
+			typeCombo.setEnabled(allowed);
+		if (exampleLink != null && !exampleLink.isDisposed())
+			exampleLink.setEnabled(allowed);
+		syncEmptyImport();
 	}
 
 	private void syncEmptyImport() {

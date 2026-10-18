@@ -40,7 +40,7 @@ images of that window here, retake them with the same setup and overwrite the fi
 | 28 | `my_cards_view.png` | collection/my_cards | My Cards view | — |
 | 29 | `collector_view.png` | collection/collector | Collector view with completion % | Group by set |
 | 30 | `unsorted_positions.png` | collection/unsorted | An unsorted collection in its manual order (a card found with Find, showing its position) | An unsorted collection |
-| 31 | `new_deck_wizard.png` | decks/create_deck | New Deck wizard (Empty / Clipboard / File / Website, Default Format, sideboard / extra) | — |
+| 31 | `new_deck_wizard.png` | decks/create_deck | New Deck wizard (the new **Virtual** checkbox above Name, checked; Empty / Clipboard / File / Website, Default Format, sideboard / extra) | — |
 | 32 | `edit_deck_properties.png` | decks/create_deck, decks/boxed | Edit Properties of a deck (Boxed, sideboard / extra, Default Format) | — |
 | 33 | `deck_view_cards.png` | decks/deck_view | Deck view, Cards tab | A full deck |
 | 34 | `deck_tab_info.png` | decks/deck_view | Info tab, with the new **Game Changers** and **Mana sources** lines | A Commander deck with a Game Changer or two |

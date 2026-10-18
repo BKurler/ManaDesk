@@ -3,6 +3,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - genuine (proxy-excluded) own-count coverage
+ *     Rémi Dutil (2026) - owned (non-virtual) deck rules: no created cards, no count increase
  */
 
 package com.reflexit.magiccards.core;
@@ -20,6 +21,7 @@ import org.junit.runners.MethodSorters;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
+import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
@@ -167,11 +169,23 @@ public class DataManagerTest extends TestCase {
 		}
 	}
 
+	/** Replaces the destination by a (non-)virtual COLLECTION - the way cards are bought / printed. */
+	protected void useCollection(boolean vir) {
+		deck2.remove();
+		i++;
+		deck2 = dm.getModelRoot().getCollectionsContainer().addDeck("blc" + i, false, vir);
+		IStorageInfo info = deck2.getStorageInfo();
+		assertNotNull(info);
+		info.setVirtual(vir);
+		info.setType(IStorageInfo.COLLECTION_TYPE);
+		store2 = deck2.getStore();
+	}
+
 	@Test
 	public void testCopyCardsVirOwn() {
-		// virtual -> non-virtual is allowed (bought / printed): the copy is owned
+		// virtual -> non-virtual collection is allowed (bought / printed): the copy is owned
 		card.setOwn(false);
-		setVirtual(false);
+		useCollection(false);
 		dm.copyCards(Collections.singletonList(card), store2);
 		assertEquals(1, store2.size());
 		assertTrue(getFirst().isOwn());
@@ -179,12 +193,109 @@ public class DataManagerTest extends TestCase {
 
 	@Test
 	public void testMoveCardsVirOwn() {
-		// a virtual card moved into a non-virtual list becomes Own (bought / printed)
+		// a virtual card moved into a non-virtual collection becomes Own (bought / printed)
 		card.setOwn(false);
-		setVirtual(false);
+		useCollection(false);
 		dm.moveCards(Collections.singletonList(card), store2);
 		assertEquals(1, store2.size());
 		assertTrue(getFirst().isOwn());
+	}
+
+	@Test
+	public void testOwnedDeckRefusesCopyOfVirtualAndDbCards() {
+		// an owned (non-virtual) deck never receives created cards
+		card.setOwn(false);
+		setVirtual(false);
+		try {
+			dm.copyCards(Collections.singletonList(card), store2);
+			fail("virtual card copied into an owned deck");
+		} catch (MagicException e) {
+			assertEquals(com.reflexit.magiccards.core.model.OwnershipRules.NO_ADD_TO_OWNED_DECK, e.getMessage());
+		}
+		try {
+			dm.copyCards(list(card.getBase()), store2);
+			fail("database card copied into an owned deck");
+		} catch (MagicException e) {
+			// good
+		}
+		assertEquals(0, store2.size());
+	}
+
+	@Test
+	public void testOwnedDeckRefusesMoveOfVirtualAndDbCards() {
+		card.setOwn(false);
+		setVirtual(false);
+		try {
+			dm.moveCards(Collections.singletonList(card), store2);
+			fail("virtual card moved into an owned deck would become Own");
+		} catch (MagicException e) {
+			// good
+		}
+		try {
+			dm.moveCards(list(card.getBase()), store2);
+			fail("database card moved into an owned deck");
+		} catch (MagicException e) {
+			// good
+		}
+		assertEquals(0, store2.size());
+		assertEquals(1, deck1.getStore().size()); // nothing was taken away either
+	}
+
+	@Test
+	public void testOwnedDeckAcceptsMovedOwnedCards() {
+		card.setOwn(true);
+		setVirtual(false);
+		dm.moveCards(Collections.singletonList(card), store2);
+		assertEquals(0, deck1.getStore().size());
+		assertEquals(1, store2.size());
+		assertTrue(getFirst().isOwn());
+	}
+
+	@Test
+	public void testOwnedDeckRefusesAnyCountChange() {
+		card.setOwn(true);
+		card.setCount(3);
+		setVirtual(false);
+		dm.moveCards(Collections.singletonList(card), store2);
+		MagicCardPhysical inDeck = getFirst();
+		assertEquals(3, inDeck.getCount());
+		// more would create owned cards, fewer would destroy them: cards only move out
+		for (int wanted : new int[] { 4, 2, 0 }) {
+			try {
+				dm.setField(store2, inDeck, MagicCardField.COUNT, wanted);
+				fail("a count change in an owned deck must be refused: " + wanted);
+			} catch (MagicException e) {
+				assertEquals(com.reflexit.magiccards.core.model.OwnershipRules.NO_COUNT_CHANGE_IN_OWNED_DECK,
+						e.getMessage());
+			}
+			assertEquals(3, inDeck.getCount());
+		}
+	}
+
+	@Test
+	public void testOwnedDeckRefusesDeletingCards() {
+		setVirtual(false);
+		assertNotNull(com.reflexit.magiccards.core.model.OwnershipRules.removeVeto(store2));
+		setVirtual(true);
+		assertNull(com.reflexit.magiccards.core.model.OwnershipRules.removeVeto(store2));
+		useCollection(false);
+		assertNull("a collection may delete cards", com.reflexit.magiccards.core.model.OwnershipRules.removeVeto(store2));
+	}
+
+	@Test
+	public void testVirtualDeckAndCollectionStillAcceptMoreCopies() {
+		card.setOwn(false);
+		setVirtual(true);
+		dm.moveCards(Collections.singletonList(card), store2);
+		MagicCardPhysical inDeck = getFirst();
+		dm.setField(store2, inDeck, MagicCardField.COUNT, 4);
+		assertEquals(4, inDeck.getCount());
+		useCollection(false);
+		card.setOwn(true);
+		dm.copyCards(list(card.getBase()), store2); // from the database: how a collection gets cards
+		assertEquals(1, store2.size());
+		dm.setField(store2, getFirst(), MagicCardField.COUNT, 5);
+		assertEquals(5, getFirst().getCount());
 	}
 
 	//

@@ -10,6 +10,7 @@
  *                         and applied
  *     Rémi Dutil (2026) - the Finish combo no longer offers "Auto" - always a
  *                         real value
+ *     Rémi Dutil (2026) - a Count change is refused in an owned (non-virtual) deck
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -107,6 +108,11 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 
 	@Override
 	protected void okPressed() {
+		String veto = countVeto();
+		if (veto != null) {
+			MessageDialog.openError(getShell(), "Count", veto);
+			return;
+		}
 		super.okPressed();
 		new Job("Updating edited cards") {
 			@Override
@@ -121,6 +127,26 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 				return Status.OK_STATUS;
 			}
 		}.schedule();
+	}
+
+	/** Why the edited Count cannot be applied (any change in an owned deck), or {@code null}. */
+	private String countVeto() {
+		String edited = store.getString(MagicCardField.COUNT.name());
+		if (UNCHANGED.equals(edited))
+			return null;
+		int next;
+		try {
+			next = Integer.parseInt(edited.trim());
+		} catch (NumberFormatException e) {
+			return null; // reported as an invalid value when applied
+		}
+		for (MagicCardPhysical card : cards) {
+			String veto = OwnershipRules.countChangeVeto(DataManager.getInstance().getCardStore(card.getLocation()),
+					card.getCount(), next);
+			if (veto != null)
+				return veto;
+		}
+		return null;
 	}
 
 	private void editCard(MagicCardPhysical card, PreferenceStore store, boolean update, Set<ICardField> fieldSet) {

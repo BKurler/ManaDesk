@@ -7,6 +7,8 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - owned (non-virtual) decks: only owned cards moved in from a collection, nothing created
+ *     Rémi Dutil (2026) - owned decks: no count change and no deletion, cards only move out
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
@@ -19,7 +21,7 @@ import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 /**
  * Ownership rules tied to the deck / collection a card is in. A card's
  * ownership follows its list: Own in a non-virtual one (Standard / For Trade,
- * an older non-virtual deck), virtual in a virtual one (Wishlist/To Print, decks).
+ * an owned deck), virtual in a virtual one (Wishlist/To Print, the default deck).
  * A card whose stored ownership does not match (data from before these rules)
  * keeps it, but can only be changed to the value that matches its list - never
  * away from it. Moving / copying a card is how it changes ownership now (a
@@ -34,6 +36,11 @@ import com.reflexit.magiccards.core.model.storage.IStorageInfo;
  * virtual to virtual - never owned to non-virtual. The copy always takes the
  * destination's ownership.</li>
  * </ul>
+ * An owned (non-virtual) deck is stricter: it only receives owned cards moved in
+ * from elsewhere, and cards only leave it by being moved out: copying, pasting,
+ * importing, moving a virtual card in, changing a count or deleting cards would
+ * create or destroy owned cards - see {@link #ownedDeckVeto},
+ * {@link #countChangeVeto} and {@link #removeVeto}.
  */
 public final class OwnershipRules {
 	/** Move: an owned card only goes to a non-virtual deck / collection. */
@@ -45,7 +52,55 @@ public final class OwnershipRules {
 	public static final String NO_SET_OWNERSHIP = "A card's ownership follows its deck / collection:"
 			+ " Own in a non-virtual one, virtual in a virtual one.";
 
+	/** An owned (non-virtual) deck only receives owned cards moved from a non-virtual collection or deck. */
+	public static final String NO_ADD_TO_OWNED_DECK = "This deck is not virtual: it only holds cards you own."
+			+ " Only owned cards moved in from a non-virtual collection or deck can go into it."
+			+ " Adding, copying, pasting or importing cards, or moving virtual cards (a Wishlist/To Print"
+			+ " collection or a virtual deck), would create owned cards that do not exist.";
+
+	/** The number of copies of an owned card is only changed in a collection. */
+	public static final String NO_COUNT_CHANGE_IN_OWNED_DECK = "This deck is not virtual: the number of copies of an"
+			+ " owned card can only be changed in a collection. To take cards out of the deck, move them to a"
+			+ " collection.";
+	/** Deleting would remove cards you own: they are moved out instead. */
+	public static final String NO_REMOVE_FROM_OWNED_DECK = "This deck is not virtual: cards cannot be deleted from it,"
+			+ " only moved out to a collection (deleting would remove cards you own).";
+
 	private OwnershipRules() {
+	}
+
+	/** True when {@code store} is a deck that is not virtual (its cards are the ones you own). */
+	public static boolean isOwnedDeck(ICardStore<?> store) {
+		if (store == null)
+			return false;
+		IStorageInfo info = getStorageInfo(store);
+		return info != null && IStorageInfo.DECK_TYPE.equals(info.getType()) && !store.isVirtual();
+	}
+
+	/**
+	 * Why {@code card} cannot go into {@code dest} when {@code dest} is an owned
+	 * deck, or {@code null}. Only an owned card moved in from elsewhere is fine -
+	 * anything else (a database card, a virtual card, a copy) would create owned cards.
+	 */
+	public static String ownedDeckVeto(Object card, ICardStore<?> dest, boolean move) {
+		if (!isOwnedDeck(dest))
+			return null;
+		// a database card (MagicCard) is not a copy in a list, even when you own the card
+		if (move && card instanceof MagicCardPhysical && ((MagicCardPhysical) card).isOwn())
+			return null;
+		return NO_ADD_TO_OWNED_DECK;
+	}
+
+	/** Why the count of a card in {@code store} cannot go from {@code oldCount} to {@code newCount}, or {@code null}. */
+	public static String countChangeVeto(ICardStore<?> store, int oldCount, int newCount) {
+		if (newCount != oldCount && isOwnedDeck(store))
+			return NO_COUNT_CHANGE_IN_OWNED_DECK;
+		return null;
+	}
+
+	/** Why cards cannot be deleted from {@code store}, or {@code null}. */
+	public static String removeVeto(ICardStore<?> store) {
+		return isOwnedDeck(store) ? NO_REMOVE_FROM_OWNED_DECK : null;
 	}
 
 	/** The storage info of {@code store}, or {@code null}. */

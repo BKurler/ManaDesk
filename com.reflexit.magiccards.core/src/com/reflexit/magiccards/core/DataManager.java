@@ -32,6 +32,9 @@
  *                         gone), the copy takes the destination's ownership
  *     Rémi Dutil (2026) - reconcile(): a card id Scryfall merged into another one
  *                         is linked to the card that replaced it (ScryfallMigrations)
+ *     Rémi Dutil (2026) - owned (non-virtual) decks: copy / move refuse cards that
+ *                         would create owned cards, setField(COUNT) refuses a
+ *                         count increase (OwnershipRules)
  */
 
 package com.reflexit.magiccards.core;
@@ -267,7 +270,10 @@ public class DataManager {
 		boolean unsorted = store.isUnsorted();
 		ArrayList<IMagicCard> list = new ArrayList<>(cards.size());
 		for (IMagicCard card : cards) {
-			// never owned -> non-virtual (it would be counted twice); every other
+			String deckVeto = OwnershipRules.ownedDeckVeto(card, store, false);
+				if (deckVeto != null)
+					throw new MagicException(deckVeto);
+				// never owned -> non-virtual (it would be counted twice); every other
 			// copy takes the destination's ownership (see OwnershipRules)
 			if (!virtual && card instanceof MagicCardPhysical && ((MagicCardPhysical) card).isOwn())
 				throw new MagicException(OwnershipRules.NO_COPY_OWNED_TO_OWNED);
@@ -348,6 +354,9 @@ public class DataManager {
 		ArrayList<IMagicCard> list = new ArrayList<>(cards.size());
 		for (Object card2 : cards) {
 			IMagicCard card = (IMagicCard) card2;
+			String deckVeto = OwnershipRules.ownedDeckVeto(card, store, true);
+			if (deckVeto != null)
+				throw new MagicException(deckVeto);
 			MagicCardPhysical phi = new MagicCardPhysical(card, to, virtual);
 			if (card instanceof MagicCardPhysical) {
 				if (((IMagicCardPhysical) card).isOwn()) {
@@ -533,6 +542,14 @@ public class DataManager {
 		Object oldValue = mc.get(field);
 		if ((newValue != null && newValue.equals(oldValue)) || (newValue == null && oldValue == null))
 			return;
+		if (field == MagicCardField.COUNT && oldValue instanceof Number && newValue instanceof Number) {
+			// an owned deck's counts only change by moving cards in or out
+			ICardStore<?> where = cardStore != null ? cardStore : getCardStore(mc.getLocation());
+			String veto = OwnershipRules.countChangeVeto(where, ((Number) oldValue).intValue(),
+					((Number) newValue).intValue());
+			if (veto != null)
+				throw new MagicException(veto);
+		}
 		mc.set(field, newValue);
 		if (cardStore == null) {
 			Location loc = mc.getLocation();

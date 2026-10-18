@@ -40,6 +40,9 @@
  *                         non-virtual destination when owned cards are selected;
  *                         Move / Split & move / Copy to confirm before virtual
  *                         cards become Own (OwnershipConfirmation)
+ *     Rémi Dutil (2026) - Delete is refused in an owned (non-virtual) deck
+ *     Rémi Dutil (2026) - an owned (non-virtual) deck is greyed as a Copy to
+ *                         destination, and as a Move to one for virtual cards
  */
 
 package com.reflexit.magiccards.ui.views.lib;
@@ -359,6 +362,12 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		// that an owned card is never copied into a non-virtual list
 		if (dest == null)
 			return null;
+		if (dest.isDeck() && !dest.isVirtual()) {
+			// an owned deck only receives owned cards moved in (see OwnershipRules#ownedDeckVeto)
+			if (kind == DeckMenuKind.COPY)
+				return "owned deck: move cards in";
+			return selectionHasOwnership(false) ? "owned deck: virtual cards" : null;
+		}
 		if (kind == DeckMenuKind.COPY)
 			return !dest.isVirtual() && selectionHasOwnership(true) ? "owned" : null;
 		// move / split & move: never owned -> virtual; virtual -> non-virtual is
@@ -411,6 +420,12 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 		IStructuredSelection sel = (IStructuredSelection) selection;
 		if (sel.isEmpty())
 			return;
+		// an owned deck: cards only leave it by being moved out
+		String veto = OwnershipRules.removeVeto(cardStore);
+		if (veto != null) {
+			MessageDialog.openError(getShell(), "Delete", veto);
+			return;
+		}
 
 		if (!delete.isShiftHeld() && !MessageDialog.openQuestion(getShell(), "Removal Confirmation",
 				"Are you sure you want to delete " + sel.size() + " card(s)?"))

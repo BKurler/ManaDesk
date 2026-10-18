@@ -21,6 +21,7 @@
  *                         decks/collections, not just a single one - the
  *                         export dialog already pre-selects whatever selection
  *                         it was opened with (DeckExportPage.setTextFromSelection())
+ *     Rémi Dutil (2026) - no "Import into..." on an owned (non-virtual) deck
  */
 
 package com.reflexit.magiccards.ui.views.nav;
@@ -374,8 +375,12 @@ public class CardsNavigatorView extends ViewPart implements ICardEventListener, 
 
 		if (pile) {
 			manager.add(new Separator());
-			importInto.setText("Import into ‘" + sel.getName() + "’…");
-			manager.add(importInto);
+			CardCollection pileCollection = (CardCollection) sel;
+			// an owned deck only receives cards moved from a collection - no import
+			if (!(pileCollection.isDeck() && !pileCollection.isVirtual())) {
+				importInto.setText("Import into ‘" + sel.getName() + "’…");
+				manager.add(importInto);
+			}
 			manager.add(export);
 		} else if (!selectedCollections().isEmpty()) {
 			// a multi-selection of decks/collections - no single name for

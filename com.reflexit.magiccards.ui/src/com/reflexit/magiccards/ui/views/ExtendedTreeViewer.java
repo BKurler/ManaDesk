@@ -528,6 +528,7 @@ public class ExtendedTreeViewer extends TreeViewer implements IMagicColumnViewer
 		if (getTControl().isDisposed())
 			return;
 		ColumnCollection columnsCollection = getColumnsCollection();
+		// the first column of a tree carries the indentation and expand arrows: Name, always
 		columnsCollection.moveColumnOnTop(columnsCollection.getColumn(GroupColumn.COL_NAME));
 		int[] columnsOrder = getColumnsCollection().getColumnsOrder();
 		if (filler == 1) {

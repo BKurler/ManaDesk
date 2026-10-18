@@ -45,19 +45,41 @@ cards of a deleted deck go when you choose to <i>disband</i> it.</p>
 <p class="shot"><img src="../images/edit_main_collection.png" alt="Screenshot: Edit Properties of the Main collection"></p>
 
 <h2>Decks</h2>
-<p>A deck is a list of the cards to play. Decks are <b>virtual</b>: a deck lists cards, while the copies
+<p>A deck is a list of the cards to play. A deck is <b>virtual</b> by default: it lists cards, while the copies
 you own stay in your collections. This is what lets the <a href="../plan/buyer.html">Buyer</a> and the
 <a href="../plan/proxier.html">Proxier</a> tell you which cards a deck still needs.</p>
 <p>A deck can also have a <b>sideboard</b> and an <b>extra list</b> (tokens, emblems, markers). See
 <a href="../decks/sideboard_extra.html">Sideboard, extra list and accessories</a>.</p>
-<div class="note">Older workspaces may have decks that are not virtual. They keep working as before.
-You can make such a deck virtual in its properties, but a virtual deck can't be made non-virtual.</div>
+
+<h3 id="owned-deck">Owned decks</h3>
+<p>If you only build decks from cards you really own, uncheck <b>Virtual</b> when you create the deck. An
+<b>owned deck</b> holds cards you own, taken from your collections. Both kinds of deck can live side by side.</p>
+<ul>
+<li>The choice is made when the deck is created and can't be changed afterwards. The deck starts
+<b>empty</b>, and its sideboard and extra list are owned too.</li>
+<li>Cards get in by <b>moving</b> owned cards from a Standard or For Trade collection, or from another owned deck
+(<b>Move to</b>, drag and drop, the Location column). The cards leave where they were, so the number of cards you
+own does not change.</li>
+<li>Everything that would <i>create</i> cards you don't have is refused, with a message: adding from the
+Scryfall Database, <b>Copy to</b>, Paste, importing a list, raising a Count, and moving a virtual card in (from
+a Wishlist/To Print collection or a virtual deck). To bring in a card you just bought, first move it to a Standard
+collection, then to the deck.</li>
+<li>Cards only leave it by being <b>moved out</b> to a collection. The number of copies can't be changed in an owned
+deck (that is done in a collection), and cards can't be deleted from it. If you delete the whole deck, choose
+<i>Disband</i> to move its cards to the <a href="#main">Main collection</a>.</li>
+<li>The <a href="../plan/proxier.html">Proxier</a> and the <a href="../plan/buyer.html">Buyer</a> leave owned decks
+out, like <a href="../decks/boxed.html">boxed decks</a>: their cards are in use, so they don't count as free stock.
+Your <a href="collector.html">Collector</a> still counts them, since you own them wherever they are.</li>
+</ul>
+<div class="note">Older workspaces may already have decks that are not virtual. They are owned decks and follow
+the same rules. To plan a deck first, create a virtual deck.</div>
 
 <h2 id="ownership">Own and virtual cards</h2>
 <p>Each card in a list is either <b>Own</b> (you have it) or <b>virtual</b> (you don't). The <b>O</b>
 column shows <code>O</code> or <code>V</code>.</p>
 <p>A card's ownership follows its list: a card is Own in a Standard or For Trade collection, and virtual
-in a deck or a Wishlist/To Print collection. You don't need to set it card by card:</p>
+in a (virtual) deck or a Wishlist/To Print collection. Only an <a href="#owned-deck">owned deck</a> holds Own
+cards. You don't need to set it card by card:</p>
 <ul>
 <li>Moving or copying a card into a list gives it that list's ownership.</li>
 <li>A wished card that you bought (or a proxy you printed) becomes Own when you move it to a Standard
@@ -80,8 +102,9 @@ them to match the list.</p>
 only while the collection is empty).</td></tr>
 <tr><td>Read Only</td><td>Both</td><td>Lock the list against changes.</td></tr>
 <tr><td>Unsorted</td><td>Standard and For Trade collections</td><td>Keep the manual order (see <a href="unsorted.html">Unsorted collections</a>).</td></tr>
-<tr><td>Virtual</td><td>Older decks</td><td>Make a non-virtual deck virtual.</td></tr>
-<tr><td>Boxed</td><td>Decks</td><td>The deck is physically put together (see <a href="../decks/boxed.html">Boxed decks</a>).</td></tr>
+<tr><td>Virtual</td><td>Decks</td><td>Shows whether the deck is virtual or an <a href="#owned-deck">owned deck</a>. It is chosen when
+the deck is created and can't be changed.</td></tr>
+<tr><td>Boxed</td><td>Virtual decks</td><td>The deck is physically put together (see <a href="../decks/boxed.html">Boxed decks</a>). Not available for an owned deck.</td></tr>
 <tr><td>Default Format</td><td>Decks</td><td>The format its legality is checked against.</td></tr>
 <tr><td>Sideboard / Extra list</td><td>Decks</td><td>Create the deck's sideboard or extra list.</td></tr>
 <tr><td>Description</td><td>Both</td><td>Your notes.</td></tr>

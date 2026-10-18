@@ -225,6 +225,7 @@
    </entry>
    <entry keyword="Collector">
       <topic href="html/collection/collector.html" title="Collector"/>
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
       <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
       <topic href="html/collection/my_cards.html" title="My Cards"/>
       <topic href="html/database/prices.html" title="Prices"/>
@@ -615,6 +616,7 @@
       <topic href="html/collection/concepts.html" title="Decks and collections"/>
       <topic href="html/collection/create_collection.html" title="Creating collections and folders"/>
       <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
       <topic href="html/database/prices.html" title="Prices"/>
       <topic href="html/database/update.html" title="Updating the card database"/>
       <topic href="html/data/workspace.html" title="Your workspace"/>
@@ -680,6 +682,7 @@
       <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
    </entry>
    <entry keyword="Location">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
       <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
       <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
       <topic href="html/collection/my_cards.html" title="My Cards"/>
@@ -838,6 +841,9 @@
       <topic href="html/support/faq.html" title="Troubleshooting and FAQ"/>
       <topic href="html/transfer/import.html" title="Importing cards"/>
       <topic href="html/collection/concepts.html#ownership" title="Decks and collections - Own and virtual cards"/>
+   </entry>
+   <entry keyword="Owned decks">
+      <topic href="html/collection/concepts.html#owned-deck" title="Decks and collections - Owned decks"/>
    </entry>
    <entry keyword="Ownership">
       <topic href="html/collection/concepts.html" title="Decks and collections"/>
@@ -1064,7 +1070,9 @@
       <topic href="html/find/filter.html#save" title="Searching and filtering - Save/Load Filter"/>
    </entry>
    <entry keyword="Scryfall">
+      <topic href="html/collection/concepts.html" title="Decks and collections"/>
       <topic href="html/collection/edit_cards.html" title="Adding and editing cards"/>
+      <topic href="html/collection/move_copy.html" title="Moving, copying and splitting"/>
       <topic href="html/database/prices.html" title="Prices"/>
       <topic href="html/database/update.html" title="Updating the card database"/>
       <topic href="html/decks/deck_view.html" title="The Deck view"/>

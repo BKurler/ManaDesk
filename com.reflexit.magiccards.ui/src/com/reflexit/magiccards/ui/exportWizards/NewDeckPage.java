@@ -37,12 +37,19 @@
  *                         request, so a miss never touches the combo.
  *     Rémi Dutil (2026) - a new deck is always virtual (no more Virtual
  *                         checkbox); a hint above Name says so.
+ *     Rémi Dutil (2026) - a Virtual checkbox is back (checked by default):
+ *                         unchecked, the deck is an owned deck - forced
+ *                         empty, no import, and its sideboard / extra list
+ *                         are owned too. Read only, Import Format and Example
+ *                         are greyed for it.
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.swt.SWT;
+import org.eclipse.swt.events.SelectionAdapter;
+import org.eclipse.swt.events.SelectionEvent;
 import org.eclipse.swt.widgets.Button;
 import org.eclipse.swt.widgets.Combo;
 import org.eclipse.swt.widgets.Group;
@@ -54,12 +61,15 @@ import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.nav.ModelRoot;
+import com.reflexit.magiccards.ui.utils.StatusDots;
 import com.reflexit.magiccards.ui.utils.WaitUtils;
 
 public class NewDeckPage extends AbstractCreateElementPage {
 	private Button createSideboard;
 	private Button createExtra;
 	private Combo formatCombo;
+	private Button virtualCheck;
+	private Label virtualHint;
 
 	public NewDeckPage(String pageName, IStructuredSelection selection) {
 		super(pageName, selection);
@@ -75,17 +85,52 @@ public class NewDeckPage extends AbstractCreateElementPage {
 		return ModelRoot.Side.DECK;
 	}
 
-	/** A deck is always virtual - it lists cards, it does not own them. */
+	/** A deck is virtual by default - it lists cards, it does not own them. Unchecked, it is
+	 *  an owned deck: created empty, then filled by moving cards in from a collection. */
 	@Override
 	protected boolean wantVirtual() {
-		return true;
+		return virtualCheck == null || virtualCheck.isDisposed() || virtualCheck.getSelection();
+	}
+
+	@Override
+	protected boolean importAllowed() {
+		return wantVirtual();
 	}
 
 	@Override
 	protected void createLeadingOptions(Group group) {
-		Label hint = new Label(group, SWT.WRAP);
-		hint.setText("A deck is virtual: it lists the cards to play. The cards you own stay in your collections.");
-		hint.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).span(3, 1).hint(300, SWT.DEFAULT).create());
+		virtualCheck = StatusDots.check(group, StatusDots.VIRTUAL, "Virtual");
+		virtualCheck.setSelection(true); // StatusDots.check() already spans the row
+		virtualCheck.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				updateVirtualState();
+			}
+		});
+		virtualHint = new Label(group, SWT.WRAP);
+		virtualHint.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).span(3, 1).hint(300, SWT.DEFAULT).create());
+		updateVirtualHint();
+	}
+
+	/** An owned deck starts empty and is filled by moving cards in: no import, and locking it
+	 *  (Read only) would make that impossible. */
+	private void updateVirtualState() {
+		updateVirtualHint();
+		boolean virtual = wantVirtual();
+		if (newReadOnly != null && !newReadOnly.isDisposed()) {
+			if (!virtual)
+				newReadOnly.setSelection(false);
+			newReadOnly.setEnabled(virtual);
+		}
+		syncImportAllowed();
+	}
+
+	private void updateVirtualHint() {
+		virtualHint.setText(wantVirtual()
+				? "A virtual deck lists the cards to play. The cards you own stay in your collections."
+				: "An owned deck holds cards you own. It starts empty: move cards into it from a collection."
+						+ " Its sideboard and extra list are owned too.");
+		virtualHint.getParent().layout(true, true);
 	}
 
 	@Override

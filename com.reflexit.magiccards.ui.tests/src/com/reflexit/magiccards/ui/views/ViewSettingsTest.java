@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - merging a smaller viewer's layout keeps the other columns in place
  *******************************************************************************/
 
 package com.reflexit.magiccards.ui.views;
@@ -46,10 +47,69 @@ public class ViewSettingsTest extends TestCase {
 		assertEquals("Count:45,Name:280,Set:165", merged);
 	}
 
-	public void testMergeKeepsTheViewerOrder() {
+	public void testMergeKeepsTheViewerOrderAmongItsColumns() {
+		// the viewer swapped Name and Set: they swap in their slots, the others stay put
 		String table = "Set:165,Name:280";
-		assertEquals("Set:165,Name:280,-Card Id:260,-Count:45,-Comment:100,-Date:100",
+		assertEquals("Set:165,-Card Id:260,Name:280,-Count:45,-Comment:100,-Date:100",
 				AbstractMagicCardsListControl.mergeColumnLayout(table, FULL));
+	}
+
+	public void testMergeNeverMovesTheColumnsTheViewerDoesNotHave() {
+		// the Split view has no Count / Ownership: saving from it used to put its own
+		// columns first and push Count into the middle of the shared layout
+		String stored = "Count:45,Name:280,Set:165,Ownership:25,Type:200,-Card Id:260,Comment:100";
+		String split = "Name:280,Set:165,Type:200,-Card Id:260";
+		assertEquals(stored, AbstractMagicCardsListControl.mergeColumnLayout(split, stored));
+	}
+
+	public void testMergeSplitViewKeepsCountFirstAfterRestoreDefaults() {
+		// restore defaults, then a viewer that does not know Count saves: Count stays first
+		String defaults = "Count,Name,-Card Id,Set,Collector's Number,Ownership,Finish,Condition,Proxy,Type,Cost";
+		String split = "Name:280,-Card Id:260,Set:165,Collector's Number:60,Finish:63,Type:200,Cost:100";
+		String merged = AbstractMagicCardsListControl.mergeColumnLayout(split, defaults);
+		assertTrue(merged, merged.startsWith("Count,Name:280,-Card Id:260,Set:165,Collector's Number:60,Ownership,"));
+		assertEquals("Count,Name:280,-Card Id:260,Set:165,Collector's Number:60,Ownership,Finish:63,Condition,Proxy,"
+				+ "Type:200,Cost:100", merged);
+	}
+
+	public void testTreeKeepsNameWhereTheSharedLayoutHasIt() {
+		// the tree shows Name first on screen: its layout is "Name,Count,Set,..." but the
+		// shared one has Count first and that must not change
+		String treeLayout = "Name:280,Count:45,Set:165,-Card Id:260";
+		String stored = "Count:45,Name:250,Set:165,-Card Id:260";
+		assertEquals("Count:45,Name:280,Set:165,-Card Id:260",
+				AbstractMagicCardsListControl.keepColumnSlot(treeLayout, stored, "Name"));
+		// the other columns still follow the tree's order (the user dragged Set before Count)
+		assertEquals("Set:165,Count:45,Name:280,-Card Id:260",
+				AbstractMagicCardsListControl.keepColumnSlot("Name:280,Set:165,Count:45,-Card Id:260",
+						"Count:45,Name:250,Set:165,-Card Id:260", "Name"));
+	}
+
+	public void testKeepColumnSlotWhenNameIsFirstInTheSharedLayout() {
+		assertEquals("Name:280,Count:45,Set:165", AbstractMagicCardsListControl
+				.keepColumnSlot("Name:280,Count:45,Set:165", "Name:250,Count:45,Set:165", "Name"));
+	}
+
+	public void testKeepColumnSlotWithoutStoredOrColumn() {
+		assertEquals("Name:280,Set:165", AbstractMagicCardsListControl.keepColumnSlot("Name:280,Set:165", null, "Name"));
+		assertEquals("Count:45,Set:165",
+				AbstractMagicCardsListControl.keepColumnSlot("Count:45,Set:165", "Name:250,Set:165", "Name"));
+	}
+
+	public void testTreeSaveThenTableLoadKeepsCountFirst() {
+		String stored = "Count:45,Name:250,Set:165,Type:200";
+		String tree = AbstractMagicCardsListControl.keepColumnSlot("Name:280,Count:45,Set:165,Type:200", stored, "Name");
+		assertEquals("Count:45,Name:280,Set:165,Type:200", AbstractMagicCardsListControl.mergeColumnLayout(tree, stored));
+	}
+
+	public void testMergeAppendsColumnsOnlyTheViewerKnows() {
+		assertEquals("Name:280,Set:165,Extra:50",
+				AbstractMagicCardsListControl.mergeColumnLayout("Extra:50,Name:280", "Name:280,Set:165"));
+	}
+
+	public void testMergeToleratesDuplicatesAndBlanks() {
+		assertEquals("Name:280,Set:165", AbstractMagicCardsListControl.mergeColumnLayout("Name:280, ,Name:100",
+				"Name:50,,Set:165,Name:60"));
 	}
 
 	public void testMergeWithNothingStored() {

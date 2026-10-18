@@ -16,6 +16,8 @@
  *                         (Owned / Boxed counted for that finish only) - the
  *                         Buyer needs foil and non-foil apart; the Proxier
  *                         keeps pooling finishes.
+ *     Rémi Dutil (2026) - an owned (non-virtual) deck claims its copies, like a
+ *                         boxed deck.
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.nav;
 
@@ -265,8 +267,15 @@ public final class DeckNeeds {
 	private static Map<String, Split> computeBoxedCounts(boolean exact, boolean byFinish) {
 		Map<String, Split> boxed = new HashMap<>();
 		for (CardCollection cc : DataManager.getInstance().getModelRoot().getDeckContainer().getAllElements()) {
-			if (!cc.isDeck() || !cc.isBoxed())
+			if (!cc.isDeck())
 				continue;
+			// a boxed deck, or a deck of owned cards (its copies are not free either)
+			if (!cc.isBoxed()) {
+				Location loc = cc.getLocation();
+				// its sideboard / extra are read together with the main deck below
+				if (!cc.isOwnedDeck() || (loc != null && (loc.isSideboard() || loc.isExtra())))
+					continue;
+			}
 			for (SourcedCard sc : cardsOfWithSuffix(cc)) {
 				if (!(sc.card instanceof MagicCardPhysical))
 					continue;

@@ -81,6 +81,12 @@
  *                         onto the selected row, so the keyboard works at once.
  *     Rémi Dutil (2026) - confirm before a copy turns virtual cards into
  *                         owned ones (OwnershipConfirmation)
+ *     Rémi Dutil (2026) - Paste reports an owned deck refusing the cards
+ *     Rémi Dutil (2026) - the split-tree viewer gets the list's own column set (it used the
+ *                         database's: a deck or collection lost Count, Ownership...)
+ *     Rémi Dutil (2026) - mergeColumnLayout(): a viewer with fewer columns (Split view)
+ *                         no longer puts its own list first, which moved Count into
+ *                         the middle of the shared layout
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -99,6 +105,7 @@ import org.eclipse.jface.action.Action;
 import org.eclipse.jface.action.IMenuManager;
 import org.eclipse.jface.action.IToolBarManager;
 import org.eclipse.jface.action.MenuManager;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.layout.GridDataFactory;
 import org.eclipse.jface.layout.GridLayoutFactory;
 import org.eclipse.jface.preference.IPersistentPreferenceStore;
@@ -553,7 +560,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 			return v;
 		}
 		if (presentation == Presentation.SPLITTREE)
-			return new SplitViewer(parent, getPreferencePageId());
+			return new SplitViewer(parent, getPreferencePageId(), columns);
 
 		if (presentation == Presentation.GALLERY)
 			return new com.reflexit.magiccards.ui.gallery.SplitGalleryViewer(parent, getPreferencePageId());
@@ -2648,8 +2655,12 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		if (contents instanceof Collection) {
 			Collection resolved = DM.resolve((Collection) contents);
 			ICardStore dest = getFilteredStore().getCardStore();
-			if (OwnershipConfirmation.confirmCopy(getControl().getShell(), resolved, dest))
-				DM.copyCards(resolved, dest);
+			try {
+				if (OwnershipConfirmation.confirmCopy(getControl().getShell(), resolved, dest))
+					DM.copyCards(resolved, dest);
+			} catch (MagicException e) {
+				MessageDialog.openError(getControl().getShell(), "Error", e.getMessage());
+			}
 		} else {
 			Control fc = getControl().getDisplay().getFocusControl();
 			CopySupport.runPaste(fc);
@@ -2922,8 +2933,13 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		IPersistentPreferenceStore store = getColumnsPreferenceStore();
 		// the store is shared by viewers that know different columns (a Split
 		// view has fewer than a table): keep the entries this one doesn't know
-		final String value = mergeColumnLayout(own, store.getString(PreferenceConstants.LOCAL_COLUMNS));
-		if (value.equals(store.getString(PreferenceConstants.LOCAL_COLUMNS)))
+		String stored = store.getString(PreferenceConstants.LOCAL_COLUMNS);
+		// a tree always shows the Name column (the group labels) first on screen: that is
+		// not part of the layout, so it must not move Name in the one shared with the tables
+		if (viewer instanceof ExtendedTreeViewer)
+			own = keepColumnSlot(own, stored, GroupColumn.COL_NAME);
+		final String value = mergeColumnLayout(own, stored);
+		if (value.equals(stored))
 			return;
 		vtrace("saveColumnLayout: '" + store.getString(PreferenceConstants.LOCAL_COLUMNS) + "' -> '" + value
 				+ "' from " + viewer.getClass().getSimpleName() + " " + storesForTrace());
@@ -2945,24 +2961,87 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 	}
 
 	/**
-	 * {@code own} (a viewer's layout: "Name:280,-Card Id:260,...") followed by
-	 * the entries of {@code stored} for the columns {@code own} doesn't list,
-	 * in their stored order - so saving from a viewer with fewer columns never
-	 * drops the visibility, width and order of the others.
+	 * {@code own} (a viewer's layout: "Name:280,-Card Id:260,...") merged into
+	 * {@code stored}, the layout shared by every viewer of the list. A viewer
+	 * with fewer columns (the Split view has no Count, Ownership...) must not
+	 * move the others: the columns it does not know keep their stored
+	 * position, and the ones it knows take its width and visibility and, among
+	 * themselves, its order - they fill the slots they held in the stored
+	 * layout. Columns only the viewer knows go at the end.
 	 */
 	static String mergeColumnLayout(String own, String stored) {
 		if (stored == null || stored.isEmpty())
 			return own;
-		java.util.Set<String> known = new java.util.HashSet<>();
-		for (String e : own.split(","))
-			known.add(columnEntryName(e));
-		StringBuilder res = new StringBuilder(own);
-		for (String e : stored.split(",")) {
+		java.util.List<String> ownEntries = columnEntries(own);
+		java.util.Set<String> ownNames = new java.util.HashSet<>();
+		for (String e : ownEntries)
+			ownNames.add(columnEntryName(e));
+		java.util.Set<String> storedNames = new java.util.LinkedHashSet<>();
+		java.util.List<String> storedEntries = new java.util.ArrayList<>();
+		for (String e : columnEntries(stored))
+			if (storedNames.add(columnEntryName(e)))
+				storedEntries.add(e);
+		// the viewer's entries for columns that are also stored, in the viewer's order
+		java.util.List<String> refill = new java.util.ArrayList<>();
+		for (String e : ownEntries)
+			if (storedNames.contains(columnEntryName(e)))
+				refill.add(e);
+		java.util.Iterator<String> next = refill.iterator();
+		StringBuilder res = new StringBuilder();
+		for (String e : storedEntries) {
+			if (res.length() > 0)
+				res.append(',');
+			res.append(ownNames.contains(columnEntryName(e)) ? next.next() : e);
+		}
+		java.util.Set<String> added = new java.util.HashSet<>();
+		for (String e : ownEntries) {
 			String name = columnEntryName(e);
-			if (!name.isEmpty() && known.add(name))
-				res.append(',').append(e.trim());
+			if (!storedNames.contains(name) && added.add(name))
+				res.append(',').append(e);
 		}
 		return res.toString();
+	}
+
+	/**
+	 * {@code own} with the entry of column {@code name} put back right after the
+	 * column that precedes it in {@code stored} (its own width and visibility are
+	 * kept): for a viewer that moves that column to the front on screen only.
+	 */
+	static String keepColumnSlot(String own, String stored, String name) {
+		if (stored == null || stored.isEmpty())
+			return own;
+		java.util.List<String> ownEntries = columnEntries(own);
+		java.util.List<String> storedEntries = columnEntries(stored);
+		int inOwn = columnEntryIndex(ownEntries, name);
+		int inStored = columnEntryIndex(storedEntries, name);
+		if (inOwn < 0 || inStored < 0)
+			return own;
+		String entry = ownEntries.remove(inOwn);
+		int at = 0;
+		if (inStored > 0) {
+			int prev = columnEntryIndex(ownEntries, columnEntryName(storedEntries.get(inStored - 1)));
+			at = prev < 0 ? Math.min(inStored, ownEntries.size()) : prev + 1;
+		}
+		ownEntries.add(at, entry);
+		return String.join(",", ownEntries);
+	}
+
+	private static int columnEntryIndex(java.util.List<String> entries, String name) {
+		for (int i = 0; i < entries.size(); i++)
+			if (columnEntryName(entries.get(i)).equals(name))
+				return i;
+		return -1;
+	}
+
+	/** The non-empty, trimmed entries of a layout, in order. */
+	private static java.util.List<String> columnEntries(String layout) {
+		java.util.List<String> res = new java.util.ArrayList<>();
+		for (String e : layout.split(",")) {
+			String t = e.trim();
+			if (!columnEntryName(t).isEmpty())
+				res.add(t);
+		}
+		return res;
 	}
 
 	/** "-Card Id:260" -> "Card Id". */

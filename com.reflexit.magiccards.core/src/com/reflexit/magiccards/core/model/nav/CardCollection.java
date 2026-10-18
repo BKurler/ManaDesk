@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isOwnedDeck(): a non-virtual deck (cards you own).
  *     Rémi Dutil (2026) - isBoxed(): "physically boxed up" marker for the
  *                         Proxier view (manual, no automatic behavior)
  *     Rémi Dutil (2026) - getDefaultFormat(): a deck's own default legality
@@ -217,6 +218,15 @@ public class CardCollection extends CardElement {
 	public boolean isBoxed() {
 		IStorageInfo info = getStorageInfo();
 		return info != null && info.isBoxed();
+	}
+
+	/**
+	 * True for a deck that is not virtual: it holds cards you own (moved in from
+	 * a collection), so those copies are spoken for - the Proxier and the Buyer
+	 * leave the deck out and treat its cards like a boxed deck's.
+	 */
+	public boolean isOwnedDeck() {
+		return isDeck() && !isVirtual();
 	}
 
 	/** This deck's default legality format ("Standard", "Modern", ...), or

@@ -36,6 +36,11 @@
  *                         when the cards allow it. A deck's Virtual checkbox
  *                         is one-way: a non-virtual (legacy) deck can be made
  *                         virtual, a virtual deck cannot be made non-virtual.
+ *     Rémi Dutil (2026) - a deck's Virtual checkbox is now read-only for both
+ *                         kinds (virtual / owned deck): the kind is chosen when
+ *                         the deck is created.
+ *     Rémi Dutil (2026) - Boxed is greyed for an owned (non-virtual) deck, and
+ *                         turning it on for a virtual deck asks for a confirmation.
  *     Rémi Dutil (2026) - only the fields that apply are shown: a collection
  *                         gets Unsorted (Standard / For Trade only); a deck
  *                         gets Boxed, Default Format and the Sideboard /
@@ -169,6 +174,11 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			// Boxed, Sideboard / Extra and Default Format are deck-only notions
 			boxed = StatusDots.check(comp, StatusDots.BOXED, "Boxed (physically pulled together)");
 			boxed.setSelection(info.isBoxed());
+			if (!info.isVirtual()) {
+				// an owned deck's cards are already in use: the Proxier and Buyer leave it out
+				boxed.setEnabled(false);
+				boxed.setToolTipText("Not needed for an owned deck: its cards are already in use.");
+			}
 			createFamilyGroup(comp);
 			createFormatField(comp, cols);
 		} else {
@@ -257,19 +267,20 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	}
 
 	/**
-	 * A deck's "Virtual" checkbox - one way only. New decks are always
-	 * virtual and cannot be made non-virtual; an existing non-virtual deck
-	 * keeps that status until the user checks the box.
+	 * A deck's "Virtual" checkbox - shown for information only. It is chosen
+	 * when the deck is created and cannot change afterwards: a virtual deck
+	 * lists cards, an owned deck holds the cards you own.
 	 */
 	private void createDeckVirtualField(Composite comp, int cols) {
 		boolean isVirtual = info.isVirtual();
 		virtual = StatusDots.check(comp, StatusDots.VIRTUAL,
-				isVirtual ? "Virtual (a deck is always virtual)"
-						: "Virtual (check to make this deck virtual - this cannot be undone)");
+				isVirtual ? "Virtual (a deck that lists the cards to play)"
+						: "Not virtual (an owned deck: it holds cards you own)");
 		virtual.setSelection(isVirtual);
-		virtual.setEnabled(!isVirtual);
-		virtual.setToolTipText("A deck lists the cards to play; the cards you own stay in your collections."
-				+ " An older non-virtual deck can be made virtual, but no deck can be made non-virtual.");
+		virtual.setEnabled(false);
+		virtual.setToolTipText("Chosen when the deck is created; it cannot be changed afterwards."
+				+ " A virtual deck lists the cards to play (the cards you own stay in your collections);"
+				+ " an owned deck holds cards you own, moved in from a collection.");
 	}
 
 	/**
@@ -379,8 +390,19 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		}
 	}
 
+	/** True when saving turns Boxed on for a deck that was not boxed: that is confirmed first. */
+	static boolean needsBoxedConfirmation(boolean wasBoxed, boolean nowBoxed, boolean boxedEnabled) {
+		return boxedEnabled && nowBoxed && !wasBoxed;
+	}
+
 	@Override
 	protected void okPressed() {
+		if (boxed != null && needsBoxedConfirmation(info.isBoxed(), boxed.getSelection(), boxed.isEnabled())
+				&& !MessageDialog.openConfirm(getShell(), "Boxed Deck",
+						"Boxed means every card of this deck is really in its box.\n\n"
+								+ "The Proxier and the Buyer will treat all its cards as in use, and leave the deck out.\n\n"
+								+ "Is the deck completely put together in its box?"))
+			return;
 		if (!applyRename())
 			return;
 		try {
@@ -426,9 +448,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (!mainCollection)
 			info.setComment(text.getText());
 		if (deckType) {
-			// one way: a deck can become virtual, never non-virtual
-			if (virtual.getSelection() && !info.isVirtual())
-				info.setVirtual(true);
+			// the deck's kind (virtual / owned) is fixed when it is created
 		} else {
 			CollectionType t = selectedCollectionType();
 			if (t != null && t != info.getCollectionType())

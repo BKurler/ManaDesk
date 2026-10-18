@@ -37,6 +37,12 @@ read-only, it is the current list, or the ownership rules below don't allow it).
 <tr><td><b>Copy</b> a virtual card</td><td>Allowed &mdash; the copy is Own, after a confirmation</td><td>Allowed</td></tr>
 </table>
 
+<p>In the table, "deck" means a virtual deck. An <a href="concepts.html#owned-deck">owned deck</a> only receives
+<b>owned cards that you move in</b> from a Standard or For Trade collection or another owned deck. Copying, pasting, adding from the Scryfall Database, importing
+and raising a Count are refused, and so is moving a virtual card in, because they would create cards you don't
+own. Lowering a Count and deleting cards are refused too: cards only leave an owned deck by being moved out. Its entry is greyed in the Copy to and Add to menus, and in the Move to menu when virtual cards are
+selected.</p>
+
 <h3>"Virtual Cards Become Own"</h3>
 <p>Moving (or copying) virtual cards into a Standard or For Trade collection means you now own them
 &mdash; you bought the card, or printed the proxy. ManaDesk asks first:</p>
