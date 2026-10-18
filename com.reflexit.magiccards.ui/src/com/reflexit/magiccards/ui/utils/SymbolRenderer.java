@@ -18,6 +18,7 @@
  *******************************************************************************/
 package com.reflexit.magiccards.ui.utils;
 
+import java.io.File;
 import java.net.URL;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -68,6 +69,21 @@ public final class SymbolRenderer {
 	// base PNGs (per PNG path)
 	private static final Map<String, Image> BASE_SYMBOL_CACHE = new HashMap<>();
 
+	/** {@code true} if the symbol picture ships with the application (else it is rendered on update). */
+	public static boolean isBundledSymbol(String pngName) {
+		return SymbolRenderer.class.getClassLoader().getResource("icons/symbols/" + pngName) != null;
+	}
+
+	/** The {@code src} of a symbol picture in the card HTML: the bundled file, else the one rendered on update. */
+	private static String symbolSrc(String png) {
+		if (!isBundledSymbol(png)) {
+			File local = SymbolConverter.getLocalPng(png);
+			if (local != null)
+				return local.toURI().toString();
+		}
+		return "icons/symbols/" + png;
+	}
+
 	// Load a single mana symbol PNG from icons/symbols/
 	public static Image getManaSymbolImage(String symbol, String path) {
 		Image cached = BASE_SYMBOL_CACHE.get(path);
@@ -77,6 +93,12 @@ public final class SymbolRenderer {
 
 		try {
 			URL url = SymbolRenderer.class.getClassLoader().getResource(path);
+			if (url == null) {
+				// a symbol added after this build: rendered from Scryfall on database update
+				File local = SymbolConverter.getLocalPng(path.substring(path.lastIndexOf('/') + 1));
+				if (local != null)
+					url = local.toURI().toURL();
+			}
 			if (url == null) {
 				System.err.println("Missing symbol PNG: " + path);
 				return null;
@@ -303,7 +325,7 @@ public final class SymbolRenderer {
 					String file = SymbolConverter.getScryfallFilename(symbol);
 					if (file != null) {
 						String png = file.replace(".svg", ".png");
-						String path = "icons/symbols/" + png;
+						String path = symbolSrc(png);
 
 						// Insert HTML <img> tag
 						out.append("<img src=\"").append(path).append("\" style=\"vertical-align:middle;\"/>");

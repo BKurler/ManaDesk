@@ -57,23 +57,33 @@ save it in the filter dialog's <a href="#save">Save/Load Filter</a> tab.</p>
 
 <h3>Main Filter</h3>
 <p class="shot"><img src="../images/filter_dialog_basic.png" alt="Screenshot: Filter dialog, Main Filter tab"></p>
+<p>The picture shows the dialog as it opens from <b>My Cards</b>, its fullest form. The other views show the same
+dialog with fewer fields:</p>
+<table>
+<tr><th>Fields and tabs</th><th>Scryfall Database, Printings</th><th>My Cards</th><th>Decks and collections</th></tr>
+<tr><td>Types, Rarity, Colors, Numbers, Finish, Name, Type, Text, Artist, Legality, Language</td><td>yes</td><td>yes</td><td>yes</td></tr>
+<tr><td>Set Filter and Save/Load Filter tabs</td><td>yes</td><td>yes</td><td>yes</td></tr>
+<tr><td>Condition, Ownership, Proxy, Count, User Price, Comment, Special</td><td>&mdash;</td><td>yes</td><td>yes</td></tr>
+<tr><td><a href="#location">Location Filter</a> tab</td><td>&mdash;</td><td>yes</td><td>&mdash;</td></tr>
+</table>
 <ul>
 <li><b>Types</b>, <b>Rarity</b>, <b>Colors</b> &mdash; check what you want to see. In Colors:
 <b>Mono-Color</b> and <b>Multi-Color</b> keep one-color or several-color cards; <b>Hybrid</b> keeps cards
 with hybrid mana; <b>And</b> asks for all the checked colors instead of any of them; <b>Only</b> excludes
-the other colors; <b>Identity</b> and <b>Extended Identity</b> match the checked colors against the card's
-color identity or extended color identity instead of its color (see
+the other colors; <b>Identity</b>, <b>Extended Identity</b> and <b>Produced</b> match the checked colors against the card's
+color identity, extended color identity or the mana it produces instead of its color (see
 <a href="../reference/columns.html#identity">Color identity</a>).</li>
-<li><b>Numbers</b> &mdash; mana value, power, toughness, count, prices, collector number... Each can be a
-single value with a comparison (<code>&gt;=</code>, <code>=</code>...) or a <b>range</b> (from... to...).</li>
+<li><b>Numbers</b> &mdash; mana value, power, toughness, online price, collector number and (for your own cards) count
+and user price. Each can be a single value with a comparison (<code>&gt;=</code>, <code>=</code>...) or a
+<b>range</b> (from... to...).</li>
 <li><b>Finish</b> &mdash; non-foil, foil, etched.</li>
 <li>For your own cards: <b>Condition</b>, <b>Ownership</b> (own / virtual) and <b>Proxy</b>.</li>
-<li><b>Text search</b> &mdash; name, type line, rules text, artist, your comment, special tags, legality,
-language. As you type in the <b>Text</b> field, it suggests keyword abilities (Flying, Deathtouch,
-Cascade...); the <b>Type</b> field suggests card types and the <b>Special</b> field your tags.</li>
+<li><b>Text search</b> &mdash; name, type line, rules text, artist, legality, language and, for your own cards, your
+comment and special tags. In the <b>Text</b> field, type <code>[</code> to get suggestions for abilities and traits
+(<code>[Flying]</code>, <code>[Cascade]</code>, <code>[Showcase]</code>...); the <b>Type</b> field suggests card
+types as you type.</li>
 </ul>
-<p class="shot"><img src="../images/filter_dialog_ranges.png" alt="Screenshot: Filter dialog with ranges filled in"></p>
-<p class="shot"><img src="../images/filter_dialog_text.png" alt="Screenshot: Filter dialog, Text field with ability suggestions"></p>
+<p class="shot"><img src="../images/filter_dialog_text.png" alt="Screenshot: Filter dialog, Text field with its suggestions"></p>
 <p>The <b>Search Tips</b> panel at the bottom of the dialog explains the search syntax for the field you
 are in. It is also in <a href="../reference/syntax.html">Filter and search syntax</a>.</p>
 
@@ -84,7 +94,7 @@ selected. <i>Only show the card from the latest set</i> keeps a single printing 
 <p>Set lists are in alphabetical order. To list them by release date (oldest first) instead, check
 <i>List sets by release date</i> in <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span>.</p>
 
-<h3>Location Filter (My Cards)</h3>
+<h3 id="location">Location Filter (My Cards)</h3>
 <p>Only show the cards that are in the decks and collections you check.</p>
 
 <h3 id="save">Save/Load Filter</h3>

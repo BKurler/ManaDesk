@@ -6,6 +6,7 @@
  *                         Rarity, not tied to any owned copy - matches the
  *                         Scryfall Database view, which already carries it
  *                         (MagicColumnCollection#createColumns())
+ *     Rémi Dutil (2026) - Traits column (carries Reprint)
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -40,6 +41,7 @@ public class PrintingsColumnCollection extends MagicColumnCollection {
 		columns.add(new GenColumn(MagicCardField.ARTIST, "Artist"));
 		columns.add(new LanguageColumn());            // "Language"
 		columns.add(new ReleaseDateColumn());         // "Release Date"
+		columns.add(new GenColumn(MagicCardField.TRAITS, "Traits"));  // Reprint (and the card-level facts)
 		columns.add(createIdColumn());                 // "Card Id"
 		columns.add(new SellerPriceColumn());        // "Online Price"
 		columns.add(new GenColumn(MagicCardField.TCGID, "TCGplayer ID"));

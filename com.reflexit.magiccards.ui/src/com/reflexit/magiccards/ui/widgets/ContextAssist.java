@@ -2,6 +2,7 @@ package com.reflexit.magiccards.ui.widgets;
 
 import org.eclipse.jface.fieldassist.ComboContentAdapter;
 import org.eclipse.jface.fieldassist.ContentProposalAdapter;
+import org.eclipse.jface.fieldassist.ContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposal;
 import org.eclipse.jface.fieldassist.IContentProposalProvider;
 import org.eclipse.jface.fieldassist.IControlContentAdapter;
@@ -37,6 +38,43 @@ public class ContextAssist {
 			}
 			return super.getProposals(contents, position);
 		}
+	}
+
+	/**
+	 * Suggestions that appear only <em>inside a bracket</em>: typing "[fl" offers "Flying]",
+	 * typing plain words offers nothing. For the Text search, where "[name]" looks up an
+	 * ability or a trait (see FilterSyntaxHelp).
+	 */
+	public static ContentProposalAdapter addBracketAssist(Text t, final String[] proposals) {
+		IContentProposalProvider provider = new IContentProposalProvider() {
+			@Override
+			public IContentProposal[] getProposals(String contents, int position) {
+				return bracketProposals(proposals, contents, position);
+			}
+		};
+		return new ContentProposalAdapter(t, new TextContentAdapter(), provider, null, null);
+	}
+
+	/**
+	 * The suggestions for the text before the cursor: only when the cursor is inside an open
+	 * "[" (no "]" since), the names that start with what was typed after it, each completing
+	 * the name and closing the bracket.
+	 */
+	static IContentProposal[] bracketProposals(String[] names, String contents, int position) {
+		if (contents == null || position < 0 || position > contents.length())
+			return new IContentProposal[0];
+		String before = contents.substring(0, position);
+		int open = before.lastIndexOf('[');
+		if (open < 0 || before.lastIndexOf(']') > open)
+			return new IContentProposal[0];
+		String prefix = before.substring(open + 1);
+		String lower = prefix.toLowerCase(java.util.Locale.ROOT);
+		java.util.List<IContentProposal> res = new java.util.ArrayList<IContentProposal>();
+		for (String name : names) {
+			if (name.toLowerCase(java.util.Locale.ROOT).startsWith(lower))
+				res.add(new ContentProposal(name.substring(prefix.length()) + "]", name, null));
+		}
+		return res.toArray(new IContentProposal[res.size()]);
 	}
 
 	public static ContentProposalAdapter addContextAssist(Control t, String[] proposals, final boolean multi) {

@@ -99,6 +99,11 @@ public class AllLocalTests {
 		suite.addTestSuite(MagicCardComparatorTest.class);
 		suite.addTestSuite(LegalityMapTest.class);
 		suite.addTestSuite(AbilitiesTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardTraitsTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.ExtendedColorIdentityTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardTypesProposalsTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.ScryfallReferenceTest.class);
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.sync.ScryfallCardFactsTest.class));
 		suite.addTest(new JUnit4TestAdapter(MagicCardListTest.class));
 		suite.addTest(new JUnit4TestAdapter(PlayingDeckTest.class));
 		suite.addTest(new JUnit4TestAdapter(ScryfallBulkSplitTest.class));

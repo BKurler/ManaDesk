@@ -207,6 +207,29 @@ public class DeckAccessoriesTest {
 	}
 
 	@Test
+	public void tokenIdentityKnowsEveryOfficialKeyword() {
+		// "toxic" is not in TOKEN_TRAITS - it comes from Scryfall's keyword list
+		MagicCard a = new MagicCard();
+		a.setName("Phyrexian Mite");
+		a.setPower("1");
+		a.setToughness("1");
+		a.setOracleText("Toxic 1 (Players dealt combat damage by this creature also get a poison counter.)");
+		MagicCard b = new MagicCard();
+		b.setName("Phyrexian Mite");
+		b.setPower("1");
+		b.setToughness("1");
+		b.setOracleText("");
+		Assert.assertNotEquals(DeckAccessories.identity(a), DeckAccessories.identity(b));
+	}
+
+	@Test
+	public void tokenKeywordsMatchWholeWordsOnly() {
+		// "Enchant" is a keyword, "enchanted" in the text of a token is not
+		Assert.assertEquals("", DeckAccessories.tokenTraits("Enchanted creature gets +1/+1."));
+		Assert.assertEquals("enchant;", DeckAccessories.tokenTraits("Enchant creature"));
+	}
+
+	@Test
 	public void tokenIdentityIgnoresRulingsLinkJunkInOracle() {
 		// some DB token records carry a stray per-printing "Rulings" html link
 		MagicCard a = new MagicCard();

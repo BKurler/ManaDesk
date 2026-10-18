@@ -199,6 +199,33 @@ public class MagicXmlHandlerTest extends TestCase {
 		assertEquals(CardCondition.HEAVILY_PLAYED, p.getCondition());
 	}
 
+	public void testXStreamAroundKeywords() {
+		// the card's Scryfall keywords live in the property map and must survive a save / load
+		MagicCard card = CardGenerator.generateCardWithValues();
+		card.set(MagicCardField.KEYWORDS, "Trample|Landfall");
+		String xml = handler.toXML(card);
+		CardCollectionStoreObject object = handler.fromXML(xml);
+		MagicCard back = (MagicCard) object.list.get(0);
+		assertEquals("Trample|Landfall", back.getKeywords());
+	}
+
+	public void testXStreamAroundCardFacts() {
+		// the Scryfall facts live in the property map and must survive a save / load
+		MagicCard card = CardGenerator.generateCardWithValues();
+		card.set(MagicCardField.RESERVED, "true");
+		card.set(MagicCardField.REPRINT, "true");
+		card.set(MagicCardField.GAME_CHANGER, "true");
+		card.set(MagicCardField.EDHREC_RANK, 42);
+		card.set(MagicCardField.PRODUCED_MANA, "{G}{C}");
+		CardCollectionStoreObject object = handler.fromXML(handler.toXML(card));
+		MagicCard back = (MagicCard) object.list.get(0);
+		assertEquals("true", back.get(MagicCardField.RESERVED));
+		assertEquals("true", back.get(MagicCardField.REPRINT));
+		assertEquals("true", back.get(MagicCardField.GAME_CHANGER));
+		assertEquals(Integer.valueOf(42), back.get(MagicCardField.EDHREC_RANK));
+		assertEquals("{G}{C}", back.get(MagicCardField.PRODUCED_MANA));
+	}
+
 	public void testXStreamNoConditionElementWhenBlank() {
 		MagicCardPhysical phi = CardGenerator.generatePhysicalCardWithValues();
 		// no condition set - blank must not be persisted

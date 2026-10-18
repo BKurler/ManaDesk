@@ -50,6 +50,24 @@
  *                         cardmarket_id) product pages instead of Scryfall's
  *                         purchase_uris (Scryfall's own affiliate/referrer
  *                         links); PARSER_VERSION 3.
+ *     Rémi Dutil (2026) - store Scryfall's keywords array (MagicCardField.KEYWORDS)
+ *                         on both faces; PARSER_VERSION 4.
+ *     Rémi Dutil (2026) - store reserved / reprint / game_changer / edhrec_rank /
+ *                         produced_mana; COLOR now comes from Scryfall's own colors
+ *                         (cost-based guess only as a fallback); the "Booster" line
+ *                         was built from textless (now shown only when false); PARSER_VERSION 5.
+ *     Rémi Dutil (2026) - store oracle_id; the facts also as lines of the card text
+ *                         (under the Finishes); PARSER_VERSION 6.
+ *     Rémi Dutil (2026) - Extended Color Identity = Scryfall's color identity + the colors the
+ *                         card can fetch + those of the symbols in its reminder text
+ *                         (Colors#getExtendedIdentityCost), no longer the
+ *                         oracle-text guess; PARSER_VERSION 7, then 8 once the reminder-text
+ *                         colors were added to it.
+ *     Rémi Dutil (2026) - treatments / size / watermark labels (frame, border, showcase, full
+ *                         art, stamp, oversized...) folded into the Traits list
+ *                         (MagicCardField.EXTRA_TRAITS);
+ *                         the FullArt / TextLess / StorySpotlight / Promos lines moved into Traits;
+ *                         PARSER_VERSION 9.
  *     Rémi Dutil (2026) - prices back at the top of the card text
  *                         (buildPrices): a TCGplayer "N$/F$/E$" line and a
  *                         Cardmarket "N€/F€/E€" line, each in its own
@@ -90,6 +108,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.CardFinish;
+import com.reflexit.magiccards.core.model.CardTraits;
 import com.reflexit.magiccards.core.model.Colors;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
@@ -120,7 +139,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	 * file is enough, since parseBulkGrouped() always re-derives every card's
 	 * fields from scratch regardless of whether the raw JSON changed.
 	 */
-	public static final int PARSER_VERSION = 3;
+	public static final int PARSER_VERSION = 9;
 
 	/** A card's TCGplayer page, from its TCGplayer product id. */
 	public static final String TCGPLAYER_PRODUCT_URL = "https://www.tcgplayer.com/product/";
@@ -274,6 +293,179 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		return finishes + "<br>";
 	}
 
+	/** A value from the face when it has one, else from the whole card. */
+	private static Object faceOrCard(JSONObject face, JSONObject elem, String key) {
+		if (face != null && face.get(key) != null)
+			return face.get(key);
+		return elem.get(key);
+	}
+
+	/**
+	 * How a printing looks, its size and its watermark, as the labels shown in the Traits list:
+	 * a frame other than the current one, a border other than black, the visual frame effects
+	 * (showcase, extended art...), full art, textless, story spotlight, a security stamp,
+	 * variation, oversized, a watermark, a content warning. In that order. Empty for an
+	 * ordinary card.
+	 *
+	 * @param face the face being read, or {@code null} for a single-faced card
+	 */
+	static java.util.List<String> extraTraitLabels(JSONObject elem, JSONObject face) {
+		java.util.List<String> res = new java.util.ArrayList<String>();
+		Object frame = faceOrCard(face, elem, "frame");
+		if (frame instanceof String && !"2015".equals(frame)) {
+			String f = (String) frame;
+			res.add("future".equals(f) ? "Future Frame" : f + " Frame");
+		}
+		Object border = faceOrCard(face, elem, "border_color");
+		if ("white".equals(border))
+			res.add("White Border");
+		else if ("silver".equals(border))
+			res.add("Silver Border");
+		else if ("gold".equals(border))
+			res.add("Gold Border");
+		else if ("borderless".equals(border))
+			res.add("Borderless");
+		Object effects = faceOrCard(face, elem, "frame_effects");
+		if (effects instanceof JSONArray) {
+			JSONArray fx = (JSONArray) effects;
+			if (fx.contains("showcase"))
+				res.add("Showcase");
+			if (fx.contains("extendedart"))
+				res.add("Extended Art");
+			if (fx.contains("inverted"))
+				res.add("Inverted Frame");
+			if (fx.contains("tombstone"))
+				res.add("Tombstone Frame");
+			if (fx.contains("colorshifted"))
+				res.add("Colorshifted");
+			if (fx.contains("shatteredglass"))
+				res.add("Shattered Glass");
+		}
+		if (Boolean.TRUE.equals(elem.get("full_art")))
+			res.add("Full Art");
+		if (Boolean.TRUE.equals(elem.get("textless")))
+			res.add("Textless");
+		if (Boolean.TRUE.equals(elem.get("story_spotlight")))
+			res.add("Story Spotlight");
+		Object stamp = faceOrCard(face, elem, "security_stamp");
+		if (stamp instanceof String && !((String) stamp).isEmpty())
+			res.add(CardTraits.capitalize((String) stamp) + " Stamp");
+		if (Boolean.TRUE.equals(elem.get("variation")))
+			res.add("Variation");
+		if (Boolean.TRUE.equals(elem.get("oversized")))
+			res.add("Oversized");
+		Object watermark = faceOrCard(face, elem, "watermark");
+		if (watermark instanceof String && !((String) watermark).isEmpty())
+			res.add(CardTraits.WATERMARK_PREFIX + CardTraits.capitalize((String) watermark));
+		if (Boolean.TRUE.equals(elem.get("content_warning")))
+			res.add("Content Warning");
+		// how this printing was handed out / what surface it has (prerelease, playtest, surge foil...)
+		Object promos = elem.get("promo_types");
+		if (promos instanceof JSONArray) {
+			for (Object o : (JSONArray) promos) {
+				String label = CardTraits.promoLabel(String.valueOf(o));
+				if (label != null && !res.contains(label))
+					res.add(label);
+			}
+		}
+		return res;
+	}
+
+	/**
+	 * The card's oracle id: the card's own, else (a multi-faced card) the face's. Every
+	 * printing of the same card has the same one, whatever its name or language.
+	 *
+	 * @return {@code null} when Scryfall gave none
+	 */
+	static String oracleIdOf(JSONObject face, JSONObject elem) {
+		Object id = elem.get("oracle_id");
+		if (!(id instanceof String) && face != null)
+			id = face.get("oracle_id");
+		return id instanceof String && !((String) id).isEmpty() ? (String) id : null;
+	}
+
+	/**
+	 * The card-text lines for the facts above, to go under the "Finishes" line:
+	 * "Traits: Reserved List, Showcase" and "Produces: {G}{C}".
+	 * Empty when there is nothing to say.
+	 */
+	static String buildFactsText(boolean reserved, boolean gameChanger, boolean reprint,
+			java.util.List<String> extraLabels, String producedMana) {
+		StringBuilder sb = new StringBuilder();
+		java.util.List<String> traits = CardTraits.labels(reserved, gameChanger, reprint);
+		if (extraLabels != null)
+			traits.addAll(extraLabels);
+		if (!traits.isEmpty())
+			sb.append("Traits: ").append(CardTraits.join(traits)).append("<br>");
+		if (producedMana != null && !producedMana.isEmpty())
+			sb.append("Produces: ").append(producedMana).append("<br>");
+		return sb.toString();
+	}
+
+	/** The rules text of the whole card: its own, else every face's. */
+	static String wholeOracle(JSONObject elem, JSONArray cardFaces) {
+		Object own = elem.get("oracle_text");
+		if (own instanceof String)
+			return (String) own;
+		StringBuilder sb = new StringBuilder();
+		if (cardFaces != null) {
+			for (Object f : cardFaces) {
+				Object t = ((JSONObject) f).get("oracle_text");
+				if (t instanceof String)
+					sb.append((String) t).append('\n');
+			}
+		}
+		return sb.toString();
+	}
+
+	/** {@code "true"} for a Scryfall boolean that is true, else {@code null} (nothing stored). */
+	static String flagString(Object bool) {
+		return Boolean.TRUE.equals(bool) ? "true" : null;
+	}
+
+	/** A Scryfall color array ({@code ["W","U"]}) as a cost string ({@code "{W}{U}"}); {@code null} when empty or missing. */
+	static String manaCostString(JSONArray list) {
+		if (list == null || list.isEmpty())
+			return null;
+		java.util.List<String> tags = new java.util.ArrayList<>();
+		for (Object o : list)
+			tags.add(o.toString());
+		return Colors.toCost(tags);
+	}
+
+	/**
+	 * The card's official colors as a cost string: from the face's own {@code colors}
+	 * array, else the whole card's. {@code "{C}"} for a colorless card (the same
+	 * convention as the color identity), {@code null} when Scryfall gave no array at
+	 * all - the caller then falls back to the cost-based guess.
+	 *
+	 * @param face the face being read, or {@code null} for a single-faced card
+	 */
+	static String officialColorCost(JSONObject face, JSONObject elem) {
+		Object colors = face != null ? face.get("colors") : null;
+		if (!(colors instanceof JSONArray))
+			colors = elem.get("colors");
+		if (!(colors instanceof JSONArray))
+			return null;
+		JSONArray list = (JSONArray) colors;
+		return list.isEmpty() ? "{C}" : manaCostString(list);
+	}
+
+	/** Scryfall's {@code keywords} array joined with {@code |}; {@code ""} (nothing stored) when empty. */
+	static String keywordsString(JSONArray list) {
+		if (list == null || list.isEmpty())
+			return "";
+		StringBuilder sb = new StringBuilder();
+		for (Object o : list) {
+			if (o == null || o.toString().trim().isEmpty())
+				continue;
+			if (sb.length() > 0)
+				sb.append('|');
+			sb.append(o.toString().trim());
+		}
+		return sb.toString();
+	}
+
 	/** Comma-joined {@code nonfoil,foil,etched} subset - stored on the printing
 	 *  ({@link MagicCardField#FINISHES}) so a copy's own Finish can tell an
 	 *  etched-only printing apart from one that also offers nonfoil/foil. */
@@ -321,23 +513,15 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 	 *  recomputing them on every get() - needs cost/type/oracle text already
 	 *  set on {@code card}, so call this right before handing the card to
 	 *  {@code handler}, never earlier. */
-	private void cacheComputedColors(MagicCard card) {
-		card.set(MagicCardField.COLOR, Colors.getInstance().getColorAsCost(card));
-		card.set(MagicCardField.COLOR_IDENTITY_EXTENDED, Colors.getInstance().getColorIdentityAsCost(card));
-	}
-
-	private String BuildPromos(JSONArray list) {
-		if (list == null || list.size() == 0) {
-			return "";
-		}
-
-		String promos = "Promos: ";
-
-		for (int i = 0; i < list.size(); i++) {
-			promos += list.get(i).toString() + ":";
-		}
-
-		return promos + "<br>";
+	private void cacheComputedColors(MagicCard card, String officialColors, String extendedIdentity) {
+		// Scryfall's own colors (a color indicator, devoid... included) win over the
+		// cost-based guess, which is only the fallback when Scryfall gave none
+		card.set(MagicCardField.COLOR,
+				officialColors != null ? officialColors : Colors.getInstance().getColorAsCost(card));
+		// Extended identity: Scryfall's color identity + the colors the card can fetch; the oracle-text
+		// guess (which also reads reminder text) only when Scryfall gave no identity
+		card.set(MagicCardField.COLOR_IDENTITY_EXTENDED,
+				extendedIdentity != null ? extendedIdentity : Colors.getInstance().getColorIdentityAsCost(card));
 	}
 
 	private String BuildLegalities(JSONObject object) {
@@ -559,11 +743,9 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		String legalitiesString = BuildLegalities((JSONObject) elem.get("legalities"));
 		String legalitiesText = "";
 		String scryfallUriString = "<br><a href=\"" + ((String) elem.get("scryfall_uri")) + "\">Scryfall</a>";
-		String fullArtString = BuildText("FullArt: ", elem.get("full_art").toString());
-		String textlessString = BuildText("TextLess: ", elem.get("textless").toString());
-		String storySpotlightString = BuildText("StorySpotlight: ", elem.get("story_spotlight").toString());
-		String boosterString = BuildText("Booster: ", elem.get("textless").toString());
-		String promoTypesString = BuildPromos((JSONArray) elem.get("promo_types"));
+		// shown only for a printing that is NOT found in boosters (a promo, a precon, a Secret Lair...):
+		// nearly every card is, so "Booster: true" on all of them would only be noise
+		String boosterString = Boolean.FALSE.equals(elem.get("booster")) ? "Booster: false<br>" : "";
 
 		// store links built from the product ids - NOT Scryfall's "purchase_uris",
 		// which carry Scryfall's own affiliate / referrer tags
@@ -618,6 +800,42 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			backCard.set(MagicCardField.FINISHES, finishesCsv);
 		}
 
+		// Scryfall's own list of the card's keyword abilities, ability words and
+		// keyword actions (card level, so the same on both faces)
+		String keywords = keywordsString((JSONArray) elem.get("keywords"));
+		frontCard.set(MagicCardField.KEYWORDS, keywords);
+		backCard.set(MagicCardField.KEYWORDS, keywords);
+
+		// More card-level facts from Scryfall (same on both faces). Each is stored only
+		// when it says something, so most cards carry none of them.
+		String reserved = flagString(elem.get("reserved"));
+		String reprint = flagString(elem.get("reprint"));
+		String gameChanger = flagString(elem.get("game_changer"));
+		String edhrecRank = elem.get("edhrec_rank") instanceof Number
+				? String.valueOf(((Number) elem.get("edhrec_rank")).intValue())
+				: null;
+		String producedMana = manaCostString((JSONArray) elem.get("produced_mana"));
+		// the same facts as lines of the card text, right under the finishes
+		// how the printing looks (showcase, borderless, full art, a stamp...), its size and watermark:
+		// per face (a watermark can differ), stored as labels of the Traits list
+		java.util.List<String> frontLabels = extraTraitLabels(elem, frontFace);
+		java.util.List<String> backLabels = extraTraitLabels(elem, backFace);
+		frontCard.set(MagicCardField.EXTRA_TRAITS, CardTraits.toStored(frontLabels));
+		backCard.set(MagicCardField.EXTRA_TRAITS, CardTraits.toStored(backLabels));
+		String factsFront = buildFactsText(reserved != null, gameChanger != null, reprint != null, frontLabels,
+				producedMana);
+		String factsBack = buildFactsText(reserved != null, gameChanger != null, reprint != null, backLabels,
+				producedMana);
+		frontCard.set(MagicCardField.ORACLE_ID, oracleIdOf(frontFace, elem));
+		backCard.set(MagicCardField.ORACLE_ID, oracleIdOf(backFace, elem));
+		for (MagicCard c : new MagicCard[] { frontCard, backCard }) {
+			c.set(MagicCardField.RESERVED, reserved);
+			c.set(MagicCardField.REPRINT, reprint);
+			c.set(MagicCardField.GAME_CHANGER, gameChanger);
+			c.set(MagicCardField.EDHREC_RANK, edhrecRank);
+			c.set(MagicCardField.PRODUCED_MANA, producedMana);
+		}
+
 		// The whole card's authoritative color identity - same for both
 		// faces (Scryfall already computes it as the union of both faces for
 		// a DFC/split card, so no per-face recombination is needed here).
@@ -626,6 +844,9 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			frontCard.set(MagicCardField.COLOR_IDENTITY, colorIdentityOfficial);
 			backCard.set(MagicCardField.COLOR_IDENTITY, colorIdentityOfficial);
 		}
+		// Extended identity: the same plus the colors the card can fetch (see Colors); it is
+		// the whole card's, so the oracle text of every face counts
+		String extendedIdentity = Colors.getExtendedIdentityCost(colorIdentityOfficial, wholeOracle(elem, card_faces));
 
 		switch (cardLayout) {
 		// Standard single face card
@@ -676,8 +897,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 			// Useful information for collectors
 			// We will use the Text field to store and display that information
-			cardText = priceString + frontMultiverseString + finishesString + fullArtString + textlessString
-					+ boosterString + storySpotlightString + promoTypesString + scryfallUriString + gathererUriString
+			cardText = priceString + frontMultiverseString + finishesString + factsFront
+					+ boosterString + scryfallUriString + gathererUriString
 					+ tcgUriString + rulingsUriString + legalitiesText + updateString;
 
 			frontCard.setText(cardText);
@@ -694,7 +915,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
-			cacheComputedColors(frontCard);
+			cacheComputedColors(frontCard, officialColorCost(null, elem), extendedIdentity);
 			handler.handleCard(frontCard);
 			break;
 
@@ -800,12 +1021,12 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			}
 
 			// Useful for collectors
-			cardText = finishesString + fullArtString + textlessString + boosterString + storySpotlightString
-					+ promoTypesString + scryfallUriString + gathererUriString + tcgUriString + rulingsUriString
-					+ legalitiesText + updateString;
+			// what follows the finishes and the facts is the same for both faces
+			String restText = boosterString + scryfallUriString + gathererUriString
+					+ tcgUriString + rulingsUriString + legalitiesText + updateString;
 
-			frontCard.setText(priceString + frontMultiverseString + cardText);
-			backCard.setText(priceString + backMultiverseString + cardText);
+			frontCard.setText(priceString + frontMultiverseString + finishesString + factsFront + restText);
+			backCard.setText(priceString + backMultiverseString + finishesString + factsBack + restText);
 
 			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
 			backCard.set(MagicCardField.LEGALITY, frontCard.get(MagicCardField.LEGALITY));
@@ -823,8 +1044,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				frontCard.setTcgCardId(tcgEtchedId.toString());
 			}
 
-			cacheComputedColors(frontCard);
-			cacheComputedColors(backCard);
+			cacheComputedColors(frontCard, officialColorCost(frontFace, elem), extendedIdentity);
+			cacheComputedColors(backCard, officialColorCost(backFace, elem), extendedIdentity);
 			handler.handleCard(frontCard);
 			handler.handleCard(backCard);
 			break;

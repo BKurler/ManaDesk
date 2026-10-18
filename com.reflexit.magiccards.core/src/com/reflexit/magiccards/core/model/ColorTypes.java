@@ -6,6 +6,7 @@
  *                         instead of Scryfall's own authoritative
  *                         color_identity (the default once Identity alone is
  *                         checked) - see MagicCardFilter#createColorGroup()
+ *     Rémi Dutil (2026) - "Produced" checkbox: search the mana a card can produce
  */
 package com.reflexit.magiccards.core.model;
 
@@ -20,6 +21,7 @@ public class ColorTypes implements ISearchableProperty {
 	static public final String ONLY_ID = getInstance().getPrefConstant("Only");
 	static public final String IDENTITY_ID = getInstance().getPrefConstant("Identity");
 	static public final String EXTENDED_ID = getInstance().getPrefConstant("Extended Identity");
+	static public final String PRODUCED_ID = getInstance().getPrefConstant("Produced");
 
 	private ColorTypes() {
 		this.names = new LinkedHashMap<String, String>();
@@ -30,6 +32,7 @@ public class ColorTypes implements ISearchableProperty {
 		add("Only");
 		add("Identity");
 		add("Extended Identity");
+		add("Produced");
 	}
 
 	private void add(String string) {

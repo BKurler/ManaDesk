@@ -3,6 +3,11 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - CONDITION field (per-copy card grade)
  *     Rémi Dutil (2026) - PROXY field + genuine-only own-count / progress fields
+ *     Rémi Dutil (2026) - KEYWORDS (Scryfall's own keywords array, property map)
+ *     Rémi Dutil (2026) - RESERVED, REPRINT, GAME_CHANGER, EDHREC_RANK, PRODUCED_MANA
+ *                         (more Scryfall card facts, property map); ORACLE_ID; TRAITS
+ *                         (computed: the yes/no facts as one list - see CardTraits);
+ *                         EXTRA_TRAITS (stored treatments / size / watermark labels of that list)
  *     Rémi Dutil (2026) - FINISH (per-copy: Nonfoil/Foil/Etched) + FINISHES
  *                         (which finishes a PRINTING supports, Scryfall-derived)
  *     Rémi Dutil (2026) - FINISH.getM(MagicCard): browsing a printing itself
@@ -1430,6 +1435,116 @@ public enum MagicCardField implements ICardField {
 		public Object getM(MagicCard card) {
 			return card.getFinishes();
 		};
+	},
+
+	KEYWORDS(null) { // Scryfall-derived: the card's own keyword abilities, ability words and
+						// keyword actions ("Flying|Scry"); kept in the property map, not exported
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setKeywords(value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getKeywords();
+		};
+	},
+
+	RESERVED(null) { // Scryfall-derived: on the Reserved List ("true"; absent when not); property map
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	REPRINT(null) { // Scryfall-derived: this printing is a reprint ("true"; absent for a first printing)
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	GAME_CHANGER(null) { // Scryfall-derived: a Commander "Game Changer" ("true"; absent when not)
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	EDHREC_RANK(null) { // Scryfall-derived: EDHREC popularity rank (1 = most played); an Integer, null when unranked
+		@Override
+		public ICardVisitor getAggregator() {
+			return new CollisionAggregator(this, "*");
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			card.setPropertyInteger(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	PRODUCED_MANA(null) { // Scryfall-derived: the mana the card can produce, as a cost string ("{G}{C}")
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+
+	ORACLE_ID(null) { // Scryfall-derived: the id every printing of the same card shares (so
+						// the Printings view need not rely on the card name); property map
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	EXTRA_TRAITS(null) { // Scryfall-derived: how the printing looks / its size / watermark, as labels joined
+							// with "|" ("Showcase|Borderless"); part of the TRAITS list (see CardTraits)
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	TRAITS(null) { // computed, not stored: "Reserved List, Game Changer, Reprint" (see CardTraits)
+		@Override
+		public Object getM(MagicCard card) {
+			return CardTraits.describe(card);
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			// computed from RESERVED / GAME_CHANGER / REPRINT
+		}
 	},
 
 	FINISH(true) { // per-copy: Nonfoil / Foil / Etched - always resolves to one of the

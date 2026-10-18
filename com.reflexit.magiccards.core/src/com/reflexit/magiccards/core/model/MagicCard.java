@@ -281,6 +281,17 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 		setPropertyString(MagicCardField.ACCESSORIES, accessories);
 	}
 
+	/** Scryfall's own {@code keywords} array for this card (keyword abilities, ability
+	 *  words, keyword actions), joined with {@code |}; {@code null} when it has none
+	 *  or was never synced. See {@link Abilities}. */
+	public String getKeywords() {
+		return (String) getProperty(MagicCardField.KEYWORDS);
+	}
+
+	void setKeywords(String keywords) {
+		setPropertyString(MagicCardField.KEYWORDS, keywords);
+	}
+
 	/** Comma-joined subset of {@code nonfoil,foil,etched} - which finishes this
 	 *  printing supports (from Scryfall's own {@code finishes} array). */
 	public String getFinishes() {

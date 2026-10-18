@@ -33,6 +33,15 @@
  *                         matched a Reach creature whose only mention of
  *                         "flying" was inside Reach's own reminder text
  *                         ("...can block creatures with flying.").
+ *     Rémi Dutil (2026) - tokenSearch()'s ABI case: [ability] now matches the
+ *                         card's Scryfall keywords (MagicCardField.KEYWORDS,
+ *                         see Abilities) instead of searching the rules text.
+ *     Rémi Dutil (2026) - [reserved] / [game changer] / [reprint] / [first printing]
+ *                         (traitSearch())
+ *     Rémi Dutil (2026) - traitSearch(): [showcase], [borderless], [full art], [oversized],
+ *                         [watermark: x]... any label of the Traits list (CardTraits)
+ *     Rémi Dutil (2026) - createColorGroup(): new "Produced" checkbox (ColorTypes.PRODUCED_ID)
+ *                         searches the mana a card can produce instead of its identity
  */
 
 package com.reflexit.magiccards.core.model;
@@ -91,11 +100,15 @@ public class MagicCardFilter implements Cloneable {
 			TextValue tvalue = new TextValue(value, false, false, true);
 			return new BinaryExpr(new CardFieldExpr(field), Operation.MATCHES, tvalue);
 		} else if (token.getType() == TokenType.ABI) {
-			Pattern pattern = Abilities.getPattern(value);
-			if (pattern != null) {
-				// stripParens=true - see TextValue's own header
-				TextValue tvalue = new TextValue(pattern, true);
-				return new BinaryExpr(new CardFieldExpr(field), Operation.MATCHES, tvalue);
+			BinaryExpr trait = traitSearch(value);
+			if (trait != null)
+				return trait;
+			String ability = Abilities.getAbility(value);
+			if (ability != null) {
+				// what Scryfall says the card has - not a text search, so a mention
+				// of the word (in reminder text or not) does not count
+				TextValue tvalue = new TextValue(Abilities.keywordPattern(ability));
+				return new BinaryExpr(new CardFieldExpr(MagicCardField.KEYWORDS), Operation.MATCHES, tvalue);
 			} else {
 				// fall back to text value
 			}
@@ -106,6 +119,37 @@ public class MagicCardFilter implements Cloneable {
 			tvalue.setWordBoundary(true);
 		}
 		return new BinaryExpr(new CardFieldExpr(field), Operation.MATCHES, tvalue);
+	}
+
+	/** The yes/no facts Scryfall gives a card, searchable in brackets next to the abilities: {@code [reserved]},
+	 *  {@code [game changer]}, {@code [reprint]}, {@code [first printing]}. */
+	public static final String[] TRAITS = { "reserved", "game changer", "reprint", "first printing" };
+
+	/** @return the search for one of {@link #TRAITS} (any case), or {@code null} if {@code name} is not one */
+	static BinaryExpr traitSearch(String name) {
+		if (name == null)
+			return null;
+		switch (name.trim().toLowerCase(java.util.Locale.ROOT).replaceAll("\\s+", " ")) {
+		case "reserved":
+			return BinaryExpr.fieldEquals(MagicCardField.RESERVED, "true");
+		case "game changer":
+		case "gamechanger":
+			return BinaryExpr.fieldEquals(MagicCardField.GAME_CHANGER, "true");
+		case "reprint":
+			return BinaryExpr.fieldEquals(MagicCardField.REPRINT, "true");
+		case "first printing":
+		case "firstprinting":
+			// stored only for a reprint: no value means a first printing
+			return BinaryExpr.fieldEquals(MagicCardField.REPRINT, null);
+		default:
+			// any other trait of the list: [showcase], [borderless], [full art], [oversized],
+			// [watermark: selesnya]...
+			String label = CardTraits.canonicalLabel(name);
+			if (label == null)
+				return null;
+			return new BinaryExpr(new CardFieldExpr(MagicCardField.TRAITS), Operation.MATCHES,
+					new TextValue(CardTraits.labelPattern(label)));
+		}
 	}
 
 	public void setFilter(Expr root) {
@@ -144,7 +188,12 @@ public class MagicCardFilter implements Cloneable {
 		FilterField ff = FilterField.COLOR;
 		boolean orOp = true;
 		boolean only = false;
-		if (map.containsKey(ColorTypes.EXTENDED_ID)) {
+		if (map.containsKey(ColorTypes.PRODUCED_ID)) {
+			// "Produced": the colors of mana the card can produce (Scryfall's
+			// produced_mana) - the most specific of the three, so it wins over
+			// Identity and Extended Identity when several are checked
+			ff = FilterField.COLOR_PRODUCED;
+		} else if (map.containsKey(ColorTypes.EXTENDED_ID)) {
 			// Extended Identity works standalone - checking it alone (without
 			// Identity too) must still search by identity, just the app's own
 			// oracle-text heuristic instead of Scryfall's own authoritative
@@ -184,6 +233,7 @@ public class MagicCardFilter implements Cloneable {
 		map.remove(ColorTypes.AND_ID);
 		map.remove(ColorTypes.IDENTITY_ID);
 		map.remove(ColorTypes.EXTENDED_ID);
+		map.remove(ColorTypes.PRODUCED_ID);
 		expr = expr.and(createOrGroup(map, ColorTypes.getInstance()));
 		return expr;
 	}

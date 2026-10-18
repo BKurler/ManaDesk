@@ -25,6 +25,7 @@
  *                         so their tuned widths apply here too, not just in
  *                         the other 6 regular views
  *     Rémi Dutil (2026) - Own Count / Own Unique follow "Count Proxies"
+ *     Rémi Dutil (2026) - Produced Mana column
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -38,6 +39,7 @@ import com.reflexit.magiccards.ui.views.columns.ColorColumn;
 import com.reflexit.magiccards.ui.views.columns.ColorIdentityColumn;
 import com.reflexit.magiccards.ui.views.columns.CostColumn;
 import com.reflexit.magiccards.ui.views.columns.ExtendedColorIdentityColumn;
+import com.reflexit.magiccards.ui.views.columns.ProducedManaColumn;
 import com.reflexit.magiccards.ui.views.columns.FinishColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
 import com.reflexit.magiccards.ui.views.columns.GroupColumn;
@@ -95,6 +97,7 @@ public class CollectorColumnCollection extends MagicColumnCollection {
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
 		columns.add(new ExtendedColorIdentityColumn());
+		columns.add(new ProducedManaColumn());
 		columns.add(new LegalityColumn());
 		columns.add(new TextColumn());
 		if (MagicUIActivator.TRACE_EXPORT) {

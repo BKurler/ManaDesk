@@ -28,15 +28,18 @@ it is given in brackets below.</p>
 <tr><td>Type</td><td>The type line (Legendary Creature &mdash; Human Wizard...).</td></tr>
 <tr><td>P, T (Power, Toughness)</td><td>Power and toughness.</td></tr>
 <tr><td>Text, Oracle Text</td><td>The rules text: as printed, and the current official (Oracle) wording.</td></tr>
-<tr><td>Color, Color Type</td><td>The card's colors, and its color category (mono, multi, colorless...).</td></tr>
+<tr><td>Color, Color Type</td><td>The card's colors as Scryfall gives them (a color indicator counts, a devoid card or a land is colorless), and its color category (mono, multi, colorless...).</td></tr>
 <tr><td>Color Identity</td><td>The colors for Commander, from Scryfall (see <a href="#identity">below</a>).</td></tr>
-<tr><td>Extended Color Identity</td><td>The color identity plus the colors a card only touches, such as a land that
+<tr><td>Extended Color Identity</td><td>The color identity plus the colors a card can fetch or names in its reminder text, such as a land that
 fetches a Forest (see <a href="#identity">below</a>).</td></tr>
 <tr><td>Rarity</td><td>Common, uncommon, rare, mythic, special.</td></tr>
 <tr><td>Finish</td><td>On a printing (Scryfall Database, Printings, Collector): the finishes it exists in &mdash; for example <i>Nonfoil, Foil</i>. On your copy, see <a href="#copy">below</a>.</td></tr>
 <tr><td>Set</td><td>The set of this printing, with its symbol. Editable in your lists: switches to another printing.</td></tr>
 <tr><td>Num (Collector's Number)</td><td>The collector number. Editable in your lists.</td></tr>
 <tr><td>Release Date</td><td>When the set was released.</td></tr>
+<tr><td>Produced Mana</td><td>The mana the card can produce (see <a href="#identity">below</a>).</td></tr>
+<tr><td>Traits</td><td>Facts about the card from Scryfall, in one list: <i>Reserved List</i>, <i>Game Changer</i> (Commander), <i>Reprint</i> (this printing is a reprint), how the printing looks (<i>Showcase</i>, <i>Extended Art</i>, <i>Borderless</i>, <i>Full Art</i>, <i>Textless</i>, an older <i>1993 Frame</i>, a <i>White Border</i>, a security <i>Acorn Stamp</i>...), <i>Oversized</i>, <i>Variation</i>, <i>Content Warning</i>, the <i>Watermark</i>, and how the printing was handed out or what surface it has (<i>Prerelease</i>, <i>Playtest</i>, <i>Buy-a-Box</i>, <i>Surge Foil</i>, <i>Universes Beyond</i>...). Blank when none applies. The card text shows the same list, then the mana the card can produce.</td></tr>
+<tr><td>EDHREC Rank</td><td>How popular the card is on EDHREC (1 = the most played), from Scryfall. Click the header to sort by popularity. Blank when the card has no rank.</td></tr>
 <tr><td>Artist</td><td>The artist of this printing.</td></tr>
 <tr><td>Legality</td><td>The card's legality in the formats.</td></tr>
 <tr><td>Language</td><td>The printing's language (English when empty).</td></tr>
@@ -91,21 +94,24 @@ need it.</td></tr>
 <tr><td>Error</td><td>Why a row couldn't be matched to a card (see <a href="../transfer/import.html">Importing cards</a>).</td></tr>
 </table>
 
-<h2 id="identity">Color identity and extended color identity</h2>
+<h2 id="identity">Color identity, extended color identity and produced mana</h2>
 <table>
-<tr><th></th><th>Color identity</th><th>Extended color identity</th></tr>
-<tr><td>What it is</td><td>The colors of the mana symbols in the card's cost and rules text, as Scryfall
-gives them &mdash; the official Commander rule.</td><td>The color identity, plus the colors the card only
-<i>touches</i>: the basic land types or colors its text names, such as a land that fetches a Forest or a
-spell that adds mana of a named color.</td></tr>
+<tr><th></th><th>Color identity</th><th>Extended color identity</th><th>Produced mana</th></tr>
+<tr><td>What it is</td><td>The colors of the mana symbols in the card's cost and rules text (not its reminder
+text), as Scryfall gives them &mdash; the official Commander rule.</td><td>The color identity, plus the colors of
+the basic land types the card can <i>fetch</i>: those named in its "Search your library for..." text, or in a
+<i>Plainscycling</i>-style ability; and the colors of the mana symbols in its reminder text (Extort, Firebending...).</td><td>The colors of mana the card can produce itself (lands, mana rocks, mana
+creatures...), from Scryfall.</td></tr>
 <tr><td>Example</td><td>A land that says "search your library for a Forest or Plains card" is
-colorless.</td><td>The same land is green and white.</td></tr>
-<tr><td>Used for</td><td>Commander legality (see <a href="../decks/legality.html">Formats and legality</a>).</td><td>Searching and sorting only: to find
-the cards that really work in a green-white deck.</td></tr>
+colorless.</td><td>The same land is green and white. So is Farseek, which finds a Plains, Island, Swamp or Mountain
+card. Syndic of Tithes is white and black, because Extort's reminder text shows {W/B}.</td><td>A fetch land produces nothing. Command Tower produces all five colors; Sol Ring produces colorless.</td></tr>
+<tr><td>Used for</td><td>Commander legality (see <a href="../decks/legality.html">Formats and legality</a>).</td><td>Searching
+and sorting only: to find the cards that really work in a green-white deck, fetch lands included.</td><td>Searching
+and sorting: which cards make the mana you need.</td></tr>
 </table>
-<p>Both are columns (<b>Color Identity</b>, <b>Extended Color Identity</b>) and both can be searched in the
-filter dialog: check the colors, then <b>Identity</b> or <b>Extended Identity</b> (see
-<a href="../find/filter.html#dialog">The filter dialog</a>).</p>
+<p>All three are columns (<b>Color Identity</b>, <b>Extended Color Identity</b>, <b>Produced Mana</b>) and all
+three can be searched in the filter dialog: check the colors, then <b>Identity</b>, <b>Extended Identity</b> or
+<b>Produced</b> (see <a href="../find/filter.html#dialog">The filter dialog</a>).</p>
 
 
 <p class="seealso">See also: <a href="../find/browse.html">Browsing the card database</a> &middot;

@@ -16,6 +16,7 @@
  *     Rémi Dutil (2026) - "Flip" on a physical copy keeps the copy (proxy
  *                         badge, finish, ...): flipOf() shows a display-only
  *                         clone on the other face instead of the bare printing.
+ *     Rémi Dutil (2026) - getOracle(): a card with no rules text no longer shows "Oracle: null"
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -299,6 +300,8 @@ class CardDescComposite extends Composite {
 
 	protected String getOracle(IMagicCard card, String text) {
 		String oracle = card.getOracleText();
+		if (oracle == null || oracle.isEmpty())
+			return ""; // a card with no rules text (Crimson Kobolds...) showed "Oracle: null"
 		if (text != null && text.length() != 0 && !text.equals(oracle)) {
 			oracle = "Oracle:<br>" + oracle + "<br><br>";
 		} else {

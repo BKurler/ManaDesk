@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - token identity also uses the keyword abilities Scryfall lists
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
@@ -18,9 +19,11 @@ import java.util.List;
 import java.util.Locale;
 import java.util.Map;
 import java.util.Set;
+import java.util.regex.Pattern;
 
 import com.reflexit.magiccards.core.model.abs.ICardCountable;
 import com.reflexit.magiccards.core.model.storage.IDbCardStore;
+import com.reflexit.magiccards.core.sync.ScryfallReference;
 
 /**
  * Turns the compact {@code ACCESSORIES} string stored on each card (see
@@ -633,7 +636,37 @@ public final class DeckAccessories {
 		for (String t : TOKEN_TRAITS)
 			if (s.contains(t))
 				sb.append(t).append(';');
+		for (Map.Entry<String, Pattern> e : officialKeywordTraits()) {
+			if (e.getValue().matcher(s).find())
+				sb.append(e.getKey()).append(';');
+		}
 		return sb.toString();
+	}
+
+	private static List<Map.Entry<String, Pattern>> keywordTraits;
+	private static long keywordTraitsVersion = -1;
+
+	/**
+	 * Every keyword ability Scryfall lists that {@link #TOKEN_TRAITS} does not already
+	 * cover (so a new keyword on a token tells it apart with no code change), each as a
+	 * whole-word pattern - "enchant" must not match "enchanted".
+	 */
+	private static synchronized List<Map.Entry<String, Pattern>> officialKeywordTraits() {
+		long v = ScryfallReference.version();
+		if (keywordTraits == null || keywordTraitsVersion != v) {
+			List<String> known = java.util.Arrays.asList(TOKEN_TRAITS);
+			List<Map.Entry<String, Pattern>> l = new ArrayList<Map.Entry<String, Pattern>>();
+			for (String k : ScryfallReference.catalog(ScryfallReference.KEYWORD_ABILITIES)) {
+				String name = k.toLowerCase(Locale.ROOT);
+				if (known.contains(name))
+					continue;
+				l.add(new java.util.AbstractMap.SimpleImmutableEntry<String, Pattern>(name,
+						Pattern.compile("\\b" + Pattern.quote(name) + "\\b")));
+			}
+			keywordTraits = l;
+			keywordTraitsVersion = v;
+		}
+		return keywordTraits;
 	}
 
 	private static String counterLabel(String payload) {

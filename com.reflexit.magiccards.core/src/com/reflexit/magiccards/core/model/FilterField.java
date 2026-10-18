@@ -61,6 +61,7 @@
  *                         used - same fix DBPRICE's own case already models
  *                         for the "field is 0, fall back to the other price"
  *                         pattern PRICE mirrors.
+ *     Rémi Dutil (2026) - COLOR_PRODUCED: the mana a card can produce (ColorTypes.PRODUCED_ID)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -104,7 +105,8 @@ public enum FilterField {
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
 	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
 	COLOR_IDENTITY(MagicCardField.COST, "identity", Postfix.ENUM_POSTFIX),
-	COLOR_IDENTITY_EXTENDED(MagicCardField.COST, "identityExtended", Postfix.ENUM_POSTFIX),;
+	COLOR_IDENTITY_EXTENDED(MagicCardField.COST, "identityExtended", Postfix.ENUM_POSTFIX),
+	COLOR_PRODUCED(MagicCardField.COST, "produced", Postfix.ENUM_POSTFIX),;
 
 	// fields
 	private ICardField field;
@@ -359,6 +361,14 @@ public enum FilterField {
 				// Filter using the app's own oracle-text heuristic instead
 				if ((en = Colors.getInstance().getEncodeByName(value)) != null) {
 					return BinaryExpr.fieldMatches(MagicCardField.COLOR_IDENTITY_EXTENDED_COMBINED, en);
+				}
+				break;
+			}
+			case COLOR_PRODUCED: {
+				String en;
+				// the mana the card can produce (Scryfall's produced_mana), same on every face
+				if ((en = Colors.getInstance().getEncodeByName(value)) != null) {
+					return BinaryExpr.fieldMatches(MagicCardField.PRODUCED_MANA, en);
 				}
 				break;
 			}

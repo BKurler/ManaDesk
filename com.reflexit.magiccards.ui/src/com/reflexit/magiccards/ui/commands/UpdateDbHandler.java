@@ -59,6 +59,7 @@
  *                         the "already up to date" question offers Support
  *                         ManaDesk... too (it is the most frequent message);
  *                         its default button is No.
+ *     Rémi Dutil (2026) - also refreshes Scryfall's symbol / keyword / card-type lists
  */
 
 package com.reflexit.magiccards.ui.commands;
@@ -92,9 +93,13 @@ import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.model.xml.DbPricesMultiFileStore;
 import com.reflexit.magiccards.core.sync.ParseScryFallChecklist;
 import com.reflexit.magiccards.core.sync.ScryfallBulkCache;
+import com.reflexit.magiccards.core.sync.ScryfallMigrations;
+import com.reflexit.magiccards.core.sync.ScryfallReference;
+import com.reflexit.magiccards.core.sync.SymbolConverter;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
+import com.reflexit.magiccards.ui.utils.SymbolRenderer;
 import com.reflexit.magiccards.ui.views.MagicDbView;
 
 /**
@@ -173,6 +178,7 @@ public class UpdateDbHandler extends AbstractHandler {
 						asyncInfo(WEB_NOT_ACCESSIBLE);
 						return Status.OK_STATUS;
 					}
+					refreshReferenceData(pm);
 					// asked for explicitly but nothing new: say so instead of silently
 					// re-processing the same card file (offer to rebuild anyway)
 					if (requireWeb && isAlreadyUpToDate() && !askRebuildAnyway())
@@ -238,6 +244,29 @@ public class UpdateDbHandler extends AbstractHandler {
 		// update's own progress is what stays shown there.
 		job.setUser(false);
 		job.schedule();
+	}
+
+	/**
+	 * Refreshes the small lists Magic keeps adding to - symbols, keyword abilities,
+	 * ability words, card types - from Scryfall, and renders the picture of any new
+	 * symbol. Best effort: offline or a bad answer just keeps what is there, and it
+	 * never stops the card update.
+	 */
+	private static void refreshReferenceData(IProgressMonitor pm) {
+		try {
+			pm.subTask("Refreshing symbols, keywords and card types…");
+			ScryfallReference.refresh(new CoreMonitorAdapter(pm));
+			// card ids Scryfall merged into others: the relink at the end of the update uses them
+			ScryfallMigrations.refresh(new CoreMonitorAdapter(pm));
+			SymbolConverter.renderMissingPngs(new SymbolConverter.Bundled() {
+				@Override
+				public boolean has(String pngName) {
+					return SymbolRenderer.isBundledSymbol(pngName);
+				}
+			});
+		} catch (Throwable e) {
+			MagicUIActivator.log(e);
+		}
 	}
 
 	private static void reloadMagicDbView() {

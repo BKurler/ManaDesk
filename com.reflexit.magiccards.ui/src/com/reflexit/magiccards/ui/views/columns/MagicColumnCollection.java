@@ -59,6 +59,7 @@
  *                         never going through this shortcut at all.
  *     Rémi Dutil (2026) - createLanguageColumn() factory (the import preview
  *                         colors overridden languages)
+ *     Rémi Dutil (2026) - "Traits" (Reserved List, Game Changer, Reprint), "EDHREC Rank" and "Produced Mana" columns
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -130,6 +131,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		columns.add(new ColorColumn());
 		columns.add(new ColorIdentityColumn());
 		columns.add(new ExtendedColorIdentityColumn());
+		columns.add(new ProducedManaColumn());
 		columns.add(new SellerPriceColumn());
 		columns.add(createArtistColumn());
 		columns.add(createCollectorsNumberColumn());
@@ -150,6 +152,8 @@ public class MagicColumnCollection extends ColumnCollection {
 			columns.add(new CreationDateColumn());
 		}
 		columns.add(new ReleaseDateColumn());
+		columns.add(new GenColumn(MagicCardField.TRAITS, "Traits")); // Reserved List, Game Changer, Reprint
+		columns.add(new GenColumn(MagicCardField.EDHREC_RANK, "EDHREC Rank")); // numeric: sort by popularity
 		if (MagicUIActivator.TRACE_EXPORT) {
 			columns.add(new GenColumn(MagicCardField.HASHCODE, "HashCode"));
 		}

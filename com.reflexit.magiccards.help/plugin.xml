@@ -16,4 +16,10 @@
       </contexts>
    </extension>
 
+   <extension
+         point="org.eclipse.help.index">
+      <index
+            file="index.xml">
+      </index>
+   </extension>
 </plugin>
