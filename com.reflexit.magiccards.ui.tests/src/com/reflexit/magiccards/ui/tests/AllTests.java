@@ -6,6 +6,7 @@
  *     Rémi Dutil (2026) - registered DeckColumnCollectionTest
  *     Rémi Dutil (2026) - registered DigitalColumnTest, DigitalBlockMessageTest
  *     Rémi Dutil (2026) - registered CardsNavigatorLabelProviderTest
+ *     Rémi Dutil (2026) - registered EditCardsPropertiesDialogImageTest
  *     Rémi Dutil (2026) - registered BrowseWebsiteLiveTest, by explicit
  *                         request - unlike every other test here, it needs a
  *                         live network connection and a real display, and
@@ -35,6 +36,7 @@ import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
 import com.reflexit.magiccards.ui.dialogs.EditCardsPropertiesDialogFinishTest;
+import com.reflexit.magiccards.ui.dialogs.EditCardsPropertiesDialogImageTest;
 import com.reflexit.magiccards.ui.dialogs.EditDeckPropertiesDialogBoxedTest;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorLabelProviderTest;
 import com.reflexit.magiccards.ui.preferences.DigitalBlockMessageTest;
@@ -51,7 +53,7 @@ import com.reflexit.magiccards.ui.views.lib.ListViewSettingsTest;
 @SuiteClasses({ TreeViewerContentProviderTest.class, RootTreeViewerContentProviderTest.class,
 		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class,
 		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class, DeckExportPageSelectionTest.class,
-		EditCardsPropertiesDialogFinishTest.class, EditDeckPropertiesDialogBoxedTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
+		EditCardsPropertiesDialogFinishTest.class, EditCardsPropertiesDialogImageTest.class, EditDeckPropertiesDialogBoxedTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
 		DigitalColumnTest.class, DigitalBlockMessageTest.class, CardsNavigatorLabelProviderTest.class,
 		BrowseWebsiteLiveTest.class })
 public class AllTests {

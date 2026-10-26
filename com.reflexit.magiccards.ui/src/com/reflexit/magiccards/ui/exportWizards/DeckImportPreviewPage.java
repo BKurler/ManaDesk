@@ -1725,7 +1725,10 @@ public class DeckImportPreviewPage extends WizardPage {
 							String cur = card.getSet();
 							if (cur != null && !cur.isEmpty() && !sets.contains(cur))
 								sets.add(cur);
-							return SetListOrder.sortToArray(sets);
+							String[] shown = SetListOrder.sortToArray(sets);
+							for (int i = 0; i < shown.length; i++)
+								shown[i] = com.reflexit.magiccards.core.model.Editions.getInstance().getDisplayName(shown[i]);
+							return shown;
 						}
 
 						@Override
@@ -1733,7 +1736,7 @@ public class DeckImportPreviewPage extends WizardPage {
 							if (!(element instanceof MagicCardPhysical))
 								return;
 							MagicCardPhysical card = (MagicCardPhysical) element;
-							String set = (String) value;
+							String set = com.reflexit.magiccards.core.model.Editions.stripLabel((String) value); // "(coming soon)" is display only
 							if (set == null || set.isEmpty())
 								return;
 							// re-bind even when the set is unchanged: this is how the

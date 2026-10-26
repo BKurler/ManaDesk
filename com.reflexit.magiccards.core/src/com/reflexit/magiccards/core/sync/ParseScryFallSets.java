@@ -3,6 +3,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - digital sets are kept and flagged instead of skipped
+ *     Rémi Dutil (2026) - sets not released yet are kept (when they have cards); only empty sets are skipped
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -12,8 +13,6 @@ import java.io.IOException;
 import java.net.MalformedURLException;
 import java.net.URL;
 import java.text.SimpleDateFormat;
-import java.time.LocalDate;
-import java.time.ZoneId;
 import java.util.ArrayList;
 import java.util.Collection;
 import java.util.Date;
@@ -107,18 +106,12 @@ public class ParseScryFallSets extends AbstractParseJson {
 		Boolean digital = getBool(elem, "digital");
 		int cardCount = getInt(elem, "card_count");
 
-		// If the date is in the future, skip the set to prevent issue while parsing the
-		// cards
-		LocalDate threshold = LocalDate.now();
-
-		// Convert to LocalDate
-		LocalDate setDate = ed.getReleaseDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
-
 		// digital sets are kept (flagged): they stay hidden unless the digital support is on
 		ed.setDigital(digital != null && digital.booleanValue());
 
-		// RD Skip set with no card (typically future sets)
-		if (cardCount > 0&& setDate.compareTo(threshold) <= 0) {
+		// A set not released yet is kept, as long as it already has cards (previews): it is shown with
+		// "(coming soon)" until its release date. Only an empty set is skipped.
+		if (cardCount > 0) {
 
 			Editions currentEd = Editions.getInstance();
 
@@ -131,7 +124,7 @@ public class ParseScryFallSets extends AbstractParseJson {
 				handler.handleEdition(ed);
 			}
 		}
-		// else: empty / future set - silently skipped
+		// else: an empty set - silently skipped
 	}
 
 	// Scryfall doesn't provide alternate code. This is typically for older sets, so

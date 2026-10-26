@@ -19,7 +19,7 @@ public class EditionNameColumn extends AbstractEditionColumn {
 	@Override
 	public String getText(Object element) {
 		Edition ed = (Edition) element;
-		return ed.getName();
+		return ed.getDisplayName(); // "(coming soon)" while not released
 	}
 
 	@Override
@@ -40,7 +40,7 @@ public class EditionNameColumn extends AbstractEditionColumn {
 
 	@Override
 	public void setText(Edition edition, String string) {
-		if (string.equals(edition.getName()))
+		if (string.equals(edition.getName()) || string.equals(edition.getDisplayName()))
 			return;
 		throw new UnsupportedOperationException("Cannot change edition name (unsupported)");
 	}

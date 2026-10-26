@@ -36,6 +36,7 @@
  *                         collection keeps its own), Collector (faster), new
  *                         Gallery and Linux entries
  *     Rémi Dutil (2026) - "Digital cards" entry
+ *     Rémi Dutil (2026) - "Sets coming soon" entry
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -248,6 +249,10 @@ final class WhatsNew {
 					+ " Arena, and nothing moves between a digital and a paper list. The Card Kind filter (Paper / Digital)"
 					+ " shows one kind or both; Collector has a D button to collect the"
 					+ " digital cards instead.", null),
+			new Feature(1, MINOR, BROWSING, "Sets coming soon", "The sets that are not released yet appear as soon as Scryfall has their cards,"
+					+ " shown as \"Star Trek (coming soon)\" in the set lists, the Set column and the set filter. Their cards can be"
+					+ " browsed, wished and added to your lists; the label disappears at the release date. Update the card"
+					+ " database to get them.", null),
 			new Feature(1, MINOR, BROWSING, "Set lists", "Lists of sets are alphabetical, or by release date"
 					+ " (oldest first) if you prefer - see the ManaDesk preferences.", null),
 			new Feature(1, MAJOR, GENERAL, "New help", "Rewritten from scratch, with screenshots: getting started,"

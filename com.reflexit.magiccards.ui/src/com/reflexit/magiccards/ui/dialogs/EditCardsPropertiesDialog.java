@@ -25,6 +25,7 @@
  *                         offers the values an edited card may take (see
  *                         OwnershipRules)
  *     Rémi Dutil (2026) - isDigitalList() hook: no Condition, Proxy or Etched for a copy in a digital list
+ *     Rémi Dutil (2026) - the image pane shows a proxy copy like Card Info: red dashed frame and a Proxy badge (imageHtml)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -69,6 +70,14 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 	public static final String PRICE_FIELD = MagicCardField.PRICE.name();
 	public static final String UNCHANGED = "<unchanged>";
 	protected Composite area;
+	/** The width of the card image: a little more than the standard card image width. */
+	private static final int IMAGE_WIDTH = ImageCreator.CARD_WIDTH + 14;
+	/** Space around the card image: the proxy frame sits there. */
+	private static final int IMAGE_MARGIN = 10;
+	/** Space under the card image for the Proxy badge. */
+	private static final int BADGE_ROOM = 34;
+	private Browser imageBrowser;
+	private String imageUrl;
 
 	public EditCardsPropertiesDialog(Shell parentShell, PreferenceStore store) {
 		super(parentShell, store);
@@ -127,8 +136,9 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		browser.addListener(SWT.MenuDetect, e -> e.doit = false);
 
 		GridData gda = new GridData(GridData.FILL_VERTICAL);
-		gda.widthHint = ImageCreator.CARD_WIDTH;
-		gda.heightHint = ImageCreator.CARD_HEIGHT;
+		// room around the image for the proxy frame, and under it for the Proxy badge
+		gda.widthHint = IMAGE_WIDTH + 2 * IMAGE_MARGIN;
+		gda.heightHint = IMAGE_WIDTH * ImageCreator.CARD_HEIGHT / ImageCreator.CARD_WIDTH + 2 * IMAGE_MARGIN + BADGE_ROOM;
 		browser.setLayoutData(gda);
 
 		// MULTI-EDIT MODE => blank area
@@ -151,10 +161,36 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 			return;
 		}
 
-		String url = localFile.toURI().toString();
+		imageBrowser = browser;
+		imageUrl = localFile.toURI().toString();
+		// a proxy copy: the red dashed frame and the "Proxy" badge, as in Card Info and the gallery
+		showImage(Boolean.parseBoolean(store.getDefaultString(PROXY_FIELD)));
+	}
 
-		browser.setText("<html><body style='margin:0;padding:0;background:#000;'>" + "<img src='" + url
-				+ "' style='width:100%;height:100%;object-fit:contain;'/>" + "</body></html>");
+	/** Shows the card image, with the proxy frame and badge when {@code proxy}. */
+	private void showImage(boolean proxy) {
+		if (imageBrowser != null && !imageBrowser.isDisposed() && imageUrl != null)
+			imageBrowser.setText(imageHtml(imageUrl, proxy, IMAGE_WIDTH));
+	}
+
+	/**
+	 * The page of the image pane. The image has the same size for every card; a proxy copy gets what Card Info and the
+	 * gallery give it (the image itself is never altered): a dashed red frame around it, and a red "Proxy" badge under
+	 * it, on the left. Plain HTML and CSS (works in every embedded browser).
+	 */
+	static String imageHtml(String url, boolean proxy, int width) {
+		// the same size for every card; a proxy adds the frame (outside the image, inside the margin) and the badge
+		// under it, on the left, as in Card Info
+		StringBuilder sb = new StringBuilder("<html><body style='margin:0;padding:" + IMAGE_MARGIN
+				+ "px;overflow:hidden;'>");
+		sb.append("<img src='").append(url).append("' style='display:block;width:").append(width).append("px;");
+		if (proxy)
+			sb.append("outline:3px dashed #d32f2f;outline-offset:4px;");
+		sb.append("'/>");
+		if (proxy)
+			sb.append("<div style='margin-top:14px;'><span style='padding:0 8px;border-radius:10px;font:bold 12px sans-serif;"
+					+ "line-height:18px;background:#d32f2f;color:#fff;border:1px solid #b71c1c;'>Proxy</span></div>");
+		return sb.append("</body></html>").toString();
 	}
 
 	/** True when the edited cards sit in a digital deck or collection (no Condition, Proxy or Etched there). */
@@ -305,6 +341,7 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 					store.setValue(PROXY_FIELD, UNCHANGED);
 				else
 					store.setValue(PROXY_FIELD, String.valueOf(PROXY_VALUE.equals(t)));
+				showImage(PROXY_VALUE.equals(t)); // the frame and badge follow the choice
 			}
 		});
 	}
