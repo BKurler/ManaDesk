@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Digital cards</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Digital cards</h1>
+
+<p>Some cards only exist online, on <b>MTGO</b> or <b>Arena</b>: the Alchemy cards, the digital-only sets, a
+few cards of paper sets. ManaDesk can keep digital decks and collections next to your paper ones. It is off
+by default, so nothing changes for a paper player.</p>
+
+<h2 id="enable">Turn it on</h2>
+<ol>
+<li>Open <span class="menu">Window &gt; Preferences &gt; ManaDesk Preferences</span> and check
+<b>Enable digital cards (MTGO / Arena)</b>.</li>
+<li>Restart ManaDesk.</li>
+<li>Run <span class="menu">Update Card Database</span> once, if you have not updated since this version:
+it loads the digital cards and sets (see <a href="../database/update.html">Updating the card database</a>).</li>
+</ol>
+<p>With the setting off, the digital cards and sets are hidden everywhere. They are kept in the database
+files, so turning the setting on needs no extra download.</p>
+<p>The setting cannot be turned off while a digital deck or collection exists: delete them first.</p>
+
+<h2 id="kinds">Paper, digital, and "also online"</h2>
+<ul>
+<li>A <b>digital-only</b> card exists only on MTGO or Arena.</li>
+<li>A paper card can also be <b>playable online</b> (most of them are: Lightning Bolt is on Arena too).
+It stays a paper card, and can go in a digital deck too.</li>
+</ul>
+<p>The <b>Digital</b> column tells them apart: <i>Digital</i> for a digital-only card, <i>Also online</i> for a
+paper card also on MTGO or Arena, and blank for a paper-only card.</p>
+
+<h2 id="lists">Digital decks and collections</h2>
+<p>When you create a deck or a collection, check <b>Digital (MTGO / Arena cards only)</b>. It is chosen
+at creation and cannot be changed afterwards (<span class="menu">Edit Properties</span> and the Info tab show it).
+A deck's Sideboard and Extra lists follow the deck.</p>
+<ul>
+<li>A <b>digital</b> list only takes digital-only cards and paper cards also playable online.</li>
+<li>A <b>paper</b> list never takes a digital-only card.</li>
+<li>Cards never move or copy between a digital and a paper list: a paper copy would end up in an Arena
+deck. Add them again from the Scryfall Database instead.</li>
+<li>No Etched finish, Proxy or Condition in a digital list: they are paper details. Foil is allowed.</li>
+<li>The value columns stay empty for a digital list (the cards have no paper price).</li>
+<li>The <a href="../plan/buyer.html">Buyer</a> leaves digital lists out, and the deck <b>Info</b> tab shows no
+proxy cost for a digital deck. Printing the cards as images still works.</li>
+</ul>
+<p>An import into a digital list is never refused: every card is made digital. A card whose printing is paper-only takes
+the printing of the same card that exists on MTGO or Arena <b>in the same set</b> (the same number if there is one),
+and an Etched finish, Proxy or Condition in the file is dropped. ManaDesk never moves a card to another set: if the
+set has no digital version of it (a card from Fourth Edition, say), the card is flagged <i>This set has no digital
+(MTGO / Arena) version of the card</i> and left out (<i>Ignore cards with errors</i>); in the preview, pick another
+set in the <b>Set</b> list, which only offers the sets that have it online. Into a paper list, a digital-only
+printing is swapped for a paper one of the same set the same way.</p>
+
+<h2 id="filter">Showing paper or digital cards</h2>
+<p>The filter dialog's <b>Card Kind</b> group (Paper / Digital) is available while the digital cards are
+enabled. It starts empty: nothing is hidden, so you see the paper and the digital cards together. Check <b>Paper</b> or <b>Digital</b> to show one kind only.
+<i>Digital</i> shows digital-only cards and the paper cards also online. The Printings and Instances views
+always show everything. <b>Group By</b> also offers <i>Digital</i>.</p>
+
+<h2 id="collector">Collecting the digital cards</h2>
+<p>In <a href="collector.html">Collector</a>, the <b>D</b> button switches between paper and digital, never
+both: it picks the cards (and so the sets) to show, and only the copies in decks and collections of that kind
+count as owned.</p>
+
+<h2>Older versions</h2>
+<p>A digital list opened in an older ManaDesk cannot link its digital-only cards to the card database: the older version may log errors for
+them, but it does not stop working.</p>
+
+<p class="seealso">See also: <a href="concepts.html">Decks and collections</a> &middot;
+<a href="collector.html">Collector</a> &middot; <a href="../find/filter.html">Searching and filtering</a></p>
+</body>
+</html>

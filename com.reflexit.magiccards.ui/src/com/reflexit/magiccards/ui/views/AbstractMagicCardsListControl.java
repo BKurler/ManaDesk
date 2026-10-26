@@ -87,6 +87,8 @@
  *     Rémi Dutil (2026) - mergeColumnLayout(): a viewer with fewer columns (Split view)
  *                         no longer puts its own list first, which moved Count into
  *                         the middle of the shared layout
+ *     Rémi Dutil (2026) - Group By: Digital (while the digital cards are enabled)
+$L
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -1470,6 +1472,14 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		return new MagicColumnCollection("");
 	}
 
+	/**
+	 * Whether this list shows your own copies (a deck, a collection, My Cards), as opposed to printings (the
+	 * Scryfall Database, Printings): only copies have a Condition, a Proxy flag or an ownership to group by.
+	 */
+	protected boolean showsCopies() {
+		return true;
+	}
+
 	protected Collection<GroupOrder> getGroups() {
 		ArrayList<GroupOrder> res = new ArrayList<>();
 		res.add(new GroupOrder());
@@ -1481,10 +1491,15 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		res.add(new GroupOrder(MagicCardField.SET));
 		res.add(new GroupOrder(MagicCardField.SET, MagicCardField.RARITY));
 		res.add(new GroupOrder(MagicCardField.RARITY));
-		res.add(new GroupOrder(MagicCardField.CONDITION));
-		res.add(new GroupOrder(MagicCardField.PROXY));
+		if (showsCopies()) { // a copy's own details: nothing to group in a list of printings
+			res.add(new GroupOrder(MagicCardField.CONDITION));
+			res.add(new GroupOrder(MagicCardField.PROXY));
+		}
+		if (com.reflexit.magiccards.core.model.DigitalSupport.isEnabled())
+			res.add(new GroupOrder(MagicCardField.CARD_KIND)); // Paper, Paper + online, Digital
 		res.add(new GroupOrder(MagicCardField.NAME));
-		res.add(new GroupOrder(MagicCardField.OWNERSHIP, MagicCardField.NAME));
+		if (showsCopies())
+			res.add(new GroupOrder(MagicCardField.OWNERSHIP, MagicCardField.NAME));
 		res.addAll(new CustomGroupsPreferencePage().getCurrentValue());
 		return res;
 	}
@@ -1703,6 +1718,11 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		updateSortColumn(-1);
 	}
 
+	/** A view may add to or override what the stored filter says (Collector: the paper or digital cards). */
+	protected void adjustFilterMap(HashMap<String, String> map) {
+		// nothing by default
+	}
+
 	public void syncFilter() {
 		MagicCardFilter filter = getFilter();
 		if (filter == null)
@@ -1711,6 +1731,7 @@ public abstract class AbstractMagicCardsListControl extends AbstractViewPage
 		if (quickFilter != null)
 			quickFilter.setPreferenceStore(store);
 		HashMap<String, String> map = storeToMap(store);
+		adjustFilterMap(map);
 		filter.update(map);
 		// !!! RD
 		// filter.setOnlyLastSet(store.getBoolean(EditionsFilterPreferencePage.LAST_SET));

@@ -16,7 +16,7 @@ images of that window here, retake them with the same setup and overwrite the fi
 | 3 | `db_download_prompt.png` | start/first_start | The first-start "download the card database" prompt | New, empty workspace |
 | 4 | `db_update_progress.png` | database/update | Update Card Database running (progress) | — |
 | 5 | `whats_new.png` | start/first_start | Help ▸ What's New dialog | — |
-| 6 | `status_markers.png` | start/window, collection/concepts | Card Navigator close-up showing the colored markers (virtual, read-only, unsorted, boxed) | Decks / collections with each marker |
+| 6 | `status_markers.png` | start/window, collection/concepts | Card Navigator close-up showing the colored markers (virtual, read-only, unsorted, boxed) | Decks / collections with each marker (the digital one too, with Enable digital cards on; Unsorted is top left with Boxed, Read-only is a red dot at the bottom right, Digital a letter D in the centre) |
 | 7 | `scryfall_db_view.png` | find/browse | Scryfall Database view with a few columns and a group | Group by set, a card selected |
 | 8 | `find_bar.png` | find/filter | The find bar, opened with the **Find...** button (magnifier in the view's toolbar): the "search..." box, Previous / Next arrows, W (Whole word) | Type e.g. `Lightning*`, a matching card selected |
 | 9 | `quick_filter.png` | find/filter, collection/my_cards | My Cards quick filter bar | — |
@@ -73,3 +73,20 @@ images of that window here, retake them with the same setup and overwrite the fi
 | 54 | `file_locations_prefs.png` | data/workspace | Preferences ▸ File Locations | — |
 | 55 | `report_issue.png` | support/report | Report a Bug or Request a Feature dialog | — |
 | 56 | `support_dialog.png` | support/support | Help ▸ Support ManaDesk | — |
+
+## To retake for the digital cards change
+
+Retake these with **Enable digital cards off** (the default), same setup as above:
+
+| # | File | Why |
+|---|---|---|
+| 1 | `window_overview.png` | Navigator and tab icons: markers moved (Unsorted top left, Read-only bottom right), sideboard / extra rows start with # / ~ |
+| 6 | `status_markers.png` | The markers table itself: Virtual blue bottom left, Boxed black and Unsorted green top left, Read-only red bottom right |
+| 30 | `unsorted_positions.png` | Tab icon of an unsorted collection (green dot now top left) |
+| 32 | `edit_deck_properties.png` | Virtual is now editable while the deck is empty; Default Format is greyed on a sideboard / extra |
+| 42d | `wishlist_collection.png` | Navigator icons (marker positions) |
+| 53 | `prices_prefs.png` | New *Enable digital cards* checkbox |
+
+Check, and retake only if they show a sideboard / extra row or a read-only / unsorted list: `deck_view_cards.png`,
+`proxier_view.png`, `location_picker.png`, `my_cards_view.png`, `edit_collection_properties.png` (type choices are now
+greyed when the collection is read only or has cards and would change between owned and virtual).

@@ -60,6 +60,7 @@
  *     Rémi Dutil (2026) - createLanguageColumn() factory (the import preview
  *                         colors overridden languages)
  *     Rémi Dutil (2026) - "Traits" (Reserved List, Game Changer, Reprint), "EDHREC Rank" and "Produced Mana" columns
+ *     Rémi Dutil (2026) - "Digital" column
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -153,6 +154,7 @@ public class MagicColumnCollection extends ColumnCollection {
 		}
 		columns.add(new ReleaseDateColumn());
 		columns.add(new GenColumn(MagicCardField.TRAITS, "Traits")); // Reserved List, Game Changer, Reprint
+		columns.add(new DigitalColumn()); // digital-only / also playable online (MTGO, Arena)
 		columns.add(new GenColumn(MagicCardField.EDHREC_RANK, "EDHREC Rank")); // numeric: sort by popularity
 		if (MagicUIActivator.TRACE_EXPORT) {
 			columns.add(new GenColumn(MagicCardField.HASHCODE, "HashCode"));

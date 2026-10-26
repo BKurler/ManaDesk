@@ -7,6 +7,9 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *    Rémi Dutil (2026) - name lookups only match printings fit for the kind (digital / paper) of the list imported into; a sideboard created by an import inherits the main deck's digital flag
+ *    Rémi Dutil (2026) - forceKind(): an import into a digital (or paper) list swaps each card to a fitting printing of the same set, or flags it (never another set)
+ *    Rémi Dutil (2026) - performImport(): a card that does not fit the list is left out (and logged) instead of failing the import
  *******************************************************************************/
 
 /*
@@ -35,6 +38,7 @@ import java.util.regex.Pattern;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -131,6 +135,66 @@ public class ImportUtils {
 		return x.equalsIgnoreCase(y);
 	}
 
+	/**
+	 * An import must never fail because of the kind of the target deck or collection: every resolved card is
+	 * made to fit it. Into a digital list a card whose printing is paper-only takes the printing of the
+	 * same name that exists on MTGO or Arena IN THE SAME SET (the same collector number preferred), and the
+	 * paper-only details (Etched finish, Proxy, Condition) are dropped. Into a paper list a digital-only printing
+	 * is swapped for a paper one of the same set the same way. The set is never changed: when the set has no
+	 * fitting printing the card gets an error (the set has no digital / paper version of it) and is left out,
+	 * instead of stopping the import. The user can pick another set in the preview. Run after {@link #resolve}; running it again changes nothing.
+	 */
+	public static void forceKind(Collection<? extends ICard> list, boolean digitalTarget) {
+		DigitalRules.trace("forceKind: " + list.size() + " card(s) into a " + (digitalTarget ? "digital" : "paper") + " list");
+		IDbCardStore<IMagicCard> db = DataManager.getInstance().getMagicDBStore();
+		for (ICard o : list) {
+			if (!(o instanceof MagicCardPhysical))
+				continue;
+			MagicCardPhysical card = (MagicCardPhysical) o;
+			if (card.getError() != null) // not resolved: nothing to fit
+				continue;
+			if (DigitalRules.kindVeto(card, digitalTarget) != null) {
+				MagicCard fit = pickPrinting(card, db == null ? null : db.getCandidates(card.getName()), digitalTarget);
+				if (fit == null) {
+					// the set stays as the file has it (never another set): the card gets an error saying the set has no
+					// version of it for this kind of list, and no database card any more, so the import drops it (or, with
+					// "Ignore cards with errors", leaves it out) instead of failing when it is added
+					DigitalRules.trace("forceKind " + card + ": its set has no " + (digitalTarget ? "digital" : "paper") + " printing");
+					MagicCard unresolved = (MagicCard) card.getBase().clone(); // do not touch the shared database card
+					unresolved.setCardId(0);
+					card.setMagicCard(unresolved);
+					card.setError(digitalTarget ? ImportError.SET_NOT_DIGITAL_ERROR : ImportError.SET_NOT_PAPER_ERROR);
+					continue;
+				}
+				DigitalRules.trace("forceKind " + card + " -> " + fit + " (" + fit.getCardId() + ")");
+				card.setMagicCard(fit);
+			}
+			if (digitalTarget)
+				DigitalRules.dropPaperDetails(card);
+		}
+	}
+
+	/**
+	 * The printing among {@code candidates} that fits a list of the given kind, in the SAME set as {@code card}
+	 * (the same collector number preferred); {@code null} when that set has none - never a printing of another set.
+	 */
+	static MagicCard pickPrinting(IMagicCard card, Collection<IMagicCard> candidates, boolean digitalTarget) {
+		if (candidates == null)
+			return null;
+		MagicCard sameSet = null;
+		for (IMagicCard c : candidates) {
+			if (!(c instanceof MagicCard) || DigitalRules.kindVeto(c, digitalTarget) != null)
+				continue;
+			if (card.getSet() != null && card.getSet().equals(c.getSet())) {
+				if (card.getCollectorId() != null && card.getCollectorId().equals(c.getCollectorId()))
+					return (MagicCard) c;
+				if (sameSet == null)
+					sameSet = (MagicCard) c;
+			}
+		}
+		return sameSet;
+	}
+
 	public static void resolve(List<? extends ICard> list) {
 		DataManager.getInstance().getMagicDBStore().initialize();
 		for (ICard card : list) {
@@ -144,6 +208,17 @@ public class ImportUtils {
 			Collection<Location> importedLocations = getLocations(importedCards);
 			createDecks(importedLocations);
 			// import into card store
+			// an import is never refused as a whole because of one card: a card that does not fit the list it is
+			// imported into (digital / paper) is left out, and the log says which one and why
+			for (java.util.Iterator<?> it = importedCards.iterator(); it.hasNext();) {
+				Object card = it.next();
+				String veto = DigitalRules.addVeto(card, cardStore);
+				if (veto != null) {
+					MagicLogger.log("Import: card left out - " + card + " (" + (card instanceof IMagicCard ? ((IMagicCard) card).getSet() : "?")
+							+ "): " + veto);
+					it.remove();
+				}
+			}
 			DataManager.getInstance().add(importedCards, cardStore);
 		}
 	}
@@ -163,11 +238,13 @@ public class ImportUtils {
 					continue;
 				}
 				boolean virtual = true;
+				boolean digital = false;
 				CardCollection maindeck = (CardCollection) parent.findChield(location.toMainDeck());
 				if (maindeck != null) {
 					virtual = maindeck.isVirtual();
+					digital = maindeck.isDigital();
 				}
-				parent.addDeck(location.getBaseFileName(), true, virtual);
+				parent.addDeck(location.getBaseFileName(), true, virtual).persistDigital(digital);
 			}
 		}
 	}
@@ -366,6 +443,10 @@ public class ImportUtils {
 		// Let used the other fields
 		// In priority Name, then String Collector Number
 
+		// a printing that does not fit the kind of list being imported into is no match
+		if (DigitalRules.isOutOfImportTarget(candidate))
+			return 0;
+
 		String collectorId = base.getCollectorId();
 		int collectorNumberId = base.getCollectorNumberId();
 		String candName = candidate.getName();
@@ -546,7 +627,16 @@ public class ImportUtils {
 			List<IMagicCard> list = map.get(name.toLowerCase(Locale.ENGLISH));
 			if (list == null)
 				return Collections.EMPTY_LIST;
-			return list;
+			// only the printings that fit the kind of list being imported into
+			List<IMagicCard> fit = null;
+			for (int i = 0; i < list.size(); i++) {
+				if (DigitalRules.isOutOfImportTarget(list.get(i))) {
+					fit = new ArrayList<>(list);
+					fit.removeIf(DigitalRules::isOutOfImportTarget);
+					break;
+				}
+			}
+			return fit != null ? fit : list;
 		}
 	}
 

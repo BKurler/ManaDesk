@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - status dots on the deck / collection tree icons
  *     Rémi Dutil (2026) - boxed indicator (top-left corner)
+ *     Rémi Dutil (2026) - a sideboard / extra list starts with # / ~ like its tab; digital indicator
  */
 package com.reflexit.magiccards.ui.views.nav;
 
@@ -20,10 +21,24 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.StatusDots;
 
 public class CardsNavigatorLabelProvider extends LabelProvider implements IColorProvider {
+	/**
+	 * The name as the deck tab shows it: a deck's sideboard starts with "#" and its extra list with "~".
+	 * Display only: the trees sort by location (see {@link DeckFamilyViewerComparator}), never by this text.
+	 */
+	static String prefixed(String name, com.reflexit.magiccards.core.model.Location loc) {
+		if (name == null || loc == null)
+			return name;
+		if (loc.isSideboard())
+			return "#" + name;
+		if (loc.isExtra())
+			return "~" + name;
+		return name;
+	}
+
 	@Override
 	public String getText(Object element) {
 		if (element instanceof CardElement) {
-			String name = ((CardElement) element).getLabel();
+			String name = prefixed(((CardElement) element).getLabel(), ((CardElement) element).getLocation());
 			String activeDeckId = DataManager.getCardHandler().getActiveDeckId();
 			if (activeDeckId != null && element instanceof CardCollection) {
 				String collId = ((CardCollection) element).getId();
@@ -41,7 +56,8 @@ public class CardsNavigatorLabelProvider extends LabelProvider implements IColor
 		if (element instanceof CardCollection) {
 			CardCollection cc = (CardCollection) element;
 			String base = cc.isDeck() ? "icons/obj16/ideck16.png" : "icons/obj16/lib16.png";
-			return StatusDots.decorate(base, cc.isVirtual(), cc.isReadOnly(), cc.isUnsorted(), cc.isBoxed());
+			return StatusDots.decorate(base, cc.isVirtual(), cc.isReadOnly(), cc.isUnsorted(), cc.isBoxed(),
+					cc.isDigital());
 		}
 		if (element instanceof CollectionsContainer) {
 			return MagicUIActivator.getDefault().getImage("icons/obj16/folder-lib.png");

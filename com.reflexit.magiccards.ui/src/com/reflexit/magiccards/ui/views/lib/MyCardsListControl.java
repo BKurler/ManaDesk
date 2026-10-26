@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - groupsByLocation(): Group By Location only where the list spans several (My Cards)
+ */
 package com.reflexit.magiccards.ui.views.lib;
 
 import java.util.Collection;
@@ -80,10 +84,16 @@ public abstract class MyCardsListControl extends AbstractMagicCardsListControl {
 		return getViewPreferencePageId();
 	}
 
+	/** Whether Group By offers Location: My Cards spans every list; a deck or a collection is one list. */
+	protected boolean groupsByLocation() {
+		return true;
+	}
+
 	@Override
 	public Collection<GroupOrder> getGroups() {
 		Collection<GroupOrder> res = super.getGroups();
-		res.add(new GroupOrder(MagicCardField.LOCATION));
+		if (groupsByLocation())
+			res.add(new GroupOrder(MagicCardField.LOCATION));
 		return res;
 	}
 

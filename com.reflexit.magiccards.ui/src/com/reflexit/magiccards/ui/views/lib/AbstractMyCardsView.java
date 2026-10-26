@@ -597,8 +597,14 @@ public abstract class AbstractMyCardsView extends AbstractGroupPageCardsView imp
 	public CardFilterDialog getCardFilterDialog() {
 		MyCardsFilterDialog dialog = new MyCardsFilterDialog(getShell(), getFilterPreferenceStore());
 		dialog.setAllowsMultipleFinishesPerRow(allowsMultipleFinishesPerRow());
+		dialog.setAllowsCardKind(allowsCardKindFilter());
 		dialog.setOnApply(getFilterApplyCallback());
 		return dialog;
+	}
+
+	/** Whether the filter dialog offers the Card Kind (Paper / Digital) group: Collector, paper or digital never both, does not. */
+	protected boolean allowsCardKindFilter() {
+		return true;
 	}
 
 	/**

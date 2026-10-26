@@ -37,6 +37,8 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	public static final String SHOW_GRID = PREFIX + ".grid";
 	/** Set drop lists: by release date (oldest first) instead of alphabetically. */
 	public static final String SETS_BY_RELEASE_DATE = PREFIX + ".setsByReleaseDate";
+	/** Digital (MTGO / Arena) cards: shown, filterable, allowed in digital decks and collections. Read at startup. */
+	public static final String ENABLE_DIGITAL = PREFIX + ".enableDigital";
 	public static final String LOCAL_SHOW_QUICKFILTER = "quickfilter";
 	public static final String LOCAL_COLUMNS = "columnlayout";
 	public static final String CHECK_FOR_UPDATES = "updates";
@@ -55,4 +57,6 @@ public class PreferenceConstants extends CorePreferenceConstants {
 	 *  as its own slot to complete, instead of any one finish completing the
 	 *  whole printing. */
 	public static final String COLLECTOR_COUNT_FINISHES_SEPARATELY = PREFIX + ".collectorCountFinishesSeparately";
+	/** Collector: show and count the digital cards (MTGO / Arena) instead of the paper ones. */
+	public static final String COLLECTOR_DIGITAL = PREFIX + ".collectorDigital";
 }

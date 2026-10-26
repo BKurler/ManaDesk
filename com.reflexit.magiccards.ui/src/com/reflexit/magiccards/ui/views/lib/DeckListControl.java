@@ -8,6 +8,7 @@
  *     Rémi Dutil (2026) - getPresentaionPreferenceStore(): in a deck / collection
  *                         tab, presentation, grouping and sort are kept per
  *                         list (its own store); columns stay shared
+ *     Rémi Dutil (2026) - no Group By Location (groupsByLocation()): a deck or a collection is one list
  */
 package com.reflexit.magiccards.ui.views.lib;
 
@@ -27,6 +28,11 @@ public class DeckListControl extends MyCardsListControl implements IDeckPage {
 
 	public DeckListControl(Presentation pres) {
 		super(pres);
+	}
+
+	@Override
+	protected boolean groupsByLocation() {
+		return false; // one deck or collection: every card is in the same place
 	}
 
 	@Override

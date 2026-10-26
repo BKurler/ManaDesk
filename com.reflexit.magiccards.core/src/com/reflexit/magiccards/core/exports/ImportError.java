@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - SET_NOT_DIGITAL_ERROR / SET_NOT_PAPER_ERROR: the set has no digital / paper version of the card
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -20,6 +21,8 @@ public class ImportError {
 		CANNOT_SET_FIELD("Cannot set field {0} to value {1}"),
 		NO_LANG("Language is not loaded in DB"),
 		NO_VARIANT("Card variant is not loaded in DB"),
+		SET_NOT_DIGITAL("This set has no digital (MTGO / Arena) version of the card"),
+		SET_NOT_PAPER("This set has no paper version of the card"),
 		// end
 		;
 
@@ -36,6 +39,10 @@ public class ImportError {
 	public static final ImportError NO_DB_ERROR = new ImportError(Type.NO_DB);
 	public static final ImportError NO_LANG = new ImportError(Type.NO_LANG);
 	public static final ImportError NO_VARIANT = new ImportError(Type.NO_VARIANT);
+	/** The card exists in the set, but not on MTGO / Arena (a digital list is imported into). */
+	public static final ImportError SET_NOT_DIGITAL_ERROR = new ImportError(Type.SET_NOT_DIGITAL);
+	/** The card exists in the set, but only digitally (a paper list is imported into). */
+	public static final ImportError SET_NOT_PAPER_ERROR = new ImportError(Type.SET_NOT_PAPER);
 	private String[] arg;
 	private ImportError.Type type;
 

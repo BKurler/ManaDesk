@@ -47,6 +47,7 @@
  *                  out of sight.
  *     Rémi Dutil (2026) - F1 help context (viewbuyer)
  *     Rémi Dutil (2026) - owned (non-virtual) decks are left out, like boxed ones
+ *     Rémi Dutil (2026) - a digital deck or collection is left out (nothing to buy for MTGO / Arena cards)
  *******************************************************************************/
 package com.manadesk.monetization;
 
@@ -354,9 +355,9 @@ public class BuyerView extends ViewPart {
 		return !isLeftOut(cc);
 	}
 
-	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so nothing is bought for them. */
+	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so nothing is bought for them. A digital deck or collection has nothing to buy */
 	private static boolean isLeftOut(CardCollection cc) {
-		return cc.isBoxed() || cc.isOwnedDeck();
+		return cc.isBoxed() || cc.isOwnedDeck() || cc.isDigital();
 	}
 
 	// ------------------------------------------------------- right pane

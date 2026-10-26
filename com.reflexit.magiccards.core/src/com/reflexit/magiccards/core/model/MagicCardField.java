@@ -8,6 +8,8 @@
  *                         (more Scryfall card facts, property map); ORACLE_ID; TRAITS
  *                         (computed: the yes/no facts as one list - see CardTraits);
  *                         EXTRA_TRAITS (stored treatments / size / watermark labels of that list)
+ *     Rémi Dutil (2026) - DIGITAL / ONLINE (digital-only printing / paper printing also
+ *                         playable online, Scryfall-derived, property map); CARD_KIND (computed label of the two, for Group By)
  *     Rémi Dutil (2026) - FINISH (per-copy: Nonfoil/Foil/Etched) + FINISHES
  *                         (which finishes a PRINTING supports, Scryfall-derived)
  *     Rémi Dutil (2026) - FINISH.getM(MagicCard): browsing a printing itself
@@ -16,6 +18,7 @@
  *                         inherited physical-field default, which read
  *                         getRealCards() - so editing your own copy's finish
  *                         in a deck was visibly "leaking" into the DB view)
+ *     Rémi Dutil (2026) - PROXY / CONDITION.getM(MagicCard): a printing has none (no aggregate of the user's copies)
  *     Rémi Dutil (2026) - removed RATING (community rating is not a concept
  *                         this app tracks anymore)
  *     Rémi Dutil (2026) - COLOR now caches its value at import time instead
@@ -1483,6 +1486,28 @@ public enum MagicCardField implements ICardField {
 			return card.getProperty(this);
 		};
 	},
+	DIGITAL(null) { // Scryfall-derived: a digital-only printing ("true"; absent for a paper one); property map
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
+	ONLINE(null) { // Scryfall-derived: a paper printing also playable on MTGO / Arena ("true"; absent otherwise); property map
+		@Override
+		protected void setStr(MagicCard card, String value) {
+			card.setPropertyString(this, value);
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			return card.getProperty(this);
+		};
+	},
 	EDHREC_RANK(null) { // Scryfall-derived: EDHREC popularity rank (1 = most played); an Integer, null when unranked
 		@Override
 		public ICardVisitor getAggregator() {
@@ -1547,6 +1572,20 @@ public enum MagicCardField implements ICardField {
 		}
 	},
 
+	CARD_KIND(null) { // computed, not stored: "Paper", "Paper + online" or "Digital" (Group By Card kind)
+		@Override
+		public Object getM(MagicCard card) {
+			if ("true".equals(card.getProperty(DIGITAL)))
+				return "Digital";
+			return "true".equals(card.getProperty(ONLINE)) ? "Paper + online" : "Paper";
+		}
+
+		@Override
+		public void setM(MagicCard card, Object value) {
+			// computed from DIGITAL / ONLINE
+		}
+	},
+
 	FINISH(true) { // per-copy: Nonfoil / Foil / Etched - always resolves to one of the
 					// three (see MagicCardPhysical#getFinish())
 		@Override
@@ -1594,6 +1633,12 @@ public enum MagicCardField implements ICardField {
 		}
 
 		@Override
+		public Object getM(MagicCard card) {
+			// a printing has no grade: never an aggregate of the user's own copies (see FINISH)
+			return null;
+		}
+
+		@Override
 		protected void setM(MagicCardPhysical card, Object value) {
 			if (value == null || value instanceof CardCondition)
 				card.setCondition((CardCondition) value);
@@ -1612,6 +1657,13 @@ public enum MagicCardField implements ICardField {
 		public Object getM(MagicCardPhysical card) {
 			// null (not Boolean.FALSE) when genuine, so exports leave the cell blank
 			return card.isProxy() ? Boolean.TRUE : null;
+		}
+
+		@Override
+		public Object getM(MagicCard card) {
+			// a printing (Scryfall Database, Printings) is not a copy: no proxy - never an aggregate of
+			// whatever the user's own copies are (see FINISH)
+			return null;
 		}
 
 		@Override

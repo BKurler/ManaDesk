@@ -3,6 +3,8 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - sortSetNames(): set names alphabetically or by
  *                         release date (oldest first), for the set drop lists
+ *     Rémi Dutil (2026) - digital sets: editions.txt field 8; getEditions()/getNames()/getIds()
+ *                         leave them out while the digital support is off (getAllEditions() keeps them)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -30,7 +32,8 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 
-// Name|Abbr|otherAbbr|ReleaseDate|Type|Block|iconAbbr|Unused(Name aliases)
+// Name|Abbr|otherAbbr|ReleaseDate|Type|Block|iconAbbr|Unused(Name aliases)|digital
+// field 8 is "digital" for a digital-only set, empty otherwise (older files stop before it)
 // field 6 (iconAbbr) is the set-symbol SVG token, e.g. "star" for the generic
 // star icon - it is NOT a legality value and NOT a set code.
 // Limited Edition Alpha|LEA|1E|August 1993|Core|Core Set|lea|
@@ -102,7 +105,16 @@ public class Editions implements ISearchableProperty {
 			return formatter.parse(date);
 	}
 
+	/** The editions to show / use: without the digital sets while the digital support is off. */
 	public Collection<Edition> getEditions() {
+		ArrayList<Edition> list = new ArrayList<>(this.name2ed.values());
+		if (!DigitalSupport.isEnabled())
+			list.removeIf(Edition::isDigital);
+		return list;
+	}
+
+	/** Every edition, the digital ones included whatever the digital support. */
+	public Collection<Edition> getAllEditions() {
 		return new ArrayList<>(this.name2ed.values());
 	}
 
@@ -250,7 +262,7 @@ public class Editions implements ISearchableProperty {
 		}
 	}
 
-	private synchronized void loadEditions(InputStream st) throws IOException {
+	synchronized void loadEditions(InputStream st) throws IOException {
 		try (BufferedReader r = new BufferedReader(new InputStreamReader(st))) {
 			String line;
 			while ((line = r.readLine()) != null) {
@@ -304,6 +316,10 @@ public class Editions implements ISearchableProperty {
 					}
 					set.setNameAliases(aliases);
 					set.setIconAbbr(iconAbbr);
+					if (attrs.length <= 8)
+						continue;
+					// digital-only set
+					set.setDigital("digital".equalsIgnoreCase(attrs[8].trim()));
 				} catch (Exception e) {
 					MagicLogger.log("bad editions record: " + line);
 					MagicLogger.log(e);
@@ -340,7 +356,7 @@ public class Editions implements ISearchableProperty {
 				editions += name + "|" + ed.getMainAbbreviation() + "|" + ed.getExtraAbbreviations() + "|" + rel + "|"
 						+ type + "|" + (ed.getBlock() == null ? "" : ed.getBlock()) + "|" + ed.getIconAbbr() + "|"
 
-						+ ed.getExtraAliases() + "\n";
+						+ ed.getExtraAliases() + "|" + (ed.isDigital() ? "digital" : "") + "\n";
 			}
 
 			st.print(editions);
@@ -362,7 +378,7 @@ public class Editions implements ISearchableProperty {
 	@Override
 	public Collection<String> getIds() {
 		ArrayList<String> list = new ArrayList<>();
-		for (Edition ed : this.name2ed.values()) {
+		for (Edition ed : getEditions()) {
 			String abbr = ed.getMainAbbreviation();
 			list.add(getPrefConstant(abbr));
 		}
@@ -413,7 +429,10 @@ public class Editions implements ISearchableProperty {
 	}
 
 	public Collection<String> getNames() {
-		return new ArrayList<>(this.name2ed.keySet());
+		ArrayList<String> names = new ArrayList<>();
+		for (Edition ed : getEditions())
+			names.add(ed.getName());
+		return names;
 	}
 
 	public synchronized void remove(Edition ed) {

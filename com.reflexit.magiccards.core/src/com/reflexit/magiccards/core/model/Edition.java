@@ -2,6 +2,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - digital flag (a digital-only set)
  */
 
 package com.reflexit.magiccards.core.model;
@@ -26,6 +27,7 @@ public class Edition {
 	private int id;
 	private EditionFileCache imageFiles;
 	private String iconAbbr;
+	private boolean digital;
 
 	public Edition(String name, String abbr) {
 		if (name.contains("#")) {
@@ -176,6 +178,15 @@ public class Edition {
 
 	public void setIconAbbr(String abbr) {
 		iconAbbr = abbr;
+	}
+
+	/** True for a digital-only set (MTGO / Arena): every card of it is digital-only. */
+	public boolean isDigital() {
+		return digital;
+	}
+
+	public void setDigital(boolean digital) {
+		this.digital = digital;
 	}
 
 	public void setType(String type) {

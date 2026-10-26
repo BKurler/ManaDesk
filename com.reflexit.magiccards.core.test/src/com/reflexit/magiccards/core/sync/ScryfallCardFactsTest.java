@@ -99,6 +99,45 @@ public class ScryfallCardFactsTest extends AbstractMagicTest {
 		Assert.assertNull(c.get(MagicCardField.PRODUCED_MANA));
 	}
 
+	// ------------------------------------------------------------ digital
+
+	private static MagicCard parseWithGames(String set, String name, String games, String extra) throws Exception {
+		File f = File.createTempFile("facts-test-", ".jsonl.gz");
+		f.deleteOnExit();
+		try (PrintStream out = new PrintStream(new GZIPOutputStream(new FileOutputStream(f)), false, "UTF-8")) {
+			out.println(cardJson(set, name, extra).replace("\"games\":[\"paper\"]", "\"games\":" + games));
+		}
+		Map<String, List<MagicCard>> g = new ParseScryFallChecklist().parseBulkGrouped(f,
+				Collections.singleton(set), ICoreProgressMonitor.NONE);
+		return g.get(set).isEmpty() ? null : g.get(set).get(0);
+	}
+
+	@Test
+	public void testDigitalOnlyRecordIsKeptAndFlagged() throws Exception {
+		MagicCard c = parseWithGames("fd1", "Arena Only", "[\"arena\"]", "\"digital\":true,");
+		Assert.assertEquals("true", c.get(MagicCardField.DIGITAL));
+		Assert.assertNull(c.get(MagicCardField.ONLINE));
+	}
+
+	@Test
+	public void testPaperRecordAlsoOnlineIsFlaggedOnline() throws Exception {
+		MagicCard c = parseWithGames("fd2", "Both Worlds", "[\"paper\",\"mtgo\",\"arena\"]", "");
+		Assert.assertNull(c.get(MagicCardField.DIGITAL));
+		Assert.assertEquals("true", c.get(MagicCardField.ONLINE));
+	}
+
+	@Test
+	public void testPaperOnlyRecordHasNoDigitalFlag() throws Exception {
+		MagicCard c = parseWithGames("fd3", "Paper Only", "[\"paper\"]", "");
+		Assert.assertNull(c.get(MagicCardField.DIGITAL));
+		Assert.assertNull(c.get(MagicCardField.ONLINE));
+	}
+
+	@Test
+	public void testRecordOnNoSupportedPlatformIsSkipped() throws Exception {
+		Assert.assertNull(parseWithGames("fd4", "Nowhere", "[\"astral\"]", ""));
+	}
+
 	@Test
 	public void testOfficialColorsWinOverTheCost() throws Exception {
 		// mana cost {G}, but Scryfall says it is red (a color indicator) / colorless (devoid)

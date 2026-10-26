@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - collector number made editable
+ *     Rémi Dutil (2026) - a copy in a digital / paper list only offers the printings fit for it
  */
 package com.reflexit.magiccards.ui.views.columns;
 
@@ -62,7 +63,7 @@ final class CollectorsNumberColumn extends GenColumn {
 		public String[] getItems(Object element) {
 			MagicCardPhysical card = (MagicCardPhysical) element;
 			Set<String> nums = new LinkedHashSet<>();
-			for (IMagicCard base : Printings.inSet(card.getName(), card.getSet())) {
+			for (IMagicCard base : Printings.inSet(card.getName(), card.getSet(), card.getLocation())) {
 				String n = base.getCollectorId();
 				if (n != null && !n.isEmpty())
 					nums.add(n);
@@ -83,7 +84,7 @@ final class CollectorsNumberColumn extends GenColumn {
 			String num = (String) value;
 			if (num == null || num.equals(card.getCollectorId()))
 				return;
-			for (IMagicCard base : Printings.inSet(card.getName(), card.getSet())) {
+			for (IMagicCard base : Printings.inSet(card.getName(), card.getSet(), card.getLocation())) {
 				if (num.equals(base.getCollectorId())) {
 					card.setMagicCard((MagicCard) base);
 					updateOnEdit(getViewer(), card);

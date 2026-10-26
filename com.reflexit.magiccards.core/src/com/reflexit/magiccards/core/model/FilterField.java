@@ -3,6 +3,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - PROXY filter field (Genuine / Proxy)
+ *     Rémi Dutil (2026) - DIGITAL filter field (Paper / Digital)
  *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
  *                         concept this app tracks anymore)
  *     Rémi Dutil (2026) - POWER/TOUGHNESS/CCC/DBPRICE/COLLNUM now build a
@@ -101,6 +102,7 @@ public enum FilterField {
 	CONDITION(MagicCardField.CONDITION, Postfix.ENUM_POSTFIX),
 	FINISH(MagicCardField.FINISH, Postfix.ENUM_POSTFIX),
 	PROXY(MagicCardField.PROXY, Postfix.TEXT_POSTFIX),
+	DIGITAL(MagicCardField.DIGITAL, Postfix.ENUM_POSTFIX),
 	FORTRADECOUNT(MagicCardField.FORTRADECOUNT, Postfix.NUMERIC_POSTFIX),
 	FORMAT(MagicCardField.LEGALITY, Postfix.TEXT_POSTFIX),
 	FORMAT_TEXT(MagicCardField.LEGALITY_FILTER, Postfix.TEXT_POSTFIX),
@@ -164,6 +166,7 @@ public enum FilterField {
 		ids.addAll(CardFinishes.getInstance().getIds());
 		ids.add(CardFinishes.AND_ID);
 		ids.addAll(Proxies.getInstance().getIds());
+		ids.addAll(CardKinds.getInstance().getIds());
 		ids.addAll(Locations.getInstance().getIds());
 		ids.add(TEXT_LINE.getPrefConstant());
 		ids.add(TYPE_LINE.getPrefConstant());
@@ -233,6 +236,13 @@ public enum FilterField {
 				String tag = cf == null ? value : cf.toString();
 				return BinaryExpr.fieldMatches(MagicCardField.FINISH,
 						"(^|,)" + java.util.regex.Pattern.quote(tag) + "($|,)");
+			}
+			case DIGITAL: {
+				// "Paper": not a digital-only printing; "Digital": digital-only, or a paper printing also on MTGO / Arena
+				if (CardKinds.DIGITAL.equalsIgnoreCase(value))
+					return BinaryExpr.fieldEquals(MagicCardField.DIGITAL, "true")
+							.or(BinaryExpr.fieldEquals(MagicCardField.ONLINE, "true"));
+				return BinaryExpr.fieldEquals(MagicCardField.DIGITAL, null);
 			}
 			case PROXY: {
 				if (Proxies.PROXY.equalsIgnoreCase(value) || "true".equalsIgnoreCase(value))

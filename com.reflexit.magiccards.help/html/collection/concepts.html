@@ -29,9 +29,8 @@ list... Each collection has a <b>type</b>:</p>
 yet.</td><td>Virtual</td></tr>
 </table>
 <p>You choose the type when you create the collection. Later, in its properties, you can switch between
-Standard and For Trade at any time, but a collection with cards in it can't move between owned and
-virtual: a Wishlist/To Print collection stays Wishlist/To Print, and a Standard or For Trade collection
-never becomes one. Only an empty collection can change to or from Wishlist/To Print. To turn wished
+Standard and For Trade. Changing between owned (Standard, For Trade) and virtual (Wishlist/To Print) is only possible
+while the collection is empty. A read-only collection can't change type until you unlock it. To turn wished
 cards into owned ones, move them to a Standard collection once bought (see
 <a href="move_copy.html">Moving, copying and splitting</a>).</p>
 
@@ -55,7 +54,8 @@ you own stay in your collections. This is what lets the <a href="../plan/buyer.h
 <p>If you only build decks from cards you really own, uncheck <b>Virtual</b> when you create the deck. An
 <b>owned deck</b> holds cards you own, taken from your collections. Both kinds of deck can live side by side.</p>
 <ul>
-<li>The choice is made when the deck is created and can't be changed afterwards. The deck starts
+<li>The choice is made when the deck is created, and can only be changed while the deck is empty (and not read only), in
+<span class="menu">Edit Properties</span>. The deck starts
 <b>empty</b>, and its sideboard and extra list are owned too.</li>
 <li>Cards get in by <b>moving</b> owned cards from a Standard or For Trade collection, or from another owned deck
 (<b>Move to</b>, drag and drop, the Location column). The cards leave where they were, so the number of cards you
@@ -98,13 +98,13 @@ them to match the list.</p>
 <table>
 <tr><th>Property</th><th>Applies to</th><th>Meaning</th></tr>
 <tr><td>Name</td><td>Both</td><td>Rename the list (its sideboard and extra list follow).</td></tr>
-<tr><td>Collection Type</td><td>Collections</td><td>Standard, For Trade or Wishlist/To Print (Wishlist/To Print
-only while the collection is empty).</td></tr>
+<tr><td>Collection Type</td><td>Collections</td><td>Standard, For Trade or Wishlist/To Print. Standard and For Trade switch freely; owned to virtual (or back) only while the collection is empty. Never while it is read only.</td></tr>
 <tr><td>Read Only</td><td>Both</td><td>Lock the list against changes.</td></tr>
 <tr><td>Unsorted</td><td>Standard and For Trade collections</td><td>Keep the manual order (see <a href="unsorted.html">Unsorted collections</a>).</td></tr>
-<tr><td>Virtual</td><td>Decks</td><td>Shows whether the deck is virtual or an <a href="#owned-deck">owned deck</a>. It is chosen when
-the deck is created and can't be changed.</td></tr>
+<tr><td>Virtual</td><td>Decks</td><td>Whether the deck is virtual or an <a href="#owned-deck">owned deck</a>. It can only be changed while the deck (with its sideboard and
+extra list) is empty, and never while it is read only.</td></tr>
 <tr><td>Boxed</td><td>Virtual decks</td><td>The deck is physically put together (see <a href="../decks/boxed.html">Boxed decks</a>). Not available for an owned deck.</td></tr>
+<tr><td>Digital</td><td>Both</td><td>Only while the <a href="digital.html">digital cards</a> are enabled: the list only holds cards that exist on MTGO or Arena. Shown for information: it is chosen when the list is created and can't be changed. A deck's sideboard and extra list follow.</td></tr>
 <tr><td>Default Format</td><td>Decks</td><td>The format its legality is checked against.</td></tr>
 <tr><td>Sideboard / Extra list</td><td>Decks</td><td>Create the deck's sideboard or extra list.</td></tr>
 <tr><td>Description</td><td>Both</td><td>Your notes.</td></tr>

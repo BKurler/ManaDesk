@@ -4,14 +4,17 @@
  *     Rémi Dutil (2026) - abstract base of every New / Import wizard: page 1 +
  *                         the shared card-list preview page + Finish handling.
  *                         "Empty" (create only) short-circuits the preview.
+ *     Rémi Dutil (2026) - a Finish that imports nothing now says why (it used to do nothing); DigitalRules traces
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.viewers.IStructuredSelection;
 import org.eclipse.jface.wizard.Wizard;
 import org.eclipse.ui.IWorkbench;
 import org.eclipse.ui.IWorkbenchWizard;
 
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.ui.views.lib.DeckView;
@@ -80,6 +83,12 @@ public abstract class AbstractCardListImportWizard extends Wizard implements IWo
 			finished = true;
 			return true;
 		}
+		// never fail silently: say why nothing was imported
+		Throwable error = mainPage.getImportData().getError();
+		DigitalRules.trace("performFinish: nothing imported, error=" + error);
+		MessageDialog.openError(getShell(), "Import", error != null
+				? "The cards could not be imported: " + (error.getMessage() != null ? error.getMessage() : error.toString())
+				: "No card could be imported: every card had an error (see the preview).");
 		return false;
 	}
 

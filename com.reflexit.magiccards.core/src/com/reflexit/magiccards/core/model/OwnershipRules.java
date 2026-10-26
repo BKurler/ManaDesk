@@ -9,6 +9,7 @@
  *     Rémi Dutil - created for ManaDesk
  *     Rémi Dutil (2026) - owned (non-virtual) decks: only owned cards moved in from a collection, nothing created
  *     Rémi Dutil (2026) - owned decks: no count change and no deletion, cards only move out
+ *     Rémi Dutil (2026) - typeChangeVeto(): a read-only collection keeps its type; owned <-> virtual only while empty
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
@@ -169,6 +170,37 @@ public final class OwnershipRules {
 		} catch (RuntimeException e) {
 			return false;
 		}
+	}
+
+	/**
+	 * Why the deck described by {@code info} cannot be made virtual / owned ({@code toVirtual}), or {@code null}:
+	 * never while it is read only, and only while it - and its sideboard and extra list ({@code hasCards} covers all
+	 * three) - holds no card.
+	 */
+	public static String deckVirtualChangeVeto(IStorageInfo info, boolean hasCards, boolean toVirtual) {
+		if (info == null || info.isVirtual() == toVirtual)
+			return null;
+		if (info.isReadOnly())
+			return "is read only (unlock it first)";
+		if (hasCards)
+			return "has cards: only an empty deck can become " + (toVirtual ? "virtual" : "owned");
+		return null;
+	}
+
+	/**
+	 * Why the collection described by {@code info}, holding {@code cards}, cannot change to type {@code to}, or
+	 * {@code null}. A read-only collection keeps its type. Standard and For Trade switch between each other freely;
+	 * becoming Wishlist/To Print (virtual) or leaving it (owned) is only for an empty collection - {@code cards}
+	 * {@code null} means the cards are not known, so not allowed.
+	 */
+	public static String typeChangeVeto(IStorageInfo info, Iterable<?> cards, CollectionType to) {
+		if (info == null || to == null || to == info.getCollectionType())
+			return null;
+		if (info.isReadOnly())
+			return "is read only (unlock it first)";
+		if (to.isVirtual() != info.isVirtual() && (cards == null || cards.iterator().hasNext()))
+			return "has cards: only an empty collection can become " + (to.isVirtual() ? "virtual" : "owned");
+		return null;
 	}
 
 	/**

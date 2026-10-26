@@ -14,6 +14,7 @@
  *                         "collectionType" key; the type also sets the
  *                         virtual flag, and an unset/inconsistent key falls
  *                         back to the type implied by that flag
+ *     Rémi Dutil (2026) - stashHidden(): database cards kept out of the list but in the file
  *     Rémi Dutil (2026) - getName() is always the file name when the location
  *                         is known (the <name> saved in the file was often
  *                         empty)
@@ -41,6 +42,7 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	private static final transient String UNSORTED = "unsorted";
 	private static final transient String READ_ONLY = "readonly";
 	private static final transient String BOXED = "boxed";
+	private static final transient String DIGITAL = "digital";
 	private static final transient String FORMAT = "format";
 	private static final transient String COLLECTION_TYPE_KEY = "collectionType";
 	protected transient File file;
@@ -49,6 +51,23 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	protected String comment;
 	protected String type;
 	protected Properties properties = new Properties();
+
+	// Database cards kept out of the list (digital-only ones while the digital support is
+	// off): never shown, but written back with the file. Keyed by card id so an update
+	// replaces the old record instead of piling up.
+	private transient java.util.Map<String, IMagicCard> hiddenCards;
+
+	/** Keep {@code card} out of the list, but in the file. */
+	public synchronized void stashHidden(IMagicCard card) {
+		if (hiddenCards == null)
+			hiddenCards = new java.util.LinkedHashMap<String, IMagicCard>();
+		hiddenCards.put(String.valueOf(card.getCardId()), card);
+	}
+
+	/** How many cards are kept out of the list (see {@link #stashHidden}). */
+	public synchronized int getHiddenCount() {
+		return hiddenCards == null ? 0 : hiddenCards.size();
+	}
 
 	// --- Save suppression mechanism ---
 	private int suppressCount = 0;
@@ -185,6 +204,16 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	@Override
 	public boolean isBoxed() {
 		return Boolean.valueOf(getProperty(BOXED));
+	}
+
+	@Override
+	public boolean isDigital() {
+		return Boolean.valueOf(getProperty(DIGITAL));
+	}
+
+	@Override
+	public void setDigital(boolean value) {
+		setProperty(DIGITAL, String.valueOf(value));
 	}
 
 	@Override
@@ -387,6 +416,9 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 	 */
 	protected void storeFields(CardCollectionStoreObject obj) {
 		obj.list = new ArrayList<IMagicCard>(this.getList());
+		// hidden (digital-only) database cards are not in the list but must stay in the file
+		if (hiddenCards != null)
+			obj.list.addAll(hiddenCards.values());
 		obj.key = getLocation().toString();
 		obj.name = getName();
 		obj.comment = getComment();

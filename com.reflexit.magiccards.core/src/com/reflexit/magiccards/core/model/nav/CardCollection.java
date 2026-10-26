@@ -7,8 +7,10 @@
  *     Rémi Dutil (2026) - getDefaultFormat(): a deck's own default legality
  *                         format, used by the Legality tab - see
  *                         IStorageInfo#getDefaultFormat()
+ *     Rémi Dutil (2026) - isDigital() / persistDigital(): a digital deck / collection
  *     Rémi Dutil (2026) - getCollectionType() / persistInitialSettings(type):
  *                         a collection's type (Standard / For Trade / Wishlist/To Print)
+ *     Rémi Dutil (2026) - a sideboard / extra list uses the main deck's default format (effectiveDefaultFormat)
  */
 
 package com.reflexit.magiccards.core.model.nav;
@@ -19,6 +21,8 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.IMagicCard;
+import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IFilteredCardStore;
 import com.reflexit.magiccards.core.model.storage.IStorage;
@@ -210,6 +214,24 @@ public class CardCollection extends CardElement {
 		return info != null && info.isReadOnly();
 	}
 
+	/** True for a digital deck / collection (MTGO / Arena cards only) - see
+	 *  {@link com.reflexit.magiccards.core.model.DigitalRules}. */
+	public boolean isDigital() {
+		IStorageInfo info = getStorageInfo();
+		return info != null && info.isDigital();
+	}
+
+	/** Makes this a digital (or paper) deck / collection; no check of the cards it holds. */
+	public void persistDigital(boolean digital) {
+		try {
+			IStorageInfo info = getStorageInfo();
+			if (info != null && info.isDigital() != digital)
+				info.setDigital(digital);
+		} catch (RuntimeException e) {
+			// non-fatal - the user can still fix it via Edit Properties
+		}
+	}
+
 	/**
 	 * Whether the user has manually marked this deck "physically boxed up".
 	 * Purely informational - setting it does not touch owned/virtual mode,
@@ -233,8 +255,26 @@ public class CardCollection extends CardElement {
 	 *  {@code null} if never set. Not applicable to collections - always
 	 *  {@code null} for one, same as an unset deck. */
 	public String getDefaultFormat() {
-		IStorageInfo info = getStorageInfo();
-		return info == null ? null : info.getDefaultFormat();
+		return effectiveDefaultFormat(getLocation(), getStorageInfo());
+	}
+
+	/**
+	 * The default format of the list at {@code loc}, whose own storage info is {@code own}: a deck's sideboard and
+	 * extra list have none of their own, they use the main deck's - the format is edited on the main deck only.
+	 * Falls back to {@code own} when the main deck cannot be found.
+	 */
+	public static String effectiveDefaultFormat(Location loc, IStorageInfo own) {
+		if (loc != null && (loc.isSideboard() || loc.isExtra())) {
+			try {
+				ICardStore<IMagicCard> main = DataManager.getInstance().getCardStore(loc.toMainDeck());
+				IStorageInfo mainInfo = main == null ? null : OwnershipRules.getStorageInfo(main);
+				if (mainInfo != null)
+					return mainInfo.getDefaultFormat();
+			} catch (RuntimeException e) {
+				// no main deck to ask: use the list's own
+			}
+		}
+		return own == null ? null : own.getDefaultFormat();
 	}
 
 }

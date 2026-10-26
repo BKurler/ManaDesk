@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - Proxies filter group
+ *     Rémi Dutil (2026) - CardKinds filter group (Paper / Digital)
  *     Rémi Dutil (2026) - removed COMMUNITYRATING (community rating is not a
  *                         concept this app tracks anymore)
  *     Rémi Dutil (2026) - CardFinishes filter group (Nonfoil / Foil / Etched)
@@ -166,6 +167,7 @@ public class MagicCardFilter implements Cloneable {
 			.and(createOrGroup(map, CardConditions.getInstance()))
 				.and(createFinishGroup(map))
 				.and(createOrGroup(map, Proxies.getInstance()))
+				.and(createOrGroup(map, CardKinds.getInstance()))
 				.and(FilterField.LANG.valueExpr(map)).and(FilterField.TYPE_LINE.valueExpr(map))
 				.and(FilterField.NAME_LINE.valueExpr(map)).and(FilterField.POWER.valueExpr(map))
 				.and(FilterField.TOUGHNESS.valueExpr(map)).and(FilterField.CCC.valueExpr(map))

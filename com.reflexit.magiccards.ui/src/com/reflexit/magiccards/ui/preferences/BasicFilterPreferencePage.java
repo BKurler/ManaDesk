@@ -1,6 +1,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - added the Condition filter group
+ *     Rémi Dutil (2026) - Card Kind (Paper / Digital) filter group, only while the digital cards are enabled;
+ *                         last in secondRow, right of Proxy (one more column)
  *     Rémi Dutil (2026) - added the Proxy filter group
  *     Rémi Dutil (2026) - moved Condition and Proxy to User Filter: they are
  *                         specific to the user's own collection, not generic
@@ -143,8 +145,10 @@ import org.eclipse.swt.layout.GridLayout;
 import org.eclipse.swt.widgets.Composite;
 import org.eclipse.swt.widgets.Control;
 
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.ui.dialogs.CardFilterDialog;
 import com.reflexit.magiccards.ui.preferences.feditors.CardConditionPreferenceGroup;
+import com.reflexit.magiccards.ui.preferences.feditors.CardKindPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.ColorsPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.CardFinishPreferenceGroup;
 import com.reflexit.magiccards.ui.preferences.feditors.MFieldEditorPreferencePage;
@@ -174,9 +178,10 @@ public class BasicFilterPreferencePage extends AbstractFilterPreferencePage {
 		this.panel.setLayout(layout);
 		this.panel.setFont(parent.getFont());
 		boolean userFilter = this.dialog.allowsUserFilter();
+		boolean cardKind = DigitalSupport.isEnabled() && this.dialog.allowsCardKind();
 		// card-database facts - see this class' own header for the row layout
 		Composite firstRow = createColumnComposite(this.panel, userFilter ? 4 : 3);
-		Composite secondRow = createColumnComposite(this.panel, userFilter ? 4 : 2);
+		Composite secondRow = createColumnComposite(this.panel, (userFilter ? 4 : 2) + (cardKind ? 1 : 0));
 		Composite thirdRow = createColumnComposite(this.panel, 1);
 		addCompact(new TypesPreferenceGroup(), firstRow);
 		addCompact(new RarityPreferenceGroup(), firstRow);
@@ -192,6 +197,10 @@ public class BasicFilterPreferencePage extends AbstractFilterPreferencePage {
 			addCompact(new OwnershipPreferenceGroup(), secondRow);
 			addCompact(new ProxyPreferenceGroup(), secondRow);
 		}
+		// paper / digital kind of the printing, right of Proxy (secondRow has a column more for it):
+		// only while the digital cards are enabled
+		if (cardKind)
+			addCompact(new CardKindPreferenceGroup(), secondRow);
 		TextSearchPreferenceGroup textGroup = new TextSearchPreferenceGroup(userFilter);
 		addCompact(textGroup, thirdRow);
 		FilterSyntaxHelp.Panel tips = FilterSyntaxHelp.create(this.panel);

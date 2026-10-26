@@ -1,7 +1,12 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - no value shown for a copy in a digital deck / collection
+ */
 package com.reflexit.magiccards.ui.views.columns;
 
 import java.text.DecimalFormat;
 
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 
@@ -26,6 +31,8 @@ public class SellerPriceColumn extends GenColumn {
 
 	@Override
 	public String getText(Object element) {
+		if (DigitalRules.hasNoValue(element))
+			return ""; // a digital deck / collection has no paper value
 		String text = super.getText(element);
 		if (text.length() == 0)
 			return text;

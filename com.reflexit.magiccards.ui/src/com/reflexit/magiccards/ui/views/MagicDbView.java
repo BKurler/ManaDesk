@@ -5,6 +5,7 @@
  *     Rémi Dutil (2026) - "Add to" greys an owned (non-virtual) deck
  *     Rémi Dutil (2026) - the list control names the database column set itself
  *                         (the split-tree viewer now takes its list's own columns)
+ *     Rémi Dutil (2026) - no Group By Condition / Proxy / Ownership for printings (showsCopies())
  */
 package com.reflexit.magiccards.ui.views;
 
@@ -61,6 +62,11 @@ public class MagicDbView extends AbstractSingleControlCardsView {
 	class MagicDbListControl extends AbstractMagicCardsListControl {
 		public MagicDbListControl() {
 			super(Presentation.SPLITTREE);
+		}
+
+		@Override
+		protected boolean showsCopies() {
+			return false; // printings: no Condition, Proxy or Ownership to group by
 		}
 
 		@Override

@@ -18,6 +18,7 @@
  *                         keeps pooling finishes.
  *     Rémi Dutil (2026) - an owned (non-virtual) deck claims its copies, like a
  *                         boxed deck.
+ *     Rémi Dutil (2026) - a digital deck claims no paper copy
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.nav;
 
@@ -30,6 +31,7 @@ import java.util.Map;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.CardFinish;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -180,11 +182,9 @@ public final class DeckNeeds {
 						ownedWithFinish(mcp, exact, row.finish, row.owned);
 					} else if (exact) {
 						// this exact printing's own aggregate - not pooled across other printings
-						row.owned.genuine = mcp.getCard().getGenuineOwnCount();
-						row.owned.proxy = mcp.getCard().getOwnCount() - row.owned.genuine;
+						ownedInPaperLists(mcp, true, row.owned);
 					} else {
-						row.owned.genuine = mcp.getGenuineOwnTotalAll();
-						row.owned.proxy = mcp.getOwnTotalAll() - row.owned.genuine;
+						ownedInPaperLists(mcp, false, row.owned);
 					}
 				}
 				ListInfo info = row.perList.computeIfAbsent(new ListRef(cc, sc.suffix), k -> new ListInfo());
@@ -235,6 +235,31 @@ public final class DeckNeeds {
 	}
 
 	/**
+	 * The copies you own, genuine vs proxy, of {@code mcp}'s exact printing or of every printing of the name - only
+	 * those in paper decks and collections: a digital deck or collection holds no card you can put in a box or print.
+	 */
+	private static void ownedInPaperLists(MagicCardPhysical mcp, boolean exact, Split into) {
+		List<MagicCard> printings = new ArrayList<>();
+		if (exact) {
+			if (mcp.getCard() instanceof MagicCard)
+				printings.add((MagicCard) mcp.getCard());
+		} else {
+			for (IMagicCard c : DataManager.getInstance().getMagicDBStore().getCandidates(mcp.getName()))
+				if (c instanceof MagicCard)
+					printings.add((MagicCard) c);
+		}
+		for (MagicCard printing : printings)
+			for (MagicCardPhysical copy : printing.getAllPhysicalCards()) {
+				if (!copy.isOwn() || DigitalRules.isInDigitalList(copy))
+					continue;
+				if (copy.isProxy())
+					into.proxy += copy.getCount();
+				else
+					into.genuine += copy.getCount();
+			}
+	}
+
+	/**
 	 * Owned copies of {@code finish} only, genuine vs proxy: of {@code mcp}'s
 	 * exact printing, or of every printing of the name.
 	 */
@@ -249,8 +274,8 @@ public final class DeckNeeds {
 					printings.add((MagicCard) c);
 		}
 		for (MagicCard printing : printings)
-			for (MagicCardPhysical copy : printing.getPhysicalCards()) {
-				if (!copy.isOwn() || copy.getFinish() != finish)
+			for (MagicCardPhysical copy : printing.getAllPhysicalCards()) {
+				if (!copy.isOwn() || copy.getFinish() != finish || DigitalRules.isInDigitalList(copy))
 					continue;
 				if (copy.isProxy())
 					into.proxy += copy.getCount();
@@ -267,7 +292,7 @@ public final class DeckNeeds {
 	private static Map<String, Split> computeBoxedCounts(boolean exact, boolean byFinish) {
 		Map<String, Split> boxed = new HashMap<>();
 		for (CardCollection cc : DataManager.getInstance().getModelRoot().getDeckContainer().getAllElements()) {
-			if (!cc.isDeck())
+			if (!cc.isDeck() || cc.isDigital()) // a digital deck claims no paper copy
 				continue;
 			// a boxed deck, or a deck of owned cards (its copies are not free either)
 			if (!cc.isBoxed()) {

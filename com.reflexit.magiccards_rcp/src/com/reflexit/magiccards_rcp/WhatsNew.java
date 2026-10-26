@@ -35,6 +35,7 @@
  *     Rémi Dutil (2026) - Filters and sorting (several levels, each deck and
  *                         collection keeps its own), Collector (faster), new
  *                         Gallery and Linux entries
+ *     Rémi Dutil (2026) - "Digital cards" entry
  *******************************************************************************/
 package com.reflexit.magiccards_rcp;
 
@@ -151,7 +152,7 @@ final class WhatsNew {
 					+ " pasting, importing, changing a count and deleting cards are refused in it - cards only leave by"
 					+ " being moved out - so the number of cards you own never changes by mistake. Its sideboard and extra"
 					+ " list are owned too, and the Proxier and the Buyer leave it out and count its cards as in use."
-					+ " The choice is made at creation and cannot be changed.", null),
+					+ " The choice can be changed in Edit Properties, but only while the deck is empty.", null),
 			new Feature(1, MINOR, CARDS, "More card facts", "A new Traits column (Reserved List, Game Changer,"
 					+ " Reprint, and how a printing looks: Showcase, Borderless, Full Art, an old frame, a stamp, Oversized,"
 					+ " a watermark, Prerelease, Playtest, Surge Foil...; the card text lists them too), an EDHREC Rank column to sort by popularity, a Produced Mana column (also a \"Produced\""
@@ -241,6 +242,12 @@ final class WhatsNew {
 			new Feature(1, MINOR, BROWSING, "Rulings", "Shown formatted, in their own view.", null),
 			new Feature(1, MINOR, BROWSING, "Find", "Next / previous, and * as a wildcard in Find and in the name"
 					+ " filter.", null),
+			new Feature(1, MAJOR, DECKS, "Digital cards", "Turn on Enable digital cards in the ManaDesk"
+					+ " preferences to bring in the MTGO and Arena cards and sets (then restart, and update the card"
+					+ " database once). A deck or collection can be Digital: it only takes cards that exist on MTGO or"
+					+ " Arena, and nothing moves between a digital and a paper list. The Card Kind filter (Paper / Digital)"
+					+ " shows one kind or both; Collector has a D button to collect the"
+					+ " digital cards instead.", null),
 			new Feature(1, MINOR, BROWSING, "Set lists", "Lists of sets are alphabetical, or by release date"
 					+ " (oldest first) if you prefer - see the ManaDesk preferences.", null),
 			new Feature(1, MAJOR, GENERAL, "New help", "Rewritten from scratch, with screenshots: getting started,"

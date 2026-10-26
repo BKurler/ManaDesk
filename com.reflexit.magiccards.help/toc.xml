@@ -36,6 +36,7 @@
       <topic label="My Cards" href="html/collection/my_cards.html"/>
       <topic label="Collector" href="html/collection/collector.html"/>
       <topic label="Unsorted Collections" href="html/collection/unsorted.html"/>
+      <topic label="Digital Cards" href="html/collection/digital.html"/>
    </topic>
    <topic label="Building Decks" href="html/decks/create_deck.html">
       <topic label="Creating a Deck" href="html/decks/create_deck.html"/>

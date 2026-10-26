@@ -265,19 +265,19 @@ public class DeckView extends AbstractMyCardsView {
 	}
 
 	private void setTitleImageIfChanged(String iconPath) {
-		setTitleImageIfChanged(iconPath, false, false, false, false);
+		setTitleImageIfChanged(iconPath, false, false, false, false, false);
 	}
 
 	/**
 	 * Sets the tab icon for {@code iconPath}, decorated with the status markers
-	 * (bottom-left blue = virtual, centre red = read-only, right green =
-	 * unsorted; top-left brown = boxed). The disk icon is never touched; the
+	 * (bottom-left blue = virtual, centre red = read-only, top-left
+	 * green = unsorted or black = boxed, centre letter D = digital, bottom-right red = read-only). The disk icon is never touched; the
 	 * composed image is cached and the call is a no-op when the tab already
 	 * shows it.
 	 */
 	private void setTitleImageIfChanged(String iconPath, boolean virtual, boolean readOnly, boolean unsorted,
-			boolean boxed) {
-		Image img = StatusDots.decorate(iconPath, virtual, readOnly, unsorted, boxed);
+			boolean boxed, boolean digital) {
+		Image img = StatusDots.decorate(iconPath, virtual, readOnly, unsorted, boxed, digital);
 		if (img != null && getTitleImage() != img)
 			setTitleImage(img);
 	}
@@ -319,7 +319,7 @@ public class DeckView extends AbstractMyCardsView {
 			setPartNameIfChanged("~" + name);
 		setTitleImageIfChanged(familyIcon(location, !member), deck != null && deck.isVirtual(),
 				deck != null && deck.isReadOnly(), deck != null && deck.isUnsorted(),
-				deck != null && deck.isBoxed());
+				deck != null && deck.isBoxed(), deck != null && deck.isDigital());
 
 		if (deck == null) {
 			// IMagicControl c = getMagicControl();

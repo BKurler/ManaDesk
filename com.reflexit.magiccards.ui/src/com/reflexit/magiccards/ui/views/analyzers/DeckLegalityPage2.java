@@ -39,6 +39,7 @@
  *                         status line says it too
  *     Rémi Dutil (2026) - the status line is colored: red when the deck is not
  *                         legal, yellow when legal with proxies, green when legal
+ *     Rémi Dutil (2026) - a sideboard / extra list uses the main deck's default format (effectiveDefaultFormat)
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -255,7 +256,8 @@ public class DeckLegalityPage2 extends AbstractDeckListPage {
 			// alone, not silently revert it
 			formatSeeded = true;
 			IStorageInfo storageInfo = getStorageInfo();
-			String f = storageInfo == null ? null : storageInfo.getDefaultFormat();
+			String f = com.reflexit.magiccards.core.model.nav.CardCollection.effectiveDefaultFormat(
+					getCardStore().getLocation(), storageInfo); // a sideboard / extra list uses the main deck's
 			format = (f != null && f.trim().length() > 0) ? Format.valueOf(f) : DEFAULT_FORMAT;
 		}
 		computeColorIdentity();
