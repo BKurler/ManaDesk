@@ -49,6 +49,9 @@
  *     Rémi Dutil (2026) - the main collection is locked: Standard only, never
  *                         Unsorted or Read Only, name and description not
  *                         editable (the description explains it)
+ *     Rémi Dutil (2026) - "Digital" checkbox, read-only (chosen when the deck / collection is created); a new sideboard / extra list follows the deck
+ *     Rémi Dutil (2026) - the collection type is locked while read only; owned <-> virtual (deck Virtual, collection type) only while empty
+ *     Rémi Dutil (2026) - a sideboard / extra list uses the main deck's default format (effectiveDefaultFormat)
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -77,6 +80,7 @@ import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -106,6 +110,8 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	private Text text;
 	private Button protection;
 	private Button boxed;
+	/** "Digital" (MTGO / Arena cards only) - shown while the digital cards are enabled, or when the list already is digital. */
+	private Button digital;
 	private Button createSideboard;
 	private Button createExtra;
 	private boolean sideboardExists;
@@ -167,6 +173,7 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		}
 		if (deckType)
 			createDeckVirtualField(comp, cols);
+		createDigitalField(comp);
 		protection = StatusDots.check(comp, StatusDots.READ_ONLY, "Read Only");
 		protection.setSelection(info.isReadOnly() && !mainCollection);
 		protection.setEnabled(!mainCollection);
@@ -220,6 +227,11 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			Label desc = new Label(types, SWT.NONE);
 			desc.setText(t.getDescription());
 			String veto = t == current ? null : OwnershipRules.collectionTypeVeto(cards, t);
+			String changeVeto = OwnershipRules.typeChangeVeto(info, cards, t);
+			if (changeVeto != null)
+				veto = changeVeto;
+			if (info.isReadOnly() && !mainCollection && veto == null)
+				veto = "is read only (unlock it first)"; // the current type too: the choice is locked
 			if (mainCollection && t != CollectionType.STANDARD)
 				veto = "is the main collection, which is always Standard";
 			if (veto != null) {
@@ -273,14 +285,61 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	 */
 	private void createDeckVirtualField(Composite comp, int cols) {
 		boolean isVirtual = info.isVirtual();
-		virtual = StatusDots.check(comp, StatusDots.VIRTUAL,
-				isVirtual ? "Virtual (a deck that lists the cards to play)"
-						: "Not virtual (an owned deck: it holds cards you own)");
+		virtual = StatusDots.check(comp, StatusDots.VIRTUAL, virtualText(isVirtual));
 		virtual.setSelection(isVirtual);
-		virtual.setEnabled(false);
-		virtual.setToolTipText("Chosen when the deck is created; it cannot be changed afterwards."
-				+ " A virtual deck lists the cards to play (the cards you own stay in your collections);"
-				+ " an owned deck holds cards you own, moved in from a collection.");
+		// owned <-> virtual only while the deck (with its sideboard and extra list) is empty, never while read only
+		String veto = deck == null ? "is not opened" : OwnershipRules.deckVirtualChangeVeto(info, deckHasCards(), !isVirtual);
+		virtual.setEnabled(veto == null && !mainCollection);
+		virtual.setToolTipText(veto == null
+				? "A virtual deck lists the cards to play (the cards you own stay in your collections); an owned deck"
+						+ " holds cards you own, moved in from a collection. It can only change while the deck is empty."
+				: "Not available: this deck " + veto + ". A virtual deck lists the cards to play; an owned deck holds"
+						+ " cards you own, moved in from a collection.");
+		virtual.addSelectionListener(new SelectionAdapter() {
+			@Override
+			public void widgetSelected(SelectionEvent e) {
+				virtual.setText(virtualText(virtual.getSelection()));
+				syncBoxed();
+			}
+		});
+	}
+
+	private static String virtualText(boolean isVirtual) {
+		return isVirtual ? "Virtual (a deck that lists the cards to play)"
+				: "Not virtual (an owned deck: it holds cards you own)";
+	}
+
+	/** Boxed does not apply to an owned deck: its cards are already in use. */
+	private void syncBoxed() {
+		if (boxed == null || boxed.isDisposed())
+			return;
+		boolean isVirtual = virtual == null || virtual.getSelection();
+		if (!isVirtual)
+			boxed.setSelection(false);
+		boxed.setEnabled(isVirtual);
+		boxed.setToolTipText(isVirtual ? null : "Not needed for an owned deck: its cards are already in use.");
+	}
+
+	/** {@code deck} and, for a deck, its existing Sideboard / Extra list. */
+	private java.util.List<CardCollection> deckFamily() {
+		java.util.List<CardCollection> res = new java.util.ArrayList<CardCollection>();
+		if (deck == null)
+			return res;
+		res.add(deck);
+		if (deck.getParent() instanceof CollectionsContainer) {
+			CollectionsContainer parent = (CollectionsContainer) deck.getParent();
+			for (Location loc : new Location[] { deck.getLocation().toSideboard(), deck.getLocation().toExtra() })
+				if (parent.findChield(loc) instanceof CardCollection)
+					res.add((CardCollection) parent.findChield(loc));
+		}
+		return res;
+	}
+
+	private boolean deckHasCards() {
+		for (CardCollection member : deckFamily())
+			if (member.getStore().iterator().hasNext())
+				return true;
+		return false;
 	}
 
 	/**
@@ -296,7 +355,10 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		formatCombo.add(NOT_SET_FORMAT);
 		for (Format f : Format.getFormats())
 			formatCombo.add(f.name());
-		String current = info.getDefaultFormat();
+		// a sideboard / extra list has no format of its own: it shows the main deck's, which is edited there
+		Location loc = deck == null ? null : deck.getLocation();
+		boolean inherited = loc != null && (loc.isSideboard() || loc.isExtra());
+		String current = CardCollection.effectiveDefaultFormat(loc, info);
 		if (current != null && !current.trim().isEmpty()) {
 			if (formatCombo.indexOf(current) < 0)
 				formatCombo.add(current); // stale/unknown value - keep it visible & selected
@@ -307,6 +369,10 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		GridData fgd = new GridData(GridData.FILL_HORIZONTAL);
 		fgd.horizontalSpan = cols - 1;
 		formatCombo.setLayoutData(fgd);
+		if (inherited) {
+			formatCombo.setEnabled(false);
+			formatCombo.setToolTipText("The format is set on the main deck: its sideboard and extra list use the same one.");
+		}
 	}
 
 	/**
@@ -390,6 +456,17 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		}
 	}
 
+	/** The "Digital" checkbox, for information only: chosen when the deck / collection is created, it cannot be changed afterwards. */
+	private void createDigitalField(Composite comp) {
+		if (!DigitalSupport.isEnabled() && !info.isDigital())
+			return;
+		digital = StatusDots.checkDigital(comp, "Digital (MTGO / Arena cards only)");
+		digital.setSelection(info.isDigital());
+		digital.setEnabled(false);
+		digital.setToolTipText("Chosen when the deck or collection is created; it cannot be changed afterwards."
+				+ " A digital one only holds cards that exist on MTGO or Arena.");
+	}
+
 	/** True when saving turns Boxed on for a deck that was not boxed: that is confirmed first. */
 	static boolean needsBoxedConfirmation(boolean wasBoxed, boolean nowBoxed, boolean boxedEnabled) {
 		return boxedEnabled && nowBoxed && !wasBoxed;
@@ -448,17 +525,26 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (!mainCollection)
 			info.setComment(text.getText());
 		if (deckType) {
-			// the deck's kind (virtual / owned) is fixed when it is created
+			// owned <-> virtual: only while the deck is empty (the checkbox is enabled only then), with its sideboard and extra
+			if (virtual != null && virtual.isEnabled() && virtual.getSelection() != info.isVirtual()
+					&& OwnershipRules.deckVirtualChangeVeto(info, deckHasCards(), virtual.getSelection()) == null) {
+				boolean toVirtual = virtual.getSelection();
+				for (CardCollection member : deckFamily()) {
+					member.getStorageInfo().setVirtual(toVirtual);
+					if (!toVirtual)
+						member.getStorageInfo().setBoxed(false);
+				}
+			}
 		} else {
 			CollectionType t = selectedCollectionType();
-			if (t != null && t != info.getCollectionType())
-				info.setCollectionType(t); // also sets the virtual flag
+			if (t != null && t != info.getCollectionType() && OwnershipRules.typeChangeVeto(info, deck != null ? deck.getStore() : null, t) == null)
+				info.setCollectionType(t); // owned <-> virtual only while empty, never while read only
 		}
 		if (unsorted != null)
 			info.setUnsorted(unsorted.isEnabled() && unsorted.getSelection());
 		if (boxed != null)
 			info.setBoxed(boxed.getSelection());
-		if (formatCombo != null) {
+		if (formatCombo != null && formatCombo.isEnabled()) {
 			String chosenFormat = formatCombo.getText();
 			info.setDefaultFormat(NOT_SET_FORMAT.equals(chosenFormat) ? null : chosenFormat);
 		}
@@ -483,12 +569,13 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		if (parent == null)
 			return;
 		boolean asVirtual = virtual.getSelection();
+		boolean asDigital = info.isDigital(); // the sideboard and extra list follow the deck
 		try {
 			if (isCreate(createSideboard))
-				createFamilyMember(parent, deck.getLocation().toSideboard(), asVirtual);
+				createFamilyMember(parent, deck.getLocation().toSideboard(), asVirtual, asDigital);
 			if (isCreate(createExtra)) {
 				Location extraLoc = deck.getLocation().toExtra();
-				if (createFamilyMember(parent, extraLoc, asVirtual) != null)
+				if (createFamilyMember(parent, extraLoc, asVirtual, asDigital) != null)
 					DeckAccessoriesPopulator.populate(extraLoc);
 			}
 		} catch (RuntimeException e) {
@@ -498,10 +585,13 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 	}
 
 	/** Creates {@code loc} mirroring the deck's virtual flag, or returns null if it already exists. */
-	private static CardCollection createFamilyMember(CollectionsContainer parent, Location loc, boolean virtual) {
+	private static CardCollection createFamilyMember(CollectionsContainer parent, Location loc, boolean virtual,
+			boolean digital) {
 		if (parent.contains(loc))
 			return null;
-		return parent.addDeck(loc.getBaseFileName(), true, virtual);
+		CardCollection created = parent.addDeck(loc.getBaseFileName(), true, virtual);
+		created.persistDigital(digital);
+		return created;
 	}
 
 }

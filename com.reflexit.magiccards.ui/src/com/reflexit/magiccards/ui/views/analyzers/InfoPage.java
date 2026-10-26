@@ -12,6 +12,8 @@
  *                         the Ownership combo only allows a non-virtual deck
  *                         to become virtual (collections follow their type);
  *                         the main collection cannot be made read-only
+ *     Rémi Dutil (2026) - the proxy / cost-to-replace rows do not apply to a digital deck
+ *     Rémi Dutil (2026) - "Digital:" line (Yes / No), while the digital cards are enabled or the list is digital
  */
 package com.reflexit.magiccards.ui.views.analyzers;
 
@@ -47,6 +49,8 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.DigitalRules;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.abs.ICard;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
@@ -72,6 +76,7 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 	private DynamicCombo ownership;
 	private Link editButton;
 	private Label decktype;
+	private Label digitalLabel;
 	private Label averagecost;
 	private Composite stats;
 	private Label maxRepeats;
@@ -157,6 +162,9 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 				}
 			}
 		});
+		if (DigitalSupport.isEnabled() || DigitalRules.isDigital(storageInfo))
+			digitalLabel = createTextLabel("Digital: ",
+					"A digital deck or collection only holds cards that exist on MTGO or Arena. It is chosen when the list is created.");
 		total = createTextLabel("Cards: ");
 		totalSideboard = createTextLabel("Cards (Sideboard): ");
 		colors = createTextLabel("Colors: ");
@@ -319,6 +327,8 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 		colorsSideboard.setImage(SymbolRenderer.buildCostImage(CardStoreUtils.buildColors(sideboardStore)));
 		ownership.setText(store.isVirtual() ? "Virtual" : "Own");
 		decktype.setText(prefix);
+		if (digitalLabel != null)
+			digitalLabel.setText(DigitalRules.isDigital(store) ? "Yes (MTGO / Arena cards only)" : "No");
 		List<? extends ICard> childrenList = group.getChildrenList();
 		maxRepeats.setText(String.valueOf(CardStoreUtils.getMaxRepeats(childrenList)));
 		// rarity and average mana cost describe the main deck only (like the Mana and
@@ -405,6 +415,14 @@ public class InfoPage extends AbstractDeckPage implements IDeckPage {
 	}
 
 	private void updateProxyStats(ICardStore<IMagicCard> mainStore, ICardStore<IMagicCard> sideboardStore) {
+		if (storageInfo != null && storageInfo.isDigital()) {
+			// a digital deck has no proxies to replace and nothing to buy
+			proxies.setText("not applicable (digital deck)");
+			proxies.setForeground(null);
+			proxiesOwned.setText("-");
+			proxyCost.setText("-");
+			return;
+		}
 		// proxy quantity per card NAME, a representative copy for pricing, and the
 		// real (non-proxy, owned) copies of that name already sitting in this deck
 		java.util.Map<String, Integer> proxyQty = new java.util.LinkedHashMap<>();

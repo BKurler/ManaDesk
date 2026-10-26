@@ -21,6 +21,7 @@
  *     Rémi Dutil (2026) - getCollectionType()/setCollectionType(): a
  *                         collection's type (Standard / For Trade / Wishlist/To Print),
  *                         which also drives its virtual flag
+ *     Rémi Dutil (2026) - isDigital()/setDigital(): a digital deck / collection
  */
 
 package com.reflexit.magiccards.core.model.storage;
@@ -73,4 +74,9 @@ public interface IStorageInfo {
 
 	/** Sets a collection's type AND its virtual flag to match. */
 	public void setCollectionType(CollectionType type);
+
+	/** True for a digital deck / collection (MTGO / Arena cards only) - see DigitalRules. */
+	public boolean isDigital();
+
+	public void setDigital(boolean value);
 }

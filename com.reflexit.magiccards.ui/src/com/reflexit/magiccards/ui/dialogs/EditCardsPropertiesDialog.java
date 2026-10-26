@@ -24,6 +24,7 @@
  *     Rémi Dutil (2026) - allowOwnership() hook: the Ownership combo only
  *                         offers the values an edited card may take (see
  *                         OwnershipRules)
+ *     Rémi Dutil (2026) - isDigitalList() hook: no Condition, Proxy or Etched for a copy in a digital list
  */
 
 package com.reflexit.magiccards.ui.dialogs;
@@ -95,12 +96,14 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 		createTextFieldEditor(area, "User Price", PRICE_FIELD);
 		// ownership
 		createOwnershipFieldEditor(area);
-		// condition
-		createConditionFieldEditor(area);
+		// condition (a digital deck or collection has none)
+		if (!isDigitalList())
+			createConditionFieldEditor(area);
 		// finish
 		createFinishFieldEditor(area);
-		// proxy
-		createProxyFieldEditor(area);
+		// proxy (nor a proxy)
+		if (!isDigitalList())
+			createProxyFieldEditor(area);
 		// comment
 		createTextFieldEditor(area, "Comment", COMMENT_FIELD, SWT.BORDER | SWT.WRAP | SWT.V_SCROLL);
 		// special
@@ -152,6 +155,11 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 
 		browser.setText("<html><body style='margin:0;padding:0;background:#000;'>" + "<img src='" + url
 				+ "' style='width:100%;height:100%;object-fit:contain;'/>" + "</body></html>");
+	}
+
+	/** True when the edited cards sit in a digital deck or collection (no Condition, Proxy or Etched there). */
+	protected boolean isDigitalList() {
+		return false;
 	}
 
 	public void createConditionFieldEditor(Composite area) {
@@ -244,7 +252,15 @@ public class EditCardsPropertiesDialog extends MagicDialog {
 	 *  {@link com.reflexit.magiccards.core.model.MagicCard#getSupportedFinishes()}
 	 *  uses. */
 	private CardFinish[] allowedFinishes() {
-		return allowedFinishes(store.getDefaultString(MagicCardField.FINISHES.name()));
+		CardFinish[] all = allowedFinishes(store.getDefaultString(MagicCardField.FINISHES.name()));
+		if (!isDigitalList())
+			return all;
+		// Etched is a paper treatment: not offered for a copy in a digital deck or collection
+		java.util.List<CardFinish> fit = new java.util.ArrayList<>();
+		for (CardFinish f : all)
+			if (f != CardFinish.ETCHED)
+				fit.add(f);
+		return fit.toArray(new CardFinish[fit.size()]);
 	}
 
 	/**

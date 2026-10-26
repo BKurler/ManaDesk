@@ -2,6 +2,8 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - digital cards are parsed too: DIGITAL (digital-only) and ONLINE
+ *                         (paper also on MTGO / Arena) from games + digital
  *     Rémi Dutil (2026) - parseBulkGrouped() is the single card-DB update pass:
  *                         public, cancellable, progress-reporting; the per-set
  *                         gzip split/merge round-trip is gone
@@ -418,6 +420,25 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		return sb.toString();
 	}
 
+	/** True when Scryfall's {@code games} list has a paper printing. */
+	static boolean isPaperGame(Object games) {
+		return gamesHas(games, "paper");
+	}
+
+	/** True when Scryfall's {@code games} list has {@code mtgo} or {@code arena}. */
+	static boolean isOnlineGame(Object games) {
+		return gamesHas(games, "mtgo") || gamesHas(games, "arena");
+	}
+
+	private static boolean gamesHas(Object games, String game) {
+		if (!(games instanceof java.util.List))
+			return games != null && games.toString().contains("\"" + game + "\"");
+		for (Object g : (java.util.List<?>) games)
+			if (game.equals(String.valueOf(g)))
+				return true;
+		return false;
+	}
+
 	/** {@code "true"} for a Scryfall boolean that is true, else {@code null} (nothing stored). */
 	static String flagString(Object bool) {
 		return Boolean.TRUE.equals(bool) ? "true" : null;
@@ -630,11 +651,18 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		Object games = elem.get("games");
 
-		// Skip non paper cards
-		// We don't want to manage Virtual cards
-		if (games == null || !(games.toString().contains("paper"))) {
+		// Paper cards, and digital ones (MTGO / Arena...): the digital-only ones are
+		// flagged DIGITAL and stay hidden unless the digital support is on
+		if (games == null) {
 			return;
 		}
+		boolean paper = isPaperGame(games);
+		boolean online = isOnlineGame(games);
+		if (!paper && !online && !Boolean.TRUE.equals(elem.get("digital"))) {
+			return;
+		}
+		final String digitalOnly = paper ? null : "true";
+		final String paperOnline = paper && online ? "true" : null;
 
 		// Skip some languages for now
 		// We could improve this later
@@ -834,6 +862,8 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			c.set(MagicCardField.GAME_CHANGER, gameChanger);
 			c.set(MagicCardField.EDHREC_RANK, edhrecRank);
 			c.set(MagicCardField.PRODUCED_MANA, producedMana);
+			c.set(MagicCardField.DIGITAL, digitalOnly);
+			c.set(MagicCardField.ONLINE, paperOnline);
 		}
 
 		// The whole card's authoritative color identity - same for both

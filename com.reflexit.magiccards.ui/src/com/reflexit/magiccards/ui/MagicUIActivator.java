@@ -6,6 +6,7 @@
  *                         "Work Offline" and is only honoured in a debug
  *                         launch.
  *     Rémi Dutil (2026) - COLOR_YELLOWISH (warning yellow)
+ *     Rémi Dutil (2026) - the "Enable digital cards" setting is handed to the core before the database loads
  */
  
  package com.reflexit.magiccards.ui;
@@ -48,6 +49,7 @@ import org.osgi.framework.BundleContext;
 
 import com.reflexit.magiccards.core.Activator;
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.core.sync.CurrencyConvertor;
 import com.reflexit.magiccards.core.sync.WebUtils;
@@ -119,6 +121,8 @@ public class MagicUIActivator extends AbstractUIPlugin {
 	private void activateCoreSettings() {
 		// start the Network plugin to set proxy
 		// org.eclipse.ui.internal.net.Activator.getDefault();
+		// before the card database loads: digital-only cards and sets stay hidden unless enabled
+		DigitalSupport.setEnabled(getPreferenceStore().getBoolean(PreferenceConstants.ENABLE_DIGITAL));
 		// load core activator to start db init
 		Activator.getDefault();
 		IPreferenceStore globalStore = getPreferenceStore();

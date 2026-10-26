@@ -1,3 +1,7 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - adjustFilterMap(): Collector is paper or digital (the D button), whatever the stored filter says
+ */
 package com.reflexit.magiccards.ui.views.collector;
 
 import java.util.ArrayList;
@@ -7,6 +11,8 @@ import java.util.Iterator;
 import org.eclipse.swt.widgets.Composite;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.CardKinds;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.GroupOrder;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -50,6 +56,17 @@ public class CollectorListControl extends AbstractMagicCardsListControl {
 		res.add(new GroupOrder(MagicCardField.SET, MagicCardField.OWN_COUNT));
 		res.addAll(new CustomGroupsPreferencePage().getCurrentValue());
 		return res;
+	}
+
+	/** Paper or digital, never both: the D button decides, not the stored filter (a Reset Filter must not mix them). */
+	@Override
+	protected void adjustFilterMap(java.util.HashMap<String, String> map) {
+		if (!DigitalSupport.isEnabled())
+			return;
+		boolean digital = CollectorView.isDigitalMode();
+		CardKinds kinds = CardKinds.getInstance();
+		map.put(kinds.getPrefConstant(CardKinds.DIGITAL), String.valueOf(digital));
+		map.put(kinds.getPrefConstant(CardKinds.PAPER), String.valueOf(!digital));
 	}
 
 	@Override

@@ -641,6 +641,14 @@ public class MagicCard extends AbstractMagicCard implements IMagicCard {
 		return 0;
 	}
 
+	/** Every copy of this printing in any list - unlike {@link #getPhysicalCards()}, not limited by the owned kind (paper / digital) Collector may have set. */
+	public Collection<MagicCardPhysical> getAllPhysicalCards() {
+		CardGroup rc = DataManager.getInstance().getAllRealCards(this);
+		if (rc == null)
+			return Collections.emptySet();
+		return (Collection<MagicCardPhysical>) rc.getChildrenList();
+	}
+
 	public Collection<MagicCardPhysical> getPhysicalCards() {
 		CardGroup rc = getRealCards();
 		if (rc == null)

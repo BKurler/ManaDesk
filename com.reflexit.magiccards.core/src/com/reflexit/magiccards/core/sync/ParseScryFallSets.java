@@ -2,6 +2,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - digital sets are kept and flagged instead of skipped
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -113,8 +114,11 @@ public class ParseScryFallSets extends AbstractParseJson {
 		// Convert to LocalDate
 		LocalDate setDate = ed.getReleaseDate().toInstant().atZone(ZoneId.systemDefault()).toLocalDate();
 
-		// RD Skip digital set and set with no card (typically future sets)
-		if (!digital && cardCount > 0 && setDate.compareTo(threshold) <= 0) {
+		// digital sets are kept (flagged): they stay hidden unless the digital support is on
+		ed.setDigital(digital != null && digital.booleanValue());
+
+		// RD Skip set with no card (typically future sets)
+		if (cardCount > 0&& setDate.compareTo(threshold) <= 0) {
 
 			Editions currentEd = Editions.getInstance();
 
@@ -127,7 +131,7 @@ public class ParseScryFallSets extends AbstractParseJson {
 				handler.handleEdition(ed);
 			}
 		}
-		// else: digital-only / empty / future set - silently skipped
+		// else: empty / future set - silently skipped
 	}
 
 	// Scryfall doesn't provide alternate code. This is typically for older sets, so

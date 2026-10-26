@@ -50,6 +50,7 @@ import java.util.Set;
 
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.ICardHandler;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
@@ -80,6 +81,29 @@ public class DataManager {
 	private ICardHandler handler;
 	private ModelRoot root;
 	private HashMap<String, IMagicCard> links = new HashMap<>();
+
+	/** Which lists the owned counts of a printing add up: all of them, the paper ones only, or the digital ones only. */
+	public enum OwnedKind {
+		ALL, PAPER, DIGITAL
+	}
+
+	private volatile OwnedKind ownedKind = OwnedKind.ALL;
+	/** The copies of one printing in the lists of the current {@link #ownedKind}, built when asked and dropped when the links change. */
+	private final java.util.Map<String, CardGroup> kindLinks = new java.util.concurrent.ConcurrentHashMap<>();
+
+	/**
+	 * Makes the owned counts (the Own column, Collector's totals and percentages) add up only the copies
+	 * that sit in paper lists, or only those in digital lists. {@link OwnedKind#ALL} is the default and
+	 * the way it always was; the views must be refreshed after a change.
+	 */
+	public void setOwnedKind(OwnedKind kind) {
+		this.ownedKind = kind == null ? OwnedKind.ALL : kind;
+		kindLinks.clear();
+	}
+
+	public OwnedKind getOwnedKind() {
+		return ownedKind;
+	}
 	private Thread initThread;
 	private Object initThreadLock = new Object();
 
@@ -270,6 +294,9 @@ public class DataManager {
 		boolean unsorted = store.isUnsorted();
 		ArrayList<IMagicCard> list = new ArrayList<>(cards.size());
 		for (IMagicCard card : cards) {
+			String digitalVeto = DigitalRules.addVeto(card, store);
+			if (digitalVeto != null)
+				throw new MagicException(digitalVeto);
 			String deckVeto = OwnershipRules.ownedDeckVeto(card, store, false);
 				if (deckVeto != null)
 					throw new MagicException(deckVeto);
@@ -354,6 +381,9 @@ public class DataManager {
 		ArrayList<IMagicCard> list = new ArrayList<>(cards.size());
 		for (Object card2 : cards) {
 			IMagicCard card = (IMagicCard) card2;
+			String digitalVeto = DigitalRules.addVeto(card, store);
+			if (digitalVeto != null)
+				throw new MagicException(digitalVeto);
 			String deckVeto = OwnershipRules.ownedDeckVeto(card, store, true);
 			if (deckVeto != null)
 				throw new MagicException(deckVeto);
@@ -448,6 +478,11 @@ public class DataManager {
 	}
 
 	public boolean add(Collection list, ICardStore store) {
+		for (Object card : list) {
+			String digitalVeto = DigitalRules.addVeto(card, store);
+			if (digitalVeto != null)
+				throw new MagicException(digitalVeto);
+		}
 		boolean res = store.addAll(list);
 		reconcile(list);
 		return res;
@@ -477,12 +512,19 @@ public class DataManager {
 		ICardStore<IMagicCard> store = getCardStore(loc);
 		if (store == null)
 			throw new IllegalArgumentException("Cannot find store for " + store);
+		String digitalVeto = DigitalRules.addVeto(mcp, store);
+		if (digitalVeto != null)
+			throw new MagicException(digitalVeto);
 		boolean res = store.add(mcp);
 		reconcile(mcp);
 		return res;
 	}
 
 	public void move(MagicCardPhysical card, Location toLoc) {
+		// check before the card leaves its list: add() would refuse it too late
+		String digitalVeto = DigitalRules.addVeto(card, getCardStore(toLoc));
+		if (digitalVeto != null)
+			throw new MagicException(digitalVeto);
 		remove(card);
 		card.setLocation(toLoc);
 		add(card); // XXX if fails we need to undo the remove
@@ -550,6 +592,11 @@ public class DataManager {
 			if (veto != null)
 				throw new MagicException(veto);
 		}
+		String digitalVeto = DigitalRules.fieldVeto(
+				cardStore != null || mc.getLocation() == null ? cardStore : getCardStore(mc.getLocation()), field,
+				newValue);
+		if (digitalVeto != null)
+			throw new MagicException(digitalVeto);
 		mc.set(field, newValue);
 		if (cardStore == null) {
 			Location loc = mc.getLocation();
@@ -660,6 +707,7 @@ public class DataManager {
 	 */
 	public void reconcile() {
 		links.clear();
+		kindLinks.clear();
 		ICardStore lib = getLibraryCardStore();
 		ICardStore db = getMagicDBStore();
 		db.initialize();
@@ -730,14 +778,42 @@ public class DataManager {
 		CardGroup realcards = new CardGroup(MagicCardField.ID, mcp.getName());
 		realcards.addAll(library.getCards(id));
 		links.put(id, realcards);
+		kindLinks.remove(id);
 		if (update)
 			update(mcp.getBase(), Collections.singleton(MagicCardField.OWN_COUNT));
 	}
 
+	/** Every copy of the printing in any list, whatever {@link #setOwnedKind}: what the Proxier and the Buyer count with. */
+	public CardGroup getAllRealCards(MagicCard mc) {
+		String id = mc.getCardId();
+		return links.containsKey(id) ? (CardGroup) links.get(id) : null;
+	}
+
 	public CardGroup getRealCards(MagicCard mc) {
 		String id = mc.getCardId();
-		if (links.containsKey(id))
-			return (CardGroup) links.get(id);
+		if (links.containsKey(id)) {
+			CardGroup all = (CardGroup) links.get(id);
+			OwnedKind kind = ownedKind;
+			if (kind == OwnedKind.ALL)
+				return all;
+			CardGroup part = kindLinks.get(id);
+			if (part == null) {
+				part = new CardGroup(MagicCardField.ID, mc.getName());
+				java.util.HashMap<Location, Boolean> digitalLists = new java.util.HashMap<>();
+				for (ICard child : all.getChildren()) {
+					Location where = child instanceof MagicCardPhysical ? ((MagicCardPhysical) child).getLocation() : null;
+					Boolean digital = digitalLists.get(where);
+					if (digital == null) {
+						digital = DigitalRules.isDigital(where);
+						digitalLists.put(where, digital);
+					}
+					if (digital == (kind == OwnedKind.DIGITAL))
+						part.add(child);
+				}
+				kindLinks.put(id, part);
+			}
+			return part;
+		}
 		return null;
 	}
 

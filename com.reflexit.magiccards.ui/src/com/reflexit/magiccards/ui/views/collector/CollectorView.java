@@ -34,6 +34,8 @@
  *     Rémi Dutil (2026) - P and F toolbar toggles sit just left of the gear
  *     Rémi Dutil (2026) - follows P / F changed from the preference page
  *                         (Restore Defaults included): toggles and counts update
+ *     Rémi Dutil (2026) - "D" toggle (digital cards, while enabled): paper or digital, never both - the
+ *                         Card Kind filter and the lists whose copies count as owned (DataManager.OwnedKind)
  */
 package com.reflexit.magiccards.ui.views.collector;
 
@@ -59,6 +61,7 @@ import org.eclipse.ui.IViewSite;
 import org.eclipse.ui.PartInitException;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.FilterField;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.actions.ShowPreferencesAction;
@@ -78,6 +81,8 @@ public class CollectorView extends AbstractMyCardsView {
 	private Action onlyOwn;
 	private Action countProxies;
 	private Action countFinishesSeparately;
+	private Action digitalMode;
+	private Image digitalIcon;
 	private boolean onlyOwnFiltred;
 	private CollectorListControl page;
 	private Image proxyIcon;
@@ -115,6 +120,11 @@ public class CollectorView extends AbstractMyCardsView {
 	}
 
 	@Override
+	protected boolean allowsCardKindFilter() {
+		return false; // paper or digital, chosen with the D button
+	}
+
+	@Override
 	protected boolean allowsMultipleFinishesPerRow() {
 		// Collector browses whole printings from the Scryfall database, not
 		// just owned copies - a printing can legitimately offer several
@@ -139,15 +149,21 @@ public class CollectorView extends AbstractMyCardsView {
 		// manager.add(onlyOwn);
 		// onlyOwn.setChecked(isOnlyOwn());
 		countProxies.setChecked(isCountProxies());
+		if (digitalMode != null)
+			digitalMode.setChecked(isDigitalMode());
 		countFinishesSeparately.setChecked(isCountFinishesSeparately());
 		// P and F go just left of the list's Preferences (gear) button, which
 		// the list control has usually contributed already
 		if (manager.find(ShowPreferencesAction.ID) != null) {
 			manager.insertBefore(ShowPreferencesAction.ID, countProxies);
 			manager.insertBefore(ShowPreferencesAction.ID, countFinishesSeparately);
+			if (digitalMode != null)
+				manager.insertBefore(ShowPreferencesAction.ID, digitalMode);
 		} else {
 			manager.add(countProxies);
 			manager.add(countFinishesSeparately);
+			if (digitalMode != null)
+				manager.add(digitalMode);
 		}
 		super.fillLocalToolBar(manager);
 	}
@@ -201,6 +217,24 @@ public class CollectorView extends AbstractMyCardsView {
 				reloadData();
 			}
 		};
+		if (DigitalSupport.isEnabled()) {
+			this.digitalIcon = renderLetterIcon("D", new RGB(110, 70, 170));
+			this.digitalMode = new Action("Digital cards", IAction.AS_CHECK_BOX) {
+				{
+					setImageDescriptor(ImageDescriptor.createFromImage(digitalIcon));
+					setToolTipText("Collect the digital cards (MTGO / Arena) instead of the paper ones: the sets"
+							+ " and the totals follow, and only your digital decks and collections count");
+				}
+
+				@Override
+				public void run() {
+					MagicUIActivator.getDefault().getPreferenceStore().setValue(PreferenceConstants.COLLECTOR_DIGITAL,
+							isChecked());
+					applyKind();
+					reloadData();
+				}
+			};
+		}
 		this.onlyOwn = new Action("Show Only Own", IAction.AS_CHECK_BOX) {
 			{
 				setImageDescriptor(MagicUIActivator.getImageDescriptor("icons/obj16/check16.png"));
@@ -297,8 +331,30 @@ public class CollectorView extends AbstractMyCardsView {
 		});
 	};
 
+	/** True when Collector shows and counts the digital cards (only possible while they are enabled). */
+	public static boolean isDigitalMode() {
+		return DigitalSupport.isEnabled()
+				&& MagicUIActivator.getDefault().getPreferenceStore().getBoolean(PreferenceConstants.COLLECTOR_DIGITAL);
+	}
+
+	/**
+	 * Paper or digital, never both: the list (CollectorListControl#adjustFilterMap) picks the cards - and so the
+	 * sets - and only the copies in decks / collections of that kind count as owned. Nothing changes while the
+	 * digital cards are not enabled.
+	 */
+	private void applyKind() {
+		DataManager dm = DataManager.getInstance();
+		if (!DigitalSupport.isEnabled()) {
+			dm.setOwnedKind(DataManager.OwnedKind.ALL);
+			return;
+		}
+		boolean digital = isDigitalMode();
+		dm.setOwnedKind(digital ? DataManager.OwnedKind.DIGITAL : DataManager.OwnedKind.PAPER);
+	}
+
 	@Override
 	public void createPartControl(Composite parent) {
+		applyKind();
 		super.createPartControl(parent);
 		MagicUIActivator.getDefault().getPreferenceStore().addPropertyChangeListener(countOptionsListener);
 	}
@@ -315,6 +371,10 @@ public class CollectorView extends AbstractMyCardsView {
 			proxyIcon.dispose();
 		if (finishIcon != null)
 			finishIcon.dispose();
+		if (digitalIcon != null)
+			digitalIcon.dispose();
+		// the owned counts of the other views go back to every list
+		DataManager.getInstance().setOwnedKind(DataManager.OwnedKind.ALL);
 		super.dispose();
 	}
 

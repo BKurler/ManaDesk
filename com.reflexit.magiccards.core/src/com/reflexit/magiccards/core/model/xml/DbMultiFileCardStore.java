@@ -36,6 +36,7 @@ import java.util.TreeSet;
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -145,6 +146,7 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 				// must lose the old value
 				for (MagicCardField f : new MagicCardField[] { MagicCardField.KEYWORDS, MagicCardField.RESERVED,
 						MagicCardField.REPRINT, MagicCardField.GAME_CHANGER, MagicCardField.EDHREC_RANK,
+						MagicCardField.DIGITAL, MagicCardField.ONLINE,
 						MagicCardField.PRODUCED_MANA, MagicCardField.ORACLE_ID, MagicCardField.EXTRA_TRAITS })
 					((MagicCard) prev).set(f, card.getBase().get(f));
 				return true;
@@ -419,8 +421,9 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 
 	private Set<Location> getHiddenSets() {
 		HashSet<Location> sets = new HashSet<>();
-		for (Edition edition : Editions.getInstance().getEditions()) {
-			if (edition.isHidden()) {
+		for (Edition edition : Editions.getInstance().getAllEditions()) {
+			// a digital set is neither loaded nor shown while the digital support is off
+			if (edition.isHidden() || (edition.isDigital() && !DigitalSupport.isEnabled())) {
 				sets.add(Location.createLocationFromSet(edition.getName()));
 			}
 		}

@@ -42,6 +42,7 @@
  *                         empty, no import, and its sideboard / extra list
  *                         are owned too. Read only, Import Format and Example
  *                         are greyed for it.
+ *     Rémi Dutil (2026) - the Sideboard / Extra list of a digital deck is digital too
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -218,15 +219,16 @@ public class NewDeckPage extends AbstractCreateElementPage {
 			return;
 		Location base = deck.getLocation();
 		if (sideboard)
-			addFamily(parent, base.toSideboard(), virtual, false);
+			addFamily(parent, base.toSideboard(), virtual, false, deck.isDigital());
 		if (extra)
-			addFamily(parent, base.toExtra(), virtual, true);
+			addFamily(parent, base.toExtra(), virtual, true, deck.isDigital());
 	}
 
-	private static void addFamily(CollectionsContainer parent, Location loc, boolean virtual, boolean populate) {
+	private static void addFamily(CollectionsContainer parent, Location loc, boolean virtual, boolean populate,
+			boolean digital) {
 		if (parent.contains(loc))
 			return;
-		parent.addDeck(loc.getBaseFileName(), true, virtual);
+		parent.addDeck(loc.getBaseFileName(), true, virtual).persistDigital(digital); // inherits the deck's kind
 		if (populate)
 			WaitUtils.asyncExec(() -> DeckAccessoriesPopulator.populate(loc));
 	}

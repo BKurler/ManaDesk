@@ -63,6 +63,7 @@
  *                         AbilitiesFilterPreferencePage and
  *                         UserFilterPreferencePage are gone - their content
  *                         moved into BasicFilterPreferencePage directly.
+ *     Rémi Dutil (2026) - allowsCardKind() / setAllowsCardKind(): the Card Kind group is not offered in Collector
  */
 package com.reflexit.magiccards.ui.dialogs;
 
@@ -130,12 +131,23 @@ public class CardFilterDialog extends TrayDialog implements IPreferencePageConta
 		addNode("save", new SaveFilterPreferencePage(this));
 	}
 
+	private boolean cardKind = true;
+
 	public boolean allowsMultipleFinishesPerRow() {
 		return this.multiFinish;
 	}
 
 	public void setAllowsMultipleFinishesPerRow(boolean multiFinish) {
 		this.multiFinish = multiFinish;
+	}
+
+	/** Whether the Card Kind (Paper / Digital) group is offered: not in Collector, which is either paper or digital. */
+	public boolean allowsCardKind() {
+		return this.cardKind;
+	}
+
+	public void setAllowsCardKind(boolean cardKind) {
+		this.cardKind = cardKind;
 	}
 
 	public boolean allowsUserFilter() {

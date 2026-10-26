@@ -26,6 +26,7 @@
  *                         (createLeadingOptions(), above Name).
  *     Rémi Dutil (2026) - importAllowed()/syncImportAllowed(): a page can force
  *                         Empty and grey the import radios (an owned deck).
+ *     Rémi Dutil (2026) - "Digital" checkbox (only while the digital cards are enabled)
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -50,6 +51,7 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Text;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
@@ -78,6 +80,8 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	private Button emptyRadio;
 	private Text whereText;
 	protected Button newReadOnly;
+	/** "Digital" - only shown while the digital cards are enabled. */
+	private Button digitalCheck;
 
 	protected AbstractCreateElementPage(String pageName, IStructuredSelection selection) {
 		super(pageName, selection);
@@ -204,7 +208,6 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 		group.setLayout(new GridLayout(3, false));
 
 		createLeadingOptions(group);
-
 		Label nl = new Label(group, SWT.NONE);
 		nl.setText("Name:");
 		nameText = new Text(group, SWT.BORDER);
@@ -236,6 +239,9 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 			}
 		});
 
+		// below "In:", above Read only
+		if (DigitalSupport.isEnabled())
+			digitalCheck = StatusDots.checkDigital(group, "Digital (MTGO / Arena cards only)");
 		newReadOnly = StatusDots.check(group, StatusDots.READ_ONLY,
 				"Read only - lock the new " + type + " after it is created");
 		// Breathing room AFTER Read only, before the type-specific options -
@@ -429,8 +435,13 @@ public abstract class AbstractCreateElementPage extends AbstractCardListImportPa
 	@Override
 	public void createEmptyElement() {
 		createNewDeck(getNewElementName(), isDeckTarget(), wantVirtual(), wantUnsorted(), wantReadOnly(),
-				wantFormat(), wantCollectionType(), parentContainer);
+				wantFormat(), wantCollectionType(), parentContainer, wantDigital());
 		createEmptyExtras(parentContainer);
+	}
+
+	@Override
+	protected boolean wantDigital() {
+		return digitalCheck != null && !digitalCheck.isDisposed() && digitalCheck.getSelection();
 	}
 
 	/** Hook for NewDeckPage to also create the Sideboard / Extra siblings. */

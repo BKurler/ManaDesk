@@ -44,6 +44,7 @@
  *                         card has tags (ManaBox's Misprint/Altered/Signed)
  *     Rémi Dutil (2026) - a language the file gives that is replaced by
  *                         English: yellow Language cell + a warning
+ *     Rémi Dutil (2026) - name matching only offers the printings fit for the kind (digital / paper) of the target list
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -84,6 +85,7 @@ import com.reflexit.magiccards.core.exports.ImportData;
 import com.reflexit.magiccards.core.exports.ImportSource;
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.model.CollectorNumber;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
@@ -147,7 +149,15 @@ public class DeckImportPreviewPage extends WizardPage {
 		super.setVisible(visible);
 		if (visible == true) {
 			reload();
+		} else {
+			DigitalRules.setImportTarget(null);
 		}
+	}
+
+	@Override
+	public void dispose() {
+		DigitalRules.setImportTarget(null);
+		super.dispose();
 	}
 
 	public void reload() {
@@ -162,6 +172,9 @@ public class DeckImportPreviewPage extends WizardPage {
 		conflictFields.clear();
 		userResolved.clear();
 		startingPage.performImport(true);
+		// the name lookups of this page (UI thread) only match printings fit for the target list's kind;
+		// cleared when the page is hidden or disposed
+		DigitalRules.setImportTarget(startingPage.isDigitalTarget());
 		resolveByExternalIds();
 		autoCompleteUnique();
 		ImportUtils.applyDeclaredLanguages(importData); // after the id-based binding above
@@ -1050,11 +1063,20 @@ public class DeckImportPreviewPage extends WizardPage {
 		if (isBlank(name))
 			return java.util.Collections.emptyList();
 		String n = name.trim();
-		java.util.Collection<IMagicCard> c = DataManager.getInstance().getMagicDBStore().getCandidates(n);
+		java.util.Collection<IMagicCard> c = fitTarget(DataManager.getInstance().getMagicDBStore().getCandidates(n));
 		if (c != null && !c.isEmpty())
 			return c;
 		java.util.List<IMagicCard> relaxed = dbByNormName().get(norm(n));
-		return relaxed == null ? java.util.Collections.emptyList() : relaxed;
+		return relaxed == null ? java.util.Collections.emptyList() : fitTarget(relaxed);
+	}
+
+	/** The printings fit for the kind (digital / paper) of the list imported into. */
+	private static <T extends java.util.Collection<IMagicCard>> java.util.Collection<IMagicCard> fitTarget(T cards) {
+		if (cards == null)
+			return null;
+		java.util.List<IMagicCard> fit = new java.util.ArrayList<>(cards);
+		fit.removeIf(DigitalRules::isOutOfImportTarget);
+		return fit;
 	}
 
 	/**

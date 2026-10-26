@@ -81,6 +81,8 @@
  *                         Europe, TCGplayer elsewhere (PriceSources).
  *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
  *                         release date (oldest first) instead of alphabetically
+ *     Rémi Dutil (2026) - ENABLE_DIGITAL default (off): digital cards stay hidden
+ *                         unless enabled
  *     Rémi Dutil (2026) - Collector defaults to Group By Set, sets in alphabetical order
  *     Rémi Dutil (2026) - setToDefault(): no save of an in-memory store (no file -
  *                         "File name not specified" from the Location picker)
@@ -139,6 +141,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.LOAD_PRINTINGS, false);
 		store.setDefault(PreferenceConstants.SHOW_GRID, false);
 		store.setDefault(PreferenceConstants.SETS_BY_RELEASE_DATE, false); // alphabetical
+		store.setDefault(PreferenceConstants.ENABLE_DIGITAL, false);
 		store.setDefault(PreferenceConstants.CHECK_FOR_UPDATES, false); // !!! RD Don't check for update per default
 		store.setDefault(PreferenceConstants.CHECK_FOR_CARDS, false);
 		store.setDefault(PreferenceConstants.CURRENCY, "USD");
@@ -149,6 +152,7 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		store.setDefault(PreferenceConstants.LAST_SELECTION, 205961);
 		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_PROXIES, false);
 		store.setDefault(PreferenceConstants.COLLECTOR_COUNT_FINISHES_SEPARATELY, false);
+		store.setDefault(PreferenceConstants.COLLECTOR_DIGITAL, false);
 		// magic store
 		getMdbStore().setDefault(PreferenceConstants.LOCAL_COLUMNS,
 				"Name,-Card Id,Set,Collector's Number,-Finish,Online Price,Type,Cost,Power,Toughness,-Rarity,-Color,"

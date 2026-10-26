@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *    Rémi Dutil (2026) - digital-only cards kept out of the list (but in the file) while the digital support is off
  *******************************************************************************/
 package com.reflexit.magiccards.core.model.xml;
 
@@ -17,6 +18,7 @@ import java.util.Collections;
 import java.util.Iterator;
 
 import com.reflexit.magiccards.core.MagicException;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -63,7 +65,11 @@ public class DbFileCardStore extends AbstractCardStoreWithStorage<IMagicCard> {
 			for (Iterator iterator = ((SingleFileCardStorage) storage).getList().iterator(); iterator
 					.hasNext();) {
 				IMagicCard card = (IMagicCard) iterator.next();
-				if (handler.hashAndResolve(card)) {
+				if (DigitalSupport.isHidden(card)) {
+					// digital-only while the digital support is off: out of the list, still in the file
+					((SingleFileCardStorage) storage).stashHidden(card);
+					iterator.remove();
+				} else if (handler.hashAndResolve(card)) {
 					iterator.remove();
 				}
 			}
@@ -108,6 +114,12 @@ public class DbFileCardStore extends AbstractCardStoreWithStorage<IMagicCard> {
 			// [t2][s15][l4][v1][i10]
 			String nid = ((MagicCard) card).syntesizeId();
 			((ICardModifiable) card).set(MagicCardField.ID, nid);
+		}
+		if (DigitalSupport.isHidden(card)) {
+			// an updated digital-only card while the digital support is off: only kept in the file
+			((SingleFileCardStorage) storage).stashHidden(card);
+			storage.autoSave();
+			return card;
 		}
 		if (handler.hashAndResolve(card) == false) {
 			storage.add(card);

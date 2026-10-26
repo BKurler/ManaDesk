@@ -170,13 +170,17 @@ public class ScryfallBulkSplitTest extends AbstractMagicTest {
 	}
 
 	@Test
-	public void testSkipsNonPaper() throws Exception {
+	public void testKeepsDigitalCardsFlagged() throws Exception {
 		String digital = cardJson("tst", "Arena Card", "5").replace("[\"paper\"]", "[\"mtgo\",\"arena\"]");
 		File bulk = gzWithLines(cardJson("tst", "Paper Card", "1"), digital);
 
 		Map<String, List<MagicCard>> g = parse(bulk, Collections.singleton("tst"));
 
-		Assert.assertEquals("only the paper card kept", 1, g.get("tst").size());
+		Assert.assertEquals("both cards kept", 2, g.get("tst").size());
+		for (MagicCard c : g.get("tst")) {
+			boolean arena = "Arena Card".equals(c.getName());
+			Assert.assertEquals(c.getName(), arena ? "true" : null, c.get(com.reflexit.magiccards.core.model.MagicCardField.DIGITAL));
+		}
 	}
 
 	@Test

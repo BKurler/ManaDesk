@@ -5,6 +5,7 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - the set list follows the "List sets by release
  *                         date" preference (SetListOrder)
+ *     Rémi Dutil (2026) - a copy in a digital / paper list only offers the printings fit for it
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -27,6 +28,7 @@ import org.eclipse.swt.widgets.Listener;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.model.CardGroup;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.IMagicCard;
@@ -179,6 +181,8 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 		public String[] getItems(Object element) {
 			IMagicCardPhysical card = (IMagicCardPhysical) element;
 			Collection<IMagicCard> cards = DataManager.getInstance().getMagicDBStore().getCandidates(card.getName());
+			cards = new java.util.ArrayList<IMagicCard>(cards);
+			cards.removeIf(c -> !DigitalRules.fitsList(c, card.getLocation())); // only printings fit for this list
 			CardList list = new CardList(cards);
 			Set<Object> unique = list.getUnique(MagicCardField.SET);
 			unique.add(card.getSet());
@@ -208,7 +212,7 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 						return;
 					// land on the lowest collector number in that set (the "main"
 					// printing, not a showcase / borderless / promo)
-					java.util.List<IMagicCard> printings = Printings.inSet(card.getName(), set);
+					java.util.List<IMagicCard> printings = Printings.inSet(card.getName(), set, card.getLocation());
 					if (!printings.isEmpty()) {
 						card.setMagicCard((MagicCard) printings.get(0));
 						updateOnEdit(getViewer(), card);

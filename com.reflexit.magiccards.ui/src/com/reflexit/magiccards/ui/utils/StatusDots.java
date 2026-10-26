@@ -6,6 +6,7 @@
  *                         stays virtual/read-only/unsorted only)
  *     Rémi Dutil (2026) - Boxed marker changed from brown to black - brown
  *                         wasn't visible enough against the disk icons
+ *     Rémi Dutil (2026) - Digital = bold letter D in the centre; Read only stays red but moves to the bottom-right; Unsorted moved to the top-left corner (shared with Boxed: never both)
  */
 package com.reflexit.magiccards.ui.utils;
 
@@ -31,9 +32,10 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
  * the New / Edit Properties dialogs so all three read the same:
  * <ul>
  * <li>blue = virtual (bottom-left)</li>
- * <li>red = read-only (bottom-centre)</li>
- * <li>green = unsorted (bottom-right)</li>
- * <li>black = boxed (top-left - kept apart from the other three)</li>
+ * <li>red = read-only (bottom-right)</li>
+ * <li>green = unsorted (top-left)</li>
+ * <li>black = boxed (top-left: a deck is boxed, a collection is unsorted, never both)</li>
+<li>letter D = digital (centre)</li>
  * </ul>
  */
 public final class StatusDots {
@@ -41,6 +43,8 @@ public final class StatusDots {
 	public static final RGB READ_ONLY = new RGB(210, 45, 45);
 	public static final RGB UNSORTED = new RGB(45, 165, 70);
 	public static final RGB BOXED = new RGB(0, 0, 0);
+	/** The colour of the letter D, in the centre: a digital (MTGO / Arena) deck or collection. */
+	public static final RGB DIGITAL = new RGB(0, 0, 0);
 
 	private StatusDots() {
 	}
@@ -52,12 +56,12 @@ public final class StatusDots {
 	 * the plugin image registry. Returns the plain icon when no flag is set.
 	 */
 	public static Image decorate(String basePath, boolean virtual, boolean readOnly, boolean unsorted,
-			boolean boxed) {
+			boolean boxed, boolean digital) {
 		Image base = MagicUIActivator.getImage(basePath);
-		if (base == null || !(virtual || readOnly || unsorted || boxed))
+		if (base == null || !(virtual || readOnly || unsorted || boxed || digital))
 			return base;
-		String key = "sdots2:" + basePath + (virtual ? "V" : "") + (readOnly ? "R" : "") + (unsorted ? "U" : "")
-				+ (boxed ? "B" : "");
+		String key = "sdots3:" + basePath + (virtual ? "V" : "") + (readOnly ? "R" : "") + (unsorted ? "U" : "")
+				+ (boxed ? "B" : "") + (digital ? "D" : "");
 		Image cached = MagicUIActivator.getDefault().getImage(key, (Image) null);
 		if (cached != null)
 			return cached;
@@ -66,7 +70,7 @@ public final class StatusDots {
 		GC gc = new GC(img);
 		try {
 			gc.setAntialias(SWT.ON);
-			paint(gc, d.width, d.height, virtual, readOnly, unsorted, boxed);
+			paint(gc, d.width, d.height, virtual, readOnly, unsorted, boxed, digital);
 		} finally {
 			gc.dispose();
 		}
@@ -81,14 +85,38 @@ public final class StatusDots {
 	 * signal, not a fourth member of that trio).
 	 */
 	public static void paint(GC gc, int w, int h, boolean virtual, boolean readOnly, boolean unsorted,
-			boolean boxed) {
+			boolean boxed, boolean digital) {
 		// still readable on the small (16px) sideboard / extra tab icons
 		int dot = Math.max(w >= 24 ? 6 : 4, w / 6);
 		int y = h - dot;
 		dot(gc, VIRTUAL, virtual, 0, y, dot);
-		dot(gc, READ_ONLY, readOnly, (w - dot) / 2, y, dot);
-		dot(gc, UNSORTED, unsorted, w - dot, y, dot);
+		dot(gc, READ_ONLY, readOnly, w - dot, y, dot);
+		// boxed (a deck) and unsorted (a collection) are never both: they share the top-left corner
+		dot(gc, UNSORTED, unsorted, 0, 0, dot);
 		dot(gc, BOXED, boxed, 0, 0, dot);
+		letterD(gc, DIGITAL, digital, w, h);
+	}
+
+	/** A bold letter D in the centre of the icon (digital). */
+	private static void letterD(GC gc, RGB rgb, boolean on, int w, int h) {
+		if (!on)
+			return;
+		org.eclipse.swt.graphics.FontData fd = gc.getFont().getFontData()[0];
+		fd.setStyle(SWT.BOLD);
+		fd.setHeight(Math.max(8, h / 2));
+		org.eclipse.swt.graphics.Font font = new org.eclipse.swt.graphics.Font(gc.getDevice(), fd);
+		org.eclipse.swt.graphics.Font old = gc.getFont();
+		Color c = new Color(gc.getDevice(), rgb);
+		try {
+			gc.setFont(font);
+			gc.setForeground(c);
+			org.eclipse.swt.graphics.Point size = gc.textExtent("D");
+			gc.drawText("D", (w - size.x) / 2, (h - size.y) / 2, true);
+		} finally {
+			gc.setFont(old);
+			font.dispose();
+			c.dispose();
+		}
 	}
 
 	private static void dot(GC gc, RGB rgb, boolean on, int x, int y, int dia) {
@@ -105,6 +133,11 @@ public final class StatusDots {
 	 * drop it right before a check box so the colour is on the same row.
 	 */
 	public static Canvas swatch(Composite parent, RGB rgb) {
+		return swatch(parent, rgb, false);
+	}
+
+	/** {@link #swatch(Composite, RGB)}, or a bold letter D of {@code rgb} when {@code letter} (digital). */
+	private static Canvas swatch(Composite parent, RGB rgb, boolean letter) {
 		Canvas canvas = new Canvas(parent, SWT.NO_FOCUS);
 		GridData gd = new GridData(SWT.CENTER, SWT.CENTER, false, false);
 		gd.widthHint = 14;
@@ -113,9 +146,21 @@ public final class StatusDots {
 		canvas.addPaintListener(e -> {
 			e.gc.setAntialias(SWT.ON);
 			Color c = new Color(e.display, rgb);
-			e.gc.setBackground(c);
-			int dia = 10;
-			e.gc.fillOval((14 - dia) / 2, (14 - dia) / 2, dia, dia);
+			if (letter) {
+				org.eclipse.swt.graphics.FontData fd = e.gc.getFont().getFontData()[0];
+				fd.setStyle(SWT.BOLD);
+				org.eclipse.swt.graphics.Font font = new org.eclipse.swt.graphics.Font(e.display, fd);
+				e.gc.setFont(font);
+				e.gc.setForeground(c);
+				org.eclipse.swt.graphics.Point size = e.gc.textExtent("D");
+				e.gc.drawText("D", (14 - size.x) / 2, (14 - size.y) / 2, true);
+				e.gc.setFont(null);
+				font.dispose();
+			} else {
+				e.gc.setBackground(c);
+				int dia = 10;
+				e.gc.fillOval((14 - dia) / 2, (14 - dia) / 2, dia, dia);
+			}
 			c.dispose();
 		});
 		return canvas;
@@ -127,6 +172,15 @@ public final class StatusDots {
 	 * is doing. The sub-composite spans the parent's grid columns.
 	 */
 	public static Button check(Composite parent, RGB rgb, String text) {
+		return check(parent, rgb, text, false);
+	}
+
+	/** The Digital check box: preceded by the letter D that marks a digital list. */
+	public static Button checkDigital(Composite parent, String text) {
+		return check(parent, DIGITAL, text, true);
+	}
+
+	private static Button check(Composite parent, RGB rgb, String text, boolean letter) {
 		Composite row = new Composite(parent, SWT.NONE);
 		GridLayout gl = new GridLayout(2, false);
 		gl.marginWidth = 0;
@@ -137,7 +191,7 @@ public final class StatusDots {
 		if (parent.getLayout() instanceof GridLayout)
 			rgd.horizontalSpan = ((GridLayout) parent.getLayout()).numColumns;
 		row.setLayoutData(rgd);
-		swatch(row, rgb);
+		swatch(row, rgb, letter);
 		Button b = new Button(row, SWT.CHECK);
 		b.setText(text);
 		b.setLayoutData(new GridData(SWT.FILL, SWT.CENTER, true, false));

@@ -130,6 +130,7 @@
  *                         Behaviour unchanged.
  *     Rémi Dutil (2026) - F1 help context (viewproxier)
  *     Rémi Dutil (2026) - owned (non-virtual) decks are left out, like boxed ones
+ *     Rémi Dutil (2026) - digital decks are left out (nothing to print for MTGO / Arena cards)
  */
 package com.reflexit.magiccards.ui.views.proxier;
 
@@ -410,9 +411,9 @@ public class ProxierView extends ViewPart {
 		return !isLeftOut(cc);
 	}
 
-	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so they are not planned. */
+	/** Boxed decks and owned (non-virtual) decks: their copies are spoken for, so they are not planned. A digital deck has nothing to print. */
 	private static boolean isLeftOut(CardCollection cc) {
-		return cc.isBoxed() || cc.isOwnedDeck();
+		return cc.isBoxed() || cc.isOwnedDeck() || cc.isDigital();
 	}
 
 	// --- right pane: pivot grid on top, per-deck breakdown of the selected row below ---

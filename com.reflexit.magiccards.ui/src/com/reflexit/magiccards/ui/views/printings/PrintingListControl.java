@@ -2,6 +2,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - null-safe oldest-print-first sort applied at the model level
  *     Rémi Dutil (2026) - printings found by Scryfall's oracle id (name only as the fallback)
+ *     Rémi Dutil (2026) - no Group By Condition / Proxy / Ownership for printings (showsCopies())
  */
 package com.reflexit.magiccards.ui.views.printings;
 
@@ -34,6 +35,11 @@ import com.reflexit.magiccards.ui.views.IMagicColumnViewer;
 
 public class PrintingListControl extends AbstractMagicCardsListControl {
 	private IMagicCard card;
+
+	@Override
+	protected boolean showsCopies() {
+		return false; // printings: no Condition, Proxy or Ownership to group by
+	}
 
 	/**
 	 * Oldest print first. Null-safe: an edition with no known release date (a

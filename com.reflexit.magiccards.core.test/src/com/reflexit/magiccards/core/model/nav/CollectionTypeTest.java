@@ -12,6 +12,7 @@ package com.reflexit.magiccards.core.model.nav;
 
 import java.util.Arrays;
 import java.util.Collections;
+import java.util.List;
 
 import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
@@ -108,6 +109,51 @@ public class CollectionTypeTest extends TestCase {
 		assertTrue(a.isVirtual());
 		info.setCollectionType(CollectionType.STANDARD);
 		assertFalse(a.isVirtual());
+	}
+
+	/** Owned <-> virtual only while empty; Standard <-> For Trade freely; never while read only. */
+	public void testTypeChangeVeto() {
+		a = create(CollectionType.STANDARD);
+		b = create(CollectionType.WISH);
+		IStorageInfo std = a.getStorageInfo();
+		IStorageInfo wish = b.getStorageInfo();
+		List<Object> empty = Collections.emptyList();
+		List<Object> full = Arrays.<Object> asList("a card");
+		// owned <-> owned is fine, with or without cards
+		assertNull(OwnershipRules.typeChangeVeto(std, full, CollectionType.FOR_TRADE));
+		// owned <-> virtual only while empty
+		assertNull(OwnershipRules.typeChangeVeto(std, empty, CollectionType.WISH));
+		assertNull(OwnershipRules.typeChangeVeto(wish, empty, CollectionType.STANDARD));
+		assertNotNull(OwnershipRules.typeChangeVeto(std, full, CollectionType.WISH));
+		assertNotNull(OwnershipRules.typeChangeVeto(wish, full, CollectionType.FOR_TRADE));
+		assertNotNull("cards not known", OwnershipRules.typeChangeVeto(std, null, CollectionType.WISH));
+		// the type it already has
+		assertNull(OwnershipRules.typeChangeVeto(std, full, CollectionType.STANDARD));
+		// read only: no change at all, empty or not
+		std.setReadOnly(true);
+		try {
+			assertNotNull(OwnershipRules.typeChangeVeto(std, empty, CollectionType.FOR_TRADE));
+			assertNotNull(OwnershipRules.typeChangeVeto(std, empty, CollectionType.WISH));
+		} finally {
+			std.setReadOnly(false);
+		}
+		assertNull(OwnershipRules.typeChangeVeto(std, empty, CollectionType.FOR_TRADE));
+	}
+
+	/** A deck turns owned <-> virtual only while it (with its sideboard and extra list) is empty and not read only. */
+	public void testDeckVirtualChangeVeto() {
+		CardCollection deck = dm.getModelRoot().getDeckContainer().addDeck("ctype-vdeck" + (++n), true, true);
+		try {
+			IStorageInfo info = deck.getStorageInfo();
+			assertNull(OwnershipRules.deckVirtualChangeVeto(info, false, false));
+			assertNotNull(OwnershipRules.deckVirtualChangeVeto(info, true, false));
+			assertNull("no change asked", OwnershipRules.deckVirtualChangeVeto(info, true, true));
+			info.setReadOnly(true);
+			assertNotNull(OwnershipRules.deckVirtualChangeVeto(info, false, false));
+			info.setReadOnly(false);
+		} finally {
+			deck.remove();
+		}
 	}
 
 	public void testDeckHasNoCollectionType() {

@@ -45,12 +45,15 @@
  *                         is always allowed, the copy follows the
  *                         destination's default ownership
  *     Rémi Dutil (2026) - "List sets by release date" checkbox
+ *     Rémi Dutil (2026) - "Enable digital cards" checkbox (applied after a restart);
+ *                         refused while a digital deck or collection exists
  */
 
 package com.reflexit.magiccards.ui.preferences;
 
 
 import org.eclipse.core.runtime.preferences.ConfigurationScope;
+import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.preference.BooleanFieldEditor;
 import org.eclipse.jface.preference.ComboFieldEditor;
 import org.eclipse.jface.preference.FieldEditorPreferencePage;
@@ -65,6 +68,8 @@ import org.eclipse.ui.IWorkbenchPreferencePage;
 import org.osgi.service.prefs.BackingStoreException;
 import org.osgi.service.prefs.Preferences;
 
+import com.reflexit.magiccards.core.model.DigitalRules;
+import com.reflexit.magiccards.core.model.DigitalSupport;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 
@@ -85,6 +90,9 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 	private static final String WORKSPACE_CHOOSER_PLUGIN_ID = "com.reflexit.magiccards_rcp";
 	private static final String SHOW_WORKSPACE_SELECTION_DIALOG = "SHOW_WORKSPACE_SELECTION_DIALOG";
 	private Button showWorkspaceDialog;
+	/** "Enable digital cards" as it was when the page opened. */
+	private boolean digitalWas;
+	private BooleanFieldEditor digitalEditor;
 
 	public MagicPreferencePage() {
 		super(GRID);
@@ -107,6 +115,11 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		addField(grid);
 		addField(new BooleanFieldEditor(PreferenceConstants.SETS_BY_RELEASE_DATE,
 				"List sets by release date (oldest first) instead of alphabetically", getFieldEditorParent()));
+		// digital cards (MTGO / Arena): read at startup, so a change needs a restart
+		this.digitalWas = getPreferenceStore().getBoolean(PreferenceConstants.ENABLE_DIGITAL);
+		digitalEditor = new BooleanFieldEditor(PreferenceConstants.ENABLE_DIGITAL,
+				"Enable digital cards (MTGO / Arena) - applied after a restart", getFieldEditorParent());
+		addField(digitalEditor);
 		// workspace - not a BooleanFieldEditor: it targets a different plugin's
 		// ConfigurationScope preference, not this page's own store - see this
 		// class' own header
@@ -206,13 +219,46 @@ public class MagicPreferencePage extends FieldEditorPreferencePage implements IW
 		super.propertyChange(event);
 	}
 
+	/** Why the digital cards cannot be turned off: how many digital lists exist, with the first names. */
+	static String digitalBlockMessage(java.util.List<String> lists) {
+		StringBuilder sb = new StringBuilder("Digital cards cannot be turned off: ");
+		sb.append(lists.size()).append(lists.size() == 1 ? " digital deck or collection exists" : " digital decks and collections exist");
+		sb.append(" (");
+		for (int i = 0; i < lists.size() && i < 5; i++)
+			sb.append(i > 0 ? ", " : "").append(lists.get(i));
+		if (lists.size() > 5)
+			sb.append(", ...");
+		sb.append(").\n\nDelete them first.");
+		return sb.toString();
+	}
+
 	private Preferences getWorkspaceSelectionDialogPreference() {
 		return ConfigurationScope.INSTANCE.getNode(WORKSPACE_CHOOSER_PLUGIN_ID);
 	}
 
 	@Override
 	public boolean performOk() {
+		// the digital cards cannot be turned off while a digital deck or collection exists
+		if (digitalEditor != null && digitalWas && !digitalEditor.getBooleanValue()) {
+			java.util.List<String> lists = DigitalRules.digitalListNames();
+			if (!lists.isEmpty()) {
+				MessageDialog.openError(getShell(), "Digital cards", digitalBlockMessage(lists));
+				digitalEditor.load(); // back to enabled
+				return false;
+			}
+		}
 		boolean ok = super.performOk();
+		boolean digitalNow = getPreferenceStore().getBoolean(PreferenceConstants.ENABLE_DIGITAL);
+		if (ok && digitalNow != DigitalSupport.isEnabled()) {
+			// the stored choice is not the one running yet: said at every OK / Apply until ManaDesk restarts
+			digitalWas = digitalNow;
+			MessageDialog.openInformation(getShell(), "Digital cards",
+					"Restart ManaDesk to " + (digitalNow ? "show" : "hide") + " the digital cards."
+							+ (digitalNow
+									? "\n\nIf you have not updated the card database since this version, run"
+											+ " Update Card Database once after the restart: it loads the digital cards and sets."
+									: ""));
+		}
 		if (this.showWorkspaceDialog != null) {
 			Preferences node = getWorkspaceSelectionDialogPreference();
 			node.putBoolean(SHOW_WORKSPACE_SELECTION_DIALOG, this.showWorkspaceDialog.getSelection());

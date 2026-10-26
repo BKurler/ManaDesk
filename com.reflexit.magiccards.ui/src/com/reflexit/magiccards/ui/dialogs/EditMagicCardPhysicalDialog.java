@@ -3,6 +3,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - isDigitalList(): copies in a digital deck / collection get no Condition, Proxy or Etched
  *     Rémi Dutil (2026) - apply the Proxy field on OK
  *     Rémi Dutil (2026) - apply the Finish field on OK
  *     Rémi Dutil (2026) - Ownership follows OwnershipRules: only the values
@@ -78,6 +79,16 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 				store.setDefault(EditCardsPropertiesDialog.NAME_FIELD, "<Multiple Cards>: " + cards.size());
 			}
 		}
+	}
+
+	@Override
+	protected boolean isDigitalList() {
+		if (!com.reflexit.magiccards.core.model.DigitalSupport.isEnabled() || cards.isEmpty())
+			return false;
+		for (MagicCardPhysical card : cards)
+			if (!com.reflexit.magiccards.core.model.DigitalRules.isDigital(card.getLocation()))
+				return false;
+		return true;
 	}
 
 	@Override

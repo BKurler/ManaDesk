@@ -137,6 +137,10 @@
  *     Rémi Dutil (2026) - after resolving, a card the file gives in another
  *                         language takes that language's printing when the
  *                         card database has it (ImportUtils.applyDeclaredLanguages)
+ *     Rémi Dutil (2026) - digital decks / collections: wantDigital(), the flag passed to createNewDeck(), and the
+ *                         name lookups of an import matching only the printings fit for the target list's kind
+ *     Rémi Dutil (2026) - forceKind() after resolving: the imported cards are made to fit the target list's kind
+ *     Rémi Dutil (2026) - the cards left out of an import (unresolved) are all listed in the log, with their error
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -210,6 +214,7 @@ import com.reflexit.magiccards.core.exports.ImportSource;
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.exports.ReportType;
 import com.reflexit.magiccards.core.model.CollectionType;
+import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -267,6 +272,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private String newNameChoice;
 	private String newFormatChoice;
 	private CollectionType newCollectionTypeChoice;
+	private boolean newDigitalChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
 	private MagicToolkit toolkit;
@@ -335,6 +341,11 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	protected boolean wantReadOnly() {
+		return false;
+	}
+
+	/** Whether a new deck / collection is a digital one (MTGO / Arena cards only) - read on the UI thread like {@link #wantVirtual()}. */
+	protected boolean wantDigital() {
 		return false;
 	}
 
@@ -525,6 +536,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			newNameChoice = getNewElementName();
 			newFormatChoice = wantFormat();
 			newCollectionTypeChoice = wantCollectionType();
+			newDigitalChoice = (element instanceof CardCollection) ? ((CardCollection) element).isDigital() : wantDigital();
 			final boolean dbImport = false;
 			try {
 				IRunnableWithProgress work = new IRunnableWithProgress() {
@@ -655,10 +667,14 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			IMagicCard card = (IMagicCard) iterator.next();
 			if (card.getCardId() == null || magicDb.getCard(card.getCardId()) == null) {
 				iterator.remove();
-				cerrors.add(card.getName() + " (" + card.getSet() + ")");
+				cerrors.add(card.getName() + " (" + card.getSet() + ")" + (card instanceof MagicCardPhysical
+						&& ((MagicCardPhysical) card).getError() != null ? " - " + ((MagicCardPhysical) card).getError() : ""));
 			}
 		}
 		if (cerrors.size() != 0) {
+			// the full list in the log (the dialog below only shows the first 10): which cards were left out
+			for (String str : cerrors)
+				MagicUIActivator.log("Import: unresolved card - " + str);
 			if (ignoreErrors) {
 				// the user opted in on the preview page: import the good cards,
 				// silently drop the rest (already removed from result above)
@@ -759,7 +775,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	protected void createNewDeck(final String base, boolean isDeck, boolean virtual, boolean unsorted, boolean readOnly,
-			String defaultFormat, CollectionType collectionType, CollectionsContainer resource) {
+			String defaultFormat, CollectionType collectionType, CollectionsContainer resource, boolean digital) {
 		int attempts = 1000;
 		Location newloc = Location.createLocation(base);
 		while (resource.contains(newloc) && attempts-- > 0) {
@@ -772,6 +788,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			created.persistInitialSettings(collectionType, unsorted); // virtual follows the type
 		else
 			created.persistInitialSettings(isDeck, virtual, unsorted);
+		if (digital)
+			created.persistDigital(true);
 		if (readOnly || (defaultFormat != null && !defaultFormat.isEmpty())) {
 			try {
 				IStorageInfo si = created.getStorageInfo();
@@ -1441,6 +1459,11 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		return reportType;
 	}
 
+	/** True when the list being imported into is (or will be) a digital one; valid after {@link #performImport}. */
+	public boolean isDigitalTarget() {
+		return newDigitalChoice;
+	}
+
 	public CardElement getElement() {
 		return element;
 	}
@@ -1454,6 +1477,19 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	}
 
 	public void importRunnable(final boolean preview, final boolean dbImport, IProgressMonitor monitor)
+			throws InvocationTargetException {
+		// name lookups only match the printings that fit the kind (digital / paper) of the list imported into
+		DigitalRules.setImportTarget(newDigitalChoice);
+		try {
+			DigitalRules.trace("import start: preview=" + preview + " dbImport=" + dbImport + " digital target=" + newDigitalChoice
+					+ " element=" + element);
+			doImportRunnable(preview, dbImport, monitor);
+		} finally {
+			DigitalRules.setImportTarget(null);
+		}
+	}
+
+	private void doImportRunnable(final boolean preview, final boolean dbImport, IProgressMonitor monitor)
 			throws InvocationTargetException {
 		SubMonitor submon = SubMonitor.convert(monitor, "Importing", 200);
 		try {
@@ -1470,6 +1506,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				ImportUtils.performPreImport(worker, importData, new CoreMonitorAdapter(submon.split(50)));
 				if (!dbImport) {
 					ImportUtils.resolve(importData.getList());
+					ImportUtils.forceKind(importData.getList(), newDigitalChoice); // fit the kind of the target list
 					ImportUtils.applyDeclaredLanguages(importData);
 				} else {
 					ImportUtils.performPreImportWithDb((Collection<IMagicCard>) importData.getList(), new ArrayList<>(),
@@ -1484,13 +1521,16 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 					Collection<IMagicCard> result = (Collection<IMagicCard>) importData.getList();
 					if (resolve) {
 						ImportUtils.resolve(importData.getList());
+						ImportUtils.forceKind(importData.getList(), newDigitalChoice);
+						DigitalRules.trace("import: " + importData.getList().size() + " card(s) resolved, "
+								+ importData.getErrorCount() + " with an error");
 						ImportUtils.applyDeclaredLanguages(importData);
 						if (element instanceof CollectionsContainer) {
 							// newNameChoice was captured on the UI thread by performImport()
 							CollectionsContainer newParent = (CollectionsContainer) element;
 							createNewDeck(newNameChoice != null ? newNameChoice : getSourceBasedName(), isDeckTarget(),
 									newVirtualChoice, newUnsortedChoice, newReadOnlyChoice, newFormatChoice,
-									newCollectionTypeChoice, newParent);
+									newCollectionTypeChoice, newParent, newDigitalChoice);
 							createImportExtras(newParent, newSideboardChoice, newExtraChoice, newVirtualChoice);
 						}
 						if (!(element instanceof CardCollection)) {
@@ -1528,7 +1568,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 									c -> c instanceof MagicCardPhysical && ((MagicCardPhysical) c).isSideboard());
 						submon.worked(10);
 					}
-					if (fixErrors(result, dbImport, submon.split(20))) {
+					boolean proceed = fixErrors(result, dbImport, submon.split(20));
+					DigitalRules.trace("import: fixErrors proceed=" + proceed + ", " + result.size() + " card(s) left");
+					if (proceed) {
 						submon.worked(10);
 						if (resolve)
 							ImportUtils.performImport(result, DataManager.getCardHandler().getLibraryCardStore());
@@ -1538,6 +1580,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		} catch (InvocationTargetException e) {
 			throw e;
 		} catch (Exception e) {
+			DigitalRules.trace("import FAILED: " + e);
+			if (DigitalRules.TRACE_DIGITAL)
+				com.reflexit.magiccards.core.MagicLogger.log(e);
 			throw new InvocationTargetException(e);
 		} finally {
 			monitor.done();
