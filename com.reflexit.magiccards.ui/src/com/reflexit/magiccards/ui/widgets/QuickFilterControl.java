@@ -383,7 +383,7 @@ public class QuickFilterControl extends Composite {
 		try {
 			int max = 0;
 			for (String name : Editions.getInstance().getNames()) {
-				int w = gc.textExtent(name).x;
+				int w = gc.textExtent(Editions.getInstance().getDisplayName(name)).x;
 				if (w > max)
 					max = w;
 			}

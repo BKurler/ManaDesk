@@ -210,6 +210,21 @@ public class Editions implements ISearchableProperty {
 		return nameAliases.get(name);
 	}
 
+	/** {@code setName} as it is displayed: with the "(coming soon)" label while its set is not released yet. */
+	public String getDisplayName(String setName) {
+		if (setName == null)
+			return null;
+		Edition ed = getEditionByName(setName);
+		return ed == null ? setName : ed.getDisplayName();
+	}
+
+	/** The set name behind a displayed one: {@code text} without a trailing "(coming soon)" label. */
+	public static String stripLabel(String text) {
+		if (text != null && text.endsWith(Edition.COMING_SOON_LABEL))
+			return text.substring(0, text.length() - Edition.COMING_SOON_LABEL.length());
+		return text;
+	}
+
 	public Edition getEditionByNameAlways(String name) {
 		Edition ed = getEditionByName(name);
 		if (ed != null)

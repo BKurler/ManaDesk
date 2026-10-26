@@ -6,6 +6,7 @@
  *     Rémi Dutil (2026) - the set list follows the "List sets by release
  *                         date" preference (SetListOrder)
  *     Rémi Dutil (2026) - a copy in a digital / paper list only offers the printings fit for it
+ *     Rémi Dutil (2026) - "(coming soon)" after the name of a set not released yet (text and drop list)
  */
 
 package com.reflexit.magiccards.ui.views.columns;
@@ -63,6 +64,12 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 	public SetColumn(boolean showImage) {
 		this();
 		this.showImage = showImage;
+	}
+
+	/** The set name, followed by "(coming soon)" while the set is not released yet (display only). */
+	@Override
+	public String getText(Object element) {
+		return Editions.getInstance().getDisplayName(super.getText(element));
 	}
 
 	@Override
@@ -190,14 +197,17 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 			for (Object o : unique)
 				if (o != null)
 					names.add(String.valueOf(o));
-			return SetListOrder.sortToArray(names);
+			String[] sorted = SetListOrder.sortToArray(names);
+			for (int i = 0; i < sorted.length; i++)
+				sorted[i] = Editions.getInstance().getDisplayName(sorted[i]);
+			return sorted;
 		}
 
 		@Override
 		protected Object getValue(Object element) {
 			if (element instanceof MagicCardPhysical) {
 				IMagicCardPhysical card = (IMagicCardPhysical) element;
-				return card.getSet();
+				return Editions.getInstance().getDisplayName(card.getSet());
 			}
 			return null;
 		}
@@ -206,7 +216,7 @@ public class SetColumn extends AbstractImageColumn implements Listener {
 		protected void setValue(Object element, Object value) {
 			if (element instanceof MagicCardPhysical) {
 				MagicCardPhysical card = (MagicCardPhysical) element;
-					String set = (String) value;
+					String set = Editions.stripLabel((String) value); // the list shows "(coming soon)", the set name has none
 					String oldSet = card.getSet();
 					if (oldSet != null && oldSet.equals(set))
 						return;

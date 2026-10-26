@@ -3,6 +3,7 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - digital flag (a digital-only set)
+ *     Rémi Dutil (2026) - isComingSoon() / getDisplayName(): the "(coming soon)" label of a set not released yet
  */
 
 package com.reflexit.magiccards.core.model;
@@ -59,6 +60,24 @@ public class Edition {
 
 	public Date getReleaseDate() {
 		return release;
+	}
+
+	/** What follows the name of a set that is not released yet, wherever its name is displayed. */
+	public static final String COMING_SOON_LABEL = " (coming soon)";
+
+	/** True when this set is released after today: its cards are already known, but not in the shops yet. */
+	public boolean isComingSoon() {
+		return isComingSoon(release, new Date());
+	}
+
+	/** True when {@code release} is after {@code today}; a set without a release date is not coming soon. */
+	public static boolean isComingSoon(Date release, Date today) {
+		return release != null && release.after(today);
+	}
+
+	/** The name to display: the name, followed by {@link #COMING_SOON_LABEL} while the set is not released yet. Never stored. */
+	public String getDisplayName() {
+		return isComingSoon() ? name + COMING_SOON_LABEL : name;
 	}
 
 	public boolean abbreviationOf(String abbr) {

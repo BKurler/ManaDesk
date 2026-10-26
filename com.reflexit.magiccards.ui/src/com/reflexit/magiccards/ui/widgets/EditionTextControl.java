@@ -62,7 +62,7 @@ public class EditionTextControl extends Composite {
 			String[] setProposals = new String[names.size()];
 			int i = 0;
 			for (String type : names) {
-				setProposals[i++] = type;
+				setProposals[i++] = Editions.getInstance().getDisplayName(type); // "(coming soon)" while not released
 			}
 			((SimpleContentProposalProvider) contentProposalProvider).setProposals(setProposals);
 		}
@@ -77,6 +77,6 @@ public class EditionTextControl extends Composite {
 	}
 
 	public String getText() {
-		return set.getText();
+		return Editions.stripLabel(set.getText()); // a picked proposal may carry "(coming soon)"
 	}
 }

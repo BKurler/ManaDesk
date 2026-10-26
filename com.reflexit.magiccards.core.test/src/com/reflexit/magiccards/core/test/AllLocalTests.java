@@ -126,6 +126,8 @@ public class AllLocalTests {
 		suite.addTestSuite(com.reflexit.magiccards.core.model.DigitalViewsTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.ImportForceKindTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.nav.DeckFormatInheritTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.EditionComingSoonTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.ParseScryFallSetsTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.xml.HiddenDigitalCardsTest.class);
 		// Perf
 		suite.addTestSuite(GrouppingPerformanceTest.class);
