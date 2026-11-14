@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Cockatrice</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Cockatrice</h1>
+
+<p>Already playing on <b>Cockatrice</b>? You can bring its deck files into ManaDesk easily, and send your decks
+back to it.</p>
+
+<h2>From Cockatrice to ManaDesk</h2>
+<ol>
+<li>In Cockatrice, save your deck. Cockatrice writes a <b>.cod</b> file.</li>
+<li>In ManaDesk, create a new deck from the file, or right-click a deck and choose <b>Import into...</b></li>
+<li>Pick the file. The format is recognized as <b>Cockatrice Deck</b> from its <code>.cod</code> extension.</li>
+<li>Check the preview, then click <b>Finish</b>. See <a href="import.html">Importing cards</a>.</li>
+</ol>
+
+<h2>What comes across</h2>
+<table>
+<tr><th>Cockatrice</th><th>ManaDesk</th></tr>
+<tr><td>Main zone</td><td>The deck</td></tr>
+<tr><td>Side zone</td><td>The sideboard</td></tr>
+<tr><td>Card name and number</td><td>Name and Count</td></tr>
+<tr><td>Deck name, comments, tokens zone</td><td>Not read (you choose the destination in the wizard)</td></tr>
+</table>
+<p>A Cockatrice deck only holds card <b>names</b>, not the set or the collector number. ManaDesk picks a printing
+for each name, and you can change it in the import preview.</p>
+
+<h2>From ManaDesk to Cockatrice</h2>
+<p>Export a deck with the <b>Cockatrice Deck</b> format (see <a href="export.html">Exporting</a>), then open the file
+in Cockatrice's deck editor. The deck is written in the main zone and its sideboard in the side zone. Since Cockatrice
+only knows names, the printings of a card are added up under its name. The extra list (tokens, emblems...) is not
+written, and there are no columns to choose.</p>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>
