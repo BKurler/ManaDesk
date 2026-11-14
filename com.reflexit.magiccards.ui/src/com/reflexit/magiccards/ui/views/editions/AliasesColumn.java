@@ -1,4 +1,12 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - read-only: the aliases are not edited by hand any more
+ */
+
 package com.reflexit.magiccards.ui.views.editions;
+
+import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.EditingSupport;
 
 import com.reflexit.magiccards.core.model.Edition;
 
@@ -13,20 +21,10 @@ public class AliasesColumn extends AbstractEditionColumn {
 		return ed.getExtraAliases();
 	}
 
+	/** Not editable: the aliases are read from editions.txt. */
 	@Override
-	public String getTextForEdit(Edition ed) {
-		return ed.getExtraAliases();
-	}
-
-	@Override
-	public void setText(Edition edition, String extraAliases) {
-		if (extraAliases.length() > 0) {
-			String[] abbrs = extraAliases.trim().split(",");
-			for (int i = 0; i < abbrs.length; i++) {
-				abbrs[i] = abbrs[i].trim();
-			}
-			edition.setNameAliases(abbrs);
-		}
+	public EditingSupport getEditingSupport(ColumnViewer viewer) {
+		return null;
 	}
 
 	@Override

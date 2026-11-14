@@ -13,6 +13,7 @@
  *                         right now (also probes the connection - the index
  *                         may be cached); isLocalImportPending(). Replace the
  *                         "Work Offline" checks of the startup / update logic.
+ *     Rémi Dutil (2026) - useForTests(): index address and folder can be redirected for unit tests
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -56,13 +57,32 @@ public final class ScryfallBulkCache {
 	private static volatile String cachedDownloadUri = null;
 	private static volatile long cachedRemoteSize = -1L;
 
+	// where the index is read and the files are kept; changed only by the tests (see useForTests)
+	private static volatile String indexUrl = BULK_INDEX_URL;
+	private static volatile File dirOverride = null;
+
 	private ScryfallBulkCache() {
+	}
+
+	/**
+	 * For the tests: read the bulk-data index from {@code indexUrl} (a {@code file:} address, so
+	 * nothing goes on the web) and keep the bulk files in {@code dir}; forgets everything cached.
+	 * Call with {@code (null, null)} to go back to the real Scryfall and the state folder.
+	 */
+	static synchronized void useForTests(String indexUrl, File dir) {
+		ScryfallBulkCache.indexUrl = indexUrl == null ? BULK_INDEX_URL : indexUrl;
+		dirOverride = dir;
+		lastIndexCheck = 0L;
+		cachedRemoteUpdatedAt = null;
+		cachedDownloadUri = null;
+		cachedRemoteSize = -1L;
+		useLocalOnce = false;
 	}
 
 	// ------------------------------------------------------------------ paths
 
 	private static File dir() {
-		File d = new File(FileUtils.getStateLocationFile(), "scryfall");
+		File d = dirOverride != null ? dirOverride : new File(FileUtils.getStateLocationFile(), "scryfall");
 		d.mkdirs();
 		return d;
 	}
@@ -102,7 +122,7 @@ public final class ScryfallBulkCache {
 			return false;
 		try {
 			// the index may be cached from earlier - make sure the web is still there
-			return WebUtils.isReachable(new URL(BULK_INDEX_URL));
+			return WebUtils.isReachable(new URL(indexUrl));
 		} catch (IOException e) {
 			return false;
 		}
@@ -199,7 +219,7 @@ public final class ScryfallBulkCache {
 		if (cachedRemoteUpdatedAt != null && System.currentTimeMillis() - lastIndexCheck < CHECK_TTL_MS)
 			return;
 		try {
-			JSONObject index = (JSONObject) new JSONParser().parse(WebUtils.openUrlText(new URL(BULK_INDEX_URL)));
+			JSONObject index = (JSONObject) new JSONParser().parse(WebUtils.openUrlText(new URL(indexUrl)));
 			for (Object o : (JSONArray) index.get("data")) {
 				JSONObject entry = (JSONObject) o;
 				if (BULK_TYPE.equals(entry.get("type"))) {

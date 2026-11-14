@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.IOException;
@@ -12,6 +17,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
  *
  * @author Alena
  */
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class MagicWorkstationDeckImportDelegate extends AbstractImportDelegate {
 	@Override
 	protected void doRun(ICoreProgressMonitor monitor) throws IOException {

@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alexander Wing�rd  - initial API and implementation
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -17,6 +18,7 @@ import com.reflexit.magiccards.core.model.MagicCardPhysical;
 /**
  * Export to Wagic: The Homebrew (http://wololo.net/wagic/) TODO: add description
  */
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class WagicExportDelegate extends AbstractExportDelegatePerLine<IMagicCard> {
 	@Override
 	public void printHeader() {

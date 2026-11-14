@@ -141,6 +141,7 @@
  *                         name lookups of an import matching only the printings fit for the target list's kind
  *     Rémi Dutil (2026) - forceKind() after resolving: the imported cards are made to fit the target list's kind
  *     Rémi Dutil (2026) - the cards left out of an import (unresolved) are all listed in the log, with their error
+ *     Rémi Dutil (2026) - removed the unused Gatherer fixLangErrors / fixVariantErrors
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -154,10 +155,8 @@ import java.util.Collection;
 import java.util.Collections;
 import java.util.HashMap;
 import java.util.Iterator;
-import java.util.List;
 import java.util.Map;
 import java.util.Random;
-import java.util.Set;
 import java.util.concurrent.atomic.AtomicBoolean;
 
 import org.eclipse.core.runtime.IProgressMonitor;
@@ -217,11 +216,8 @@ import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
-import com.reflexit.magiccards.core.model.MagicCard;
-import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICard;
-import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CardElement;
@@ -229,8 +225,6 @@ import com.reflexit.magiccards.core.model.nav.CardOrganizer;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
-import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
-import com.reflexit.magiccards.core.sync.ParseGathererOracle;
 import com.reflexit.magiccards.core.sync.WebUtils;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.BrowseWebsiteDialog;
@@ -703,56 +697,7 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		return true;
 	}
 
-	private void fixLangErrors(ICardStore magicDb, Collection<IMagicCard> result, SubMonitor monitor) {
-		HashMap<String, List> categorizedErrors = new HashMap<>();
-		for (IMagicCard card : result) {
-			if (card instanceof MagicCardPhysical) {
-				Object error = ((MagicCardPhysical) card).getError();
-				if (error == ImportError.NO_LANG) {
-					String language = card.getBase().getLanguage();
-					List records = categorizedErrors.get(language);
-					if (records == null) {
-						categorizedErrors.put(language, records = new ArrayList<>());
-					}
-					records.add(card);
-				}
-			}
-		}
-		// IDbCardStore<IMagicCard> db = DataManager.getInstance().getMagicDBStore();
-		for (String lang : categorizedErrors.keySet()) {
-			List list = categorizedErrors.get(lang);
-			// System.err.println("Loading " + lang + " for " + list);
-			ImportUtils.loadLanguageForCard(lang, list, magicDb, new CoreMonitorAdapter(monitor.split(list.size())));
-		}
-	}
 
-	private void fixVariantErrors(ICardStore magicDb, Collection<IMagicCard> result, SubMonitor monitor) {
-		Set<ICardField> fieldMap = Collections.singleton((ICardField) MagicCardField.COLLNUM);
-		for (IMagicCard card : result) {
-			if (card instanceof MagicCardPhysical) {
-				Object error = ((MagicCardPhysical) card).getError();
-				if (error == ImportError.NO_VARIANT) {
-					ParseGathererOracle parser = new ParseGathererOracle();
-					try {
-						parser.updateCard(card.getBase(), fieldMap, ICoreProgressMonitor.NONE);
-						ICardStore<MagicCard> variations = parser.getVariations();
-						monitor.subTask("Loading " + card.getBase().getName());
-						for (MagicCard landVariation : variations) {
-							ParseGathererOracle parser2 = new ParseGathererOracle();
-							parser2.updateCard(landVariation, fieldMap, ICoreProgressMonitor.NONE);
-							if (magicDb.getCard(landVariation.getCardId()) == null) {
-								magicDb.add(landVariation);
-								// System.err.println("Added " + landVariation.getName());
-							}
-						}
-						monitor.worked(1);
-					} catch (IOException e) {
-						MagicLogger.log(e);
-					}
-				}
-			}
-		}
-	}
 
 	private Map<Object, Integer> categorizeErrors(final Collection<IMagicCard> result) {
 		HashMap<Object, Integer> categorizedErrors = new HashMap<>();

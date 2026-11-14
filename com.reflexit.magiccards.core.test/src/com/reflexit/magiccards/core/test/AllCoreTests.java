@@ -12,37 +12,22 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - runs AllLocalTests + the new AllOnlineTests (the network / timing tests)
  */
 
 package com.reflexit.magiccards.core.test;
 
-import com.reflexit.magiccards.core.exports.ScrtFallImportTest;
-import com.reflexit.magiccards.core.model.storage.PerformanceFilteringTest;
-import com.reflexit.magiccards.core.sync.CurrencyConvertorTest;
-
-import junit.framework.JUnit4TestAdapter;
 import junit.framework.Test;
 import junit.framework.TestSuite;
 
+/** Everything: the local tests plus the online / timing ones. Maven runs only {@link AllLocalTests}. */
 public class AllCoreTests {
 	public static Test suite() {
 		TestSuite suite = new TestSuite("Test for com.reflexit.magiccards.core.test");
 		// $JUnit-BEGIN$
 		suite.addTest(AllLocalTests.suite());
-		// gatherer
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererCardLanguagesTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererSetsTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererLegalityTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererOracleTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererPrintedTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererSearchStandardTest.class);
-		// !!! RD Not used anymore		suite.addTestSuite(ParseGathererSearchChecklistTest.class);
-		suite.addTestSuite(CurrencyConvertorTest.class);
-		suite.addTestSuite(PerformanceFilteringTest.class);
-		// online import
-		suite.addTest(new JUnit4TestAdapter(ScrtFallImportTest.class));
-		// price providers
-		// !!! RD suite.addTest(AllSellerTests.suite());
+		suite.addTest(AllOnlineTests.suite());
+		// gatherer and price providers: not used anymore (see git history)
 		// $JUnit-END$
 		return suite;
 	}

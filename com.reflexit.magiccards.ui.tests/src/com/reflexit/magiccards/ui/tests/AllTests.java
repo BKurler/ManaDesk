@@ -27,6 +27,7 @@
  *                         DeckTextExtractor), same as the other tests
  *                         already here with no explicit import
  *                         (UnsortedCopyPositionTest, PrintOrderSortTest, ...).
+ *     Rémi Dutil (2026) - registered GalleryHtmlBuilderTest, ProgressColumnTest, ContentProvidersTest, ColumnCollectionTest, UtilsTest, ImageCacheTest, StatusDotsTest, SymbolRendererTest, MagicCardTransferTest and MagicDeckTransferTest (moved from com.reflexit.magicassistant.ui.tests)
  */
 
 package com.reflexit.magiccards.ui.tests;
@@ -35,6 +36,16 @@ import org.junit.runner.RunWith;
 import org.junit.runners.Suite;
 import org.junit.runners.Suite.SuiteClasses;
 
+import com.reflexit.magiccards.ui.dnd.MagicCardTransferTest;
+import com.reflexit.magiccards.ui.gallery.GalleryHtmlBuilderTest;
+import com.reflexit.magiccards.ui.views.nav.MagicDeckTransferTest;
+import com.reflexit.magiccards.ui.utils.ImageCacheTest;
+import com.reflexit.magiccards.ui.utils.StatusDotsTest;
+import com.reflexit.magiccards.ui.utils.SymbolRendererTest;
+import com.reflexit.magiccards.ui.utils.UtilsTest;
+import com.reflexit.magiccards.ui.view.model.ContentProvidersTest;
+import com.reflexit.magiccards.ui.views.columns.ColumnCollectionTest;
+import com.reflexit.magiccards.ui.views.collector.ProgressColumnTest;
 import com.reflexit.magiccards.ui.dialogs.EditCardsPropertiesDialogFinishTest;
 import com.reflexit.magiccards.ui.dialogs.EditCardsPropertiesDialogImageTest;
 import com.reflexit.magiccards.ui.dialogs.EditDeckPropertiesDialogBoxedTest;
@@ -55,6 +66,9 @@ import com.reflexit.magiccards.ui.views.lib.ListViewSettingsTest;
 		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class, DeckExportPageSelectionTest.class,
 		EditCardsPropertiesDialogFinishTest.class, EditCardsPropertiesDialogImageTest.class, EditDeckPropertiesDialogBoxedTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
 		DigitalColumnTest.class, DigitalBlockMessageTest.class, CardsNavigatorLabelProviderTest.class,
+		GalleryHtmlBuilderTest.class, ProgressColumnTest.class, ContentProvidersTest.class, ColumnCollectionTest.class, UtilsTest.class,
+		ImageCacheTest.class, StatusDotsTest.class, SymbolRendererTest.class, MagicCardTransferTest.class,
+		MagicDeckTransferTest.class,
 		BrowseWebsiteLiveTest.class })
 public class AllTests {
 }

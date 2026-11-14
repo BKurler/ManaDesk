@@ -1,3 +1,9 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ *                         (the detail link now uses the String overload of GatherHelper.createImageDetailURL)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.lang.reflect.InvocationTargetException;
@@ -21,6 +27,7 @@ import com.reflexit.magiccards.core.sync.GatherHelper;
 import com.reflexit.magiccards.core.xml.MyXMLStreamWriter;
 import com.reflexit.magiccards.core.xml.XMLStreamException;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class CompactHtmlExportDelegate extends AbstractExportDelegate<IMagicCard> {
 	public static final String CARD_URI = "http://";
 	public static final String CARDID = "multiverseid=";
@@ -233,7 +240,7 @@ public class CompactHtmlExportDelegate extends AbstractExportDelegate<IMagicCard
 	}
 
 	protected void printNameAndLink(MyXMLStreamWriter w, IMagicCard card) throws XMLStreamException {
-		String cardDetailUrl = GatherHelper.createImageDetailURL(card.getGathererId()).toString();
+		String cardDetailUrl = GatherHelper.createImageDetailURL(String.valueOf(card.getGathererId())).toString();
 		URL imageUrl = GatherHelper.createImageURL(card.getGathererId());
 		w.ela("a", cardLine(card), "href", cardDetailUrl, "onmouseover",
 				"document.images.card_pic.src='" + imageUrl.toExternalForm() + "'");

@@ -88,6 +88,7 @@
  *                         "File name not specified" from the Location picker)
  *     Rémi Dutil (2026) - getListViewStore() / resetListViewSettings(): a deck's
  *                         or collection's own presentation, grouping and sort
+ *     Rémi Dutil (2026) - removed the unused GATHERER_* defaults
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -131,9 +132,6 @@ public class PreferenceInitializer extends AbstractPreferenceInitializer {
 		storeCore.setDefault(PreferenceConstants.DIR_MAGICCARDS, FileUtils.MAGICCARDS);
 		storeCore.setDefault(PreferenceConstants.DIR_BACKUP, FileUtils.BACKUP);
 		IPreferenceStore store = getGlobalStore();
-		store.setDefault(PreferenceConstants.GATHERER_SITE, "http://ww2.wizards.com/gatherer");
-		store.setDefault(PreferenceConstants.GATHERER_UPDATE,
-				"http://ww2.wizards.com/gatherer/index.aspx?output=Spoiler&setfilter=Standard");
 		store.setDefault(PreferenceConstants.CACHE_IMAGES, true);
 		store.setDefault(PreferenceConstants.LOAD_IMAGES, true);
 		store.setDefault(PreferenceConstants.LOAD_RULINGS, false);

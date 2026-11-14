@@ -11,6 +11,7 @@
  *                         and an Accept header.
  *     Rémi Dutil (2026) - symbols now come from ScryfallReference (bundled snapshot,
  *                         refreshed on database update); missing PNGs are rendered on demand.
+ *     Rémi Dutil (2026) - useDirForTests(): the picture folder can be redirected for unit tests
  *******************************************************************************/
 
 package com.reflexit.magiccards.core.sync;
@@ -38,7 +39,15 @@ import com.reflexit.magiccards.core.sync.ScryfallReference.Symbol;
  */
 public final class SymbolConverter {
 
+	// where the rendered pictures are kept; changed only by the tests
+	private static volatile File localPngDirOverride = null;
+
 	private SymbolConverter() {
+	}
+
+	/** For the tests: keep the rendered pictures in {@code dir} ({@code null}: the state folder again). */
+	static void useDirForTests(File dir) {
+		localPngDirOverride = dir;
 	}
 
 	/** Returns the canonical Scryfall filename for a mana symbol. */
@@ -67,7 +76,8 @@ public final class SymbolConverter {
 
 	/** Where the pictures of symbols that were not bundled are kept. */
 	public static File getLocalPngDir() {
-		File d = new File(new File(FileUtils.getStateLocationFile(), "scryfall"), "symbols");
+		File d = localPngDirOverride != null ? localPngDirOverride
+				: new File(new File(FileUtils.getStateLocationFile(), "scryfall"), "symbols");
 		d.mkdirs();
 		return d;
 	}

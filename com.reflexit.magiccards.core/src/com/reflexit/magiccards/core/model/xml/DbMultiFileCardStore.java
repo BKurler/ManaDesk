@@ -18,6 +18,7 @@
  *     Rémi Dutil (2026) - no bundled flat-file seed: doInitialize() just loads
  *                         <DB>/*.xml; isEmpty()/loadedSetCount() count set files
  *                         on disk (not the map, which reconcile() inflates)
+ *     Rémi Dutil (2026) - getHiddenSets(): only digital sets are hidden (sets can no longer be hidden)
  */
 
 package com.reflexit.magiccards.core.model.xml;
@@ -423,7 +424,7 @@ public class DbMultiFileCardStore extends AbstractMultiStore<IMagicCard> impleme
 		HashSet<Location> sets = new HashSet<>();
 		for (Edition edition : Editions.getInstance().getAllEditions()) {
 			// a digital set is neither loaded nor shown while the digital support is off
-			if (edition.isHidden() || (edition.isDigital() && !DigitalSupport.isEnabled())) {
+			if (edition.isDigital() && !DigitalSupport.isEnabled()) {
 				sets.add(Location.createLocationFromSet(edition.getName()));
 			}
 		}

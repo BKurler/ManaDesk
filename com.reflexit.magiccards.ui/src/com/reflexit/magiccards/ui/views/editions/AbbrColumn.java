@@ -1,4 +1,12 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - read-only: abbreviations (and the old two-letter codes) only come from the database update
+ */
+
 package com.reflexit.magiccards.ui.views.editions;
+
+import org.eclipse.jface.viewers.ColumnViewer;
+import org.eclipse.jface.viewers.EditingSupport;
 
 import com.reflexit.magiccards.core.model.Edition;
 
@@ -16,23 +24,10 @@ public class AbbrColumn extends AbstractEditionColumn {
 		return abbrs;
 	}
 
+	/** Not editable: the abbreviations are set by the database update. */
 	@Override
-	public String getTextForEdit(Edition ed) {
-		String abbrs = ed.getMainAbbreviation();
-		if (ed.getExtraAbbreviations().length() > 0)
-			abbrs += "," + ed.getExtraAbbreviations();
-		return abbrs;
-	}
-
-	@Override
-	public void setText(Edition edition, String abbrOther) {
-		if (abbrOther.length() > 0) {
-			String[] abbrs = abbrOther.trim().split(",");
-			for (int i = 0; i < abbrs.length; i++) {
-				String string = abbrs[i];
-				edition.addAbbreviation(string.trim());
-			}
-		}
+	public EditingSupport getEditingSupport(ColumnViewer viewer) {
+		return null;
 	}
 
 	@Override

@@ -6,6 +6,7 @@
  *                         only, debug launches).
  *     Rémi Dutil (2026) - SETS_BY_RELEASE_DATE: set drop lists sorted by
  *                         release date (oldest first) instead of alphabetically
+ *     Rémi Dutil (2026) - removed the unused GATHERER_* preference keys
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -18,16 +19,9 @@ import com.reflexit.magiccards.ui.MagicUIActivator;
  */
 public class PreferenceConstants extends CorePreferenceConstants {
 	private static final String PREFIX = MagicUIActivator.PLUGIN_ID;
-	public static final String GATHERER_SITE = PREFIX + ".gathererSite";
-	public static final String GATHERER_UPDATE = PREFIX + ".gathererUpdate";
 	// public static final String MDBVIEW_COLS = PREFIX + ".columns.mdb";
 	// public static final String LIBVIEW_COLS = PREFIX + ".columns.lib";
 	// public static final String DECKVIEW_COLS = PREFIX + ".columns.deck";
-	public static final String GATHERER_UPDATE_SET = PREFIX + ".set";
-	public static final String GATHERER_UPDATE_LAND = PREFIX + ".land";
-	public static final String GATHERER_UPDATE_LANGUAGE = PREFIX + ".lang";
-	public static final String GATHERER_UPDATE_PRINT = PREFIX + ".printings";
-	public static final String GATHERER_UPDATE_SPECIAL = PREFIX + ".special";
 	public static final String CACHE_IMAGES = PREFIX + ".cacheImages";
 	public static final String LOAD_IMAGES = PREFIX + ".loadImages";
 	public static final String LOAD_RULINGS = PREFIX + ".loadRulings";

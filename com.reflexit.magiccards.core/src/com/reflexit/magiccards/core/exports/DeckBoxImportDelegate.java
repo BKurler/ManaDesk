@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.util.Iterator;
@@ -9,6 +14,7 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class DeckBoxImportDelegate extends CsvImportDelegate {
 	LinkedHashMap<String, ICardField> fieldMap = new LinkedHashMap<>();
 
