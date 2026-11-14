@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Deckstats</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Deckstats</h1>
+
+<p>Already using <b>Deckstats</b>? You can bring your decks and your collection into ManaDesk easily, and send them
+back. There are two formats: the <b>deck list</b> (the text of one deck) and the <b>collection CSV</b>.</p>
+
+<h2>A deck, from Deckstats to ManaDesk</h2>
+<ol>
+<li>In Deckstats, open the deck and export it as text (the list that has the set and number of each card).</li>
+<li>In ManaDesk, create a new deck from the clipboard (or save the text in a <b>.txt</b> file and pick it), or
+right-click a deck and choose <b>Import into...</b></li>
+<li>The format is recognized as <b>Deckstats Deck List</b>. Check the preview, then click <b>Finish</b>. See
+<a href="import.html">Importing cards</a>.</li>
+</ol>
+<p>A line looks like <code>1 Lightning Bolt (SLZ) 305</code>:</p>
+<table>
+<tr><th>Deckstats</th><th>ManaDesk</th></tr>
+<tr><td>Number at the start</td><td>Count</td></tr>
+<tr><td>Set code between parentheses, then the collector number: <code>(SLZ) 305</code></td><td>The exact printing</td></tr>
+<tr><td>Name</td><td>Name</td></tr>
+<tr><td>Lines after a <code>//Sideboard</code> heading (or starting with <code>SB:</code>)</td><td>Sideboard</td></tr>
+<tr><td><code>//Maybeboard</code> section</td><td>Not read</td></tr>
+<tr><td>Other <code>//...</code> lines, and <code># comment</code> at the end of a line</td><td>Ignored</td></tr>
+</table>
+<p>A line with only a count and a name is accepted too, but a file where <b>no</b> line has a
+set code and collector number is not taken for a Deckstats list (it is read as a plain text list instead).</p>
+
+<h2>A deck, from ManaDesk to Deckstats</h2>
+<p>Export the deck with <b>Deckstats Deck List</b> (see <a href="export.html">Exporting</a>), open the file, copy
+its text, and paste it in Deckstats' import. Copies of the same printing are added up, the sideboard follows a
+<code>//Sideboard</code> heading, and the extra list (tokens, emblems...) is not written. There are no columns to choose.</p>
+
+<h2>A collection, from Deckstats to ManaDesk</h2>
+<p>In Deckstats, export your collection as a CSV file, then import it as for any other file (the format is recognized
+as <b>Deckstats Collection CSV</b>). The columns are matched by their names:</p>
+<table>
+<tr><th>Deckstats</th><th>ManaDesk</th></tr>
+<tr><td>amount</td><td>Count</td></tr>
+<tr><td>card_name</td><td>Name</td></tr>
+<tr><td>set_code, collector_number</td><td>The exact printing</td></tr>
+<tr><td>is_foil</td><td>Finish: foil</td></tr>
+<tr><td>language, condition, comment (when the file has them)</td><td>Language, Condition, Comment</td></tr>
+<tr><td>Other columns</td><td>Not read</td></tr>
+</table>
+
+<h2>A collection, from ManaDesk to Deckstats</h2>
+<p>Export with <b>Deckstats Collection CSV</b>: the columns are <code>amount</code>, <code>card_name</code>,
+<code>is_foil</code>, <code>set_code</code> and <code>collector_number</code>. There are no columns to choose.</p>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>

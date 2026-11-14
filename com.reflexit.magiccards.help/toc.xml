@@ -58,6 +58,7 @@
       <topic label="Deckbox" href="html/transfer/deckbox.html"/>
       <topic label="Cockatrice" href="html/transfer/cockatrice.html"/>
       <topic label="Moxfield" href="html/transfer/moxfield.html"/>
+      <topic label="Deckstats" href="html/transfer/deckstats.html"/>
       <topic label="Exporting" href="html/transfer/export.html"/>
       <topic label="Custom Export Formats" href="html/transfer/custom_export.html"/>
    </topic>
