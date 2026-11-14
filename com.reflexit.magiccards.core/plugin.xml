@@ -83,6 +83,17 @@
             label="ManaBox CSV"
             xmlFormat="false">
       </deckFormat>
+      <!-- Cockatrice deck (.cod, XML): names and counts, "main" and "side" zones; the
+           extension is unique, so a .cod file is detected without scoring -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.CockatriceExportDelegate"
+            extension="cod"
+            id="cockatrice"
+            importDelegate="com.reflexit.magiccards.core.exports.CockatriceImportDelegate"
+            application="true"
+            label="Cockatrice Deck"
+            xmlFormat="true">
+      </deckFormat>
       <!-- forgiving text importer: '# name' comments, 'Sideboard' markers,
            '3 Name', '3x Name (Set)', or any line carrying a Scryfall id -->
       <deckFormat

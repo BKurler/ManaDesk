@@ -56,6 +56,7 @@
       <topic label="Importing from a Website" href="html/transfer/import_website.html"/>
       <topic label="ManaBox" href="html/transfer/manabox.html"/>
       <topic label="Deckbox" href="html/transfer/deckbox.html"/>
+      <topic label="Cockatrice" href="html/transfer/cockatrice.html"/>
       <topic label="Exporting" href="html/transfer/export.html"/>
       <topic label="Custom Export Formats" href="html/transfer/custom_export.html"/>
    </topic>

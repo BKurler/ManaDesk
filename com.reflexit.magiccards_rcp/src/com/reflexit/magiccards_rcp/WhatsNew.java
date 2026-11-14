@@ -27,6 +27,7 @@
  *     Rémi Dutil (2026) - "More card facts" entry
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
  *     Rémi Dutil (2026) - "Deckbox" entry (import / export)
+ *     Rémi Dutil (2026) - "Cockatrice" entry (import / export)
  *     Rémi Dutil (2026) - "Import preview" entry
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
@@ -221,6 +222,9 @@ final class WhatsNew {
 					+ " collection: count, cards for trade, condition (a \"Proxy\" becomes a proxy copy), foil, price and the"
 					+ " signed / proof / altered / misprint marks come across. Decks and collections can also be exported as a Deckbox Inventory or"
 					+ " Wishlist CSV, with the columns Deckbox needs (including the Scryfall ID, Tags and Proxy condition).", null),
+			new Feature(1, MAJOR, IMPORT, "Cockatrice", "Already playing on Cockatrice? Import its .cod deck files (the main"
+					+ " zone becomes the deck, the side zone its sideboard), and export a deck as a Cockatrice deck."
+					+ " Cockatrice only knows card names, so ManaDesk picks the printing.", null),
 			new Feature(1, MINOR, IMPORT, "Import preview", "Sorting by Language puts the cards imported as English although"
 					+ " the file gave another language together, and sorting by Error works. A card with no set no longer shows"
 					+ " a made-up set. \"Auto complete using first match\" also fixes the \"Mismatched info\" rows from the"
