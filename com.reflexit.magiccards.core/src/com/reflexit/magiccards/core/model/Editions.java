@@ -5,6 +5,7 @@
  *                         release date (oldest first), for the set drop lists
  *     Rémi Dutil (2026) - digital sets: editions.txt field 8; getEditions()/getNames()/getIds()
  *                         leave them out while the digital support is off (getAllEditions() keeps them)
+ *     Rémi Dutil (2026) - removed addAbbreviation(name, abbr): abbreviations only come from the database update
  */
 
 package com.reflexit.magiccards.core.model;
@@ -134,12 +135,6 @@ public class Editions implements ISearchableProperty {
 			}
 		}
 		return null;
-	}
-
-	public void addAbbreviation(String name, String abbr) {
-		Edition ed = getEditionByName(name);
-		if (ed != null)
-			ed.addAbbreviation(abbr);
 	}
 
 	public void removeEdition(String name, String abbr) {

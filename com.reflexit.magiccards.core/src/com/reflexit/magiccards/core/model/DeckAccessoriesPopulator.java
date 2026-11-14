@@ -14,10 +14,12 @@
  *     Rémi Dutil (2026) - entries are matched by token (name + power/toughness),
  *                         not by exact printing: 2 Beast tokens of another set
  *                         already cover a needed Beast - no duplicate line
+ *     Rémi Dutil (2026) - plan(): the add/remove decision split from the stores, so it can be tested
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
@@ -79,34 +81,12 @@ public final class DeckAccessoriesPopulator {
 			return res;
 		Map<String, IMagicCard> needed = neededCards(dm, mainLoc);
 
-		// entries with a count above 0 first: they are never touched and they
-		// cover their token
-		Set<String> present = new HashSet<>();
-		List<IMagicCard> zero = new ArrayList<>();
-		for (IMagicCard c : accStore.getCards()) {
-			int count = c instanceof ICardCountable ? ((ICardCountable) c).getCount() : 1;
-			if (count > 0)
-				present.add(key(c));
-			else
-				zero.add(c);
-		}
-		// a count-0 entry goes when the deck no longer needs it, or when the same
-		// token is already listed (e.g. a count-0 line next to your 2 copies)
-		List<IMagicCard> toRemove = new ArrayList<>();
-		for (IMagicCard c : zero) {
-			String key = key(c);
-			if (removeUnneeded && (!needed.containsKey(key) || present.contains(key)))
-				toRemove.add(c);
-			else
-				present.add(key);
-		}
-
+		Plan plan = plan(accStore.getCards(), needed, removeUnneeded);
+		List<IMagicCard> toRemove = plan.remove;
 		boolean virtual = accStore.isVirtual();
 		List<MagicCardPhysical> toAdd = new ArrayList<>();
-		for (Map.Entry<String, IMagicCard> e : needed.entrySet()) {
-			if (!present.add(e.getKey()))
-				continue; // already listed
-			MagicCardPhysical phi = new MagicCardPhysical(e.getValue(), accLoc, virtual);
+		for (IMagicCard card : plan.add) {
+			MagicCardPhysical phi = new MagicCardPhysical(card, accLoc, virtual);
 			phi.setCount(0);
 			toAdd.add(phi);
 		}
@@ -120,6 +100,49 @@ public final class DeckAccessoriesPopulator {
 		res[0] = toAdd.size();
 		res[1] = toRemove.size();
 		return res;
+	}
+
+	/** What a refresh does to the list: the entries to remove and the needed cards to add (at count 0). */
+	static final class Plan {
+		final List<IMagicCard> remove = new ArrayList<>();
+		final List<IMagicCard> add = new ArrayList<>();
+	}
+
+	/**
+	 * The decision of {@link #refresh} / {@link #populate}, without the stores: which entries of the
+	 * list go and which needed cards are added.
+	 *
+	 * @param listed         the entries of the accessories list now
+	 * @param needed         the cards the deck needs, by {@link #key}
+	 * @param removeUnneeded {@code false} for populate (never removes)
+	 */
+	static Plan plan(Collection<? extends IMagicCard> listed, Map<String, IMagicCard> needed, boolean removeUnneeded) {
+		Plan plan = new Plan();
+		// entries with a count above 0 first: they are never touched and they
+		// cover their token
+		Set<String> present = new HashSet<>();
+		List<IMagicCard> zero = new ArrayList<>();
+		for (IMagicCard c : listed) {
+			int count = c instanceof ICardCountable ? ((ICardCountable) c).getCount() : 1;
+			if (count > 0)
+				present.add(key(c));
+			else
+				zero.add(c);
+		}
+		// a count-0 entry goes when the deck no longer needs it, or when the same
+		// token is already listed (e.g. a count-0 line next to your 2 copies)
+		for (IMagicCard c : zero) {
+			String key = key(c);
+			if (removeUnneeded && (!needed.containsKey(key) || present.contains(key)))
+				plan.remove.add(c);
+			else
+				present.add(key);
+		}
+		for (Map.Entry<String, IMagicCard> e : needed.entrySet()) {
+			if (present.add(e.getKey()))
+				plan.add.add(e.getValue());
+		}
+		return plan;
 	}
 
 	/**

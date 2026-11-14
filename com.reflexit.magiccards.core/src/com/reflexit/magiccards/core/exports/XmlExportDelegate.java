@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.File;
@@ -18,6 +23,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.xml.CardCollectionStoreObject;
 import com.reflexit.magiccards.core.xml.MagicXmlStreamHandler;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class XmlExportDelegate extends AbstractExportDelegatePerLine<IMagicCard> {
 	@Override
 	public void run(ICoreProgressMonitor monitor) throws InvocationTargetException {

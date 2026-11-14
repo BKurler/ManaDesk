@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alexander Wing�rd  - initial API and implementation
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -19,6 +20,7 @@ import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.sync.GatherHelper;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class HtmlTableExportDelegate extends AbstractExportDelegatePerLine<IMagicCard> {
 	@Override
 	public void printCard(IMagicCard card) {

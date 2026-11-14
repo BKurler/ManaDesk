@@ -7,6 +7,7 @@
  *     Rémi Dutil (2026) - Save As on an existing file: Overwrite or Append (same
  *                         rules as the Export wizard's "Append to the existing
  *                         file" - ExportAppender)
+ *     Rémi Dutil (2026) - the two link constants are kept here: CompactHtmlExportDelegate is disabled
  */
 
 package com.reflexit.magiccards.ui.views.analyzers;
@@ -62,7 +63,6 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.exports.AbstractExportDelegate;
-import com.reflexit.magiccards.core.exports.CompactHtmlExportDelegate;
 import com.reflexit.magiccards.core.exports.ExportAppender;
 import com.reflexit.magiccards.core.exports.IExportDelegate;
 import com.reflexit.magiccards.core.exports.ImportExportFactory;
@@ -91,6 +91,10 @@ import com.reflexit.magiccards.ui.utils.StoredSelectionProvider;
 import com.reflexit.magiccards.ui.views.columns.MagicColumnCollection;
 
 public class ExportDeckPage extends AbstractDeckPage {
+	/** How the card links of the exported HTML look, to find the card behind a clicked link. */
+	private static final String CARD_URI = "http://";
+	private static final String CARDID = "multiverseid=";
+
 	private Browser textBrowser;
 	private Composite exportArea;
 	private ISelectionProvider selProvider = new StoredSelectionProvider();
@@ -152,8 +156,8 @@ public class ExportDeckPage extends AbstractDeckPage {
 				@Override
 				public void changing(LocationEvent event) {
 					String location = event.location;
-					if (location.startsWith(CompactHtmlExportDelegate.CARD_URI)) {
-						location = location.substring(CompactHtmlExportDelegate.CARD_URI.length());
+					if (location.startsWith(CARD_URI)) {
+						location = location.substring(CARD_URI.length());
 						if (location.endsWith("/")) {
 							location = location.substring(0, location.length() - 1);
 						}
@@ -163,9 +167,9 @@ public class ExportDeckPage extends AbstractDeckPage {
 						String params[] = location.split("&");
 						for (int i = 0; i < params.length; i++) {
 							String string = params[i];
-							if (string.startsWith(CompactHtmlExportDelegate.CARDID)) {
+							if (string.startsWith(CARDID)) {
 								event.doit = false;
-								String cardId = string.substring(CompactHtmlExportDelegate.CARDID.length());
+								String cardId = string.substring(CARDID.length());
 								IDbCardStore magicDBStore = DataManager.getCardHandler().getMagicDBStore();
 								IMagicCard card = (IMagicCard) magicDBStore.getCard(cardId);
 								if (card != null)

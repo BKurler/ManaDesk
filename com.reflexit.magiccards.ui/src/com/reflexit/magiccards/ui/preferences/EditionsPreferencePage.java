@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - deleting a set that has cards is refused (sets can no longer be hidden)
  */
 package com.reflexit.magiccards.ui.preferences;
 
@@ -140,11 +141,10 @@ public class EditionsPreferencePage extends PreferencePage implements IWorkbench
 				return;
 			}
 			MessageDialog.openInformation(getShell(), "Info",
-					ed.getName() + " is not empty, it will be hidden instead. " + "Restart ManaDesk to take effect.");
-			ed.setHidden(true);
-		} else if (!ed.isHidden()) {
-			Editions.getInstance().remove(ed);
+					ed.getName() + " is not empty, it cannot be deleted.");
+			return;
 		}
+		Editions.getInstance().remove(ed);
 		try {
 			Editions.getInstance().save();
 		} catch (FileNotFoundException e) {

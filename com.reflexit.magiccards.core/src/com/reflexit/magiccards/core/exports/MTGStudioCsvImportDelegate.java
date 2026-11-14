@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  *******************************************************************************/
 
 /*
@@ -39,6 +40,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
  Abattoir Ghoul,ISD,2,False,0.20,0.40,13/10/2011 5:13:06 PM,B,Creature — Zombie,U,3B,3/2,"First strike Whenever a creature dealt damage by Abattoir Ghoul this turn dies, you gain life equal to that creature's toughness."
  Abbey Griffin,ISD,4,False,0.11,0.44,13/10/2011 5:15:18 PM,W,Creature — Griffin,C,3W,2/2,"Flying, vigilance"
  */
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class MTGStudioCsvImportDelegate extends CsvImportDelegate {
 	private int cardNameIndex = 0;
 	private int countIndex = 2;

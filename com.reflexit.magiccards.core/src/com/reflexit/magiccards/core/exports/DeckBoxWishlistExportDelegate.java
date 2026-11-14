@@ -1,12 +1,14 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - the header row follows "Generate header row"
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  */
 package com.reflexit.magiccards.core.exports;
 
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class DeckBoxWishlistExportDelegate extends DeckBoxExportDelegate {
 	@Override
 	public void printHeader() {

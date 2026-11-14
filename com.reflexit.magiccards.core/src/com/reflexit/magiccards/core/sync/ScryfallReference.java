@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - useSymbolsForTests(): the symbol list can be replaced in unit tests
  *******************************************************************************/
 package com.reflexit.magiccards.core.sync;
 
@@ -97,6 +98,13 @@ public final class ScryfallReference {
 	private static volatile long version = 1;
 
 	private ScryfallReference() {
+	}
+
+	/** For the tests: use these symbols ({@code null}: read them again from the refreshed or bundled list). */
+	static void useSymbolsForTests(Map<String, Symbol> forTests) {
+		synchronized (LOCK) {
+			symbols = forTests;
+		}
 	}
 
 	// -------------------------------------------------------------- public API

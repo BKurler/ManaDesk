@@ -14,6 +14,7 @@
  *                         buildable suite until now - it never ran as part
  *                         of a normal AllLocalTests pass.
  *     Rémi Dutil (2026) - added ExportAppenderTest (printable sheet, append)
+ *     Rémi Dutil (2026) - added PrintProxyHtmlExportDelegateTest
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -34,7 +35,7 @@ import com.reflexit.magiccards.core.sync.TextPrinterTest;
 // !!! RD Disable for now	MTGStudioImportTest.class,
 		PipedTableExportText.class, CsvExportDelegateTest.class, CsvImportDelegateTest.class,
 		ClassicExportDelegateTest.class, ClassicImportDelegateTest.class, CustomExportDelegateTest.class,
-		SideboardHelpHtmlExportDelegateTest.class, ExportAppenderTest.class,
+		SideboardHelpHtmlExportDelegateTest.class, ExportAppenderTest.class, PrintProxyHtmlExportDelegateTest.class,
 		// !!! RD DeckBoxImportTest.class,
 		TextPrinterTest.class, DeckTextExtractorTest.class,
 // !!! RD 		HtmlTableImportTest.class, //

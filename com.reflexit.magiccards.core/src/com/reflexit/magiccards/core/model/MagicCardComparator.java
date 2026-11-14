@@ -2,6 +2,8 @@
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - sort by the PROXY flag
+ *     Rémi Dutil (2026) - PROXY: a copy without the flag (null) is a genuine copy and sorts first,
+ *                         it was treated as a missing value and sorted after the proxies
  */
 package com.reflexit.magiccards.core.model;
 
@@ -93,6 +95,11 @@ public class MagicCardComparator implements Comparator {
 	protected int compare(ICard c1, ICard c2, ICardField sort) {
 		Object a1 = c1.get(sort);
 		Object a2 = c2.get(sort);
+		if (sort == MagicCardField.PROXY) {
+			// a genuine copy has no PROXY value at all (null): it is not "missing", it is a
+			// copy that is not a proxy, and it goes first
+			return Boolean.compare(isProxyValue(a1), isProxyValue(a2));
+		}
 		// NOTE: a CardGroup returns "*" for a field whose members disagree. We
 		// deliberately compare that "*" as a plain string - it sorts low and,
 		// crucially, CONSISTENTLY. An earlier "if either side is a colliding
@@ -195,13 +202,6 @@ public class MagicCardComparator implements Comparator {
 						d = CardCondition.compare((CardCondition) a1, (CardCondition) a2);
 					}
 					break;
-				case PROXY:
-					if (a1 != a2) {
-						boolean p1 = Boolean.TRUE.equals(a1) || "true".equals(a1);
-						boolean p2 = Boolean.TRUE.equals(a2) || "true".equals(a2);
-						d = Boolean.compare(p1, p2); // genuine copies first
-					}
-					break;
 				case COLLNUM:
 					if (a1 != a2) {
 						d = ((IMagicCard) c1).getCollectorNumberId() - ((IMagicCard) c2).getCollectorNumberId();
@@ -244,6 +244,10 @@ public class MagicCardComparator implements Comparator {
 			}
 		}
 		return d;
+	}
+
+	private static boolean isProxyValue(Object value) {
+		return Boolean.TRUE.equals(value) || "true".equals(value);
 	}
 
 	@Override

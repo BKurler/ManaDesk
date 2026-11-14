@@ -78,10 +78,17 @@ Every change must work on all three. In particular:
 - Every fix or feature comes with unit tests where the logic can be tested.
   Extract the logic into a small (package-private, static if possible) method
   when that makes it testable.
-- Core tests: `com.reflexit.magiccards.core.test` (suite `AllLocalTests`).
+- Core tests: `com.reflexit.magiccards.core.test` (suite `AllLocalTests` = offline, what Maven runs;
+  `AllCoreTests` = it plus `AllOnlineTests`, the network/timing tests).
+  `AllCoreTests.launch` sets `-Dosgi.instance.area` to a temp folder, so tests never write to the real
+  ManaDesk folder; a test that reaches `DataManager` or a store must still use test-owned files/locations
+  (see `DbMultiFileCardStoreHandlerTest`). Online tests hit Scryfall with a few small requests only (never the
+  bulk file) and fail, with the reason, when Scryfall cannot be reached.
 - UI tests: `com.reflexit.magiccards.ui.tests`, a **fragment** of the UI plug-in -
   a test in the same package can call package-private code. Add each new test
   class to `com.reflexit.magiccards.ui.tests/.../tests/AllTests.java`.
+  Run it with `com.reflexit.magiccards.ui.tests/AllUiTests.launch` (JUnit Plug-in Test on a temp workspace
+  folder, `manadesk-ui-tests`, cleared on each launch - never the real ManaDesk folder).
 - Tests that need the Eclipse runtime (preferences, workbench) only run as a
   JUnit Plug-in Test or under Maven/Tycho (`eclipse-test-plugin`); pure-logic
   tests also run as plain JUnit. Say which kind each new test is.

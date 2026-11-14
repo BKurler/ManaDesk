@@ -1,3 +1,8 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
 import java.io.IOException;
@@ -12,6 +17,7 @@ import com.reflexit.magiccards.core.sync.CardCache;
 import com.reflexit.magiccards.core.xml.MyXMLStreamWriter;
 import com.reflexit.magiccards.core.xml.XMLStreamException;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class CompactPlusHtmlExportDelegate extends CompactHtmlExportDelegate {
 	protected boolean showImage;
 	protected boolean showCost;

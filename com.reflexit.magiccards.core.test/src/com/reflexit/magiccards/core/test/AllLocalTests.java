@@ -15,6 +15,15 @@
  *     Rémi Dutil (2026) - added WebUtilsTest.
  *     Rémi Dutil (2026) - added FormatTest (format shapes + Commander color
  *                         identity rule) - it was never registered.
+ *     Rémi Dutil (2026) - registered nine tests that existed but never ran
+ *                         (Condition, Finish, Proxy, set rename, storage, SVG, two imports).
+ *     Rémi Dutil (2026) - added ReportTypeTest, CardStoreUtilsStatsTest, EditionTest and
+ *                         EditionsAliasesTest, ParseScryFallSetsRecordTest and
+ *                         DbMultiFileCardStoreHandlerTest, ProgressMonitorTest, CardGroupStructureTest,
+ *                         SortOrderStateTest, MagicCardComparatorFieldsTest, FormatValidationTest and
+ *                         DeckAccessoriesDbTest, CardCacheTest, ScryfallRulingsTest, ScryfallBulkCacheTest,
+ *                         DeckAccessoriesPopulatorTest, SvgRasterizerRenderTest,
+ *                         SymbolConverterTest, CachedFileTest and EditionFileCacheTest.
  */
 
 package com.reflexit.magiccards.core.test;
@@ -47,7 +56,7 @@ import com.reflexit.magiccards.core.model.PlayingDeckTest;
 import com.reflexit.magiccards.core.model.SortOrderTest;
 import com.reflexit.magiccards.core.model.nav.CardElementTest;
 import com.reflexit.magiccards.core.model.nav.NewCardCollectionSettingsTest;
-// !!! RD import com.reflexit.magiccards.core.model.nav.CardOrganizerTest;
+import com.reflexit.magiccards.core.model.nav.CardOrganizerTest;
 import com.reflexit.magiccards.core.model.storage.AbstractFilteredCardStoreTest;
 import com.reflexit.magiccards.core.model.storage.CardCollectionStoreObjectTest;
 import com.reflexit.magiccards.core.model.storage.CollectionStoreTest;
@@ -78,7 +87,7 @@ public class AllLocalTests {
 		suite.addTestSuite(MagicCardTest_failure_2.class);
 		suite.addTestSuite(DbMultiFileCardStoreTest.class);
 		suite.addTestSuite(MultiFileCollectionStoreTest.class);
-// !!! RD 		suite.addTestSuite(CardOrganizerTest.class);
+		suite.addTestSuite(CardOrganizerTest.class);
 		suite.addTestSuite(AbstractFilteredCardStoreTest.class);
 		suite.addTestSuite(DeckStoreTest.class);
 		suite.addTestSuite(CardCollectionStoreObjectTest.class);
@@ -88,7 +97,7 @@ public class AllLocalTests {
 		suite.addTestSuite(DataManagerTest.class);
 		suite.addTestSuite(NewCardCollectionSettingsTest.class);
 		suite.addTestSuite(FileUtilsTest.class);
-		// suite.addTestSuite(CardTextNL1Test.class); TODO
+		// suite.addTestSuite(CardTextNL1Test.class); TODO needs the Russian pack of com.reflexit.magiccards.core.nl1
 		suite.addTestSuite(CardElementTest.class);
 		suite.addTestSuite(CardGroupTest.class);
 		suite.addTest(new JUnit4TestAdapter(ColorsTest.class));
@@ -129,6 +138,44 @@ public class AllLocalTests {
 		suite.addTestSuite(com.reflexit.magiccards.core.model.EditionComingSoonTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.sync.ParseScryFallSetsTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.xml.HiddenDigitalCardsTest.class);
+		// fields and storage that were never registered
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardConditionTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardFinishTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardProxyTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.SetRenameLinkTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.storage.CollectionCardStoreTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.xml.SingleFileCardStorageFinishConversionTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.SvgRasterizerTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.SvgRasterizerRenderTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.SymbolConverterTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.CachedFileTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.EditionFileCacheTest.class);
+		// imports that were never registered
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.exports.FreeformImportTest.class));
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.exports.MagicAssistantCsvImportTest.class));
+		// deck statistics
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.utils.CardStoreUtilsStatsTest.class));
+		// editions and the set list
+		suite.addTestSuite(com.reflexit.magiccards.core.model.EditionTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.EditionsAliasesTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.ParseScryFallSetsRecordTest.class);
+		// card database store
+		suite.addTestSuite(com.reflexit.magiccards.core.model.storage.DbMultiFileCardStoreHandlerTest.class);
+		// progress, groups and sorting
+		suite.addTestSuite(com.reflexit.magiccards.core.monitor.ProgressMonitorTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.CardGroupStructureTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.SortOrderStateTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.MagicCardComparatorFieldsTest.class);
+		// legality and deck accessories
+		suite.addTestSuite(com.reflexit.magiccards.core.legality.FormatValidationTest.class);
+		suite.addTest(new JUnit4TestAdapter(com.reflexit.magiccards.core.model.DeckAccessoriesDbTest.class));
+		suite.addTestSuite(com.reflexit.magiccards.core.model.DeckAccessoriesPopulatorTest.class);
+		// image cache and rulings (file: addresses, no web)
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.CardCacheTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.ScryfallRulingsTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.sync.ScryfallBulkCacheTest.class);
+		// import format detection
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.ReportTypeTest.class);
 		// Perf
 		suite.addTestSuite(GrouppingPerformanceTest.class);
 		// $JUnit-END$

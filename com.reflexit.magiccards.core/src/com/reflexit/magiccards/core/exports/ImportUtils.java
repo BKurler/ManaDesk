@@ -18,11 +18,11 @@
  *     Rémi Dutil (2026) - applyDeclaredLanguages(): a card the file gives in
  *                         another language is bound to that language's
  *                         printing when the card database has it (same set)
+ *     Rémi Dutil (2026) - removed loadLanguageForCard (Gatherer language loader, no longer used)
  */
 
 package com.reflexit.magiccards.core.exports;
 
-import java.io.IOException;
 import java.lang.reflect.InvocationTargetException;
 import java.util.ArrayList;
 import java.util.Collection;
@@ -60,7 +60,6 @@ import com.reflexit.magiccards.core.model.storage.IStorage;
 import com.reflexit.magiccards.core.model.xml.DbMultiFileCardStore;
 import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 import com.reflexit.magiccards.core.sync.TextPrinter;
-import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
 
 /**
  * Utils to perform import
@@ -421,16 +420,6 @@ public class ImportUtils {
 		return card.getBase();
 	}
 
-	public static void loadLanguageForCard(String lang, List list, ICardStore magicDb, ICoreProgressMonitor monitor) {
-		try {
-			UpdateCardsFromWeb parser = new UpdateCardsFromWeb();
-			// parser.set
-			Set<ICardField> fieldMap = Collections.singleton((ICardField) MagicCardField.LANG);
-			parser.updateStore(list.iterator(), list.size(), fieldMap, lang, magicDb, monitor);
-		} catch (IOException e) {
-			MagicLogger.log(e);
-		}
-	}
 
 	public static long matchRating(IMagicCard base, IMagicCard candidate) {
 		long result = 0;

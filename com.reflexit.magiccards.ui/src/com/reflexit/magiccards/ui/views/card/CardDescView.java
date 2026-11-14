@@ -19,6 +19,7 @@
  *                         finish) and that copy is shown again at startup,
  *                         not the bare database printing. DEBUG
  *                         load trace (who asked, which card, proxy or not).
+ *     Rémi Dutil (2026) - Gatherer details URL comes from GatherHelper
  */
 
 package com.reflexit.magiccards.ui.views.card;
@@ -80,7 +81,7 @@ import com.reflexit.magiccards.core.model.MagicCardPhysical;
 import com.reflexit.magiccards.core.model.abs.ICardGroup;
 import com.reflexit.magiccards.core.model.events.CardEvent;
 import com.reflexit.magiccards.core.model.events.CardEventUpdate;
-import com.reflexit.magiccards.core.sync.ParseGathererOracle;
+import com.reflexit.magiccards.core.sync.GatherHelper;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardDialog;
 import com.reflexit.magiccards.ui.dialogs.EditMagicCardPhysicalDialog;
@@ -354,7 +355,7 @@ public class CardDescView extends ViewPart implements ISelectionListener, IShowI
 
 	protected String getUrl() {
 		int gathererId = panel.getCard().getGathererId();
-		return ParseGathererOracle.DETAILS_QUERY_URL_BASE + gathererId;
+		return GatherHelper.DETAILS_QUERY_URL_BASE + gathererId;
 	}
 
 	private void revealCurrentSelection() {

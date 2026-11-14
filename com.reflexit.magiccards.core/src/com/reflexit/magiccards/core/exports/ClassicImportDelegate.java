@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -22,6 +23,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
 /**
  * Import for classic text deck format
  */
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class ClassicImportDelegate extends AbstractImportDelegate {
 	private boolean sideboard;
 

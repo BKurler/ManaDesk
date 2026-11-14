@@ -32,6 +32,8 @@
  *                         and sorting, Printings and Instances entries updated
  *     Rémi Dutil (2026) - Export entry: the Export tab follows the Cards tab's
  *                         sort and filter
+ *     Rémi Dutil (2026) - 0.9.9 (FEATURES_VERSION 2): "Proxy sort" fix entry; the upgrade
+ *                         popup shows the release headings when it spans several releases
  *     Rémi Dutil (2026) - Filters and sorting (several levels, each deck and
  *                         collection keeps its own), Collector (faster), new
  *                         Gallery and Linux entries
@@ -86,9 +88,9 @@ import com.reflexit.magiccards.ui.utils.WaitUtils;
  */
 final class WhatsNew {
 	/** Bump whenever {@link #FEATURES} gets new entries. */
-	static final int FEATURES_VERSION = 1;
+	static final int FEATURES_VERSION = 2;
 	/** The heading of each features version, index = version - 1. */
-	private static final String[] RELEASES = { "New since ManaDesk 0.9.7" };
+	private static final String[] RELEASES = { "New in ManaDesk 0.9.8 (since 0.9.7)", "New in ManaDesk 0.9.9" };
 	private static final String SEEN_KEY = "whatsNew.seenVersion";
 
 	private static final String PROXIER_VIEW = "com.reflexit.magiccards.ui.views.proxier.ProxierView";
@@ -140,8 +142,7 @@ final class WhatsNew {
 			new Feature(1, MINOR, CARDS, "Proxies", "Mark copies as proxies, shown with a red Proxy badge - collection"
 					+ " value, completion and owned counts leave them out (unless you turn on Count Proxies in the"
 					+ " Collector), a deck's info shows how many it has and what replacing them would cost, and the"
-					+ " Legality tab warns when a legal deck uses proxies.",
-					null),
+					+ " Legality tab warns when a legal deck uses proxies.", null),
 			new Feature(1, MINOR, CARDS, "Quick edits", "Change the set or collector number right in the list, and"
 					+ " \"Split & move to\" moves part of a pile to another deck or collection.", null),
 			new Feature(1, MINOR, CARDS, "Unsorted boxes", "Card positions in unsorted collections: find a card without"
@@ -267,7 +268,10 @@ final class WhatsNew {
 			new Feature(1, MINOR, GENERAL, "Report a bug or request a feature", "From the Help menu: describe it,"
 					+ " and ManaDesk opens the report on GitHub, ready to submit - or, without a GitHub account, as"
 					+ " an email to the developer, in your mail app or in Gmail / Outlook.com. For a bug, ManaDesk"
-					+ " prepares its log as a file to attach.", null), };
+					+ " prepares its log as a file to attach.", null),
+			// --- since 0.9.8
+			new Feature(2, MINOR, CARDS, "Proxy sort", "Sorting by the Proxy column now lists the genuine copies"
+					+ " first, then the proxies.", null), };
 
 	private WhatsNew() {
 	}
@@ -412,6 +416,15 @@ final class WhatsNew {
 
 			if (!all)
 				heading(body, "This version brings:", 0);
+			// the menu always names the releases; the upgrade popup only when it spans several
+			int releasesShown = 0;
+			for (int release = 1; release <= FEATURES_VERSION; release++)
+				for (Feature f : features)
+					if (f.since == release) {
+						releasesShown++;
+						break;
+					}
+			boolean namedReleases = all || releasesShown > 1;
 			// per release: "Highlights" (the major additions, bold, with room
 			// around them), then "Also new" (smaller improvements, by topic)
 			for (int release = FEATURES_VERSION; release >= 1; release--) {
@@ -422,7 +435,7 @@ final class WhatsNew {
 						(f.major ? majors : minors).add(f);
 				if (majors.isEmpty() && minors.isEmpty())
 					continue;
-				if (all)
+				if (namedReleases)
 					heading(body, RELEASES[release - 1], 2);
 				if (!majors.isEmpty()) {
 					heading(body, "Highlights", 1);

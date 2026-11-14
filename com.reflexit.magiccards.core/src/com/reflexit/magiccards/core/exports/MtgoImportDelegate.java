@@ -7,6 +7,7 @@
  *
  * Contributors:
  *    Alena Laskavaia - initial API and implementation
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -40,6 +41,7 @@ import com.reflexit.magiccards.core.monitor.ICoreProgressMonitor;
  * Bloodrite Invoker, 3, 0, C, ROE, 97/248, No
  * Bloodthrone Vampire, 13, 6, C, ROE, 98/248, No
  */
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class MtgoImportDelegate extends CsvImportDelegate {
 	private int cardNameIndex = 0;
 	private int countIndex = 1;

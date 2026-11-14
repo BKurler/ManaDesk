@@ -16,6 +16,7 @@
  *                         not a single filtered card list)
  *     Rémi Dutil (2026) - the view follows its column preferences again (the
  *                         activate() override skipped the preference listeners)
+ *     Rémi Dutil (2026) - removed an unused import
  */
 package com.reflexit.magiccards.ui.views.instances;
 
@@ -48,7 +49,6 @@ import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 import com.reflexit.magiccards.core.model.storage.ICardStore;
-import com.reflexit.magiccards.core.sync.UpdateCardsFromWeb;
 import com.reflexit.magiccards.ui.MagicUIActivator;
 import com.reflexit.magiccards.ui.utils.CoreMonitorAdapter;
 import com.reflexit.magiccards.ui.views.AbstractCardsView;

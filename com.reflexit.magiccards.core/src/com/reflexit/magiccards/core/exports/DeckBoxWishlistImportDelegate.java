@@ -1,5 +1,11 @@
+/*
+ * Contributors:
+ *     Rémi Dutil (2026) - marked @GeneratedDisabledFeature (disabled format, excluded from code coverage)
+ */
+
 package com.reflexit.magiccards.core.exports;
 
+@GeneratedDisabledFeature("Commented out of plugin.xml - kept for later")
 public class DeckBoxWishlistImportDelegate extends DeckBoxImportDelegate {
 	public static String HEADER_W = "Count,Name,Foil,Textless,Promo,Signed,Edition,Condition,Language";
 

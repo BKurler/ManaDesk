@@ -36,6 +36,7 @@
  *                         white after the fix - e.g. a 0.9.6 cache carried
  *                         over to 0.9.7. An all-white Common icon is now
  *                         deleted and re-rendered black.
+ *     Rémi Dutil (2026) - useDirForTests(): the icon folder can be redirected for unit tests
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -57,11 +58,18 @@ import com.reflexit.magiccards.core.model.Editions;
 import com.reflexit.magiccards.core.model.Rarity;
 
 public class EditionFileCache {
+	// where the set icons are kept; changed only by the tests
+	private static volatile File dirOverride = null;
 	private Edition edition;
 	private HashMap<String, CachedFile> map = new HashMap<>(3);
 
 	public EditionFileCache(Edition ed) {
 		this.edition = ed;
+	}
+
+	/** For the tests: keep the set icons in {@code dir} ({@code null}: the state folder again). */
+	static void useDirForTests(File dir) {
+		dirOverride = dir;
 	}
 
 	/**
@@ -262,7 +270,7 @@ public class EditionFileCache {
 	private String createLocalSetImageFilePath(String rarity) {
 		if ("Land".equals(rarity))
 			rarity = "Common";
-		File loc = FileUtils.getStateLocationFile();
+		File loc = dirOverride != null ? dirOverride : FileUtils.getStateLocationFile();
 
 		// RD Modification to use the common "icon" set for special sets like Arts, Tokens, Promos, etc
 		String name = edition.getIconBaseFileName() + "-" + rarity;

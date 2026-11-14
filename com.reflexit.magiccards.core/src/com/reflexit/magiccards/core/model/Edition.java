@@ -4,6 +4,9 @@
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
  *     Rémi Dutil (2026) - digital flag (a digital-only set)
  *     Rémi Dutil (2026) - isComingSoon() / getDisplayName(): the "(coming soon)" label of a set not released yet
+ *     Rémi Dutil (2026) - removed isHidden() / setHidden(): hiding a set is no longer a feature
+ *     Rémi Dutil (2026) - removed setMainAbbreviation() (abbreviations only come from the database update);
+ *                         addNameAlias() copied the old aliases the wrong way round and lost them
  */
 
 package com.reflexit.magiccards.core.model;
@@ -134,31 +137,6 @@ public class Edition {
 			iAbb = iAbb.substring(1);
 		}
 		return iAbb;
-	}
-
-	public void setMainAbbreviation(String abbr) {
-		if (abbr.contains(" ")) {
-			System.err.println("Bad abbreviation " + abbr + " for " + this);
-			return;
-		}
-		if (isAbbreviationFake()) {
-			abbrs[0] = abbr;
-		} else {
-			for (int i = 0; i < abbrs.length; i++) {
-				if (abbrs[i].equals(abbr)) {
-					if (i == 0)
-						return;
-					String temp = abbrs[0];
-					abbrs[0] = abbr;
-					abbrs[i] = temp;
-					return;
-				}
-			}
-			String[] arr = new String[abbrs.length + 1];
-			System.arraycopy(abbrs, 0, arr, 1, abbrs.length);
-			arr[0] = abbr;
-			abbrs = arr;
-		}
 	}
 
 	public String getExtraAbbreviations() {
@@ -357,7 +335,7 @@ public class Edition {
 				return;
 		}
 		String[] naliases = new String[aliases.length + 1];
-		System.arraycopy(naliases, 0, aliases, 0, aliases.length);
+		System.arraycopy(aliases, 0, naliases, 0, aliases.length);
 		naliases[aliases.length] = alias;
 		aliases = naliases;
 	}
@@ -373,19 +351,6 @@ public class Edition {
 
 	public boolean isUnknown() {
 		return false;
-	}
-
-	public boolean isHidden() {
-		return getType().contains("--");
-	}
-
-	public void setHidden(boolean hidden) {
-		if (hidden == isHidden())
-			return;
-		if (hidden)
-			setType("--" + getType());
-		else
-			setType(getType().replace("--", ""));
 	}
 
 	public EditionFileCache getImageFiles() {
