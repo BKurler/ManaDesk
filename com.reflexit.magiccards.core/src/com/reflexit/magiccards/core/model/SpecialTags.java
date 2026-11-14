@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - "misprint" and "altered" tags (ManaBox import)
+ *     Rémi Dutil (2026) - "proof" tag (Deckbox Artist Proof), "lang" tag (the language of the file, see ImportUtils)
  */
 package com.reflexit.magiccards.core.model;
 
@@ -26,7 +27,7 @@ public class SpecialTags {
 		usedTags = new HashSet<String>();
 		conditions.addAll(Arrays.asList(new String[] { "mint", "nearmint", "played", "poor", "good" }));
 		usedTags.addAll(Arrays.asList(new String[] { "foil", "premium", "promo", "online", "signed",
-				"textless", "misprint", "altered",
+				"textless", "misprint", "altered", "proof", "lang",
 				"wishlist", "fortrade" }));
 		usedTags.addAll(conditions);
 	}

@@ -36,6 +36,22 @@ cards into owned ones, move them to a Standard collection once bought (see
 
 <p class="shot"><img src="../images/edit_collection_properties.png" alt="Screenshot: Edit Properties of a collection"></p>
 
+<h3 id="for_trade">For Trade</h3>
+<p>A pile of cards is <b>for trade</b> when its <b>Special</b> field has the <code>fortrade</code> tag. The whole
+pile is for trade, and the read-only <b>For Trade</b> column shows its count (0 for the other piles). To offer only some
+copies of a pile, <a href="move_copy.html">split</a> it and give the tag to one of the two piles.</p>
+<ul>
+<li>In a <b>Standard</b> collection, or an owned deck, the tag is yours: add it or remove it like any other
+Special tag (in the Edit dialog or in the Special column).</li>
+<li>In a <b>For Trade</b> collection, every card that comes in &mdash; moved, imported, or already there when you
+change the type to For Trade &mdash; gets the tag automatically, and the tag <b>cannot be removed</b>. A For Trade collection opened with
+cards that don't have the tag (an older collection) tags them. Moving the card to another collection keeps the tag.
+Changing the collection back to Standard keeps it too.</li>
+<li>A <b>proxy</b> can't be traded. A For Trade collection refuses proxies (and a collection that holds one can't become
+For Trade). Elsewhere, the tag on a proxy is ignored: its For Trade count is 0.</li>
+<li>Decks and Wishlist/To Print collections have no rule of their own: they behave like a Standard collection.</li>
+</ul>
+
 <h3 id="main">The Main collection</h3>
 <p>Every workspace has a collection called <b>Main</b>. It is always there, always a Standard
 collection, always sorted and writable, and it can't be renamed or deleted. It is where cards go by

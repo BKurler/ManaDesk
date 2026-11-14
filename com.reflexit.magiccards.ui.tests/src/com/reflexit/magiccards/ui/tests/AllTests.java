@@ -27,6 +27,8 @@
  *                         DeckTextExtractor), same as the other tests
  *                         already here with no explicit import
  *                         (UnsortedCopyPositionTest, PrintOrderSortTest, ...).
+ *     Rémi Dutil (2026) - registered ForTradeCountColumnTest, ForTradeImportNoteTest, PreviewPopulatedColumnsTest
+ *     Rémi Dutil (2026) - registered DeclaredLanguageOrderTest, ErrorTextOrderTest, MismatchPickTest, PreviewTableViewerSortTest, PreviewCommentColumnTest
  *     Rémi Dutil (2026) - registered GalleryHtmlBuilderTest, ProgressColumnTest, ContentProvidersTest, ColumnCollectionTest, UtilsTest, ImageCacheTest, StatusDotsTest, SymbolRendererTest, MagicCardTransferTest and MagicDeckTransferTest (moved from com.reflexit.magicassistant.ui.tests)
  */
 
@@ -52,7 +54,15 @@ import com.reflexit.magiccards.ui.dialogs.EditDeckPropertiesDialogBoxedTest;
 import com.reflexit.magiccards.ui.views.nav.CardsNavigatorLabelProviderTest;
 import com.reflexit.magiccards.ui.preferences.DigitalBlockMessageTest;
 import com.reflexit.magiccards.ui.views.columns.DigitalColumnTest;
+import com.reflexit.magiccards.ui.views.columns.ForTradeCountColumnTest;
 import com.reflexit.magiccards.ui.exportWizards.DeckExportPageSelectionTest;
+import com.reflexit.magiccards.ui.exportWizards.DeclaredLanguageOrderTest;
+import com.reflexit.magiccards.ui.exportWizards.ErrorTextOrderTest;
+import com.reflexit.magiccards.ui.exportWizards.ForTradeImportNoteTest;
+import com.reflexit.magiccards.ui.exportWizards.MismatchPickTest;
+import com.reflexit.magiccards.ui.exportWizards.PreviewCommentColumnTest;
+import com.reflexit.magiccards.ui.exportWizards.PreviewPopulatedColumnsTest;
+import com.reflexit.magiccards.ui.exportWizards.PreviewTableViewerSortTest;
 import com.reflexit.magiccards.ui.exportWizards.ImportNameDiagnosisTest;
 import com.reflexit.magiccards.ui.view.model.RootTreeViewerContentProviderTest;
 import com.reflexit.magiccards.ui.view.model.TreeViewerContentProviderTest;
@@ -62,10 +72,12 @@ import com.reflexit.magiccards.ui.views.lib.ListViewSettingsTest;
 
 @RunWith(Suite.class)
 @SuiteClasses({ TreeViewerContentProviderTest.class, RootTreeViewerContentProviderTest.class,
-		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, PrintOrderSortTest.class,
+		UnsortedCopyPositionTest.class, ImportNameDiagnosisTest.class, DeclaredLanguageOrderTest.class, ErrorTextOrderTest.class,
+		MismatchPickTest.class, PreviewTableViewerSortTest.class, PreviewCommentColumnTest.class, PreviewPopulatedColumnsTest.class,
+		PrintOrderSortTest.class,
 		PrintingsColumnCollectionTest.class, InstanceLocationSortTest.class, DeckExportPageSelectionTest.class,
 		EditCardsPropertiesDialogFinishTest.class, EditCardsPropertiesDialogImageTest.class, EditDeckPropertiesDialogBoxedTest.class, DeckColumnCollectionTest.class, ViewSettingsTest.class, ListViewSettingsTest.class, ContextAssistTest.class,
-		DigitalColumnTest.class, DigitalBlockMessageTest.class, CardsNavigatorLabelProviderTest.class,
+		DigitalColumnTest.class, ForTradeCountColumnTest.class, ForTradeImportNoteTest.class, DigitalBlockMessageTest.class, CardsNavigatorLabelProviderTest.class,
 		GalleryHtmlBuilderTest.class, ProgressColumnTest.class, ContentProvidersTest.class, ColumnCollectionTest.class, UtilsTest.class,
 		ImageCacheTest.class, StatusDotsTest.class, SymbolRendererTest.class, MagicCardTransferTest.class,
 		MagicDeckTransferTest.class,

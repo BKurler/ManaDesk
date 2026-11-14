@@ -50,7 +50,29 @@
             importDelegate="com.reflexit.magiccards.core.exports.ManaDeskCsvSemicolonImportDelegate"
             label="ManaDesk CSV Semicolon">
       </deckFormat>
-      <!-- before the lenient CSV formats (DeckBox, MTG Studio...): a ManaBox file
+      <!-- strict Deckbox importer (needs Count, Name and Edition columns); the wishlist
+           is export-only: the same importer reads both. BEFORE ManaBox: a Deckbox export
+           has a "Scryfall ID" column, so ManaBox would also parse it (same card count,
+           no errors) and, on a tie, the first registered wins - while a ManaBox file
+           has no Count / Edition column, so Deckbox rejects it -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.DeckBoxExportDelegate"
+            extension="csv"
+            id="deckbox"
+            importDelegate="com.reflexit.magiccards.core.exports.DeckBoxImportDelegate"
+            application="true"
+            label="Deckbox Inventory CSV"
+            xmlFormat="false">
+      </deckFormat>
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.DeckBoxWishlistExportDelegate"
+            extension="csv"
+            id="deckboxW"
+            application="true"
+            label="Deckbox Wishlist CSV"
+            xmlFormat="false">
+      </deckFormat>
+      <!-- before the lenient CSV formats (MTG Studio...): a ManaBox file
            would also parse with them, and on a tie the first registered wins -->
       <deckFormat
             exportDelegate="com.reflexit.magiccards.core.exports.ManaBoxCsvExportDelegate"
@@ -231,24 +253,6 @@
              xmlFormat="true">
        </deckFormat>
 
-      <deckFormat
-            exportDelegate="com.reflexit.magiccards.core.exports.DeckBoxExportDelegate"
-            extension="csv"
-            id="deckbox"
-            importDelegate="com.reflexit.magiccards.core.exports.DeckBoxImportDelegate"
-            application="true"
-            label="DeckBox Inventory CSV"
-            xmlFormat="false">
-      </deckFormat>
-      <deckFormat
-            exportDelegate="com.reflexit.magiccards.core.exports.DeckBoxWishlistExportDelegate"
-            extension="csv"
-            id="deckboxW"
-            importDelegate="com.reflexit.magiccards.core.exports.DeckBoxWishlistImportDelegate"
-            application="true"
-            label="DeckBox Wishlist CSV"
-            xmlFormat="false">
-      </deckFormat>
       <deckFormat
             extension="html"
             id="htmlTcgPlayer"

@@ -19,10 +19,13 @@
  *                         applyFixedOwnership(). A file-virtual card going
  *                         into a non-virtual list is also marked Proxy; both
  *                         kinds of change are counted for the preview warning
+ *     Rémi Dutil (2026) - forTradeDestination: the file's trade count is ignored, every card gets the fortrade tag
  *     Rémi Dutil (2026) - declareLanguage(): a non-English language the file
  *                         gives for a card that is imported as English (the
  *                         card database only has English printings), for the
  *                         preview's warning / yellow Language cell
+ *     Rémi Dutil (2026) - declareUnknownCondition(): a condition text the file gives that is no known grade
+ *                         (the copy is imported ungraded), for the preview's warning / yellow Condition cell
  */
 package com.reflexit.magiccards.core.exports;
 
@@ -47,12 +50,16 @@ public class ImportData {
 	private boolean virtual = false;
 	/** When true, every imported card takes ownership {@code !virtual} - see the header. */
 	private boolean ownershipFixed = false;
+	/** The cards go to a For Trade collection: the file's trade count is ignored, every card is tagged. */
+	private boolean forTradeDestination = false;
 	/** Copies the file said were Own, imported as virtual (virtual target). */
 	private int forcedVirtual = 0;
 	/** Copies the file said were virtual, imported as Own + Proxy (non-virtual target). */
 	private int forcedOwnProxy = 0;
 	/** card -&gt; the non-English language the file gave it (imported as English) */
 	private final IdentityHashMap<Object, String> declaredLanguage = new IdentityHashMap<>();
+	/** card -&gt; the condition text the file gave it, that is no known grade (imported ungraded) */
+	private final IdentityHashMap<Object, String> unknownCondition = new IdentityHashMap<>();
 	private ImportSource importSource;
 	private LinkedHashMap<String, Object> props = new LinkedHashMap<>();
 	/** what the file declared for each card (before resolution swaps the base): [name,set,collnum,id,gathererId,tcgId] */
@@ -151,6 +158,7 @@ public class ImportData {
 		forcedVirtual = 0;
 		forcedOwnProxy = 0;
 		declaredLanguage.clear();
+		unknownCondition.clear();
 	}
 
 	/** Snapshot what the file said about this card, before resolution rewrites its base. */
@@ -196,6 +204,18 @@ public class ImportData {
 		return ownershipFixed;
 	}
 
+	/**
+	 * True when the cards go to a For Trade collection: every card is for trade (the fortrade tag), so the file's own
+	 * trade count (Deckbox's Tradelist Count) is ignored - see {@link AbstractImportDelegate#importCard}.
+	 */
+	public boolean isForTradeDestination() {
+		return forTradeDestination;
+	}
+
+	public void setForTradeDestination(boolean forTradeDestination) {
+		this.forTradeDestination = forTradeDestination;
+	}
+
 	public void setOwnershipFixed(boolean ownershipFixed) {
 		this.ownershipFixed = ownershipFixed;
 	}
@@ -236,6 +256,22 @@ public class ImportData {
 	/** The non-English language the file gave {@code card}, or {@code null}. */
 	public String getDeclaredLanguage(Object card) {
 		return declaredLanguage.get(card);
+	}
+
+	/** The file gives {@code card} a condition text that is no known grade: the copy is imported ungraded. */
+	public void declareUnknownCondition(Object card, String text) {
+		if (card != null && text != null && !text.trim().isEmpty())
+			unknownCondition.put(card, text.trim());
+	}
+
+	/** The condition text of the file that is no known grade, or {@code null}. */
+	public String getUnknownCondition(Object card) {
+		return unknownCondition.get(card);
+	}
+
+	/** Cards whose condition text in the file is no known grade. */
+	public java.util.Collection<Object> getUnknownConditions() {
+		return unknownCondition.keySet();
 	}
 
 	/** Cards whose language from the file was replaced by English. */

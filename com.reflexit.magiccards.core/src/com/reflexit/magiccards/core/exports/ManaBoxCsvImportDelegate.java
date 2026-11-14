@@ -114,20 +114,15 @@ public class ManaBoxCsvImportDelegate extends CsvImportDelegate {
 	protected void setHeaderFields(List<String> list) {
 		currencyColumn = -1;
 		boolean manaBox = false;
-		boolean hasSetCode = false;
 		for (String raw : list) {
 			String key = norm(raw);
 			manaBox |= key.equals("scryfall id") || key.equals("manabox id");
-			hasSetCode |= key.equals("set code");
 		}
 		if (!manaBox)
 			throw new MagicException("Not a ManaBox CSV: no 'Scryfall ID' or 'ManaBox ID' column (" + list + ")");
 		ICardField[] fields = new ICardField[list.size()];
 		for (int i = 0; i < fields.length; i++) {
 			ICardField f = HEADERS.get(norm(list.get(i)));
-			// the set code is the exact one; the set name only when there is no code
-			if (f == MagicCardField.SET && hasSetCode)
-				f = null;
 			fields[i] = f;
 			if (norm(list.get(i)).equals("purchase price currency"))
 				currencyColumn = i;
@@ -199,7 +194,7 @@ public class ManaBoxCsvImportDelegate extends CsvImportDelegate {
 			return;
 		}
 		if (field == MagicCardField.CONDITION) {
-			card.setCondition(condition(value));
+			setConditionOrUnknown(card, value, condition(value));
 			return;
 		}
 		if (field == MagicCardField.LANG) {

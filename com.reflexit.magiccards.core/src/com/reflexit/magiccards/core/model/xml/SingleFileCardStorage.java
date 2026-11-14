@@ -10,6 +10,7 @@
  *                         "format" key DeckLegalityPage2 already wrote
  *                         directly via getProperty/setProperty, so existing
  *                         decks' remembered format survives unchanged
+ *     Rémi Dutil (2026) - a For Trade collection tags its untagged cards when loaded (ForTradeRules)
  *     Rémi Dutil (2026) - getCollectionType()/setCollectionType() under the
  *                         "collectionType" key; the type also sets the
  *                         virtual flag, and an unset/inconsistent key falls
@@ -29,6 +30,7 @@ import java.util.Properties;
 
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.model.CollectionType;
+import com.reflexit.magiccards.core.model.ForTradeRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
@@ -386,6 +388,17 @@ public class SingleFileCardStorage extends MemoryCardStorage<IMagicCard> impleme
 		this.properties = obj.properties;
 		this.type = obj.type;
 		convertLegacyFoilTagsToFinish();
+		tagForTradeCollection();
+	}
+
+	/**
+	 * Every card of a For Trade collection is for trade (see {@link ForTradeRules}): a collection of that type
+	 * opened with an untagged card - created before the rule existed, or edited outside the application - gets the
+	 * "fortrade" tag on it, in memory, each time it is loaded (saved with the next change).
+	 */
+	private void tagForTradeCollection() {
+		if (ForTradeRules.isForTradeList(this))
+			ForTradeRules.tagAll(getList());
 	}
 
 	/**

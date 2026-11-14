@@ -36,7 +36,6 @@ import com.reflexit.magiccards.core.sync.TextPrinterTest;
 		PipedTableExportText.class, CsvExportDelegateTest.class, CsvImportDelegateTest.class,
 		ClassicExportDelegateTest.class, ClassicImportDelegateTest.class, CustomExportDelegateTest.class,
 		SideboardHelpHtmlExportDelegateTest.class, ExportAppenderTest.class, PrintProxyHtmlExportDelegateTest.class,
-		// !!! RD DeckBoxImportTest.class,
 		TextPrinterTest.class, DeckTextExtractorTest.class,
 // !!! RD 		HtmlTableImportTest.class, //
 // !!! RD 		ScryGlassImportDelegateTest.class

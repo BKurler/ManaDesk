@@ -9,6 +9,7 @@
  *                         chosen first, above Name, and decides the virtual
  *                         flag (Wishlist/To Print = virtual). Unsorted only for
  *                         Standard / For Trade. No Website source.
+ *     Rémi Dutil (2026) - changing the type refreshes the first-page notes (For Trade ignores the Tradelist Count)
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -89,6 +90,7 @@ public class NewCollectionPage extends AbstractCreateElementPage {
 				@Override
 				public void widgetSelected(SelectionEvent e) {
 					syncUnsorted();
+					updatePageCompletion(); // the first-page notes depend on the type
 				}
 			});
 			typeRadios.put(t, radio);

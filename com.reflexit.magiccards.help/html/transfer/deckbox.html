@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Deckbox</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Deckbox</h1>
+
+<p>Already keep your cards on <b>Deckbox</b>? You can bring your inventory and wishlist into ManaDesk easily,
+and send your decks and collections back to it.</p>
+
+<h2>From Deckbox to your collection</h2>
+<ol>
+<li>On Deckbox, export your inventory (or your wishlist) to a <b>CSV</b> file.</li>
+<li>In ManaDesk, right-click a Standard collection and choose <b>Import into...</b>
+(or create a new collection from the file).</li>
+<li>Pick the file. The format is recognized as <b>Deckbox Inventory CSV</b>.</li>
+<li>Check the preview, then click <b>Finish</b>. See <a href="import.html">Importing cards</a>.</li>
+</ol>
+<p class="note"><b>Important:</b> export with the <b>Scryfall ID</b> column. It is what lets ManaDesk find the exact
+printing of every card. Without it, ManaDesk has to match each card by its name, set and number, and Deckbox does not
+always use the same set names, set codes and card numbers as the card database (for example <i>Standard Showdown
+Promos</i>): some cards will then show an error in the import preview, and you have to fix them there.</p>
+
+<p>Deckbox's export carries each card's <b>Scryfall ID</b>, so ManaDesk finds the exact printing with it. Deckbox
+numbers old sets differently and names some sets differently, so the <b>Edition</b> and <b>Card Number</b> columns
+are not read when the Scryfall ID is there. An older file without the Scryfall ID is matched by <b>Name</b>,
+<b>Edition Code</b> (used first when ManaDesk knows it) or <b>Edition</b> (the set's name), and <b>Card Number</b>; a card it cannot match is shown in red in the preview,
+where you can fix its set or number.</p>
+
+<h2>What comes across</h2>
+<table>
+<tr><th>Deckbox</th><th>ManaDesk</th></tr>
+<tr><td>Scryfall ID (or Name, Edition, Card Number)</td><td>The exact printing</td></tr>
+<tr><td>Count</td><td>Count</td></tr>
+<tr><td>Tradelist Count</td><td>Above 0: the copies get the <code>fortrade</code> Special tag (see
+<a href="../collection/concepts.html#for_trade">For Trade</a>). When it is less than Count, the pile is split in two: the
+copies for trade and the others. It never raises Count. Proxies are never for trade. <b>Into a For Trade
+collection, every card is for trade</b> (it gets the tag, whatever the Tradelist Count says, even 0, and the pile is never split), so Tradelist Count is ignored: the first page of the wizard
+shows a red warning when the destination is a For Trade collection and the file has that column.</td></tr>
+<tr><td>Foil</td><td>Finish</td></tr>
+<tr><td>Condition</td><td>Condition: Mint and Near Mint &rarr; NM, Good (Lightly Played) &rarr; LP, Played &rarr; MP,
+Heavily Played &rarr; HP, Poor &rarr; DMG. <b>Proxy</b> is not a condition for ManaDesk: the card is imported as a
+<b>Proxy</b>, not graded.</td></tr>
+<tr><td>Language</td><td>Language, when the card database has that printing (otherwise English, shown in yellow in the
+preview)</td></tr>
+<tr><td>My Price</td><td>User Price (Deckbox prices are in dollars; converted to your currency when possible)</td></tr>
+<tr><td>Signed, Artist Proof, Altered Art, Misprint</td><td>The <code>signed</code>, <code>proof</code>,
+<code>altered</code> and <code>misprint</code> special tags</td></tr>
+<tr><td>Tags</td><td>The <b>Comment</b>, as written (Deckbox's own tags are free text)</td></tr>
+<tr><td>Promo, Textless, Printing Id, Printing Note</td><td>Not read (Deckbox itself no longer offers Promo and Textless;
+the Scryfall ID already identifies the exact printing)</td></tr>
+</table>
+<p>The columns are read by name, in any order, so a wishlist (which has no Tradelist Count) and a file with
+extra columns both work.</p>
+
+<h2>From ManaDesk to Deckbox</h2>
+<p>Export a deck or collection with the <b>Deckbox Inventory CSV</b> format, or <b>Deckbox Wishlist CSV</b> for a
+wishlist (see <a href="export.html">Exporting</a>), then import the file on Deckbox. The columns are the ones of
+Deckbox's own export and they are fixed: all of them are always written, you don't choose them. Promo and Textless
+(deprecated on Deckbox) and Printing Id and Printing Note (Deckbox's own numbers and notes) are not written.</p>
+<table>
+<tr><th>Deckbox column</th><th>Written from</th></tr>
+<tr><td>Count</td><td>Count</td></tr>
+<tr><td>Tradelist Count</td><td>The copies with the <code>fortrade</code> Special tag (0 for a proxy). Not in a wishlist.</td></tr>
+<tr><td>Name, Edition, Edition Code, Card Number</td><td>The card, its set (name and code) and collector number</td></tr>
+<tr><td>Condition</td><td>Condition; a <b>Proxy</b> is written as the condition <i>Proxy</i>; a card that is not graded is Near Mint</td></tr>
+<tr><td>Language</td><td>Language; a card kept in English with a <code>lang=French</code> Special tag is written as French</td></tr>
+<tr><td>Foil</td><td>Finish (an etched foil is a foil)</td></tr>
+<tr><td>Signed, Artist Proof, Altered Art, Misprint</td><td>The <code>signed</code>, <code>proof</code>, <code>altered</code> and <code>misprint</code> Special tags</td></tr>
+<tr><td>Tags</td><td>The Comment</td></tr>
+<tr><td>My Price</td><td>The price, in US dollars</td></tr>
+<tr><td>Scryfall ID</td><td>The card's Scryfall ID</td></tr>
+</table>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>

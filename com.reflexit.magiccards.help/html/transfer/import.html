@@ -46,6 +46,7 @@ what that format looks like. The line below tells how many cards were found.</p>
 <code>Lightning Bolt</code>, lines with a Scryfall id, <code>#</code> comments, and a <i>Sideboard</i> line before
 the sideboard cards. This is what most websites, forums and apps produce.</td></tr>
 <tr><td>ManaDesk CSV / ManaDesk CSV Semicolon</td><td>The files ManaDesk exports (see <a href="export.html">Exporting</a>).</td></tr>
+<tr><td>Deckbox CSV</td><td>Inventory and Wishlist exports from Deckbox (see <a href="deckbox.html">Deckbox</a>).</td></tr>
 <tr><td>ManaBox CSV</td><td>Exports from the ManaBox app (see <a href="manabox.html">ManaBox</a>).</td></tr>
 <tr><td>Magic Assistant CSV</td><td>CSV files with a header row, from Magic Assistant and similar programs
 (columns such as Name, Set, Count, Language, Collector Number...).</td></tr>
@@ -61,9 +62,18 @@ the problem.</li>
 <li>Fix a row by editing its <b>Name</b>, <b>Set</b>, <b>Num</b> or <b>Multiverse id</b> cell. Cells ManaDesk filled
 in by itself show in green.</li>
 <li><b>Auto complete using first match</b> picks the first matching printing for every card that is still
-ambiguous.</li>
+ambiguous. A <b>Mismatched info</b> row (the file's Scryfall id, Name, Set and Num do not agree) is bound to the
+file's <b>Name</b> and <b>Set</b>, and its <b>Num</b> is taken from the card database.</li>
 <li><b>Ignore cards with errors</b> imports only the valid rows.</li>
 </ul>
+
+<h3>How a card is found</h3>
+<p>When the file gives the card's <b>Scryfall id</b>, that id decides: the set and number in the file are not used.
+Otherwise ManaDesk uses the card's name and its set. If the file has both a <b>set code</b> column and a <b>set
+name</b> column, the set code wins, whatever the case it is written in (<code>m10</code> or <code>M10</code>); a
+code ManaDesk does not know is ignored and the set name is used. In a plain text list, what you write between
+parentheses, as in <code>4 Lightning Bolt (M10)</code> or <code>2 Counterspell (Ice Age)</code>, can be either a
+set name or a set code: ManaDesk tries the name first, then the code.</p>
 
 <h3>Warnings</h3>
 <p>The zone below the table also warns you when the import changes something from the file:</p>
@@ -80,12 +90,17 @@ ambiguous.</li>
  a collection. Import into a virtual deck or a collection instead.</li>
 <li><b>Language</b> &mdash; when the file gives a card in another language, ManaDesk uses that language's printing
 if the card database has it (same set). Otherwise the card is imported in English, shown with a yellow
-<b>Language</b> cell.</li>
+<b>Language</b> cell, and the language the file gave is kept in the card's <b>Special</b> tags as <code>lang=French</code>
+so the information is not lost (you can filter on it). Click the <b>Language</b> header to sort: the yellow cards come together at the top (grouped
+by the language the file gave), so they are easy to find.</li>
+<li><b>Condition</b> &mdash; when the file gives a condition ManaDesk does not know, the card is imported without a
+condition: the <b>Condition</b> cell is left empty, on a yellow background, and the warning lists the texts of the
+file. Pick the right condition in the cell if you want one.</li>
 </ul>
 
 <p>Click <b>Finish</b> to import.</p>
 
 <p class="seealso">See also: <a href="import_website.html">Importing from a website</a> &middot;
-<a href="manabox.html">ManaBox</a> &middot; <a href="export.html">Exporting</a></p>
+<a href="manabox.html">ManaBox</a> &middot; <a href="deckbox.html">Deckbox</a> &middot; <a href="export.html">Exporting</a></p>
 </body>
 </html>

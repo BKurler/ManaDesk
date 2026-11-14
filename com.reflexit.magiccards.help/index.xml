@@ -338,6 +338,9 @@
    <entry keyword="Custom export formats">
       <topic href="html/transfer/custom_export.html" title="Custom export formats"/>
    </entry>
+   <entry keyword="Deckbox">
+      <topic href="html/transfer/deckbox.html" title="Deckbox"/>
+   </entry>
    <entry keyword="Deck">
       <topic href="html/collection/collector.html" title="Collector"/>
       <topic href="html/collection/concepts.html" title="Decks and collections"/>
