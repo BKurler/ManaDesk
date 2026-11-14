@@ -50,6 +50,19 @@
             importDelegate="com.reflexit.magiccards.core.exports.ManaDeskCsvSemicolonImportDelegate"
             label="ManaDesk CSV Semicolon">
       </deckFormat>
+      <!-- Moxfield collection CSV: needs Count, Name, Edition and Collector Number columns.
+           BEFORE Deckbox (a Moxfield file also has Count, Name and Edition, so Deckbox would
+           parse it too and, on a tie, the first registered wins); a Deckbox file has "Card
+           Number", not "Collector Number", so this one rejects it -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.MoxfieldCsvExportDelegate"
+            extension="csv"
+            id="moxfieldCsv"
+            importDelegate="com.reflexit.magiccards.core.exports.MoxfieldCsvImportDelegate"
+            application="true"
+            label="Moxfield Collection CSV"
+            xmlFormat="false">
+      </deckFormat>
       <!-- strict Deckbox importer (needs Count, Name and Edition columns); the wishlist
            is export-only: the same importer reads both. BEFORE ManaBox: a Deckbox export
            has a "Scryfall ID" column, so ManaBox would also parse it (same card count,
@@ -93,6 +106,18 @@
             application="true"
             label="Cockatrice Deck"
             xmlFormat="true">
+      </deckFormat>
+      <!-- Moxfield deck list ("Copy for Moxfield": "1 Sol Ring (C21) 263 *F*"); rejects a file
+           with no line carrying a set code and a number, so a plain list goes to Freeform.
+           BEFORE Freeform: on a tie the first registered wins -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.MoxfieldTextExportDelegate"
+            extension="txt"
+            id="moxfieldText"
+            importDelegate="com.reflexit.magiccards.core.exports.MoxfieldTextImportDelegate"
+            application="true"
+            label="Moxfield Deck List"
+            xmlFormat="false">
       </deckFormat>
       <!-- forgiving text importer: '# name' comments, 'Sideboard' markers,
            '3 Name', '3x Name (Set)', or any line carrying a Scryfall id -->
