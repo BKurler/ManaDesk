@@ -29,6 +29,7 @@
  *     Rémi Dutil (2026) - "Deckbox" entry (import / export)
  *     Rémi Dutil (2026) - "Cockatrice" entry (import / export)
  *     Rémi Dutil (2026) - "Moxfield" entry (import / export)
+ *     Rémi Dutil (2026) - "Deckstats" entry (import / export)
  *     Rémi Dutil (2026) - "Import preview" entry
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
@@ -229,6 +230,9 @@ final class WhatsNew {
 			new Feature(1, MAJOR, IMPORT, "Moxfield", "Already using Moxfield? Import the deck text of \"Copy for Moxfield\""
 					+ " (each card keeps its printing and foil, the sideboard goes to the sideboard) and your collection CSV, and export a"
 					+ " deck or a collection for Moxfield's own import.", null),
+			new Feature(1, MAJOR, IMPORT, "Deckstats", "Already using Deckstats? Import its deck text (each card keeps its printing,"
+					+ " the sideboard section becomes the sideboard) and your collection CSV, and export a deck or a collection for"
+					+ " Deckstats' own import.", null),
 			new Feature(1, MINOR, IMPORT, "Import preview", "Sorting by Language puts the cards imported as English although"
 					+ " the file gave another language together, and sorting by Error works. A card with no set no longer shows"
 					+ " a made-up set. \"Auto complete using first match\" also fixes the \"Mismatched info\" rows from the"

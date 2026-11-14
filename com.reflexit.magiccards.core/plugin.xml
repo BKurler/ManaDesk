@@ -63,6 +63,17 @@
             label="Moxfield Collection CSV"
             xmlFormat="false">
       </deckFormat>
+      <!-- Deckstats collection CSV: needs the columns amount and card_name; no other registered
+           format uses those names, so the order does not matter -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.DeckstatsCsvExportDelegate"
+            extension="csv"
+            id="deckstatsCsv"
+            importDelegate="com.reflexit.magiccards.core.exports.DeckstatsCsvImportDelegate"
+            application="true"
+            label="Deckstats Collection CSV"
+            xmlFormat="false">
+      </deckFormat>
       <!-- strict Deckbox importer (needs Count, Name and Edition columns); the wishlist
            is export-only: the same importer reads both. BEFORE ManaBox: a Deckbox export
            has a "Scryfall ID" column, so ManaBox would also parse it (same card count,
@@ -117,6 +128,18 @@
             importDelegate="com.reflexit.magiccards.core.exports.MoxfieldTextImportDelegate"
             application="true"
             label="Moxfield Deck List"
+            xmlFormat="false">
+      </deckFormat>
+      <!-- Deckstats deck text ("//Main", "1 Lightning Bolt (SLZ) 305"); rejects a file
+           with no set code and number, so a plain list goes to Freeform. BEFORE Freeform: on a tie the
+           first registered wins -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.DeckstatsTextExportDelegate"
+            extension="txt"
+            id="deckstatsText"
+            importDelegate="com.reflexit.magiccards.core.exports.DeckstatsTextImportDelegate"
+            application="true"
+            label="Deckstats Deck List"
             xmlFormat="false">
       </deckFormat>
       <!-- forgiving text importer: '# name' comments, 'Sideboard' markers,

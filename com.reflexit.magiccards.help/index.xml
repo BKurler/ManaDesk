@@ -711,6 +711,9 @@
    <entry keyword="Magic: The Gathering rules">
       <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
    </entry>
+   <entry keyword="Deckstats">
+      <topic href="html/transfer/deckstats.html" title="Deckstats"/>
+   </entry>
    <entry keyword="Moxfield">
       <topic href="html/transfer/moxfield.html" title="Moxfield"/>
    </entry>
