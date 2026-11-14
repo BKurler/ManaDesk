@@ -7,16 +7,21 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - frame effects and borders by table + fallback (frameEffectLabels,
+ *                         borderLabel), so a value Scryfall adds later still shows
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collection;
 import java.util.Collections;
+import java.util.HashSet;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Set;
 import java.util.regex.Pattern;
 
 /**
@@ -79,6 +84,72 @@ public final class CardTraits {
 			PROMO.put(e[0], e[1]);
 	}
 	private static final Pattern FINAL_FANTASY = Pattern.compile("ff([ivxl]+)");
+
+	/** Scryfall's frame_effects that change how a card looks -> the label shown, in the order shown. */
+	private static final Map<String, String> FRAME_EFFECTS = new LinkedHashMap<String, String>();
+	static {
+		String[][] e = { { "showcase", "Showcase" }, { "extendedart", "Extended Art" }, { "inverted", "Inverted Frame" },
+				{ "tombstone", "Tombstone Frame" }, { "colorshifted", "Colorshifted" },
+				{ "shatteredglass", "Shattered Glass" } };
+		for (String[] x : e)
+			FRAME_EFFECTS.put(x[0], x[1]);
+	}
+	/**
+	 * Scryfall's frame_effects that only describe the frame's structure or the card's rules
+	 * (legendary, devoid, snow, a double-faced card's kind...), or that another trait already
+	 * says (full art, textless, etched): not traits to show. A frame effect that is neither here
+	 * nor in {@link #FRAME_EFFECTS} is new, and is shown capitalized until it is listed.
+	 */
+	private static final Set<String> PLAIN_FRAME_EFFECTS = new HashSet<String>(Arrays.asList("legendary", "miracle",
+			"nyxtouched", "draft", "devoid", "snow", "companion", "vehicle", "enchantment", "lesson", "spree",
+			"sunmoondfc", "mooneldrazidfc", "originpwdfc", "fandfc", "waxingandwaningmoondfc", "convertdfc",
+			"upsidedowndfc", "etched", "fullart", "textless", "boosterfun"));
+
+	/** True when {@code effect} (a Scryfall frame effect) is one this knows about, shown or not. */
+	public static boolean isKnownFrameEffect(String effect) {
+		return FRAME_EFFECTS.containsKey(effect) || PLAIN_FRAME_EFFECTS.contains(effect);
+	}
+
+	/**
+	 * The labels of a card's frame effects: the known ones in a fixed order, then any new one
+	 * (capitalized) in the order given; the structural ones are left out.
+	 *
+	 * @param effects Scryfall's {@code frame_effects} values (strings), may be {@code null}
+	 */
+	public static List<String> frameEffectLabels(Collection<?> effects) {
+		List<String> res = new ArrayList<String>();
+		if (effects == null || effects.isEmpty())
+			return res;
+		Set<String> given = new java.util.LinkedHashSet<String>();
+		for (Object o : effects)
+			if (o != null && !o.toString().isEmpty())
+				given.add(o.toString());
+		for (Map.Entry<String, String> e : FRAME_EFFECTS.entrySet())
+			if (given.contains(e.getKey()))
+				res.add(e.getValue());
+		for (String g : given)
+			if (!isKnownFrameEffect(g))
+				res.add(capitalize(g));
+		return res;
+	}
+
+	/**
+	 * The label of a card's border color: none for a black one (the usual), "Borderless", else
+	 * the color ("White Border", "Silver Border", "Gold Border", and any new one).
+	 */
+	public static String borderLabel(String border) {
+		if (border == null || border.isEmpty() || "black".equals(border))
+			return null;
+		if ("borderless".equals(border))
+			return "Borderless";
+		return capitalize(border) + " Border";
+	}
+
+	/** True when {@code promoType} (a Scryfall promo type) is one {@link #promoLabel} knows by name. */
+	public static boolean isKnownPromo(String promoType) {
+		return promoType != null && (PROMO.containsKey(promoType) || "boosterfun".equals(promoType)
+				|| FINAL_FANTASY.matcher(promoType).matches());
+	}
 
 	/**
 	 * The label of one of Scryfall's {@code promo_types} - how a printing was handed out or what
