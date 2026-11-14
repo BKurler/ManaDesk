@@ -35,6 +35,8 @@
  *     Rémi Dutil (2026) - owned (non-virtual) decks: copy / move refuse cards that
  *                         would create owned cards, setField(COUNT) refuses a
  *                         count increase (OwnershipRules)
+ *     Rémi Dutil (2026) - For Trade collections: add/copy/move/import tag every card, a proxy is
+ *                         refused, the fortrade tag cannot be removed (ForTradeRules)
  */
 
 package com.reflexit.magiccards.core;
@@ -51,6 +53,7 @@ import java.util.Set;
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.model.CardGroup;
 import com.reflexit.magiccards.core.model.DigitalRules;
+import com.reflexit.magiccards.core.model.ForTradeRules;
 import com.reflexit.magiccards.core.model.ICardHandler;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.IMagicCardPhysical;
@@ -482,7 +485,13 @@ public class DataManager {
 			String digitalVeto = DigitalRules.addVeto(card, store);
 			if (digitalVeto != null)
 				throw new MagicException(digitalVeto);
+			String tradeVeto = ForTradeRules.addVeto(card, store);
+			if (tradeVeto != null)
+				throw new MagicException(tradeVeto);
 		}
+		// a For Trade collection: every card that comes in is for trade
+		for (Object card : list)
+			ForTradeRules.prepare(card, store);
 		boolean res = store.addAll(list);
 		reconcile(list);
 		return res;
@@ -515,6 +524,10 @@ public class DataManager {
 		String digitalVeto = DigitalRules.addVeto(mcp, store);
 		if (digitalVeto != null)
 			throw new MagicException(digitalVeto);
+		String tradeVeto = ForTradeRules.addVeto(mcp, store);
+		if (tradeVeto != null)
+			throw new MagicException(tradeVeto);
+		ForTradeRules.prepare(mcp, store);
 		boolean res = store.add(mcp);
 		reconcile(mcp);
 		return res;
@@ -525,6 +538,9 @@ public class DataManager {
 		String digitalVeto = DigitalRules.addVeto(card, getCardStore(toLoc));
 		if (digitalVeto != null)
 			throw new MagicException(digitalVeto);
+		String tradeVeto = ForTradeRules.addVeto(card, getCardStore(toLoc));
+		if (tradeVeto != null)
+			throw new MagicException(tradeVeto);
 		remove(card);
 		card.setLocation(toLoc);
 		add(card); // XXX if fails we need to undo the remove
@@ -592,11 +608,13 @@ public class DataManager {
 			if (veto != null)
 				throw new MagicException(veto);
 		}
-		String digitalVeto = DigitalRules.fieldVeto(
-				cardStore != null || mc.getLocation() == null ? cardStore : getCardStore(mc.getLocation()), field,
-				newValue);
+		ICardStore<?> where = cardStore != null || mc.getLocation() == null ? cardStore : getCardStore(mc.getLocation());
+		String digitalVeto = DigitalRules.fieldVeto(where, field, newValue);
 		if (digitalVeto != null)
 			throw new MagicException(digitalVeto);
+		String tradeVeto = ForTradeRules.fieldVeto(where, field, newValue);
+		if (tradeVeto != null)
+			throw new MagicException(tradeVeto);
 		mc.set(field, newValue);
 		if (cardStore == null) {
 			Location loc = mc.getLocation();

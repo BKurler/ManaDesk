@@ -1,6 +1,15 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - an unknown condition text of the file: yellow empty Condition cell + warning below
+ *                         the table
+ *     Rémi Dutil (2026) - populatedFields(): Proxy, Condition, Finish, Price and For Trade columns are shown whenever a card has a value
+ *     Rémi Dutil (2026) - the Comments column is shown whenever a card has a comment (a file comment, Deckbox tags)
+ *     Rémi Dutil (2026) - "Auto complete using first match" also fixes the "Mismatched info" rows: the
+ *                         file's Name and Set win, the Num comes from the database (MismatchPick)
+ *     Rémi Dutil (2026) - sorting by Language groups the cards imported as English whose file
+ *                         language differs (yellow cells): DeclaredLanguageOrder;
+ *                         sorting by Error works (by the short text shown): ErrorTextOrder
  *     Rémi Dutil (2026) - getMainPage() etc. follow the DeckImportPage rename to
  *                         AbstractCardListImportPage; dropped the dead
  *                         getIntoChoice()-based branch (no more "extend the
@@ -100,6 +109,7 @@ import com.reflexit.magiccards.ui.views.IMagicColumnViewer;
 import com.reflexit.magiccards.ui.views.SimpleTableViewer;
 import com.reflexit.magiccards.ui.views.columns.AbstractColumn;
 import com.reflexit.magiccards.ui.views.columns.ColumnCollection;
+import com.reflexit.magiccards.ui.views.columns.ConditionColumn;
 import com.reflexit.magiccards.ui.views.columns.CommentColumn;
 import com.reflexit.magiccards.ui.views.columns.CountColumn;
 import com.reflexit.magiccards.ui.views.columns.GenColumn;
@@ -378,6 +388,19 @@ public class DeckImportPreviewPage extends WizardPage {
 			sb.append("Warning: ").append(langs.size()).append(" card(s) are in another language in the file (")
 					.append(String.join(", ", names)).append(") - they are imported as English, the card")
 					.append(" database only has English printings (shown in yellow).");
+		}
+		java.util.Set<String> unknown = new java.util.TreeSet<>();
+		int unknownCards = 0;
+		for (Object c : importData.getUnknownConditions())
+			if (c instanceof MagicCardPhysical && ((MagicCardPhysical) c).getCondition() == null) {
+				unknown.add(importData.getUnknownCondition(c));
+				unknownCards++;
+			}
+		if (unknownCards > 0) {
+			if (sb.length() > 0)
+				sb.append("\n");
+			sb.append("Warning: ").append(unknownCards).append(" card(s) have a condition ManaDesk does not know in the")
+					.append(" file (").append(String.join(", ", unknown)).append(") - it is left empty (shown in yellow).");
 		}
 		int toVirtual = importData.getForcedVirtual();
 		if (toVirtual > 0) {
@@ -807,10 +830,14 @@ public class DeckImportPreviewPage extends WizardPage {
 			if (!(o instanceof MagicCardPhysical))
 				continue;
 			MagicCardPhysical card = (MagicCardPhysical) o;
+			if (conflictFields.containsKey(card)) {
+				// "Mismatched info": the file's identifiers contradict each other - trust its Name and Set
+				if (fixMismatch(card))
+					fixed++;
+				continue;
+			}
 			if (card.getCardId() != null && !card.getCardId().isEmpty())
 				continue;
-			if (conflictFields.containsKey(card))
-				continue; // never auto-fix a card whose file info already contradicts itself
 			String name = importedName(card);
 			if (name == null)
 				name = card.getName();
@@ -831,6 +858,40 @@ public class DeckImportPreviewPage extends WizardPage {
 		}
 		trace("auto-fix first match: bound " + fixed + " card(s)");
 		revalidateAfterEdit();
+	}
+
+	/**
+	 * A "Mismatched info" row: the Scryfall id, Multiverse id, Name, Set and Num of the file do not point at
+	 * the same printing. The Name and the Set of the file win; the row is bound to that printing and the Num is
+	 * taken from the database (see {@link MismatchPick}), else - no printing in that set - to the first match of
+	 * the name. The row is then the user's: it is not checked against the file again.
+	 */
+	private boolean fixMismatch(MagicCardPhysical card) {
+		String name = importedName(card);
+		if (name == null)
+			name = card.getName();
+		if (isBlank(name))
+			return false;
+		String[] d = importData.getDeclared(card);
+		String set = d == null ? "" : nz(d[1]);
+		String num = d == null ? "" : nz(d[2]);
+		java.util.Collection<IMagicCard> printings = dbPrintings(name);
+		if (printings.isEmpty())
+			return false;
+		MagicCard pick = (MagicCard) MismatchPick.choose(printings, set, num, DeckImportPreviewPage::setsMatch);
+		if (pick == null)
+			pick = firstMatch(name);
+		if (pick == null)
+			return false;
+		Snap before = new Snap(card);
+		card.setMagicCard(pick);
+		card.setError(null);
+		conflictFields.remove(card);
+		applyAutoMarks(card, before, null);
+		markUserResolved(card);
+		trace("auto-fix mismatch \"" + name + "\" (file set='" + set + "' num='" + num + "') -> " + pick.getSet() + " #"
+				+ pick.getCollectorId());
+		return true;
 	}
 
 	/**
@@ -1367,6 +1428,56 @@ public class DeckImportPreviewPage extends WizardPage {
 		return false;
 	}
 
+	/**
+	 * True when a card has a comment: the Comments column is then shown (a comment of the file, the tags of a
+	 * Deckbox export).
+	 */
+	static boolean anyComment(java.util.Collection<?> cards) {
+		if (cards == null)
+			return false;
+		for (Object o : cards)
+			if (o instanceof MagicCardPhysical) {
+				String c = ((MagicCardPhysical) o).getComment();
+				if (c != null && !c.trim().isEmpty())
+					return true;
+			}
+		return false;
+	}
+
+	/**
+	 * The per-copy columns that have a value in at least one of {@code cards}: Proxy, Condition, Finish, Price and
+	 * For Trade (Special and Comments have their own tests above). The preview shows them even when no column of the
+	 * file maps to them - a proxy comes from the Condition cell of a Deckbox file, for instance - so a value the
+	 * user sees in the result is never hidden.
+	 */
+	static java.util.List<ICardField> populatedFields(java.util.Collection<?> cards) {
+		java.util.List<ICardField> res = new java.util.ArrayList<>();
+		if (cards == null)
+			return res;
+		boolean proxy = false, condition = false, finish = false, price = false, trade = false;
+		for (Object o : cards) {
+			if (!(o instanceof MagicCardPhysical))
+				continue;
+			MagicCardPhysical c = (MagicCardPhysical) o;
+			proxy |= c.isProxy();
+			condition |= c.getCondition() != null;
+			finish |= c.getRawFinish() != null;
+			price |= c.getPrice() > 0;
+			trade |= c.getForTrade() > 0;
+		}
+		if (proxy)
+			res.add(MagicCardField.PROXY);
+		if (condition)
+			res.add(MagicCardField.CONDITION);
+		if (finish)
+			res.add(MagicCardField.FINISH);
+		if (price)
+			res.add(MagicCardField.PRICE);
+		if (trade)
+			res.add(MagicCardField.FORTRADECOUNT);
+		return res;
+	}
+
 	public void updateColumns(ICardField[] fields) {
 		ColumnCollection colls = viewer.getColumnsCollection();
 		java.util.LinkedHashSet<ICardField> cols = new java.util.LinkedHashSet<>();
@@ -1386,6 +1497,13 @@ public class DeckImportPreviewPage extends WizardPage {
 		// Altered / Signed) - show them whenever an imported card has some
 		if (hasSpecialTags())
 			cols.add(MagicCardField.SPECIAL);
+		// Comments: from the file (a Deckbox export's tags are read as comments)
+		if (importData != null && anyComment(importData.getList()))
+			cols.add(MagicCardField.COMMENT);
+		// every column an imported card has a value in is shown, whichever file column (or rule) gave it: Proxy
+		// (a Deckbox "Proxy" condition), Condition, Finish, Price, For Trade
+		if (importData != null)
+			cols.addAll(populatedFields(importData.getList()));
 		if (fields != null)
 			for (ICardField field : fields)
 				if (field != null)
@@ -1401,6 +1519,8 @@ public class DeckImportPreviewPage extends WizardPage {
 				pref.append(pref.length() == 0 ? "" : ",").append(column.getColumnFullName());
 		}
 		final String p = pref.toString();
+		trace("columns: " + p + " (comment column asked: " + cols.contains(MagicCardField.COMMENT) + ", cards: "
+				+ (importData == null || importData.getList() == null ? 0 : importData.getList().size()) + ")");
 		Display.getDefault().syncExec(() -> viewer.updateColumns(p));
 	}
 
@@ -1442,7 +1562,7 @@ public class DeckImportPreviewPage extends WizardPage {
 		ld.heightHint = text.getLineHeight() * 5;
 		text.setLayoutData(ld);
 		text.addModifyListener(modifyLister);
-		viewer = new SimpleTableViewer(comp, columns);
+		viewer = new PreviewTableViewer(comp, columns, () -> importData);
 		GridData tld = new GridData(GridData.FILL_BOTH);
 		tld.widthHint = 1000;
 		tld.heightHint = 340;
@@ -1459,7 +1579,8 @@ public class DeckImportPreviewPage extends WizardPage {
 		autoFix.setText("Auto complete using first match");
 		autoFix.setToolTipText("For every unresolved card whose file data doesn't already point "
 				+ "elsewhere, pick the most recently released set that has it and its lowest collector "
-				+ "number. Auto-filled fields turn green.");
+				+ "number. A \"Mismatched info\" row is bound to the file's Name and Set instead, and its Num "
+				+ "is taken from the database. Auto-filled fields turn green.");
 		autoFix.addSelectionListener(new org.eclipse.swt.events.SelectionAdapter() {
 			@Override
 			public void widgetSelected(org.eclipse.swt.events.SelectionEvent e) {
@@ -1621,6 +1742,34 @@ public class DeckImportPreviewPage extends WizardPage {
 					if (declared != null)
 						return declared + " in the file - imported as English (the card database only has"
 								+ " English printings)";
+					return super.getToolTipText(element);
+				}
+			};
+		}
+
+		/** A condition text of the file that is no known grade: the cell is left empty, on a yellow background, the
+		 *  text of the file in the tooltip. Choosing a grade by hand clears it. */
+		@Override
+		protected AbstractColumn createConditionColumn() {
+			return new ConditionColumn() {
+				private boolean unknown(Object element) {
+					return importData != null && element instanceof MagicCardPhysical
+							&& importData.getUnknownCondition(element) != null
+							&& ((MagicCardPhysical) element).getCondition() == null;
+				}
+
+				@Override
+				public Color getBackground(Object element) {
+					if (unknown(element))
+						return yellow();
+					return super.getBackground(element);
+				}
+
+				@Override
+				public String getToolTipText(Object element) {
+					if (unknown(element))
+						return "'" + importData.getUnknownCondition(element) + "' in the file is not a condition ManaDesk"
+								+ " knows - left empty";
 					return super.getToolTipText(element);
 				}
 			};

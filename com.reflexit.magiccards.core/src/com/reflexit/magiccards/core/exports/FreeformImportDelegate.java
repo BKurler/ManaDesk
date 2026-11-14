@@ -113,7 +113,7 @@ public class FreeformImportDelegate extends AbstractImportDelegate {
 		Matcher ns = NAME_SET.matcher(body);
 		if (ns.matches() && !ns.group(1).trim().isEmpty()) {
 			name = ns.group(1).trim();
-			card.set(MagicCardField.SET, ns.group(2).trim());
+			card.set(MagicCardField.SET, bestEffortSet(ns.group(2)));
 		}
 		if (name.isEmpty()) {
 			card.setError("Cannot read a card from: " + line);
@@ -121,6 +121,19 @@ public class FreeformImportDelegate extends AbstractImportDelegate {
 		}
 		card.set(MagicCardField.NAME, name);
 		return card;
+	}
+
+	/**
+	 * What is between the parentheses of "Name (X)" is a set name or a set code, and nothing says which: a set
+	 * name ManaDesk knows is kept; else a known set code (any case) gives its set's name; else the text is kept
+	 * as written. Files with a header do not guess: see {@link #setEditionCode}.
+	 */
+	protected String bestEffortSet(String text) {
+		String t = text == null ? "" : text.trim();
+		if (t.isEmpty() || isSetName(t))
+			return t;
+		String byCode = setNameByCode(t);
+		return byCode != null ? byCode : t;
 	}
 
 	private static int parseCount(String s) {

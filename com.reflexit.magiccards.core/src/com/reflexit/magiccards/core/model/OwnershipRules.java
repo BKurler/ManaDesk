@@ -10,6 +10,7 @@
  *     Rémi Dutil (2026) - owned (non-virtual) decks: only owned cards moved in from a collection, nothing created
  *     Rémi Dutil (2026) - owned decks: no count change and no deletion, cards only move out
  *     Rémi Dutil (2026) - typeChangeVeto(): a read-only collection keeps its type; owned <-> virtual only while empty
+ *     Rémi Dutil (2026) - typeChangeVeto(): a collection with a proxy cannot become For Trade (see ForTradeRules)
  *******************************************************************************/
 package com.reflexit.magiccards.core.model;
 
@@ -200,6 +201,8 @@ public final class OwnershipRules {
 			return "is read only (unlock it first)";
 		if (to.isVirtual() != info.isVirtual() && (cards == null || cards.iterator().hasNext()))
 			return "has cards: only an empty collection can become " + (to.isVirtual() ? "virtual" : "owned");
+		if (to == CollectionType.FOR_TRADE)
+			return ForTradeRules.proxiesVeto(cards); // a proxy cannot be traded
 		return null;
 	}
 

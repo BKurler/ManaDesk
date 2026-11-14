@@ -187,6 +187,21 @@ public class ManaBoxCsvTest extends TestCase {
 		assertNull(ImportUtils.findLocalizedPrinting(copy, "Japanese", all));
 	}
 
+	/** A condition text that is no known grade: imported ungraded, remembered for the preview, not in the comment. */
+	public void testUnknownCondition() throws Exception {
+		String text = HEADER + "\n" + "Fog,4ED,Fourth Edition,244,normal,common,1,39943,"
+				+ "a1959de7-e945-438c-a90a-158e21c4d5bf,0.28,false,false,false,banana,en,false,USD,"
+				+ "2026-10-10T19:29:49.972Z\n" + "Fog,4ED,Fourth Edition,244,normal,common,1,39943,"
+				+ "b1959de7-e945-438c-a90a-158e21c4d5bf,0.28,false,false,false,near_mint,en,false,USD,"
+				+ "2026-10-10T19:29:49.972Z\n";
+		List<IMagicCard> c = parse(text);
+		assertNull(((MagicCardPhysical) c.get(0)).getCondition());
+		assertEquals("banana", data.getUnknownCondition(c.get(0)));
+		assertNull(((MagicCardPhysical) c.get(0)).getComment());
+		assertNull(data.getUnknownCondition(c.get(1)));
+		assertEquals(1, data.getUnknownConditions().size());
+	}
+
 	public void testConditionGrades() {
 		assertEquals(CardCondition.NEAR_MINT, ManaBoxCsvImportDelegate.condition("near_mint"));
 		assertEquals(CardCondition.NEAR_MINT, ManaBoxCsvImportDelegate.condition("mint"));

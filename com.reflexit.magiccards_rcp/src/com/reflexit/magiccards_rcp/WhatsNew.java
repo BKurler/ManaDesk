@@ -26,6 +26,8 @@
  *     Rémi Dutil (2026) - "Symbols and keywords stay current" entry
  *     Rémi Dutil (2026) - "More card facts" entry
  *     Rémi Dutil (2026) - "ManaBox" entry (import / export)
+ *     Rémi Dutil (2026) - "Deckbox" entry (import / export)
+ *     Rémi Dutil (2026) - "Import preview" entry
  *     Rémi Dutil (2026) - "New help" and "Deck statistics" entries, Export entry
  *                         mentions the printable preview
  *     Rémi Dutil (2026) - "Extra list" and "Collector" entries; Proxies, Filters
@@ -176,6 +178,10 @@ final class WhatsNew {
 			new Feature(1, MAJOR, DECKS, "Collection types", "Each collection is Standard, For Trade or Wishlist/To"
 					+ " Print. Wishlist/To Print holds the cards to buy or the proxies to print; moving one to a"
 					+ " Standard collection marks it as owned.", null),
+			new Feature(1, MAJOR, DECKS, "For Trade", "A pile is for trade when it has the fortrade Special tag; the"
+					+ " For Trade column is now read-only and only shows it. A For Trade collection gives the tag to every card"
+					+ " that comes in, or is already in it when opened, and keeps it (it cannot be removed), and refuses proxies, which"
+					+ " can't be traded. Importing into one warns, in red, that every card gets the tag - and that a Deckbox Inventory's Tradelist Count is ignored.", null),
 			new Feature(1, MAJOR, DECKS, "Formats and legality", "Pick a deck's format: legality now covers every"
 					+ " format (Brawl, Oathbreaker, Pauper Commander, Old School...), and commander decks are"
 					+ " checked against the commander's color identity. The Legality tab shows its verdict in"
@@ -210,6 +216,17 @@ final class WhatsNew {
 					+ " collection: each card keeps its exact printing, finish, condition,"
 					+ " purchase price, proxy and misprint / altered / signed marks, and its language when"
 					+ " ManaDesk knows that printing. Decks and collections can also be exported for ManaBox.",
+					null),
+			new Feature(1, MAJOR, IMPORT, "Deckbox", "Already using Deckbox? Import its Inventory and Wishlist CSV files into a"
+					+ " collection: count, cards for trade, condition (a \"Proxy\" becomes a proxy copy), foil, price and the"
+					+ " signed / proof / altered / misprint marks come across. Decks and collections can also be exported as a Deckbox Inventory or"
+					+ " Wishlist CSV, with the columns Deckbox needs (including the Scryfall ID, Tags and Proxy condition).", null),
+			new Feature(1, MINOR, IMPORT, "Import preview", "Sorting by Language puts the cards imported as English although"
+					+ " the file gave another language together, and sorting by Error works. A card with no set no longer shows"
+					+ " a made-up set. \"Auto complete using first match\" also fixes the \"Mismatched info\" rows from the"
+					+ " file's name and set. A set code (any case) is used before the set name when the file has no Scryfall id. A card imported"
+					+ " in English although the file gave another language keeps that language in its Special tags, as lang=French. A condition the file gives that ManaDesk does not know is"
+					+ " left empty, on a yellow background, with a warning.",
 					null),
 			new Feature(1, MINOR, IMPORT, "Export", "Several decks at once, in one file or one per deck, a printable"
 					+ " sideboard list, and export formats you can edit with a live preview. Proxies and"

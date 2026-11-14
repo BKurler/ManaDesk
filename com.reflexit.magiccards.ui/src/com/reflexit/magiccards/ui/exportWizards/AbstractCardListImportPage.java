@@ -1,6 +1,7 @@
 /*
  * Contributors:
  *     Rémi Dutil (2026) - updated for ManaDesk creation and Eclipse 2.0 migration
+ *     Rémi Dutil (2026) - resolve(list, importData): a card given in another language is looked up in it first
  *     Rémi Dutil (2026) - restored the "Clipboard" import source (radio + preview +
  *                         Edit...); empty-clipboard guard; clamp a stale "URL" choice
  *     Rémi Dutil (2026) - split from the old DeckImportPage into this abstract
@@ -132,6 +133,8 @@
  *                         createNewDeck() takes the new collection's type.
  *     Rémi Dutil (2026) - offerWebsiteSource() hook: the collection pages hide
  *                         the Website source.
+ *     Rémi Dutil (2026) - an import into a For Trade collection shows the fortrade tag in the preview (ForTradeRules.tagAll)
+ *     Rémi Dutil (2026) - first-page warnings (red): a For Trade destination tags every card, and ignores the Deckbox Tradelist Count when the file has it
  *     Rémi Dutil (2026) - refuses to import into an owned (non-virtual) deck;
  *                         typeCombo / exampleLink are protected so a page can grey them.
  *     Rémi Dutil (2026) - after resolving, a card the file gives in another
@@ -176,6 +179,7 @@ import org.eclipse.jface.operation.IRunnableWithProgress;
 import org.eclipse.jface.preference.IPreferenceStore;
 import org.eclipse.jface.preference.PreferenceStore;
 import org.eclipse.jface.viewers.IStructuredSelection;
+import org.eclipse.jface.resource.JFaceColors;
 import org.eclipse.jface.window.SameShellProvider;
 import org.eclipse.jface.window.Window;
 import org.eclipse.swt.SWT;
@@ -204,6 +208,7 @@ import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.FileUtils;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.MagicLogger;
+import com.reflexit.magiccards.core.exports.DeckBoxImportDelegate;
 import com.reflexit.magiccards.core.exports.DeckTextExtractor;
 import com.reflexit.magiccards.core.exports.IImportDelegate;
 import com.reflexit.magiccards.core.exports.ImportData;
@@ -213,6 +218,7 @@ import com.reflexit.magiccards.core.exports.ImportSource;
 import com.reflexit.magiccards.core.exports.ImportUtils;
 import com.reflexit.magiccards.core.exports.ReportType;
 import com.reflexit.magiccards.core.model.CollectionType;
+import com.reflexit.magiccards.core.model.ForTradeRules;
 import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
@@ -266,6 +272,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	private String newNameChoice;
 	private String newFormatChoice;
 	private CollectionType newCollectionTypeChoice;
+	/** the destination is a For Trade collection - cached on the UI thread like the other choices */
+	private boolean newForTradeChoice;
 	private boolean newDigitalChoice;
 	/** set from the preview page: skip errored cards instead of blocking Finish */
 	private boolean ignoreErrors;
@@ -293,6 +301,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	/** shows defaultPrompt()'s dynamic "Found N record(s)..." status - below the
 	 *  Options group, not the wizard's title-area banner (see defaultPrompt()) */
 	private Label statusLabel;
+	/** the warnings of {@link #forTradeWarnings}, in red, below {@link #statusLabel}; empty and hidden when none */
+	private Label warningLabel;
 
 	protected AbstractCardListImportPage(final String pageName, final IStructuredSelection selection) {
 		super(pageName);
@@ -531,6 +541,8 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 			newFormatChoice = wantFormat();
 			newCollectionTypeChoice = wantCollectionType();
 			newDigitalChoice = (element instanceof CardCollection) ? ((CardCollection) element).isDigital() : wantDigital();
+			newForTradeChoice = isForTradeDestination();
+			importData.setForTradeDestination(newForTradeChoice); // the file's trade count is ignored then
 			final boolean dbImport = false;
 			try {
 				IRunnableWithProgress work = new IRunnableWithProgress() {
@@ -871,12 +883,38 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 		// turned out to be
 		statusLabel = new Label(composite, SWT.WRAP);
 		statusLabel.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
+		warningLabel = new Label(composite, SWT.WRAP);
+		warningLabel.setForeground(JFaceColors.getErrorText(composite.getDisplay()));
+		warningLabel.setLayoutData(GridDataFactory.fillDefaults().grab(true, false).create());
 		restoreWidgetValues();
 		updateWidgetEnablements();
 		defaultPrompt();
 		setPageComplete(determinePageCompletion());
 		// setErrorMessage(null); // should not initially have error message
 		PlatformUI.getWorkbench().getHelpSystem().setHelp(composite, MagicUIActivator.PLUGIN_ID + ".export");
+	}
+
+	/** True when the cards go to a For Trade collection: a new one of that type, or the existing one picked. */
+	private boolean isForTradeDestination() {
+		CollectionType wanted = wantCollectionType();
+		if (wanted != null)
+			return wanted == CollectionType.FOR_TRADE;
+		return element instanceof CardCollection && ((CardCollection) element).getCollectionType() == CollectionType.FOR_TRADE;
+	}
+
+	/**
+	 * What the first page warns about (in red), one paragraph per warning, or "" when nothing applies. Into a For
+	 * Trade collection every card gets the fortrade tag (proxies are left out); and when the file also says which
+	 * cards are for trade (a Deckbox Inventory with its Tradelist Count column) that is lost.
+	 */
+	static String forTradeWarnings(boolean forTradeDestination, Object delegate) {
+		if (!forTradeDestination)
+			return "";
+		String text = "Warning: this is a For Trade collection: every card imported into it will have the fortrade tag"
+				+ " (proxies are left out).";
+		if (delegate instanceof DeckBoxImportDelegate && ((DeckBoxImportDelegate) delegate).hasTradelistColumn())
+			text += "\nWarning: the Tradelist Count of the Deckbox Inventory is ignored: all the cards are for trade.";
+		return text;
 	}
 
 	/** Shows the dynamic "You have selected '&lt;format&gt;'... Total N
@@ -907,9 +945,19 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 					total += ((MagicCardPhysical) card).getCount();
 			mess += "Total " + total + " (unique " + unique + ") card(s) found, " + errcount + " error(s).";
 		}
+		// in red, below the status: only what applies (see forTradeWarnings)
+		String warnings = forTradeWarnings(isForTradeDestination(),
+				reportType == null ? null : reportType.getImportDelegate());
+		if (warningLabel != null && !warningLabel.isDisposed()) {
+			warningLabel.setText(warnings);
+			((GridData) warningLabel.getLayoutData()).exclude = warnings.isEmpty();
+			warningLabel.setVisible(!warnings.isEmpty());
+		}
 		if (statusLabel != null && !statusLabel.isDisposed()) {
 			statusLabel.setText(mess);
 			statusLabel.getParent().layout();
+			if (warningLabel != null && !warningLabel.isDisposed())
+				warningLabel.getParent().layout();
 		}
 	}
 
@@ -1450,9 +1498,13 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				// to exception
 				ImportUtils.performPreImport(worker, importData, new CoreMonitorAdapter(submon.split(50)));
 				if (!dbImport) {
-					ImportUtils.resolve(importData.getList());
+					ImportUtils.resolve(importData.getList(), importData);
 					ImportUtils.forceKind(importData.getList(), newDigitalChoice); // fit the kind of the target list
 					ImportUtils.applyDeclaredLanguages(importData);
+					if (newForTradeChoice) {
+						// every card of a For Trade collection is for trade: the preview shows it as it will be written
+						ForTradeRules.tagAll(importData.getList());
+					}
 				} else {
 					ImportUtils.performPreImportWithDb((Collection<IMagicCard>) importData.getList(), new ArrayList<>(),
 							importData.getFields());
@@ -1465,11 +1517,15 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 				if (importData.isOk()) {
 					Collection<IMagicCard> result = (Collection<IMagicCard>) importData.getList();
 					if (resolve) {
-						ImportUtils.resolve(importData.getList());
+						ImportUtils.resolve(importData.getList(), importData);
 						ImportUtils.forceKind(importData.getList(), newDigitalChoice);
 						DigitalRules.trace("import: " + importData.getList().size() + " card(s) resolved, "
 								+ importData.getErrorCount() + " with an error");
 						ImportUtils.applyDeclaredLanguages(importData);
+						if (newForTradeChoice) {
+							// every card of a For Trade collection is for trade: shown in the preview as it will be written
+							ForTradeRules.tagAll(importData.getList());
+						}
 						if (element instanceof CollectionsContainer) {
 							// newNameChoice was captured on the UI thread by performImport()
 							CollectionsContainer newParent = (CollectionsContainer) element;

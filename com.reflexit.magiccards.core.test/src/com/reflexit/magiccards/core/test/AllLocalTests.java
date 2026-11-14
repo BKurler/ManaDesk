@@ -124,6 +124,10 @@ public class AllLocalTests {
 		suite.addTestSuite(com.reflexit.magiccards.core.model.nav.CollectionTypeTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.IssueReportTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.ManaBoxCsvTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.DeckBoxCsvTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.SetCodePriorityTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.ImportLanguageResolveTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.LanguageMarkTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.ExportTypeOrderTest.class);
 		suite.addTest(new JUnit4TestAdapter(PriceSourcesTest.class));
 		suite.addTest(new JUnit4TestAdapter(DeckAccessoriesTest.class));
@@ -143,6 +147,7 @@ public class AllLocalTests {
 		suite.addTestSuite(com.reflexit.magiccards.core.model.CardConditionTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.CardFinishTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.CardProxyTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.model.ForTradeRulesTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.SetRenameLinkTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.storage.CollectionCardStoreTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.model.xml.SingleFileCardStorageFinishConversionTest.class);

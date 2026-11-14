@@ -54,6 +54,28 @@ public class EditionsAliasesTest extends TestCase {
 
 	// ---- reading editions.txt
 
+	/**
+	 * The 8th field of editions.txt (name aliases) is empty for most sets. It must not become an alias: a blank
+	 * set name used to find the last set read ("Alchemy: Reality Fracture" showed in the Set cell of every
+	 * import preview row that had no set).
+	 */
+	public void testBlankAliasFieldIsNotAnAlias() throws IOException {
+		Edition ed = load("Alias Test Blank|AZE||October 1993|Core|Alias Block|aze||digital");
+		assertEquals("", ed.getExtraAliases());
+		assertNull(eds.getEditionByName(""));
+		assertNull(eds.getEditionByName("   "));
+		assertNull(eds.getEditionByName(null));
+		assertNull(eds.getEditionByNameIgnoreCase(""));
+		assertNull(eds.getEditionByNameIgnoreCase(null));
+		assertNull(ImportUtils.resolveSet(""));
+		assertEquals("a blank set stays blank", "", eds.getDisplayName(""));
+		// an empty entry between two real aliases is skipped too
+		Edition two = load("Alias Test Blank Two|AZF||October 1993|Core|Alias Block|azf|First Old,,Second Old|");
+		assertSame(two, eds.getEditionByName("First Old"));
+		assertSame(two, eds.getEditionByName("Second Old"));
+		assertNull(eds.getEditionByName(""));
+	}
+
 	public void testExtraAbbreviationsAreReadAndLookedUp() throws IOException {
 		Edition ed = load("Alias Test Alpha|AZA|A1,A2|October 1993|Core|Alias Block|aza||");
 		assertEquals("AZA", ed.getMainAbbreviation());

@@ -31,6 +31,7 @@
  *                         already wrote as a side effect of its own combo -
  *                         this just makes it a real, discoverable field
  *     Rémi Dutil (2026) - collection Type (Standard / For Trade / Wishlist/To Print) radios
+ *     Rémi Dutil (2026) - becoming a For Trade collection tags every card "fortrade"
  *                         replace a collection's Virtual checkbox (the type
  *                         decides it); switching to/from Wishlist is offered only
  *                         when the cards allow it. A deck's Virtual checkbox
@@ -59,6 +60,7 @@ package com.reflexit.magiccards.ui.dialogs;
 import org.eclipse.jface.dialogs.MessageDialog;
 import org.eclipse.jface.dialogs.TitleAreaDialog;
 import org.eclipse.jface.layout.GridDataFactory;
+import java.util.Collections;
 import java.util.EnumMap;
 import java.util.Map;
 
@@ -76,15 +78,20 @@ import org.eclipse.swt.widgets.Label;
 import org.eclipse.swt.widgets.Shell;
 import org.eclipse.swt.widgets.Text;
 
+import com.reflexit.magiccards.core.DataManager;
 import com.reflexit.magiccards.core.MagicException;
 import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.CollectionType;
 import com.reflexit.magiccards.core.model.DeckAccessoriesPopulator;
 import com.reflexit.magiccards.core.model.DigitalSupport;
+import com.reflexit.magiccards.core.model.ForTradeRules;
+import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
+import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.nav.CardCollection;
 import com.reflexit.magiccards.core.model.nav.CollectionsContainer;
+import com.reflexit.magiccards.core.model.storage.ICardStore;
 import com.reflexit.magiccards.core.model.storage.IStorageInfo;
 import com.reflexit.magiccards.ui.utils.StatusDots;
 
@@ -335,6 +342,12 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 		return res;
 	}
 
+	/** Gives the "fortrade" tag to every card of a collection that just became a For Trade one, and saves them. */
+	private static void tagForTrade(ICardStore<IMagicCard> store) {
+		if (store != null && ForTradeRules.tagAll(store) > 0)
+			DataManager.getInstance().update(store, Collections.singleton(MagicCardField.SPECIAL));
+	}
+
 	private boolean deckHasCards() {
 		for (CardCollection member : deckFamily())
 			if (member.getStore().iterator().hasNext())
@@ -537,8 +550,11 @@ public class EditDeckPropertiesDialog extends TitleAreaDialog {
 			}
 		} else {
 			CollectionType t = selectedCollectionType();
-			if (t != null && t != info.getCollectionType() && OwnershipRules.typeChangeVeto(info, deck != null ? deck.getStore() : null, t) == null)
+			if (t != null && t != info.getCollectionType() && OwnershipRules.typeChangeVeto(info, deck != null ? deck.getStore() : null, t) == null) {
 				info.setCollectionType(t); // owned <-> virtual only while empty, never while read only
+				if (t == CollectionType.FOR_TRADE && deck != null)
+					tagForTrade(deck.getStore()); // every card of a For Trade collection is for trade (kept if it goes back)
+			}
 		}
 		if (unsorted != null)
 			info.setUnsorted(unsorted.isEnabled() && unsorted.getSelection());

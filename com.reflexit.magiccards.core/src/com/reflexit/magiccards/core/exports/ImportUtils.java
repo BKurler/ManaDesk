@@ -10,6 +10,7 @@
  *    Rémi Dutil (2026) - name lookups only match printings fit for the kind (digital / paper) of the list imported into; a sideboard created by an import inherits the main deck's digital flag
  *    Rémi Dutil (2026) - forceKind(): an import into a digital (or paper) list swaps each card to a fitting printing of the same set, or flags it (never another set)
  *    Rémi Dutil (2026) - performImport(): a card that does not fit the list is left out (and logged) instead of failing the import
+ *    Rémi Dutil (2026) - performImport(): a proxy is left out of a For Trade collection
  *******************************************************************************/
 
 /*
@@ -19,6 +20,9 @@
  *                         another language is bound to that language's
  *                         printing when the card database has it (same set)
  *     Rémi Dutil (2026) - removed loadLanguageForCard (Gatherer language loader, no longer used)
+ *     Rémi Dutil (2026) - resolve(list, data): a card with no id is first looked up in the language the file gave
+ *     Rémi Dutil (2026) - a card imported in English although the file gave another language gets the Special
+ *                         tag "lang=French", so the language is not lost
  */
 
 package com.reflexit.magiccards.core.exports;
@@ -41,6 +45,7 @@ import com.reflexit.magiccards.core.MagicLogger;
 import com.reflexit.magiccards.core.model.DigitalRules;
 import com.reflexit.magiccards.core.model.Edition;
 import com.reflexit.magiccards.core.model.Editions;
+import com.reflexit.magiccards.core.model.ForTradeRules;
 import com.reflexit.magiccards.core.model.IMagicCard;
 import com.reflexit.magiccards.core.model.Location;
 import com.reflexit.magiccards.core.model.MagicCard;
@@ -92,6 +97,7 @@ public class ImportUtils {
 			String lang = data.getDeclaredLanguage(card);
 			if (sameLanguage(lang, card.getLanguage())) {
 				data.clearDeclaredLanguage(card); // already that printing
+				removeLanguageTag(card, lang);
 				continue;
 			}
 			Collection<IMagicCard> candidates = db == null || card.getName() == null ? null
@@ -100,8 +106,39 @@ public class ImportUtils {
 			if (localized != null) {
 				card.setMagicCard(localized);
 				data.clearDeclaredLanguage(card);
+				removeLanguageTag(card, lang);
+			} else {
+				// stays English: the language the file gave is kept in the Special tags, the value is not lost
+				addLanguageTag(card, lang);
 			}
 		}
+	}
+
+	/** The Special tag of a language: "lang=French" - first letter upper case, the others lower case. */
+	static String languageTag(String language) {
+		String l = language == null ? "" : language.trim();
+		if (l.isEmpty())
+			return "";
+		return LANGUAGE_TAG + "=" + l.substring(0, 1).toUpperCase(Locale.ROOT) + l.substring(1).toLowerCase(Locale.ROOT);
+	}
+
+	/** The key of the Special tag that keeps the language the file gave. */
+	static final String LANGUAGE_TAG = "lang";
+
+	/** {@code card} keeps the language the file gave in its Special tags, as "lang=French" (once: a tag is a set). */
+	static void addLanguageTag(MagicCardPhysical card, String language) {
+		String tag = languageTag(language);
+		if (!tag.isEmpty())
+			card.setSpecialTag(tag);
+	}
+
+	/** The card has that language after all (found in the database): its "lang=..." tag goes away. */
+	static void removeLanguageTag(MagicCardPhysical card, String language) {
+		if (language == null || language.trim().isEmpty())
+			return;
+		String kept = card.getSpecialTagValue(LANGUAGE_TAG);
+		if (kept != null && kept.equalsIgnoreCase(language.trim()))
+			card.removeSpecialTag(LANGUAGE_TAG);
 	}
 
 	/**
@@ -195,11 +232,54 @@ public class ImportUtils {
 	}
 
 	public static void resolve(List<? extends ICard> list) {
+		resolve(list, null);
+	}
+
+	/**
+	 * {@code resolve(list)}, where a card the file gives in another language ({@link ImportData#declareLanguage},
+	 * not set on the card) is looked up in that language first, see {@link #resolveInDeclaredLanguage}.
+	 */
+	public static void resolve(List<? extends ICard> list, ImportData data) {
 		DataManager.getInstance().getMagicDBStore().initialize();
 		for (ICard card : list) {
-			if (card instanceof MagicCardPhysical)
-				ImportUtils.updateCardReference((MagicCardPhysical) card);
+			if (card instanceof MagicCardPhysical) {
+				MagicCardPhysical physical = (MagicCardPhysical) card;
+				resolveInDeclaredLanguage(physical, data == null ? null : data.getDeclaredLanguage(physical),
+						ImportUtils::updateCardReference);
+			}
 		}
+	}
+
+	/**
+	 * A card with no id is matched by its name and set, and a card with no language only matches an English
+	 * printing: a French card of a set that has French printings only (Foreign Black Border) got "Language is not
+	 * loaded in DB". The file gave the language, so the card is looked up in it first: when the database has that
+	 * printing the card is bound to it - no error, and no warning, the card is in the file's language. When it has
+	 * not, the card is looked up as the file gave it (without the language), and the preview warns that it is
+	 * imported in English ({@link #applyDeclaredLanguages}).
+	 *
+	 * @param declaredLanguage
+	 *            the language the file gave, {@code null} when it gave none (or English)
+	 * @param resolver
+	 *            finds the card in the database and sets its error, see {@link #updateCardReference}
+	 */
+	static void resolveInDeclaredLanguage(MagicCardPhysical card, String declaredLanguage,
+			java.util.function.Function<MagicCardPhysical, MagicCard> resolver) {
+		boolean hasId = card.getCardId() != null && !card.getCardId().isEmpty();
+		if (declaredLanguage == null || declaredLanguage.trim().isEmpty() || hasId) {
+			resolver.apply(card); // an id is exact: the printing it names has its own language
+			return;
+		}
+		MagicCard asTheFileGaveIt = (MagicCard) card.getBase().clone();
+		card.getBase().setLanguage(declaredLanguage);
+		resolver.apply(card);
+		if (card.getError() == null)
+			return; // found in that language
+		// not in that language: the card as the file gave it - the resolver may have filled the base from the
+		// printing it found, and the error belongs to the attempt in that language
+		card.setMagicCard(asTheFileGaveIt);
+		card.setError(null);
+		resolver.apply(card);
 	}
 
 	public static void performImport(Collection importedCards, ICardStore cardStore) {
@@ -212,6 +292,8 @@ public class ImportUtils {
 			for (java.util.Iterator<?> it = importedCards.iterator(); it.hasNext();) {
 				Object card = it.next();
 				String veto = DigitalRules.addVeto(card, cardStore);
+				if (veto == null)
+					veto = ForTradeRules.addVeto(card, cardStore); // a proxy cannot go to a For Trade collection
 				if (veto != null) {
 					MagicLogger.log("Import: card left out - " + card + " (" + (card instanceof IMagicCard ? ((IMagicCard) card).getSet() : "?")
 							+ "): " + veto);
@@ -263,6 +345,41 @@ public class ImportUtils {
 	}
 
 	static Map<String, Edition> setAlias = new HashMap<>();
+
+	/**
+	 * The edition one of whose abbreviations (the main one, or an alternate one such as Magic Assistant's or
+	 * Deckbox's) is {@code code}: an exact match first, else ignoring the case - other applications write
+	 * "m10" or "wl" where ManaDesk stores "M10" and "WL". {@code null} when there is none.
+	 */
+	public static Edition findEditionByCode(Collection<Edition> editions, String code) {
+		if (code == null || code.trim().isEmpty() || editions == null)
+			return null;
+		String c = code.trim();
+		Edition ignoringCase = null;
+		for (Edition ed : editions) {
+			if (ed == null)
+				continue;
+			if (ed.abbreviationOf(c))
+				return ed;
+			if (ignoringCase == null) {
+				for (String abbr : ed.getAbbreviations()) {
+					if (abbr != null && abbr.equalsIgnoreCase(c)) {
+						ignoringCase = ed;
+						break;
+					}
+				}
+			}
+		}
+		return ignoringCase;
+	}
+
+	/** {@link #findEditionByCode(Collection, String)} among all the known editions. */
+	public static Edition findEditionByCode(String code) {
+		Edition ed = Editions.getInstance().getEditionByAbbr(code == null ? null : code.trim());
+		if (ed != null)
+			return ed;
+		return findEditionByCode(Editions.getInstance().getAllEditions(), code);
+	}
 
 	public static Edition resolveSet(String origSet) {
 		if (origSet == null)

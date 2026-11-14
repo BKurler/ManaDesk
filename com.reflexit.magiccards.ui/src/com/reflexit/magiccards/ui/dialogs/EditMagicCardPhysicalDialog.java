@@ -11,6 +11,7 @@
  *                         and applied
  *     Rémi Dutil (2026) - the Finish combo no longer offers "Auto" - always a
  *                         real value
+ *     Rémi Dutil (2026) - in a For Trade collection the "fortrade" tag cannot be removed, nor a proxy set
  *     Rémi Dutil (2026) - a Count change is refused in an owned (non-virtual) deck
  */
 
@@ -42,6 +43,7 @@ import com.reflexit.magiccards.core.model.CardFinish;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.MagicCardPhysical;
+import com.reflexit.magiccards.core.model.ForTradeRules;
 import com.reflexit.magiccards.core.model.OwnershipRules;
 import com.reflexit.magiccards.core.model.abs.ICardField;
 
@@ -124,6 +126,13 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 			MessageDialog.openError(getShell(), "Count", veto);
 			return;
 		}
+		veto = specialVeto();
+		if (veto == null)
+			veto = proxyVeto();
+		if (veto != null) {
+			MessageDialog.openError(getShell(), "For Trade", veto);
+			return;
+		}
 		super.okPressed();
 		new Job("Updating edited cards") {
 			@Override
@@ -141,6 +150,32 @@ public class EditMagicCardPhysicalDialog extends EditCardsPropertiesDialog {
 	}
 
 	/** Why the edited Count cannot be applied (any change in an owned deck), or {@code null}. */
+	private String specialVeto() {
+		String edited = store.getString(EditCardsPropertiesDialog.SPECIAL_FIELD);
+		if (UNCHANGED.equals(edited))
+			return null;
+		for (MagicCardPhysical card : cards) {
+			String veto = ForTradeRules.specialVeto(card, edited);
+			if (veto != null)
+				return veto;
+		}
+		return null;
+	}
+
+	/** Why the edited proxy flag cannot be applied (a proxy in a For Trade collection), or {@code null}. */
+	private String proxyVeto() {
+		String edited = store.getString(EditCardsPropertiesDialog.PROXY_FIELD);
+		if (UNCHANGED.equals(edited) || !Boolean.parseBoolean(edited))
+			return null;
+		for (MagicCardPhysical card : cards) {
+			String veto = ForTradeRules.fieldVeto(DataManager.getInstance().getCardStore(card.getLocation()),
+					MagicCardField.PROXY, Boolean.TRUE);
+			if (veto != null)
+				return veto;
+		}
+		return null;
+	}
+
 	private String countVeto() {
 		String edited = store.getString(MagicCardField.COUNT.name());
 		if (UNCHANGED.equals(edited))

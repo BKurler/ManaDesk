@@ -6,6 +6,9 @@
  *     Rémi Dutil (2026) - digital sets: editions.txt field 8; getEditions()/getNames()/getIds()
  *                         leave them out while the digital support is off (getAllEditions() keeps them)
  *     Rémi Dutil (2026) - removed addAbbreviation(name, abbr): abbreviations only come from the database update
+ *     Rémi Dutil (2026) - a blank name alias (the empty 8th field of editions.txt) is not an alias, and a blank
+ *                         set name finds no set: it used to find the last set read, so a card with no set
+ *                         showed that set in the import preview
  */
 
 package com.reflexit.magiccards.core.model;
@@ -199,6 +202,8 @@ public class Editions implements ISearchableProperty {
 	}
 
 	public Edition getEditionByName(String name) {
+		if (name == null || name.trim().isEmpty())
+			return null; // no name is not the name of a set
 		Edition ed = this.name2ed.get(name);
 		if (ed != null)
 			return ed;
@@ -317,14 +322,16 @@ public class Editions implements ISearchableProperty {
 					set.setIconAbbr(iconAbbr);
 					if (attrs.length <= 7)
 						continue;
-					// Name aliases
-					String[] aliases = attrs[7].trim().split(",");
-					for (int i = 0; i < aliases.length; i++) {
-						String alias = aliases[i].trim();
-						aliases[i] = alias;
+					// Name aliases (the field is empty for most sets: "".split(",") is one empty text, not an alias)
+					ArrayList<String> aliasList = new ArrayList<>();
+					for (String alias : attrs[7].trim().split(",")) {
+						alias = alias.trim();
+						if (alias.isEmpty())
+							continue;
+						aliasList.add(alias);
 						nameAliases.put(alias, set);
 					}
-					set.setNameAliases(aliases);
+					set.setNameAliases(aliasList.toArray(new String[0]));
 					set.setIconAbbr(iconAbbr);
 					if (attrs.length <= 8)
 						continue;
@@ -450,6 +457,8 @@ public class Editions implements ISearchableProperty {
 	}
 
 	public Edition getEditionByNameIgnoreCase(String ed) {
+		if (ed == null || ed.trim().isEmpty())
+			return null;
 		for (String name : this.name2ed.keySet()) {
 			if (name.equalsIgnoreCase(ed))
 				return name2ed.get(name);
