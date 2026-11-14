@@ -54,6 +54,7 @@
  *     Rémi Dutil (2026) - a language the file gives that is replaced by
  *                         English: yellow Language cell + a warning
  *     Rémi Dutil (2026) - name matching only offers the printings fit for the kind (digital / paper) of the target list
+ *     Rémi Dutil (2026) - the "will be imported" summary is green when there is no error or warning
  */
 
 package com.reflexit.magiccards.ui.exportWizards;
@@ -352,6 +353,7 @@ public class DeckImportPreviewPage extends WizardPage {
 		if (errorZone == null || errorZone.isDisposed())
 			return;
 		String msg = "";
+		boolean allGood = false; // nothing to fix: the summary is shown in green
 		MagicCardPhysical card = selectedCard();
 		if (card != null && card.getError() != null)
 			msg = String.valueOf(card.getError());
@@ -363,7 +365,9 @@ public class DeckImportPreviewPage extends WizardPage {
 			String warn = ownershipWarning();
 			if (warn != null)
 				msg = warn + "\n" + msg;
+			allGood = n == 0 && warn == null;
 		}
+		errorZone.setForeground(Display.getDefault().getSystemColor(allGood ? SWT.COLOR_DARK_GREEN : SWT.COLOR_RED));
 		errorZone.setText(msg);
 	}
 

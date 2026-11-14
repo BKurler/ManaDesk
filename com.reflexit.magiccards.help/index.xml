@@ -711,6 +711,9 @@
    <entry keyword="Magic: The Gathering rules">
       <topic href="html/support/rules.html" title="Magic: The Gathering rules"/>
    </entry>
+   <entry keyword="Moxfield">
+      <topic href="html/transfer/moxfield.html" title="Moxfield"/>
+   </entry>
    <entry keyword="Main Filter">
       <topic href="html/find/filter.html" title="Searching and filtering - Main Filter"/>
    </entry>
