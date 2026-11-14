@@ -28,6 +28,7 @@ import org.junit.BeforeClass;
 import org.junit.Test;
 
 import com.reflexit.magiccards.core.DataManager;
+import com.reflexit.magiccards.core.legality.Format;
 import com.reflexit.magiccards.core.model.MagicCard;
 import com.reflexit.magiccards.core.model.MagicCardField;
 import com.reflexit.magiccards.core.model.utils.CardStoreUtils;
@@ -408,5 +409,68 @@ public class ScryfallCardFactsTest extends AbstractMagicTest {
 		Assert.assertFalse("same content: nothing rewritten", ScryfallMigrations.write(f, m));
 		Assert.assertEquals(m, ScryfallMigrations.read(f));
 		Assert.assertTrue(ScryfallMigrations.read(new File(f.getParentFile(), "no-such-file.tsv")).isEmpty());
+	}
+
+	// ------------------------------------------------------------ legalities
+
+	@Test
+	public void testLegalitiesListEveryKnownFormatInAFixedOrder() throws Exception {
+		String l = ParseScryFallChecklist.buildLegalities(json("{\"modern\":\"legal\",\"standard\":\"banned\","
+				+ "\"vintage\":\"restricted\",\"pauper\":\"not_legal\"}"));
+		Assert.assertTrue(l, l.startsWith("Standard!;Pioneer-;Modern+;Commander-;Vintage1;Legacy-;"));
+		Assert.assertTrue(l, l.endsWith("Oathbreaker-;"));
+		Assert.assertTrue(l, l.contains("Pauper-;"));
+		Assert.assertEquals(ParseScryFallChecklist.LEGALITY_FORMATS.size(), l.split(";").length);
+	}
+
+	@Test
+	public void testNoLegalitiesGiveNothing() throws Exception {
+		Assert.assertEquals("", ParseScryFallChecklist.buildLegalities(null));
+		Assert.assertEquals("", ParseScryFallChecklist.buildLegalities(new JSONObject()));
+	}
+
+	@Test
+	public void testAFormatScryfallAddsIsStoredByItsKey() throws Exception {
+		String l = ParseScryFallChecklist.buildLegalities(
+				json("{\"standard\":\"legal\",\"some_format\":\"restricted\",\"newformat\":\"legal\"}"));
+		Assert.assertTrue(l, l.startsWith("Standard+;"));
+		Assert.assertTrue(l, l.endsWith("Newformat+;Some format1;")); // after the known ones, by key
+		Assert.assertEquals("Some format", ParseScryFallChecklist.legalityNameOf("some_format"));
+		Assert.assertEquals("Penny Dreadful", ParseScryFallChecklist.legalityNameOf("penny"));
+	}
+
+	@Test
+	public void testEveryLegalityKeyNamesARegisteredFormat() {
+		for (String name : ParseScryFallChecklist.LEGALITY_FORMATS.values())
+			Assert.assertNotNull(name + " is not registered in Format", Format.get(name));
+	}
+
+	// ------------------------------------------------------------ new values
+
+	@Test
+	public void testNewBorderAndFrameEffectStillShow() throws Exception {
+		Assert.assertEquals(java.util.Arrays.asList("Bronze Border", "Newfx"), ParseScryFallChecklist.extraTraitLabels(
+				json("{\"border_color\":\"bronze\",\"frame_effects\":[\"newfx\",\"legendary\"]}"), null));
+		Assert.assertEquals(java.util.Arrays.asList("Foo Frame"),
+				ParseScryFallChecklist.extraTraitLabels(json("{\"frame\":\"foo\"}"), null));
+	}
+
+	@Test
+	public void testValuesWithoutANameAreReportedOnce() throws Exception {
+		File f = File.createTempFile("facts-test-", ".jsonl.gz");
+		f.deleteOnExit();
+		String card = cardJson("fn1", "Brand New", "\"frame_effects\":[\"newfx\",\"showcase\"],"
+				+ "\"promo_types\":[\"newpromo\",\"prerelease\"],\"legalities\":{\"modern\":\"legal\",\"newformat\":\"legal\"},")
+						.replace("\"layout\":\"normal\"", "\"layout\":\"zzz_layout\"");
+		String known = cardJson("fn1", "Old Hat", "\"frame_effects\":[\"showcase\"],");
+		try (PrintStream out = new PrintStream(new GZIPOutputStream(new FileOutputStream(f)), false, "UTF-8")) {
+			out.println(card);
+			out.println(known);
+		}
+		ParseScryFallChecklist parser = new ParseScryFallChecklist();
+		Assert.assertEquals(2, parser.parseBulkGrouped(f, Collections.singleton("fn1"), ICoreProgressMonitor.NONE)
+				.get("fn1").size());
+		Assert.assertEquals(new java.util.TreeSet<String>(java.util.Arrays.asList("layout:zzz_layout",
+				"frame_effect:newfx", "promo_type:newpromo", "legality:newformat")), parser.getUnknownValues());
 	}
 }

@@ -75,6 +75,14 @@
  *                         Cardmarket "N€/F€/E€" line, each in its own
  *                         currency, no conversion.
  *     Rémi Dutil (2026) - BuildLanguage() uses Languages.fromScryfallCode()
+ *     Rémi Dutil (2026) - legalities: every format Scryfall sends is read (unknown ones by
+ *                         their key), borders / frame effects by table + fallback, and
+ *                         the values this version does not know yet are reported at the
+ *                         end of an update
+ *     Rémi Dutil (2026) - parseRecord(): the number of cards (one, or front + back) and
+ *                         the image come from the data (card_faces, image_uris), no
+ *                         longer from a hard-coded list of layout names; missing fields
+ *                         no longer throw
  */
 
 package com.reflexit.magiccards.core.sync;
@@ -205,7 +213,49 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 	private final Set<String> costSymbols = new TreeSet<>();
 	private final Set<String> textSymbols = new TreeSet<>();
+	/** Values Scryfall sent that this version has no name for yet (see {@link #noteUnknownValues}). */
+	private final Set<String> unknownValues = new TreeSet<>();
 	private String updateString = "";
+
+	/** The layouts Scryfall documents; one outside this list is only reported, it is read from its faces anyway. */
+	private static final Set<String> KNOWN_LAYOUTS = new java.util.HashSet<>(java.util.Arrays.asList("normal", "split",
+			"flip", "transform", "modal_dfc", "meld", "leveler", "class", "case", "saga", "adventure", "mutate",
+			"prototype", "battle", "planar", "scheme", "vanguard", "token", "double_faced_token", "emblem", "augment",
+			"host", "art_series", "reversible_card", "prepare", "front_card"));
+
+	/** The values seen by the last parse that this version does not know yet ("layout:x", "promo_type:x"...). */
+	Set<String> getUnknownValues() {
+		return Collections.unmodifiableSet(unknownValues);
+	}
+
+	/**
+	 * Remember what Scryfall sent that has no name here yet - a layout, a frame effect, a promo
+	 * type, a legality format. None of them breaks the parse (each is read generically); this only
+	 * lets {@code parseBulkGrouped} tell, once, that the tables could be updated.
+	 */
+	private void noteUnknownValues(JSONObject elem, List<JSONObject> faces, String layoutName) {
+		if (!layoutName.isEmpty() && !KNOWN_LAYOUTS.contains(layoutName))
+			unknownValues.add("layout:" + layoutName);
+		List<JSONObject> sources = new ArrayList<>(faces);
+		sources.add(elem);
+		for (JSONObject src : sources) {
+			Object fx = src.get("frame_effects");
+			if (fx instanceof List)
+				for (Object o : (List<?>) fx)
+					if (o != null && !CardTraits.isKnownFrameEffect(o.toString()))
+						unknownValues.add("frame_effect:" + o);
+		}
+		Object promos = elem.get("promo_types");
+		if (promos instanceof List)
+			for (Object o : (List<?>) promos)
+				if (o != null && !CardTraits.isKnownPromo(o.toString()))
+					unknownValues.add("promo_type:" + o);
+		Object legal = elem.get("legalities");
+		if (legal instanceof JSONObject)
+			for (Object k : ((JSONObject) legal).keySet())
+				if (!LEGALITY_FORMATS.containsKey(k))
+					unknownValues.add("legality:" + k);
+	}
 
 	private static final Pattern SYMBOL_PATTERN = Pattern.compile("\\{[^}]+\\}");
 
@@ -316,33 +366,15 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		Object frame = faceOrCard(face, elem, "frame");
 		if (frame instanceof String && !"2015".equals(frame)) {
 			String f = (String) frame;
-			res.add("future".equals(f) ? "Future Frame" : f + " Frame");
+			res.add(CardTraits.capitalize(f) + " Frame");
 		}
 		Object border = faceOrCard(face, elem, "border_color");
-		if ("white".equals(border))
-			res.add("White Border");
-		else if ("silver".equals(border))
-			res.add("Silver Border");
-		else if ("gold".equals(border))
-			res.add("Gold Border");
-		else if ("borderless".equals(border))
-			res.add("Borderless");
+		String borderLabel = CardTraits.borderLabel(border instanceof String ? (String) border : null);
+		if (borderLabel != null)
+			res.add(borderLabel);
 		Object effects = faceOrCard(face, elem, "frame_effects");
-		if (effects instanceof JSONArray) {
-			JSONArray fx = (JSONArray) effects;
-			if (fx.contains("showcase"))
-				res.add("Showcase");
-			if (fx.contains("extendedart"))
-				res.add("Extended Art");
-			if (fx.contains("inverted"))
-				res.add("Inverted Frame");
-			if (fx.contains("tombstone"))
-				res.add("Tombstone Frame");
-			if (fx.contains("colorshifted"))
-				res.add("Colorshifted");
-			if (fx.contains("shatteredglass"))
-				res.add("Shattered Glass");
-		}
+		if (effects instanceof java.util.Collection)
+			res.addAll(CardTraits.frameEffectLabels((java.util.Collection<?>) effects));
 		if (Boolean.TRUE.equals(elem.get("full_art")))
 			res.add("Full Art");
 		if (Boolean.TRUE.equals(elem.get("textless")))
@@ -545,43 +577,49 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				extendedIdentity != null ? extendedIdentity : Colors.getInstance().getColorIdentityAsCost(card));
 	}
 
-	private String BuildLegalities(JSONObject object) {
+	/** Scryfall's legalities keys -> the format names registered in Format's static initializer, in the order stored. */
+	static final Map<String, String> LEGALITY_FORMATS = new java.util.LinkedHashMap<String, String>();
+	static {
+		String[][] f = { { "standard", "Standard" }, { "pioneer", "Pioneer" }, { "modern", "Modern" },
+				{ "commander", "Commander" }, { "vintage", "Vintage" }, { "legacy", "Legacy" }, { "future", "Future" },
+				{ "historic", "Historic" }, { "timeless", "Timeless" }, { "explorer", "Explorer" },
+				{ "pauper", "Pauper" }, { "penny", "Penny Dreadful" }, { "alchemy", "Alchemy" },
+				{ "oldschool", "Old School" }, { "premodern", "Premodern" }, { "gladiator", "Gladiator" },
+				{ "duel", "Duel Commander" }, { "paupercommander", "Pauper Commander" }, { "predh", "PreDH" },
+				{ "brawl", "Brawl" }, { "standardbrawl", "Standard Brawl" }, { "oathbreaker", "Oathbreaker" } };
+		for (String[] e : f)
+			LEGALITY_FORMATS.put(e[0], e[1]);
+	}
+
+	/** The format name of a Scryfall legalities key this does not know ("some_format" gives "Some format"). */
+	static String legalityNameOf(String key) {
+		String known = LEGALITY_FORMATS.get(key);
+		if (known != null)
+			return known;
+		return CardTraits.capitalize(key.replace('_', ' ').replace(';', ' ').trim());
+	}
+
+	/**
+	 * The card's legalities as {@code "Name+;Name-;..."}: every known format in a fixed order (a
+	 * missing one counts as not legal), then any format Scryfall sends that is not known yet, by
+	 * key order - so a new format is stored too (Format creates it when it is read back).
+	 */
+	static String buildLegalities(JSONObject object) {
 		if (object == null || object.isEmpty())
 			return "";
-
 		StringBuilder sb = new StringBuilder();
-
-		appendLegality(sb, "Standard", object.get("standard"));
-		appendLegality(sb, "Pioneer", object.get("pioneer"));
-		appendLegality(sb, "Modern", object.get("modern"));
-		appendLegality(sb, "Commander", object.get("commander"));
-		appendLegality(sb, "Vintage", object.get("vintage"));
-		appendLegality(sb, "Legacy", object.get("legacy"));
-		// The rest of Scryfall's legalities object - previously silently
-		// dropped, so these formats always showed "Unknown" regardless of
-		// Scryfall's actual data. Names match Format's registrations in
-		// Format.java's static initializer exactly.
-		appendLegality(sb, "Future", object.get("future"));
-		appendLegality(sb, "Historic", object.get("historic"));
-		appendLegality(sb, "Timeless", object.get("timeless"));
-		appendLegality(sb, "Explorer", object.get("explorer"));
-		appendLegality(sb, "Pauper", object.get("pauper"));
-		appendLegality(sb, "Penny Dreadful", object.get("penny"));
-		appendLegality(sb, "Alchemy", object.get("alchemy"));
-		appendLegality(sb, "Old School", object.get("oldschool"));
-		appendLegality(sb, "Premodern", object.get("premodern"));
-		appendLegality(sb, "Gladiator", object.get("gladiator"));
-		appendLegality(sb, "Duel Commander", object.get("duel"));
-		appendLegality(sb, "Pauper Commander", object.get("paupercommander"));
-		appendLegality(sb, "PreDH", object.get("predh"));
-		appendLegality(sb, "Brawl", object.get("brawl"));
-		appendLegality(sb, "Standard Brawl", object.get("standardbrawl"));
-		appendLegality(sb, "Oathbreaker", object.get("oathbreaker"));
-
+		for (Map.Entry<String, String> e : LEGALITY_FORMATS.entrySet())
+			appendLegality(sb, e.getValue(), object.get(e.getKey()));
+		Set<String> others = new TreeSet<>();
+		for (Object k : object.keySet())
+			if (k instanceof String && !LEGALITY_FORMATS.containsKey(k))
+				others.add((String) k);
+		for (String k : others)
+			appendLegality(sb, legalityNameOf(k), object.get(k));
 		return sb.toString();
 	}
 
-	private void appendLegality(StringBuilder sb, String name, Object value) {
+	private static void appendLegality(StringBuilder sb, String name, Object value) {
 		if (value == null) {
 			sb.append(name).append("-;");
 			return;
@@ -608,7 +646,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			break;
 
 		default:
-			// Unknown → treat as not legal
+			// Unknown -> treat as not legal
 			sb.append(name).append("-;");
 			break;
 		}
@@ -645,6 +683,39 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		return v > 0 ? v : -0.0001f;
 	}
 
+	/** A field as text; {@code ""} when the record has none. */
+	static String strOf(JSONObject o, String key) {
+		Object v = o.get(key);
+		return v == null ? "" : v.toString();
+	}
+
+	/**
+	 * The picture of a face: its own {@code image_uris} (a transform / modal card has one per
+	 * face), else the card's (a split / adventure card has one for both), else the front
+	 * face's. The "normal" size, else any; {@code null} when there is none, when Scryfall says
+	 * the image is missing or when it only gives its "image not available" placeholder.
+	 *
+	 * @param face      the face being read, or {@code null} for a single card
+	 * @param firstFace the card's first face, or {@code null}
+	 */
+	static String imageUrl(JSONObject face, JSONObject elem, JSONObject firstFace) {
+		if ("missing".equals(elem.get("image_status")))
+			return null;
+		for (JSONObject source : new JSONObject[] { face, elem, firstFace }) {
+			if (source == null || !(source.get("image_uris") instanceof JSONObject))
+				continue;
+			JSONObject uris = (JSONObject) source.get("image_uris");
+			if (uris.isEmpty())
+				continue;
+			Object url = uris.get("normal");
+			if (url == null || url.toString().isEmpty())
+				url = uris.values().iterator().next();
+			String s = url == null ? "" : url.toString();
+			return s.isEmpty() || s.contains("errors.scryfall") ? null : s;
+		}
+		return null;
+	}
+
 	private void parseRecord(JSONObject elem, ILoadCardHander handler) {
 		if (elem == null)
 			return;
@@ -672,75 +743,25 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		MagicCard frontCard = new MagicCard();
 		MagicCard backCard = new MagicCard();
 
-		int cardLayout = 0; // Single face card by default
-
+		// How many cards a record makes is read from the data, not from the layout name: a card
+		// with two or more faces is a front and a back, anything else is one card. A layout that
+		// Scryfall adds tomorrow therefore needs no code here; the layout is only a label (the
+		// back card's name).
 		Object layout = elem.get("layout");
+		String layoutName = layout != null ? layout.toString() : "";
 		JSONArray card_faces = (JSONArray) elem.get("card_faces");
-
-		JSONObject frontFace = null;
-		JSONObject backFace = null;
-
-		if (card_faces != null && card_faces.size() > 0) {
-			frontFace = (JSONObject) card_faces.get(0);
-			backFace = (JSONObject) card_faces.get(1);
-		}
-
-		// Determine the number of "faces/sides/zones", depending of the card type
-		switch (layout.toString()) {
-		case ("split"):
-		case ("flip"):
-		case ("adventure"):
-		case ("prepare"):
-			// Two cards, same face
-			cardLayout = 1;
-			break;
-
-		case ("transform"):
-		case ("modal_dfc"):
-		case ("battle"):
-		case ("double_faced_token"):
-		case ("reversible_card"):
-			// Two cards, 2 faces
-			cardLayout = 2;
-			break;
-
-		case ("scheme"):
-		case ("token"):
-		case ("emblem"):
-		case ("art_series"):
-			// Depends
-			if (card_faces != null && card_faces.size() > 1) {
-				// 2 cards
-				cardLayout = 2;
-			} else {
-				// Single card
-				cardLayout = 0;
-			}
-
-			break;
-
-		case ("normal"):
-		case ("meld"): // Process only the face for now
-		case ("leveler"):
-		case ("class"):
-		case ("case"):
-		case ("saga"):
-		case ("mutate"):
-		case ("prototype"):
-		case ("planar"):
-		case ("vanguard"):
-		case ("augment"):
-		case ("host"):
-			// Single face
-			// Exception: Meld, we process only the "main Face" for now
-			cardLayout = 0;
-			break;
-
-		default:
-			// Unknown layout, assume single side card by default
-			cardLayout = 0;
-			break;
-		}
+		List<JSONObject> faces = new ArrayList<>();
+		if (card_faces != null)
+			for (Object f : card_faces)
+				if (f instanceof JSONObject)
+					faces.add((JSONObject) f);
+		if (faces.size() > 2)
+			System.err.println("Card " + elem.get("name") + " has " + faces.size() + " faces (" + layoutName
+					+ "), only the first two are kept");
+		final int count = faces.size() >= 2 ? 2 : 1;
+		JSONObject frontFace = faces.isEmpty() ? null : faces.get(0);
+		JSONObject backFace = count == 2 ? faces.get(1) : null;
+		noteUnknownValues(elem, faces, layoutName);
 
 		// Read multiverse info, for the ID
 		JSONArray gids = (JSONArray) elem.get("multiverse_ids");
@@ -768,7 +789,7 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 
 		String languageString = BuildLanguage(elem.get("lang").toString());
 		String finishesString = BuildFinishes((JSONArray) elem.get("finishes"));
-		String legalitiesString = BuildLegalities((JSONObject) elem.get("legalities"));
+		String legalitiesString = buildLegalities((JSONObject) elem.get("legalities"));
 		String legalitiesText = "";
 		String scryfallUriString = "<br><a href=\"" + ((String) elem.get("scryfall_uri")) + "\">Scryfall</a>";
 		// shown only for a printing that is NOT found in boosters (a promo, a precon, a Secret Lair...):
@@ -810,7 +831,6 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 			rulingsUriString = "<BR><a href=\"" + ((String) rulings_uri) + "\">Rulings</a>";
 		}
 
-		JSONObject image_uris = (JSONObject) elem.get("image_uris");
 
 		// Physical accessories the card needs (tokens/emblems from all_parts,
 		// counters/dice/markers from the rules text). Same for both faces.
@@ -878,208 +898,59 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 		// the whole card's, so the oracle text of every face counts
 		String extendedIdentity = Colors.getExtendedIdentityCost(colorIdentityOfficial, wholeOracle(elem, card_faces));
 
-		switch (cardLayout) {
-		// Standard single face card
-		case 0:
+		// One card per face; a single card reads the card's own fields, a face its own
+		MagicCard[] cards = count == 2 ? new MagicCard[] { frontCard, backCard } : new MagicCard[] { frontCard };
+		// what follows the finishes and the facts is the same for every face
+		String restText = boosterString + scryfallUriString + gathererUriString + tcgUriString + rulingsUriString
+				+ legalitiesText + updateString;
+		for (int i = 0; i < count; i++) {
+			MagicCard c = cards[i];
+			boolean isBack = i == 1;
+			JSONObject face = isBack ? backFace : frontFace;
+			JSONObject src = face != null ? face : elem;
 
-			frontCard.setName(elem.get("name").toString());
-			frontCard.setLanguage(languageString);
-			frontCard.setSet(elem.get("set_name").toString());
-			frontCard.setCost(elem.get("mana_cost").toString());
-			frontCard.setType(elem.get("type_line").toString().replace("—", "-"));
-			frontCard.setRarity(elem.get("rarity").toString());
-			frontCard.setPower(elem.get("power") != null ? elem.get("power").toString() : "");
-			frontCard.setToughness(elem.get("toughness") != null ? elem.get("toughness").toString() : "");
-			String oracle = "";
-			if (elem.get("oracle_text") != null) {
-				oracle = elem.get("oracle_text").toString();
-			} else {
-				System.err.println("Card " + frontCard.getName() + " has no oracle text, check for new layout");
-			}
+			String name = strOf(elem, "name");
+			c.setName(isBack ? name + " (" + layoutName + ")" : name);
+			c.setLanguage(languageString);
+			c.setSet(strOf(elem, "set_name"));
+			c.setCost(strOf(src, "mana_cost"));
+			c.setType(strOf(src, "type_line").replace("\u2014", "-"));
+			c.setRarity(strOf(elem, "rarity"));
+			c.setPower(strOf(src, "power"));
+			c.setToughness(strOf(src, "toughness"));
+			if (src.get("oracle_text") == null && count == 1)
+				System.err.println("Card " + name + " has no oracle text, check for new layout");
+			c.setOracleText(strOf(src, "oracle_text").replace("|", "&vert;"));
+			c.setArtist(strOf(src, "artist"));
+			String collNumber = strOf(elem, "collector_number");
+			c.setCollNumber(isBack ? collNumber + "b" : collNumber);
 
-			frontCard.setOracleText(oracle.replace("|", "&vert;"));
-			frontCard.setArtist(elem.get("artist").toString());
-			frontCard.setCollNumber(elem.get("collector_number").toString());
-
-			// Check if an image exist
-			if (elem.get("image_status") != "missing") {
-				JSONObject images = null;
-
-				// Get the image
-				if (image_uris.size() > 0) {
-					images = image_uris;
-				} else if (card_faces.size() > 0 && frontFace != null) {
-					images = (JSONObject) frontFace.get("image_uris");
-				}
-
-				if (images != null) {
-					// We select the "normal" format, this is the best fit
-					String image = images.get("normal").toString();
-
-					if (image == null || image.isEmpty()) {
-						image = images.get(0).toString();
-					}
-					if (image != null && !(image.toString().contains("errors.scryfall"))) {
-						frontCard.set(MagicCardField.IMAGE_URL, image);
-					}
-				}
-			}
+			String image = imageUrl(face, elem, frontFace);
+			if (image != null)
+				c.set(MagicCardField.IMAGE_URL, image);
 
 			// Useful information for collectors
 			// We will use the Text field to store and display that information
-			cardText = priceString + frontMultiverseString + finishesString + factsFront
-					+ boosterString + scryfallUriString + gathererUriString
-					+ tcgUriString + rulingsUriString + legalitiesText + updateString;
+			c.setText(priceString + (isBack ? backMultiverseString : frontMultiverseString) + finishesString
+					+ (isBack ? factsBack : factsFront) + restText);
+			c.set(MagicCardField.LEGALITY, legalitiesString);
+			cacheComputedColors(c, officialColorCost(face, elem), extendedIdentity);
+		}
 
-			frontCard.setText(cardText);
-			frontCard.setLanguage(languageString);
-
-			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
-			if (gids != null && gids.size() > 0) {
-				frontCard.setGathererCardId(gids.get(0).toString());
-			}
-
-			if (tcgId != null) {
-				frontCard.setTcgCardId(tcgId.toString());
-			} else if (tcgEtchedId != null) {
-				frontCard.setTcgCardId(tcgEtchedId.toString());
-			}
-
-			cacheComputedColors(frontCard, officialColorCost(null, elem), extendedIdentity);
-			handler.handleCard(frontCard);
-			break;
-
-		// One face, 2 cards
-		case 1:
-			// 2 faces
-		case 2:
-
-			frontCard.setName(elem.get("name").toString());
-			backCard.setName(elem.get("name").toString() + " (" + layout.toString() + ")");
-
-			frontCard.setLanguage(languageString);
-			backCard.setLanguage(languageString);
-
-			frontCard.setSet(elem.get("set_name").toString());
-			backCard.setSet(frontCard.getSet());
-
-			frontCard.setCost(frontFace.get("mana_cost").toString());
-			backCard.setCost(backFace.get("mana_cost").toString());
-
-			frontCard.setType(frontFace.get("type_line").toString().replace("—", "-"));
-			backCard.setType(
-					backFace.get("type_line") != null ? backFace.get("type_line").toString().replace("—", "-") : "");
-
-			frontCard.setRarity(elem.get("rarity").toString());
-			backCard.setRarity(frontCard.getRarity());
-
-			frontCard.setPower(frontFace.get("power") != null ? frontFace.get("power").toString() : "");
-			backCard.setPower(backFace.get("power") != null ? backFace.get("power").toString() : "");
-
-			frontCard.setToughness(frontFace.get("toughness") != null ? frontFace.get("toughness").toString() : "");
-			backCard.setToughness(backFace.get("toughness") != null ? backFace.get("toughness").toString() : "");
-
-			frontCard.setOracleText(frontFace.get("oracle_text") != null
-					? (frontFace.get("oracle_text").toString().replace("|", "&vert;"))
-					: "");
-			backCard.setOracleText(backFace.get("oracle_text") != null
-					? (backFace.get("oracle_text").toString().replace("|", "&vert;"))
-					: "");
-
-			frontCard.setArtist(frontFace.get("artist") != null ? frontFace.get("artist").toString() : "");
-			backCard.setArtist(backFace.get("artist") != null ? backFace.get("artist").toString() : "");
-
-			frontCard.setCollNumber(elem.get("collector_number").toString());
-			backCard.setCollNumber(frontCard.getCollNumber() + "b");
-
-			// Check if an image exist
-			if (elem.get("image_status") != "missing") {
-				JSONObject images = null;
-
-				if (cardLayout == 2) {
-					// Get the image
-					if (frontFace != null) {
-						images = (JSONObject) frontFace.get("image_uris");
-					}
-
-					if (images != null) {
-						String image = images.get("normal").toString();
-
-						if (image == null || image.isEmpty()) {
-							image = images.get(0).toString();
-						}
-						if (image != null && !(image.toString().contains("errors.scryfall"))) {
-							frontCard.set(MagicCardField.IMAGE_URL, image);
-						}
-					}
-
-					if (backFace != null) {
-						images = (JSONObject) backFace.get("image_uris");
-					}
-
-					if (images != null) {
-						String image = images.get("normal").toString();
-
-						if (image == null || image.isEmpty()) {
-							image = images.get(0).toString();
-						}
-						if (image != null && !(image.toString().contains("errors.scryfall"))) {
-							backCard.set(MagicCardField.IMAGE_URL, image);
-						}
-					}
-
-				} else {
-					// Get the image
-					if (image_uris.size() > 0) {
-						images = image_uris;
-					} else if (card_faces.size() > 0 && frontFace != null) {
-						images = (JSONObject) frontFace.get("image_uris");
-					}
-
-					if (images != null) {
-						String image = images.get("normal").toString();
-
-						if (image == null || image.isEmpty()) {
-							image = images.get(0).toString();
-						}
-						if (image != null && !(image.toString().contains("errors.scryfall"))) {
-							frontCard.set(MagicCardField.IMAGE_URL, image);
-							backCard.set(MagicCardField.IMAGE_URL, image);
-						}
-					}
-				}
-			}
-
-			// Useful for collectors
-			// what follows the finishes and the facts is the same for both faces
-			String restText = boosterString + scryfallUriString + gathererUriString
-					+ tcgUriString + rulingsUriString + legalitiesText + updateString;
-
-			frontCard.setText(priceString + frontMultiverseString + finishesString + factsFront + restText);
-			backCard.setText(priceString + backMultiverseString + finishesString + factsBack + restText);
-
-			frontCard.set(MagicCardField.LEGALITY, legalitiesString);
-			backCard.set(MagicCardField.LEGALITY, frontCard.get(MagicCardField.LEGALITY));
-
+		if (count == 2) {
 			frontCard.set(MagicCardField.FLIPID, backCard.getCardId());
 			backCard.set(MagicCardField.FLIPID, frontCard.getCardId());
-
-			if (gids != null && gids.size() > 0) {
-				frontCard.setGathererCardId(gids.get(0).toString());
-			}
-
-			if (tcgId != null) {
-				frontCard.setTcgCardId(tcgId.toString());
-			} else if (tcgEtchedId != null) {
-				frontCard.setTcgCardId(tcgEtchedId.toString());
-			}
-
-			cacheComputedColors(frontCard, officialColorCost(frontFace, elem), extendedIdentity);
-			cacheComputedColors(backCard, officialColorCost(backFace, elem), extendedIdentity);
-			handler.handleCard(frontCard);
-			handler.handleCard(backCard);
-			break;
 		}
+		if (gids != null && gids.size() > 0) {
+			frontCard.setGathererCardId(gids.get(0).toString());
+		}
+		if (tcgId != null) {
+			frontCard.setTcgCardId(tcgId.toString());
+		} else if (tcgEtchedId != null) {
+			frontCard.setTcgCardId(tcgEtchedId.toString());
+		}
+		for (MagicCard c : cards)
+			handler.handleCard(c);
 
 		collectSymbols(frontCard.getCost(), frontCard.getName(), costSymbols);
 		collectSymbols(backCard.getCost(), backCard.getName(), costSymbols);
@@ -1280,6 +1151,9 @@ public class ParseScryFallChecklist extends AbstractParseJson {
 				MagicLogger.log(e);
 			}
 		}
+		if (!unknownValues.isEmpty())
+			System.err.println("[ScryfallBulk] values this version has no name for yet (read generically): "
+					+ unknownValues);
 		System.err.println("[ScryfallBulk] parsed " + records + " records in " + (System.currentTimeMillis() - t0)
 				+ " ms, matched " + matched + " printing(s) for "
 				+ (onlyLower == null ? result.size() + " set(s)" : "abbreviations " + onlyLower));

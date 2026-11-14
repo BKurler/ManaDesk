@@ -89,4 +89,36 @@ public class CardTraitsTest extends TestCase {
 		assertTrue(s.contains("Showcase") && s.contains("Reserved List") && s.contains("Oversized"));
 		assertTrue(s.contains("First Printing"));
 	}
+
+	public void testFrameEffectLabelsKnownInFixedOrderThenNew() {
+		// the known ones in the table's order, structural ones left out, a new one capitalized last
+		assertEquals(Arrays.asList("Showcase", "Extended Art", "Newthing"),
+				CardTraits.frameEffectLabels(Arrays.asList("extendedart", "legendary", "newthing", "showcase")));
+		assertTrue(CardTraits.frameEffectLabels(Arrays.asList("legendary", "devoid", "snow", "etched")).isEmpty());
+		assertTrue(CardTraits.frameEffectLabels(null).isEmpty());
+		assertTrue(CardTraits.frameEffectLabels(Arrays.asList()).isEmpty());
+		assertEquals(Arrays.asList("Showcase"), CardTraits.frameEffectLabels(Arrays.asList("showcase", "showcase")));
+	}
+
+	public void testIsKnownFrameEffectAndPromo() {
+		assertTrue(CardTraits.isKnownFrameEffect("showcase"));
+		assertTrue(CardTraits.isKnownFrameEffect("legendary"));
+		assertFalse(CardTraits.isKnownFrameEffect("newthing"));
+		assertTrue(CardTraits.isKnownPromo("prerelease"));
+		assertTrue(CardTraits.isKnownPromo("boosterfun"));
+		assertTrue(CardTraits.isKnownPromo("ffvii"));
+		assertFalse(CardTraits.isKnownPromo("newpromo"));
+		assertFalse(CardTraits.isKnownPromo(null));
+	}
+
+	public void testBorderLabels() {
+		assertNull(CardTraits.borderLabel(null));
+		assertNull(CardTraits.borderLabel(""));
+		assertNull(CardTraits.borderLabel("black"));
+		assertEquals("Borderless", CardTraits.borderLabel("borderless"));
+		assertEquals("White Border", CardTraits.borderLabel("white"));
+		assertEquals("Silver Border", CardTraits.borderLabel("silver"));
+		assertEquals("Gold Border", CardTraits.borderLabel("gold"));
+		assertEquals("Bronze Border", CardTraits.borderLabel("bronze"));
+	}
 }
