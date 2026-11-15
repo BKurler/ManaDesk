@@ -145,6 +145,8 @@
  *     Rémi Dutil (2026) - forceKind() after resolving: the imported cards are made to fit the target list's kind
  *     Rémi Dutil (2026) - the cards left out of an import (unresolved) are all listed in the log, with their error
  *     Rémi Dutil (2026) - removed the unused Gatherer fixLangErrors / fixVariantErrors
+ *     Rémi Dutil (2026) - updatePageCompletion() always refreshes the status line (a format that cannot
+ *                         read the data no longer leaves the previous format's status)
  */
 package com.reflexit.magiccards.ui.exportWizards;
 
@@ -1423,9 +1425,9 @@ public abstract class AbstractCardListImportPage extends WizardDataTransferPage 
 	@Override
 	protected void updatePageCompletion() {
 		super.updatePageCompletion();
-		if (isPageComplete() || getErrorMessage() == null) {
-			defaultPrompt(); // set default prompt, otherwise it empty ugly
-		}
+		// always: a format that cannot read the data sets an error message, and the status line below the
+		// options (which names the selected format and the parse error) must still follow the selection
+		defaultPrompt();
 	}
 
 	@Override
