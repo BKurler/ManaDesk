@@ -7,6 +7,7 @@
  *
  * Contributors:
  *     Rémi Dutil - created for ManaDesk
+ *     Rémi Dutil (2026) - rejects an Archidekt file (Edition code column), read by its own importer
  *******************************************************************************/
 package com.reflexit.magiccards.core.exports;
 
@@ -113,13 +114,16 @@ public class ManaBoxCsvImportDelegate extends CsvImportDelegate {
 	@Override
 	protected void setHeaderFields(List<String> list) {
 		currencyColumn = -1;
-		boolean manaBox = false;
+		boolean manaBox = false, archidekt = false;
 		for (String raw : list) {
 			String key = norm(raw);
 			manaBox |= key.equals("scryfall id") || key.equals("manabox id");
+			// ManaBox writes "Set code", never "Edition code": that is an Archidekt file, which also has a Scryfall ID
+			archidekt |= key.equals("edition code");
 		}
-		if (!manaBox)
-			throw new MagicException("Not a ManaBox CSV: no 'Scryfall ID' or 'ManaBox ID' column (" + list + ")");
+		if (!manaBox || archidekt)
+			throw new MagicException("Not a ManaBox CSV: no 'Scryfall ID' or 'ManaBox ID' column, or an Archidekt file ("
+					+ list + ")");
 		ICardField[] fields = new ICardField[list.size()];
 		for (int i = 0; i < fields.length; i++) {
 			ICardField f = HEADERS.get(norm(list.get(i)));

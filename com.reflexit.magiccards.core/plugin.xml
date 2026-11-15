@@ -95,6 +95,18 @@
             label="TappedOut Collection CSV"
             xmlFormat="false">
       </deckFormat>
+      <!-- Archidekt collection CSV: needs the columns Quantity and Name and none of another app's (Set
+           code, Binder Name, Count...), so ManaBox / Deckbox / Moxfield files are rejected; registered before
+           them anyway, as on a tie the first registered wins -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.ArchidektCsvExportDelegate"
+            extension="csv"
+            id="archidektCsv"
+            importDelegate="com.reflexit.magiccards.core.exports.ArchidektCsvImportDelegate"
+            application="true"
+            label="Archidekt Collection CSV"
+            xmlFormat="false">
+      </deckFormat>
       <!-- strict Deckbox importer (needs Count, Name and Edition columns); the wishlist
            is export-only: the same importer reads both. BEFORE ManaBox: a Deckbox export
            has a "Scryfall ID" column, so ManaBox would also parse it (same card count,
@@ -138,6 +150,17 @@
             application="true"
             label="Cockatrice Deck"
             xmlFormat="true">
+      </deckFormat>
+      <!-- Archidekt deck text ("1x Sol Ring (c21) 263 [Ramp]"); needs a Nx count and a set code or
+           category on some line. BEFORE Moxfield and Freeform: on a tie the first registered wins -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.ArchidektTextExportDelegate"
+            extension="txt"
+            id="archidektText"
+            importDelegate="com.reflexit.magiccards.core.exports.ArchidektTextImportDelegate"
+            application="true"
+            label="Archidekt Deck List"
+            xmlFormat="false">
       </deckFormat>
       <!-- Moxfield deck list ("Copy for Moxfield": "1 Sol Ring (C21) 263 *F*"); rejects a file
            with no line carrying a set code and a number, so a plain list goes to Freeform.

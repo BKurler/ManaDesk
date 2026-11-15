@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>Archidekt</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>Archidekt</h1>
+
+<p>Already using <b>Archidekt</b>? You can bring your decks and your collection into ManaDesk easily, and send them
+back. There are two formats: the <b>deck list</b> (the text of one deck) and the <b>collection CSV</b>.</p>
+
+<h2>A deck, from Archidekt to ManaDesk</h2>
+<ol>
+<li>In Archidekt, open the deck and export it as text (keep the set and the collector number of each card).</li>
+<li>In ManaDesk, create a new deck from the clipboard (or save the text in a <b>.txt</b> file and pick it), or
+right-click a deck and choose <b>Import into...</b></li>
+<li>The format is recognized as <b>Archidekt Deck List</b>. Check the preview, then click <b>Finish</b>. See
+<a href="import.html">Importing cards</a>.</li>
+</ol>
+<p>A line looks like <code>1x Sol Ring (c21) 263 [Ramp] ^Have,#37d67a^</code>:</p>
+<table>
+<tr><th>Archidekt</th><th>ManaDesk</th></tr>
+<tr><td>Number then <code>x</code></td><td>Count</td></tr>
+<tr><td>Set code between parentheses, then the collector number: <code>(c21) 263</code></td><td>The exact printing</td></tr>
+<tr><td><code>*F*</code> (foil) or <code>*E*</code> (etched)</td><td>Finish</td></tr>
+<tr><td>Category <code>[Sideboard]</code></td><td>Sideboard</td></tr>
+<tr><td>Category <code>[Maybeboard]</code>, or a category that is not counted in the deck
+(<code>{noDeck}</code>, such as <i>Upgrades</i>)</td><td>Not read</td></tr>
+<tr><td>Other categories (<code>[Commander]</code>, <code>[Ramp]</code>...)</td><td>The card stays in the deck</td></tr>
+<tr><td><code>^Tag,#color^</code></td><td>Ignored</td></tr>
+</table>
+
+<h2>A deck, from ManaDesk to Archidekt</h2>
+<p>Export the deck with <b>Archidekt Deck List</b> (see <a href="export.html">Exporting</a>), open the file, copy
+its text, and paste it in Archidekt's import. Copies of the same printing are added up, the sideboard cards end with
+<code>[Sideboard]</code>, and the extra list (tokens, emblems...) is not written. There are no columns to choose.</p>
+
+<h2>A collection, from Archidekt to ManaDesk</h2>
+<p>In Archidekt, export your collection as a CSV file, then import it as for any other file (the format is recognized
+as <b>Archidekt Collection CSV</b>). The columns are matched by their names:</p>
+<table>
+<tr><th>Archidekt</th><th>ManaDesk</th></tr>
+<tr><td>Quantity</td><td>Count</td></tr>
+<tr><td>Name</td><td>Name</td></tr>
+<tr><td>Scryfall ID</td><td>The exact card (used first, when the file has it)</td></tr>
+<tr><td>Edition Code, Collector Number (Edition Name when there is no code)</td><td>The printing, when there is no Scryfall ID</td></tr>
+<tr><td>Finish (Normal, Foil, Etched)</td><td>Finish</td></tr>
+<tr><td>Condition (NM, LP, MP, HP, D)</td><td>Condition</td></tr>
+<tr><td>Language</td><td>Language</td></tr>
+<tr><td>Other columns</td><td>Not read</td></tr>
+</table>
+<p>A deck exported as CSV with only <code>Quantity</code> and <code>Name</code> is read too: the cards are
+found by name, with the default printing.</p>
+
+<h2>A collection, from ManaDesk to Archidekt</h2>
+<p>Export with <b>Archidekt Collection CSV</b>: the columns are <code>Quantity</code>, <code>Name</code>,
+<code>Finish</code>, <code>Condition</code>, <code>Language</code>, <code>Scryfall ID</code>, <code>Edition Name</code>,
+<code>Edition Code</code> and <code>Collector Number</code>. A card with no condition is written as NM.
+There are no columns to choose.</p>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>
