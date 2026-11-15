@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<!--
+  Copyright (c) 2026 Rémi Dutil.
+  All rights reserved. This program and the accompanying materials are made
+  available under the terms of the Eclipse Public License v2.0 which accompanies
+  this distribution, and is available at:
+    https://www.eclipse.org/org/documents/epl-2.0/EPL-2.0.html
+-->
+<html>
+<head>
+<meta charset="utf-8">
+<title>TappedOut</title>
+<link rel="stylesheet" href="../help.css">
+</head>
+<body>
+<h1>TappedOut</h1>
+
+<p>Already using <b>TappedOut</b>? You can bring your decks into ManaDesk easily, and send them back, as a
+<b>deck CSV</b>.</p>
+
+<h2>A deck, from TappedOut to ManaDesk</h2>
+<ol>
+<li>In TappedOut, export the deck as a CSV file.</li>
+<li>In ManaDesk, create a new deck from the file, or right-click a deck and choose <b>Import into...</b></li>
+<li>The format is recognized as <b>TappedOut Deck CSV</b>. Check the preview, then click <b>Finish</b>. See
+<a href="import.html">Importing cards</a>.</li>
+</ol>
+<p>The columns are matched by their names:</p>
+<table>
+<tr><th>TappedOut</th><th>ManaDesk</th></tr>
+<tr><td>Board: <code>main</code></td><td>The deck</td></tr>
+<tr><td>Board: <code>side</code></td><td>Sideboard</td></tr>
+<tr><td>Other boards (maybeboard...)</td><td>Not read</td></tr>
+<tr><td>Qty</td><td>Count</td></tr>
+<tr><td>Name (<code>Front / Back</code> for a split or double-faced card)</td><td>Name</td></tr>
+<tr><td>Printing (the set code)</td><td>Set</td></tr>
+<tr><td>Foil</td><td>Finish: foil</td></tr>
+<tr><td>Alter</td><td>The "altered" tag</td></tr>
+<tr><td>Condition, Language</td><td>Condition, Language</td></tr>
+<tr><td>Signed</td><td>Not read</td></tr>
+</table>
+
+<p>TappedOut's list exports (the ones with the columns <code>Qty</code>, <code>Name</code>, <code>Set</code>,
+<code>Set Number</code>...) are read too: <b>Set</b> and <b>Set Number</b> give the exact printing, <code>f</code> in
+Foil is a foil (<code>f-etch</code>: etched), <code>SL</code> is Lightly Played, a language is a code such as <code>EN</code> or <code>FR</code>, and
+a <code>-</code> is an empty cell. The format is recognized as <b>TappedOut Collection CSV</b>.</p>
+
+<h2>A deck, from ManaDesk to TappedOut</h2>
+<p>Export the deck with <b>TappedOut Deck CSV</b> (see <a href="export.html">Exporting</a>) and import the file in
+TappedOut. The sideboard is written with the board <code>side</code>; the extra list (tokens, emblems...) is not
+written. There are no columns to choose. To send a collection or a list of cards instead, export with
+<b>TappedOut Collection CSV</b>: the columns are those of TappedOut's own list export.</p>
+
+<p class="seealso">See also: <a href="import.html">Importing cards</a> &middot; <a href="export.html">Exporting</a></p>
+</body>
+</html>
