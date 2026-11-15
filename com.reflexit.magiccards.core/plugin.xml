@@ -74,6 +74,27 @@
             label="Deckstats Collection CSV"
             xmlFormat="false">
       </deckFormat>
+      <!-- TappedOut deck CSV: needs the columns Board, Qty and Name; no other registered
+           format uses those names, so the order does not matter -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.TappedOutCsvExportDelegate"
+            extension="csv"
+            id="tappedOutCsv"
+            importDelegate="com.reflexit.magiccards.core.exports.TappedOutCsvImportDelegate"
+            application="true"
+            label="TappedOut Deck CSV"
+            xmlFormat="false">
+      </deckFormat>
+      <!-- the same importer reads TappedOut's collection layout (Qty, Name, Set, Set Number...) -->
+      <deckFormat
+            exportDelegate="com.reflexit.magiccards.core.exports.TappedOutCollectionCsvExportDelegate"
+            extension="csv"
+            id="tappedOutCollectionCsv"
+            importDelegate="com.reflexit.magiccards.core.exports.TappedOutCsvImportDelegate"
+            application="true"
+            label="TappedOut Collection CSV"
+            xmlFormat="false">
+      </deckFormat>
       <!-- strict Deckbox importer (needs Count, Name and Edition columns); the wishlist
            is export-only: the same importer reads both. BEFORE ManaBox: a Deckbox export
            has a "Scryfall ID" column, so ManaBox would also parse it (same card count,

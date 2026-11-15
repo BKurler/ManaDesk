@@ -128,6 +128,7 @@ public class AllLocalTests {
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.CockatriceTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.MoxfieldTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.DeckstatsTest.class);
+		suite.addTestSuite(com.reflexit.magiccards.core.exports.TappedOutCsvTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.SetCodePriorityTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.ImportLanguageResolveTest.class);
 		suite.addTestSuite(com.reflexit.magiccards.core.exports.LanguageMarkTest.class);
